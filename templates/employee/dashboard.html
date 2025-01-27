@@ -1,0 +1,571 @@
+{% extends 'employee/base.html' %}
+
+{% block content %}
+  <div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col">
+            <!-- Page pre-title -->
+            <div class="page-pretitle">Overview</div>
+            <h2 class="page-title">Dashboard</h2>
+          </div>
+          <!-- Page title actions -->
+          <div class="col-auto ms-auto d-print-none">
+            <div class="btn-list">
+              {% comment %} <span class="d-none d-sm-inline"><a href="#" class="btn">New view</a></span> {% endcomment %}
+              <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
+                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 5l0 14" />
+                  
+                  <path d="M5 12l14 0" />
+                </svg>Create new report
+              </a>
+              <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
+                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 5l0 14" />
+                  <path d="M5 12l14 0" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Page body -->
+    <div class="page-body">
+      <div class="container-xl">
+        <div class="row row-deck row-cards">
+          <div class="col-sm-6 col-lg-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="subheader">Today Earning</div>
+                </div>
+                <div class="h1 mb-3">{{todays_earning}}</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="subheader">Total Project's</div>
+                </div>
+                <div class="d-flex align-items-baseline">
+                  <div class="h1 mb-0 me-2">{{ total_login_time }}</div>
+                </div>
+              </div>
+              {% comment %} <div id="chart-revenue-bg" class="chart-sm"></div> {% endcomment %}
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="subheader">Complete Project's</div>
+                </div>
+                <div class="d-flex align-items-baseline">
+                  <div class="h1 mb-0 me-2">11</div>
+                </div>
+              </div>
+              {% comment %} <div id="chart-revenue-bg" class="chart-sm"></div> {% endcomment %}
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="subheader">Total Revenue</div>
+                  {% comment %} <div class="ms-auto lh-1">
+                    <div class="dropdown">
+                      <a class="dropdown-toggle text-secondary" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Last 7 days</a>
+                      <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item active" href="#">Last 7 days</a>
+                        <a class="dropdown-item" href="#">Last 30 days</a>
+                        <a class="dropdown-item" href="#">Last 3 months</a>
+                      </div>
+                    </div>
+                  </div> {% endcomment %}
+                </div>
+                <div class="d-flex align-items-baseline">
+                  <div class="h1 mb-3 me-2">{{monthly_earning}}</div>
+                  {% comment %} <div class="me-auto">
+                    <span class="text-yellow d-inline-flex align-items-center lh-1">
+                      1% 
+                    </span>
+                  </div> {% endcomment %}
+                </div>
+                {% comment %} <div id="chart-new-clients" class="chart-sm"></div> {% endcomment %}
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="row row-cards">
+              <div class="col-sm-6 col-lg-3">
+                <div class="card card-sm">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col-auto">
+                        
+                      </div>
+                      <div class="col">
+                        <div class="font-weight-medium">{{total_call_count}} Candidate's</div>
+                        <div class="text-secondary">Total Call</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-lg-3">
+                <div class="card card-sm">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col-auto">
+                        
+                      </div>
+                      <div class="col">
+                        <div class="font-weight-medium">{{total_connected_call}} Candidate's</div>
+                        <div class="text-secondary">Total Connected</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-lg-3">
+                <div class="card card-sm">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col-auto">
+                        
+                      </div>
+                      <div class="col">
+                        <div class="font-weight-medium">{{total_lead_generate}} Candidate's</div>
+                        <div class="text-secondary">Total Lead Generate</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-lg-3">
+                <div class="card card-sm">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col-auto">
+                        
+                      </div>
+                      <div class="col">
+                        <div class="font-weight-medium">{{total_placement}} Candidate's</div>
+                        <div class="text-secondary">Total Placement's</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-12 col-lg-6">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Meeting Schedule</h3>
+              </div>
+              <div class="card-table table-responsive">
+                <table class="table table-vcenter">
+                  <thead>
+                    <tr>
+                      <th>Meeting Title</th>
+                      <th>Department</th>
+                      <th>Meeting Date</th>
+                      <th>Meeting Time</th>
+                      <th>Meeting location</th>
+                    </tr>
+                  </thead>
+                  <tr>
+                    {% for meeting in meetings %}
+                    <td>
+                      {{meeting.title}}
+                    </td>
+                    <td class="text-secondary">{{meeting.department}}</td>
+                    <td class="text-secondary">{{meeting.date}}</td>
+                    <td class="text-secondary">{{meeting.time}}</td>
+                    <td class="text-secondary"> {{meeting.location}}</td>
+                    {% endfor %}
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          
+          <div class="col-md-12 col-lg-6">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Today's Attendance</h3>
+              </div>
+              <div class="card-table table-responsive">
+                <table class="table table-vcenter">
+                  <thead>
+                    <tr>
+                      <th>Login Time</th>
+                      <th>Logout Time Time</th>
+                      <th>Total Time Worked</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for session in sessions %}
+                    <tr>
+                      <td class="text-secondary">{{ session.login_time }}</td>
+                      <td class="text-secondary">{{ session.logout_time }}</td>
+                      <td class="text-secondary">{{ session.total_time }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          
+          {% comment %} 
+          
+          {% endcomment %}
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Today Expense</h3>
+              </div>
+              <div class="card-table table-responsive">
+                <table class="table table-vcenter">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Reason</th>
+                      <th>Ammount</th>
+                      <th>Date</th>
+                      <th>Attech</th>
+                    </tr>
+                  </thead>
+                  <tr>
+                    {% for office_expense in office_expenses %}
+                    <td class="text-secondary">{{office_expense.employee_name}}</td>
+                    <td class="text-secondary">{{office_expense.item_name}}</td>
+                    <td class="text-secondary">{{office_expense.amount}}</td>
+                    <td class="text-secondary">{{office_expense.purchase_date}}</td>
+                    
+                    <td class="text-secondary">{% if office_expense.attech %}
+                      <a href="{{ office_expense.attech.url }}" target="_blank">View Attachment</a>
+                    {% else %}
+                      No Attachment
+                    {% endif %}</td>
+                  </tr>
+                  {% endfor %}
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-header border-0">
+                <div class="card-title">Notification's</div>
+              </div>
+              <div class="card-table table-responsive">
+                <table class="table table-vcenter">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Message</th>
+                      <th>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for notification in notifications %}
+                    <tr>
+                      <td class="w-1">
+                        <span class="avatar avatar-sm">{{forloop.counter}}</span>
+                      </td>
+                      <td class="td-truncate">
+                        <div class="text-truncate">{{ notification.message }}</div>
+                      </td>
+                      <td class="text-nowrap text-secondary">{{ notification.created_at }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-12 col-lg-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Tasks Assigned</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="table card-table table-vcenter">
+                  {% for task in tasks %}
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Title</th>
+                      <th>Description</th>
+                      <th>Priority</th>
+                      <th>Due Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  <tr>
+                    <td >
+                      {{forloop.counter}}
+                    </td>
+                    <td class="w-10">
+                      {{task.title}}
+                    </td>
+                    <td class="text-nowrap text-secondary">{{task.description}}
+                    </td>
+                    <td class="text-nowrap">
+                        </svg>{{task.priority}}
+                    </td>
+                    <td class="text-nowrap">{{task.due_date}}
+                    </td>
+                    <td>
+                      <form method="post" action="{% url 'update_task_status' task.id %}">
+                        {% csrf_token %}
+                        <select class="form-select" name="status" onchange="this.form.submit()" style="width: auto;">
+                          <option value="Pending" {% if task.status == 'Pending' %}selected{% endif %}>Pending</option>
+                          <option value="In Progress" {% if task.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                          <option value="Completed" {% if task.status == 'Completed' %}selected{% endif %}>Completed</option>
+                        </select>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Today's Selection</h3>
+              </div>
+              <div class="card-body border-bottom py-3">
+                <div class="d-flex">
+                  <div class="text-secondary">
+                    Show<div class="mx-2 d-inline-block">
+                      <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
+                    </div>entries
+                  </div>
+                  <div class="ms-auto text-secondary">
+                    Search:<div class="ms-2 d-inline-block">
+                      <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
+                  <thead>
+                    <tr>
+                      <th class="w-1">
+                        No. <!-- Download SVG icon from http://tabler-icons.io/i/chevron-up -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm icon-thick" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                          <path d="M6 15l6 -6l6 6" />
+                        </svg>
+                      </th>
+                      <th>Name</th>
+                      <th>Unique ID</th>
+                      <th>Company</th>
+                      <th>Handle By</th>
+                      <th>Salary Offered</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for selected_candidate in selected_candidates %}
+                    <tr>
+                      <td>
+                        {{forloop.counter}}
+                      </td>
+                      <td>
+                        <a href="{% url 'candidate-details' selected_candidate.id  %}" >
+                        <span class="text-secondary">{{selected_candidate.candidate_name}}</span></a>
+                      </td>
+                      <td>
+                        {{selected_candidate.unique_code}}</a>
+                      </td>
+                      <td>
+                        {{selected_candidate.company_name}}
+                      </td>
+                      <td>{{selected_candidate.employee_name}}</td>
+                      <td>{{selected_candidate.offered_salary}}</td>
+                      <td>
+                        {% if selected_candidate.selection_status == "Selected" %}
+                          <span class="badge bg-success me-1"></span> {{ selected_candidate.selection_status }}
+                        {% elif selected_candidate.selection_status == "Rejected" %}
+                          <span class="badge bg-danger me-1"></span> {{ selected_candidate.selection_status }}
+                        {% else %}
+                          <span class="badge bg-warning me-1"></span> {{ selected_candidate.selection_status }}
+                        {% endif %}
+                      </td>
+                      
+                      
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <div class="card-footer d-flex align-items-center">
+                <p class="m-0 text-secondary">
+                  Showing <span>1</span> to <span>8</span> of <span>16</span> entries
+                </p>
+                <ul class="pagination m-0 ms-auto">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                      <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M15 6l-6 6l6 6" />
+                      </svg>prev
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">1</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">3</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">4</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">5</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">
+                      next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M9 6l6 6l-6 6" />
+                      </svg>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">New report</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" name="example-text-input" placeholder="Your report name" />
+          </div>
+          <label class="form-label">Report type</label>
+          <div class="form-selectgroup-boxes row mb-3">
+            <div class="col-lg-6">
+              <label class="form-selectgroup-item">
+                <input type="radio" name="report-type" value="1" class="form-selectgroup-input" checked />
+                <span class="form-selectgroup-label d-flex align-items-center p-3">
+                  <span class="me-3"><span class="form-selectgroup-check"></span></span>
+                  <span class="form-selectgroup-label-content">
+                    <span class="form-selectgroup-title strong mb-1">Simple</span>
+                    <span class="d-block text-secondary">Provide only basic data needed for the report</span>
+                  </span>
+                </span>
+              </label>
+            </div>
+            <div class="col-lg-6">
+              <label class="form-selectgroup-item">
+                <input type="radio" name="report-type" value="1" class="form-selectgroup-input" />
+                <span class="form-selectgroup-label d-flex align-items-center p-3">
+                  <span class="me-3"><span class="form-selectgroup-check"></span></span>
+                  <span class="form-selectgroup-label-content">
+                    <span class="form-selectgroup-title strong mb-1">Advanced</span>
+                    <span class="d-block text-secondary">Insert charts and additional advanced analyses to be inserted in the report</span>
+                  </span>
+                </span>
+              </label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-8">
+              l<div class="mb-3">
+                <label class="form-label">Report url</label>
+                <div class="input-group input-group-flat">
+                  <span class="input-group-text">https://tabler.io/reports/</span>
+                  <input type="text" class="form-control ps-0" value="report-01" autocomplete="off" />
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="mb-3">
+                <label class="form-label">Visibility</label>
+                <select class="form-select">
+                  <option value="1" selected>Private</option>
+                  <option value="2">Public</option>
+                  <option value="3">Hidden</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="mb-3">
+                <label class="form-label">Client name</label>
+                <input type="text" class="form-control" />
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="mb-3">
+                <label class="form-label">Reporting period</label>
+                <input type="date" class="form-control" />
+              </div>
+            </div>
+            <div class="col-lg-12">
+              <div>
+                <label class="form-label">Additional information</label>
+                <textarea class="form-control" rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</a>
+          <a href="#" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+            <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M12 5l0 14" />
+              <path d="M5 12l14 0" />
+            </svg>Create new report
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

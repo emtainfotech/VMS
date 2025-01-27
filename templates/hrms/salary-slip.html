@@ -1,0 +1,156 @@
+{% extends 'hrms/base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col">
+            <h2 class="page-title">
+              Invoice
+            </h2>
+          </div>
+          <!-- Page title actions -->
+          <div class="col-auto ms-auto d-print-none">
+            <button type="button" class="btn btn-primary" onclick="javascript:window.print();">
+              <!-- Download SVG icon from http://tabler-icons.io/i/printer -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2" /><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4" /><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" /></svg>
+              Print Invoice
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Page body -->
+    <div class="page-body">
+      <div class="container-xl">
+        <div class="card card-lg">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-6">
+                <p class="h3">Elite Manpower & Training Academy</p>
+                <address>
+                  155,Mangal City Mall<br>
+                  Vijay Nagar, Indore<br>
+                  MP - 452010<br>
+                  MD@EMTA.CO.IN
+                </address>
+              </div>
+              <div class="col-6 text-end">
+                <p class="h3">{{ employee.first_name }} {{ salary.employee.last_name }}</p>
+                <address>
+                    {{ employee.employee_id }}<br>
+                    {{ salary.employee.designation }} <br>
+                    {% comment %} {{ employee.contact_number }}<br> {% endcomment %}
+                    {{ employee.email }}<br>
+                    {{ bank_details.account_number }}
+                </address>
+              </div>
+              <div class="col-12 my-5">
+                <h1>Invoice INV/001/15</h1>
+              </div>
+            </div>
+            <table class="table table-transparent table-responsive">
+              <thead>
+                <tr>
+                  <th class="text-center" style="width: 1%"></th>
+                  <th>Earning</th>
+                  {% comment %} <th class="text-center" style="width: 1%">Qnt</th>
+                  <th class="text-end" style="width: 1%">Unit</th> {% endcomment %}
+                  <th class="text-end" style="width: 1%">Amount</th>
+                </tr>
+              </thead>
+              <tr>
+                <td class="text-center">1</td>
+                <td>
+                  <p class="strong mb-1">Basic Salary</p>
+                </td>
+                <td class="text-end">{{ salary.basic_salary }}</td>
+              </tr>
+              <tr>
+                <td class="text-center">2</td>
+                <td>
+                  <p class="strong mb-1">DA (Dearness Allowance)</p>
+                </td>
+                <td class="text-end">{{ salary.dearness_allowance }}</td>
+              </tr>
+              <tr>
+                <td class="text-center">3</td>
+                <td>
+                  <p class="strong mb-1">Transport Allowance(TA)</p>
+                </td>
+                <td class="text-end">{{ salary.transport_allowance }}</td>
+              </tr>
+              <tr>
+                <td class="text-center">4</td>
+                <td>
+                  <p class="strong mb-1">Mobile Allowance (MA)</p>
+                </td>
+                <td class="text-end">{{ salary.mobile_allowance }}</td>
+              </tr>
+              <tr>
+                <td class="text-center">5</td>
+                <td>
+                  <p class="strong mb-1">Bonus</p>
+                </td>
+                <td class="text-end">{{ salary.bonus }}</td>
+              </tr>
+              <tr>
+                <td class="text-center">6</td>
+                <td>
+                  <p class="strong mb-1">Others Earnings</p>
+                </td>
+                <td class="text-end">{{ salary.others_earning }}</td>
+              </tr>
+              <tr>
+                <td class="text-center">7</td>
+                <td>
+                  <p class="strong mb-1">Provident Fund (PF)</p>
+                </td>
+                <td class="text-end">{{ salary.provident_fund }}</td>
+              </tr>
+              <tr>
+                <td class="text-center">8</td>
+                <td>
+                  <p class="strong mb-1">Personal Loan (PL)</p>
+                </td>
+                <td class="text-end">{{ salary.personal_loan }}</td>
+              </tr>
+              <tr>
+                <td class="text-center">9</td>
+                <td>
+                  <p class="strong mb-1">Security Deposit (SD)</p>
+                </td>
+                <td class="text-end">{{ salary.security_deposit }}</td>
+              </tr>
+              
+              <tr>
+                <td class="text-center">10</td>
+                <td>
+                  <p class="strong mb-1">Total Deductions</p>
+                </td>
+                <td class="text-end">{{ salary.total_deductions }}</td>
+              </tr>
+              <tr>
+                <td class="text-end">{{salary.net_pay}}</td>
+              </tr>
+              <tr>
+                <td class="text-end">$5.000,00</td>
+              </tr>
+              <tr>
+                <td class="font-weight-bold text-end">$30.000,00</td>
+              </tr>
+            </table>
+            <p class="text-secondary text-center mt-5">Thank you very much for doing business with us. We look forward to working with
+              you again!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+{% endblock %}
+
+

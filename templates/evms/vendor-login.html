@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,500,600,700,800&display=swap"
+        rel="stylesheet">
+    <title>EVMS - EMTA Vendor Management System</title>
+    <link href="/static/pics/EMTA.jpeg" rel="icon" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            height: 100vh; 
+            background: url('/static/bg.jpg');
+            background-size: cover; /* Cover the entire viewport */
+            background-position: center; /* Center the image */
+            background-repeat: no-repeat;
+            
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative;
+            font-family: 'Poppins', sans-serif; /* Ensure text uses the specified font */
+        }
+
+        /* Background Layer */
+        #particles-js { 
+            position: absolute; 
+            width: 100%; 
+            height: 100vh; 
+            top: 0; 
+            left: 0; 
+            z-index: -1; 
+        }
+
+        /* Fade-in effect for the form container */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 1s forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Slide-in effect for input fields */
+        .slide-in {
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.5s forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Hover effect for the button */
+        .button-hover {
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .button-hover:hover {
+            background-color: #4c51bf; /* Darker shade of indigo */
+            transform: scale(1.05);
+        }
+
+        /* Button to show/hide password */
+        .show-password-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #4c51bf;
+        }
+
+        
+    </style>
+</head>
+
+<body>
+    <!-- Background Layer -->
+    <div id="particles-js"></div>
+
+    <!-- Login Form Container -->
+    <div  class="bg-white shadow-lg rounded-lg p-8 w-full max-w-md fade-in">
+        <div class="flex justify-center mb-6">
+            <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3"><a href="."><img src="https://emta.co.in/f.png" width="110" height="32" alt="Tabler" class="navbar-brand-image" /></a></h1>
+          
+        </div>
+
+        <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Login</h2>
+
+        <form method="POST" class="space-y-6" id="login-form">
+            {% csrf_token %}
+
+            {% if error_message %}
+            <p class="text-red-500 text-center">{{ error_message }}</p>
+            {% endif %}
+
+            <!-- Username Field -->
+            <div class="slide-in">
+                <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                <div class="relative mt-1">
+                    <input type="text" name="username" id="username" placeholder="Enter your username" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <i class="bx bx-envelope absolute right-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="slide-in relative">
+                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                <div class="relative mt-1">
+                    <input type="password" name="password" id="password" placeholder="Enter your password" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <button type="button" class="show-password-btn" id="togglePassword">
+                        <i class="bx bx-show"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Remember Me and Forgot Password Links -->
+            <div class="flex items-center justify-between mt-4">
+                <label class="flex items-center">
+                    <input type="checkbox" id="login-check" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <span class="ml-2 block text-sm text-gray-900">Remember Me</span>
+                </label>
+
+                {% comment %} <div>
+                    <a href="{% url 'forgot_password' %}" class="text-sm text-indigo-600 hover:text-indigo-500">Forgot password?</a>
+                </div> {% endcomment %}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-6">
+                <button type="submit" class="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-md shadow button-hover focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Login</button>
+            </div>
+
+            <!-- Signup Link -->
+            <div class="mt-6 text-center text-sm text-gray-600">
+                Don't have an account? <a href="{% url 'vendor_signup' %}" class="text-indigo-600 hover:text-indigo-500">Sign Up</a>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script>
+        particlesJS('particles-js', {
+            "particles": {
+                "number": {
+                    "value": 100,
+                    "density": {
+                        "enable": true,
+                        "value_area": 800
+                    }
+                },
+                "color": {
+                    "value": "#ffffff"
+                },
+                "shape": {
+                    "type": "circle",
+                    "stroke": {
+                        "width": 0,
+                        "color": "#000000"
+                    },
+                    "polygon": {
+                        "nb_sides": 5
+                    }
+                },
+                "opacity": {
+                    "value": 0.5,
+                    "random": false,
+                    "anim": {
+                        "enable": false,
+                        "speed": 1,
+                        "opacity_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "size": {
+                    "value": 3,
+                    "random": true,
+                    "anim": {
+                        "enable": false,
+                        "speed": 4,
+                        "size_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 150,
+                    "color": "#ffffff",
+                    "opacity": 0.4,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 6,
+                    "direction": "none",
+                    "random": false,
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false,
+                    "attract": {
+                        "enable": false,
+                        "rotateX": 600,
+                        "rotateY": 1200
+                    }
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": {
+                        "enable": true,
+                        "mode": "repulse"
+                    },
+                    "onclick": {
+                        "enable": true,
+                        "mode": "push"
+                    },
+                    "resize": true
+                },
+                "modes": {
+                    "grab": {
+                        "distance": 400,
+                        "line_linked": {
+                            "opacity": 1
+                        }
+                    },
+                    "bubble": {
+                        "distance": 400,
+                        "size": 40,
+                        "duration": 2,
+                        "opacity": 0.8,
+                        "speed": 3
+                    },
+                    "repulse": {
+                        "distance": 200,
+                        "duration": 0.4
+                    },
+                    "push": {
+                        "particles_nb": 4
+                    },
+                    "remove": {
+                        "particles_nb": 2
+                    }
+                }
+            },
+            "retina_detect": true
+        });
+
+        // JavaScript to toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const passwordField = document.getElementById('password');
+            const passwordIcon = this.querySelector('i');
+
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                passwordIcon.classList.remove('bx-show');
+                passwordIcon.classList.add('bx-hide');
+            } else {
+                passwordField.type = 'password';
+                passwordIcon.classList.remove('bx-hide');
+                passwordIcon.classList.add('bx-show');
+            }
+        });
+    </script>
+</body>
+
+</html>

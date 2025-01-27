@@ -1,0 +1,536 @@
+{% extends 'employee/base.html' %}
+
+{% block content %}
+  <style>
+    .card {
+      border: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+    .object-cover {
+      object-fit: cover;
+    }
+    .card-body h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .card-body .btn {
+      background-color: #6c63ff;
+      color: #fff;
+      font-weight: 500;
+    }
+    .card-body .btn:hover {
+      background-color: #574bce;
+    }
+    .edit-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      color: #6c63ff;
+    }
+  </style>
+
+  <div class="container py-5">
+    <div class="row">
+      <div class="col-lg-7">
+        <div class="card p-4">
+          <div class="card-body">
+            <h5 class="card-title mb-4">Personal Information</h5>
+            <div class="row g-0">
+              <!-- Left Image Section -->
+              <div class="col-7">
+                <img src="{{employee.employee_photo.url}}"  class="object-cover card-img-start rounded-circle" style="height: 125px; width: 125px;" alt="Profile Picture" />
+                <div>
+                  <h3 class="card-title mb-1">{{ employee.user.first_name }} {{ employee.user.last_name }}</h3>
+                  <p class="text-muted mb-2">{{ employee.designation }}</p>
+                  <p>{{ employee.employee_id }}</p>
+                  <p>
+                    <strong class="subheader">Date of Join:</strong> <br />{{ employee.joining_date }}
+                  </p>
+                </div>
+              </div>
+              <!-- Right Content Section -->
+              <div class="col">
+                <div class="card-body">
+                  <p>
+                    <strong class="subheader">Phone:</strong><br /> {{ employee.contact_number }}
+                  </p>
+                  <p>
+                    <strong class="subheader">Email:</strong><br /> {{ employee.user.email }}
+                  </p>
+                  <p>
+                    <strong class="subheader">Birthday:</strong><br /> {{ additional_info.date_of_birth }}
+                  </p>
+                  <p>
+                    <strong class="subheader">Address:</strong><br /> {{ employee.address }}
+                  </p>
+                  <p>
+                    <strong class="subheader">Gender:</strong><br /> {{ additional_info.gender }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% comment %} <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-profile"><i class="bi bi-pencil"></i></a></span> {% endcomment %}
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card p-4">
+          <div class="card-body">
+            <h5 class="card-title mb-4">Emergency Contact</h5>
+            <div class="row">
+              <!-- Primary Contact -->
+              <div class="col-md-6">
+                <h6 class="text-label">Primary Contact</h6>
+                <p>
+                  <strong class="subheader">Name:</strong><br /> {{emergency_contact.primary_full_name}}
+                </p>
+                <p>
+                  <strong class="subheader">Relationship:</strong><br /> {{emergency_contact.primary_relationship}}
+                </p>
+                <p>
+                  <strong class="subheader">Phone:</strong> <br />{{emergency_contact.primary_phone_1}}, {{emergency_contact.primary_phone_2}}
+                </p>
+                <p>
+                  <strong class="subheader">Email:</strong> <br />{{emergency_contact.primary_email}}
+                </p>
+                <p>
+                  <strong class="subheader">Address:</strong> <br />{{emergency_contact.primary_address}}
+                </p>
+              </div>
+              <!-- Secondary Contact -->
+              <div class="col-md-6">
+                <h6 class="text-label">Secondary Contact</h6>
+                <p>
+                  <strong class="subheader">Name:</strong><br /> {{emergency_contact.secondary_full_name}}
+                </p>
+                <p>
+                  <strong class="subheader">Relationship:</strong><br /> {{emergency_contact.secondary_relationship}}
+                </p>
+                <p>
+                  <strong class="subheader">Phone:</strong> <br />{{emergency_contact.secondary_phone_1}}, {{emergency_contact.secondary_phone_2}} 
+                </p>
+                <p>
+                  <strong class="subheader">Email:</strong><br />{{emergency_contact.secondary_email}} 
+                </p>
+                <p>
+                  <strong class="subheader">Address:</strong><br /> {{emergency_contact.secondary_address}}
+                </p>
+              </div>
+            </div>
+            <!-- Edit Icon -->
+            {% comment %} <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-contact"><i class="bi bi-pencil"></i></a></span> {% endcomment %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6 mt-3">
+        <div class="card p-4">
+          <h5 class="card-title mb-4">Social Media Account</h5>
+          <div class="card-body">
+            <div class="row">
+              <!-- Primary Contact -->
+              <div class="col-md-6">
+                <p>
+                  <strong class="subheader">Instagram :</strong>
+                </p>
+                <p>
+                  <strong class="subheader">Whatsapp :</strong>
+                </p>
+                <p>
+                  <strong class="subheader">linkedin :</strong>
+                </p>
+                <p>
+                  <strong class="subheader">Twitter :</strong>
+                </p>
+                <p>
+                  <strong class="subheader">Facebook :</strong>
+                </p>
+              </div>
+              <!-- Secondary Contact -->
+              <div class="col-md-6">
+                <p>
+                  <strong class="subheader">{{ social_media.instagram }}</strong>
+                </p>
+                <p>
+                  <strong class="subheader">{{ social_media.whatsapp }}</strong>
+                </p>
+                <p>
+                  <strong class="subheader">{{ social_media.linkedin }}</strong>
+                </p>
+                <p>
+                  <strong class="subheader">{{ social_media.twitter }}</strong>
+                </p>
+                <p>
+                  <strong class="subheader">{{ social_media.facebook }}</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+          <!-- Edit Icon -->
+          {% comment %} <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-social"><i class="bi bi-pencil"></i></a></span> {% endcomment %}
+        </div>
+      </div>
+
+      <div class="col-lg-6 mt-3">
+        <div class="card p-4">
+          <h5 class="card-title mb-4">Bank Account</h5>
+          <div class="card-body">
+            <div class="row">
+              <!-- Primary Contact -->
+              <div class="col-md-6">
+                <p>
+                  <strong class="subheader">Account Holder Name:</strong>
+                </p>
+                <p>
+                  <strong class="subheader">Account Number:</strong>
+                </p>
+                <p>
+                  <strong class="subheader">Bank Name:</strong>
+                </p>
+                <p>
+                  <strong class="subheader">Branch Name:</strong>
+                </p>
+                <p>
+                  <strong class="subheader">IFSC Code:</strong>
+                </p>
+              </div>
+              <!-- Secondary Contact -->
+              <div class="col-md-6">
+                <p>
+                  <strong class="subheader">{{ bank_details.account_holder_name }}</strong>
+                </p>
+                <p>
+                  <strong class="subheader">{{ bank_details.account_number }}</strong>
+                </p>
+                <p>
+                  <strong class="subheader">{{ bank_details.bank_name }}</strong>
+                </p>
+                <p>
+                  <strong class="subheader">{{ bank_details.branch_name }}</strong>
+                </p>
+                <p>
+                  <strong class="subheader">{{ bank_details.ifsc_code }}</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+          <!-- Edit Icon -->
+          {% comment %} <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-bank"><i class="bi bi-pencil"></i></a></span> {% endcomment %}
+        </div>
+      </div>
+      <div class="col-lg-12 mt-5">
+        <div class="card p-4">
+          <div class="card-body">
+            <h5 class="card-title mb-4">Attendence Record</h5>
+            <div class="row">
+              
+              <div class="col-md-12">
+                <div class="table-responsive">
+                  <table class="table attendance-table text-center">
+                      <thead>
+                          <tr>
+                              <th>Month</th>
+                              <th>Year</th>
+                              <th>Total Present</th>
+                              <th>Total Absent</th>
+                              <th>Total Half Day</th>
+                              
+                          </tr>
+                      </thead>
+                      <tbody>
+                        {% for record in attendance_sheet %}
+                          <tr>
+                              <td>{{ record.month }}</td>
+                              <td>{{ record.year }}</td>
+                              <td>{{ record.total_present }}</td>
+                              <td>{{ record.total_absent }}</td>
+                              <td>{{ record.total_half_day }}</td>
+                          </tr>
+                          {% endfor %}
+                      </tbody>
+                  </table>
+              </div>
+              </div>
+            </div>
+            <!-- Edit Icon -->
+            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-contact"><i class="bi bi-pencil"></i></a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% comment %}profile details{% endcomment %}
+
+  <div class="modal modal-blur fade" id="modal-profile" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Personal Information</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+              <!-- Employee Fields -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="first_name" value="{{ employee.first_name }}" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="last_name" value="{{ employee.last_name }}" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="contact_number" value="{{ employee.contact_number }}" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" name="email" value="{{ employee.user.email }}" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Joining Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="joining_date" value="{{ employee.joining_date|date:'Y-m-d' }}" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Employee Photo <span class="text-danger">*</span></label>
+                <input type="file" class="form-control" name="employee_photo" />
+              </div>
+          
+              <!-- EmployeeAdditionalInfo Fields -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Date Of Birth <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="date_of_birth" value="{{ additional_info.date_of_birth|date:'Y-m-d' }}" required/>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Gender</label>
+                <select class="form-select" name="gender">
+                  <option value="Male" {% if additional_info.gender == "Male" %}selected{% endif %}>Male</option>
+                  <option value="Female" {% if additional_info.gender == "Female" %}selected{% endif %}>Female</option>
+                  <option value="Other" {% if additional_info.gender == "Other" %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+              {% comment %} <div class="col-md-6 mb-3">
+                <label class="form-label">Department</label>
+                <select class="form-select" name="department">
+                  <option value="Private" {% if additional_info.department == "Private" %}selected{% endif %}>Private</option>
+                  <option value="Public" {% if additional_info.department == "Public" %}selected{% endif %}>Public</option>
+                  <option value="Hidden" {% if additional_info.department == "Hidden" %}selected{% endif %}>Hidden</option>
+                </select>
+              </div> {% endcomment %}
+              <!-- Designation & Joining Date -->
+              <div class="col-lg-12 mb-3">
+                <label class="form-label">Designation</label>
+                <select class="form-control" name="designation" required>
+                    {% for designation in designations %}
+                        <option value="{{ designation.name }}">{{ designation.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            </div>
+          
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" name="employee_submit_employee_details" class="btn btn-primary">Save Changes</button>
+            </div>
+          </form>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% comment %}contact{% endcomment %}
+
+  <div class="modal modal-blur fade" id="modal-contact" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Emergency Contact</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post">
+            {% csrf_token %}
+            <h5 class="text-secondary">Primary Contact</h5>
+            <hr />
+            <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="primary_full_name" 
+                       value="{{ emergency_contact.primary_full_name }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Relationship <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="primary_relationship" 
+                       value="{{ emergency_contact.primary_relationship }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Phone Number 1 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="primary_phone_1" 
+                       value="{{ emergency_contact.primary_phone_1 }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Phone Number 2</label>
+                <input type="text" class="form-control" name="primary_phone_2" 
+                       value="{{ emergency_contact.primary_phone_2 }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Email Address </label>
+                <input type="email" class="form-control" name="primary_email" 
+                       value="{{ emergency_contact.primary_email }}" >
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Address <span class="text-danger">*</span></label>
+                <textarea class="form-control" name="primary_address" rows="2" required>{{ emergency_contact.primary_address }}</textarea>
+            </div>
+    
+            <h5 class="text-secondary">Secondary Contact</h5>
+            <hr />
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-control" name="secondary_full_name" 
+                       value="{{ emergency_contact.secondary_full_name }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Relationship</label>
+                <input type="text" class="form-control" name="secondary_relationship" 
+                       value="{{ emergency_contact.secondary_relationship }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Phone Number 1</label>
+                <input type="text" class="form-control" name="secondary_phone_1" 
+                       value="{{ emergency_contact.secondary_phone_1 }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Phone Number 2</label>
+                <input type="text" class="form-control" name="secondary_phone_2" 
+                       value="{{ emergency_contact.secondary_phone_2 }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" name="secondary_email" 
+                       value="{{ emergency_contact.secondary_email }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Address</label>
+                <textarea class="form-control" name="secondary_address" rows="2">{{ emergency_contact.secondary_address }}</textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" name="employee_submit_emergency_contact" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  {% comment %}Education{% endcomment %}
+  <div class="modal modal-blur fade" id="modal-social" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Social Media Account Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Instagram</label>
+                    <input type="text" name="instagram" class="form-control" value="{{ social_media.instagram }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Facebook</label>
+                    <input type="text" name="facebook" class="form-control" value="{{ social_media.facebook }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">LinkedIn</label>
+                    <input type="text" name="linkedin" class="form-control" value="{{ social_media.linkedin }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Twitter</label>
+                    <input type="text" name="twitter" class="form-control" value="{{ social_media.twitter }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">WhatsApp</label>
+                    <input type="text" name="whatsapp" class="form-control" value="{{ social_media.whatsapp }}">
+                </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" name="employee_submit_social_media" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% comment %}Bank{% endcomment %}
+
+  <div class="modal modal-blur fade" id="modal-bank" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Bank Account Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <!-- Account Holder Name & Bank Name -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Account Holder Name<span class="text-danger">*</span></label>
+                    <input type="text" name="account_holder_name" class="form-control" value="{{ bank_details.account_holder_name }}" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+                    <input type="text" name="bank_name" class="form-control" value="{{ bank_details.bank_name }}" required />
+                </div>
+        
+                <!-- Account Number & Confirm Account Number -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Account Number<span class="text-danger">*</span></label>
+                    <input type="text" name="account_number" class="form-control" value="{{ bank_details.account_number }}" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Confirm Account Number <span class="text-danger">*</span></label>
+                    <input type="text" name="confirm_account_number" class="form-control" value="{{ bank_details.confirm_account_number }}" required />
+                </div>
+        
+                <!-- Branch Name & IFSC Code -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Branch Name<span class="text-danger">*</span></label>
+                    <input type="text" name="branch_name" class="form-control" value="{{ bank_details.branch_name }}" required />
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">IFSC Code <span class="text-danger">*</span></label>
+                    <input type="text" name="ifsc_code" class="form-control" value="{{ bank_details.ifsc_code }}" required />
+                </div>
+        
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="employee_submit_bank_account" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+        </form>
+        
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% comment %}success{% endcomment %}
+
+
+{% endblock %}

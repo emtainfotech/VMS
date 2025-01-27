@@ -1,0 +1,127 @@
+{% extends 'hrms/base.html' %}
+
+{% block content %}
+  <!-- Add Custom Styles -->
+  <style>
+    .attendance-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    .attendance-table th,
+    .attendance-table td {
+      padding: 10px;
+      text-align: center;
+    }
+    
+    .attendance-table th {
+      background-color: #f4f4f4;
+    }
+    
+    .attendance-table td {
+      font-size: 18px;
+    }
+    
+    .attendance-table .status-icon {
+      font-size: 20px;
+    }
+    
+    .icon {
+      font-size: 20px;
+    }
+    
+    .present {
+      color: green;
+    }
+    
+    .absent {
+      color: red;
+    }
+    
+    .on-leave {
+      color: purple;
+    }
+    
+    .holiday {
+      color: gold;
+    }
+    
+    .day-off {
+      color: blue;
+    }
+    
+    .half-day {
+      color: orange;
+    }
+    
+    .late {
+      color: yellow;
+    }
+  </style>
+  <div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col">
+            <!-- Page pre-title -->
+            {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
+            <h2 class="page-title" style="margin-bottom: 50px;">Employee Attendance</h2>
+          </div>
+          <!-- Page title actions -->
+          
+          <div class="attendance-section">
+            <div class="attendance-legend mb-3">
+              <strong>Note:</strong>&nbsp;&nbsp; &nbsp;&nbsp;
+              <span class="legend-item"><i class="fas fa-sun holiday"></i>&nbsp;&nbsp; → &nbsp;&nbsp; Holiday</span>&nbsp;&nbsp; |&nbsp;&nbsp;
+              <span class="legend-item"><i class="fas fa-calendar-day day-off"></i>&nbsp;&nbsp; → &nbsp;&nbsp; Day Off</span>&nbsp;&nbsp; |&nbsp;&nbsp;
+              <span class="legend-item"><i class="fas fa-check-circle present"></i>&nbsp;&nbsp; →&nbsp;&nbsp; Present</span>&nbsp;&nbsp; |&nbsp;&nbsp;
+              <span class="legend-item"><i class="fas fa-clock half-day"></i>&nbsp;&nbsp; → &nbsp;&nbsp; Half Day</span>&nbsp;&nbsp; |&nbsp;&nbsp;
+              <span class="legend-item"><i class="fas fa-exclamation-circle late"></i>&nbsp;&nbsp; → &nbsp;&nbsp; Late</span>&nbsp;&nbsp; |&nbsp;&nbsp;
+              <span class="legend-item"><i class="fas fa-times-circle absent"></i>&nbsp;&nbsp; → &nbsp;&nbsp; Absent</span>&nbsp;&nbsp; |&nbsp;&nbsp;
+              <span class="legend-item"><i class="fas fa-bed on-leave"></i>&nbsp;&nbsp; → &nbsp;&nbsp; On Leave</span>
+            </div>
+            <!-- Attendance Table -->
+            <div class="table-responsive">
+                <table class="table attendance-table text-center">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            {% for day in days_range %}
+                                <th>{{ day }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee_id, data in attendance_data.items %}
+                        <tr>
+                            <td class="employee-info">
+                                <img src="{{ data.employee.employee_photo.url }}" class="object-cover card-img-start rounded-circle" style="height: 36;width: 36px;" alt="Employee" class="employee-img" />
+                                <span class="text-secondary">{{ data.employee.first_name }} {{ data.employee.last_name }}</span>
+                            </td>
+                            {% for attendance in data.attendance %}
+                            <td>
+                                {% if attendance.status == "present" %}
+                                    <i class="fas fa-check-circle present"></i>
+                                {% elif attendance.status == "on_leave" %}
+                                    <i class="fas fa-bed on-leave"></i>
+                                {% elif attendance.status == "holiday" %}
+                                    <i class="fas fa-sun holiday"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle absent"></i>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

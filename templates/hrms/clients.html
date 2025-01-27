@@ -1,0 +1,204 @@
+{% extends 'hrms/base.html' %}
+
+{% block content %}
+  <style>
+    .card .rounded-circle {
+      border: 2px solid #f0f0f0;
+      margin-top: -50px;
+    }
+    
+    .card .btn {
+      border-radius: 20px;
+      font-size: 14px;
+    }
+    
+    .card .btn-outline-primary {
+      color: #007bff;
+      border-color: #007bff;
+    }
+    
+    .card .btn-outline-secondary {
+      color: #6c757d;
+      border-color: #6c757d;
+    }
+    
+    .card .text-secondary {
+      color: #6c757d !important;
+    }
+  </style>
+  <div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col">
+            <h2 class="page-title">Client's</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="container-xl">
+        <div class="row row-cards">
+          <div class="col-lg-3">
+            <div class="card" style="border: none; border-radius: 5px; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
+              <div class="card-body">
+                <div>
+                  <input type="text" class="form-control" name="name-input" placeholder="Client Name" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3">
+            <div class="card" style="border: none; border-radius: 5px; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
+              <div class="card-body">
+                <div>
+                  <input type="text" class="form-control" name="id-input" placeholder="Client Id" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3">
+            <div class="card" style="border: none; border-radius: 5px; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
+              <div class="card-body">
+                <div>
+                  <div>
+                    <select class="form-select">
+                      <option value="1">Employee Designation</option>
+                      <option value="2">Chief Executive Officer</option>
+                      <option value="3">Three</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3">
+            <div class="card" style="border: none; border-radius: 5px; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
+              <div class="card-body">
+                <a href="#" class="btn btn-success w-100">Add Client</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="container-xl">
+      <div class="row row-cards">
+        <div class="col-lg-3" style="margin-top: 40px;">
+          <div class="card text-center p-3" style="border: none; border-radius: 5px; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
+            <!-- Profile Image -->
+            <div class="card-img-top" style="margin-top: 50px;">
+              <img src="https://via.placeholder.com/100" alt="Profile" class="rounded-circle mx-auto d-block" style="width: 100px; height: 100px; object-fit: cover;" />
+            </div>
+            <!-- Card Body -->
+            <div class="card-body">
+              <h5 class="card-title">Naira Muskan</h5>
+              <h5 class="card-id">12345</h5>
+              <p class="text-secondary mb-3">Chief Executive Officer</p>
+              <!-- Social Media Icons -->
+              <div class="d-flex justify-content-center mb-3">
+                <a href="#" class="text-decoration-none mx-2"><i class="bi bi-facebook"></i></a>
+                <a href="#" class="text-decoration-none mx-2"><i class="bi bi-x"></i></a>
+                <a href="#" class="text-decoration-none mx-2"><i class="bi bi-linkedin"></i></a>
+                <a href="#" class="text-decoration-none mx-2"><i class="bi bi-youtube"></i></a>
+                <a href="#" class="text-decoration-none mx-2"><i class="bi bi-globe"></i></a>
+              </div>
+              <!-- Call and View Buttons -->
+              <div class="d-flex justify-content-around">
+                <button class="btn btn-outline-primary">Call</button>
+                <button class="btn btn-outline-secondary">View</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const input = document.querySelector("input[name='name-input']");
+      const cards = document.querySelectorAll(".col-lg-3"); // Select all card columns
+  
+      input.addEventListener("input", function () {
+        const filterText = input.value.toLowerCase();
+  
+        // Loop through all cards to check for a match
+        cards.forEach(card => {
+          const nameElement = card.querySelector(".card-title");
+          
+          // Check if the card has a title element
+          if (nameElement) {
+            const nameText = nameElement.textContent.toLowerCase();
+  
+            // Show or hide the card based on the match
+            if (nameText.includes(filterText)) {
+              card.style.display = ""; // Show the card
+            } else {
+              card.style.display = "none"; // Hide the card
+            }
+          }
+        });
+      });
+    });
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const input = document.querySelector("input[name='id-input']"); // Input field
+      const cards = document.querySelectorAll(".col-lg-3"); // Select all card columns
+  
+      input.addEventListener("input", function () {
+        const filterText = input.value.toLowerCase();
+  
+        // Loop through all cards to check for a match
+        cards.forEach(card => {
+          const idElement = card.querySelector(".card-id");
+          
+          // Check if the card has an ID element
+          if (idElement) {
+            const idText = idElement.textContent.toLowerCase();
+  
+            // Show or hide the card based on the match
+            if (idText.includes(filterText)) {
+              card.style.display = ""; // Show the card
+            } else {
+              card.style.display = "none"; // Hide the card
+            }
+          }
+        });
+      });
+    });
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const dropdown = document.querySelector(".form-select"); // Dropdown element
+      const cards = document.querySelectorAll(".col-lg-3"); // Select all card columns
+  
+      dropdown.addEventListener("change", function () {
+        const selectedValue = dropdown.options[dropdown.selectedIndex].text.toLowerCase(); // Get selected option text
+  
+        // Loop through all cards to check for a match
+        cards.forEach(card => {
+          const designationElement = card.querySelector(".text-secondary.mb-3");
+  
+          // Check if the card has a designation element
+          if (designationElement) {
+            const designationText = designationElement.textContent.toLowerCase();
+  
+            // Show or hide the card based on the match
+            if (designationText.includes(selectedValue)) {
+              card.style.display = ""; // Show the card
+            } else {
+              card.style.display = "none"; // Hide the card
+            }
+          }
+        });
+      });
+    });
+  </script>
+  
+  
+{% endblock %}

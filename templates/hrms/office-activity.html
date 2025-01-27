@@ -1,0 +1,203 @@
+{% extends 'hrms/base.html' %}
+
+{% block content %}
+  <div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col">
+            <!-- Page pre-title -->
+            {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
+            <h2 class="page-title" style="margin-bottom: 50px;">Activities</h2>
+          </div>
+          <!-- Page title actions -->
+          <div class="col-auto ms-auto d-print-none">
+            <div class="btn-list">
+              {% comment %} <span class="d-none d-sm-inline"><a href="#" class="btn">New view</a></span> {% endcomment %}
+              <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
+                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 5l0 14" />
+                  <path d="M5 12l14 0" />
+                </svg>Add Activity
+              </a>
+              <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
+                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 5l0 14" />
+                  <path d="M5 12l14 0" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col-12">
+            <div class="card">
+              {% comment %} <div class="card-header">
+                <h3 class="card-title">Designations</h3>
+              </div> {% endcomment %}
+              <div class="card-body border-bottom py-3">
+                <div class="d-flex">
+                  <div class="text-secondary">
+                    Show<div class="mx-2 d-inline-block">
+                      <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
+                    </div>entries
+                  </div>
+                  <div class="ms-auto text-secondary">
+                    Search:<div class="ms-2 d-inline-block">
+                      <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
+                  <thead>
+                    <tr>
+                      <th class="w-1">
+                        No. <!-- Download SVG icon from http://tabler-icons.io/i/chevron-up -->
+                      </th>
+                      <th>Title</th>
+                      <th>Activity Type</th>
+                      <th>Owner</th>
+                      <th>Create Date</th>
+                      <th>Deadline</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for activitie in activities %}
+                    <tr>
+                      <td>
+                        <span class="text-secondary">{{forloop.counter}}</span>
+                      </td>
+
+                      <td>
+                        <span class="me-2"></span>
+                        {{activitie.title}}
+                      </td>
+                      <td>
+                        <span class="me-2"></span>
+                        {{activitie.activity_type}}
+                      </td>
+                      <td>
+                        <span class="me-2"></span>
+                        {{activitie.owner_name}}
+                      </td>
+                      <td>
+                        <span class="me-2"></span>
+                        {{activitie.start_date}}
+                      </td>
+                      <td>
+                        <span class="me-2"></span>
+                        {{activitie.deadline}}
+                      </td>
+                      <td>
+                        <span class="me-2">
+                          <div class="d-flex justify-content-center">
+                            <button class="btn btn-light p-2" style="background-color: #FDECEA; border-radius: 10%; border: none;"><a href="{% url 'delete_activity' activitie.id %}" style="color: #FF4C4C;"><i class="bi bi-trash"></i></a></button>
+                          </div>
+                        </span>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <div class="card-footer d-flex align-items-center">
+                <p class="m-0 text-secondary">
+                  Showing <span>1</span> to <span>8</span> of <span>16</span> entries
+                </p>
+                <ul class="pagination m-0 ms-auto">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                      <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M15 6l-6 6l6 6" />
+                      </svg>prev
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">1</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">3</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">4</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">5</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">
+                      next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M9 6l6 6l-6 6" />
+                      </svg>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Activity</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="POST">
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Activity Title</label>
+                <input type="text" class="form-control" name="title" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Activity Type</label>
+                <input type="text" class="form-control" name="activity_type" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Owner Name</label>
+                <input type="text" class="form-control" name="owner_name" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Start Date</label>
+                <input type="date" class="form-control" name="start_date" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Deadline</label>
+                <input type="date" class="form-control" name="deadline" required />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

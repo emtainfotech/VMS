@@ -1,0 +1,222 @@
+{% extends "hrms/base.html" %}
+
+{% block content %}
+  <div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col">
+            <!-- Page pre-title -->
+            {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
+            <h2 class="page-title" style="margin-bottom: 50px;">Task Assignment</h2>
+            
+          </div>
+          <div class="col-auto ms-auto d-print-none">
+            <div class="btn-list">
+              <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
+                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 5l0 14" />
+                  <path d="M5 12l14 0" />
+                </svg>Assign Task
+              </a>
+              <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
+                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 5l0 14" />
+                  <path d="M5 12l14 0" />
+                </svg>
+              </a>
+            </div>
+          </div>
+          <!-- Page title actions -->
+          <div class="col-auto ms-auto d-print-none">
+            <div class="btn-list">
+              <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
+                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 5l0 14" />
+                  <path d="M5 12l14 0" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col-12">
+            <div class="card">
+              {% comment %} <div class="card-header">
+                <h3 class="card-title">Designations</h3>
+              </div> {% endcomment %}
+              <div class="card-body border-bottom py-3">
+                <div class="d-flex">
+                  <div class="text-secondary">
+                    Show<div class="mx-2 d-inline-block">
+                      <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
+                    </div>entries
+                  </div>
+                  <div class="ms-auto text-secondary">
+                    Search:<div class="ms-2 d-inline-block">
+                      <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
+                  <thead>
+                    <tr>
+                      <th class="w-1">
+                        No. <!-- Download SVG icon from http://tabler-icons.io/i/chevron-up -->
+                      </th>
+                      <th>Title</th>
+                      <th>Description</th>
+                      <th>Assigned To</th>
+                      <th>Priority</th>
+                      <th>Deadline</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for task in tasks %}
+                      <tr>
+                        <td>
+                          <span class="text-secondary">{{ forloop.counter }}</span>
+                        </td>
+                        <td>
+                          <span class="me-2"></span>
+                          {{ task.title }}
+                        </td>
+                        <td>
+                          <span class="me-2"></span>
+                          {{ task.description }}
+                        </td>
+                        <td>
+                          <span class="me-2"></span>
+                          {{ task.assigned_to.first_name }} {{ task.assigned_to.last_name }}
+                        </td>
+                        <td>
+                          <span class="me-2"></span>
+                          {{ task.priority }}
+                        </td>
+                        <td>
+                          <span class="me-2"></span>
+                          {{ task.due_date }}
+                        </td>
+                        <td>
+                          <span class="me-2"></span>
+                          {{ task.status }}
+                        </td>
+                        <td>
+                          <form method="post" action="{% url 'update_task_status' task.id %}">
+                            {% csrf_token %}
+                            <select class="form-select" name="status" onchange="this.form.submit()" style="width: auto;">
+                              <option value="Pending" {% if task.status == 'Pending' %}selected{% endif %}>Pending</option>
+                              <option value="In Progress" {% if task.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                              <option value="Completed" {% if task.status == 'Completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                          </form>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <div class="card-footer d-flex align-items-center">
+                <p class="m-0 text-secondary">
+                  Showing <span>1</span> to <span>8</span> of <span>16</span> entries
+                </p>
+                <ul class="pagination m-0 ms-auto">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                      <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M15 6l-6 6l6 6" />
+                      </svg>prev
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">1</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">3</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">4</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">5</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">
+                      next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M9 6l6 6l-6 6" />
+                      </svg>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Assign New Task</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="employee" class="form-label">Employee</label>
+                    <select name="assigned_to" id="assigned_to" class="form-select" required>
+                        <option value="" selected disabled>Select Employee</option>
+                        {% for employee in employees %}
+                            <option value="{{ employee.id }}">{{ employee.first_name }} {{ employee.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" name="title" id="title" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <input type="text" name="description" id="description" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                  <label for="priority" class="form-label">Priority</label>
+                  <input type="text" name="priority" id="priority" class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label for="deadline" class="form-label">Deadline</label>
+                <input type="date" name="due_date" id="deadline" class="form-control" required />
+            </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

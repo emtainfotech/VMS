@@ -1,0 +1,451 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EVMS | Candidate Registration Form</title>
+  <link href="/static/pics/EMTA.jpeg" rel="icon" type="image/png">
+  <!-- Import Materialize CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <style>
+    .register-container {
+      max-width: 600px;
+      margin: 100px auto;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      position: relative;
+    }
+    .register-container header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .input-field i {
+      top: 0;
+    }
+    .logo {
+      position: absolute;
+      top: 20px;
+      left: 85px;
+      width: 180px; /* Adjust the width as needed */
+    }
+    .button-container {
+      text-align: center;
+    }
+    .custom-btn {
+      background-color: #f8f6f2; /* Change to your desired color */
+      color: rgb(136, 133, 133);
+    }
+  </style>
+
+  <style>
+    /* Style the dropdown container */
+    .dropdown-container {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+  
+    /* Style the search input */
+    .dropdown-search {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+    }
+  
+    /* Style the options list */
+    .dropdown-options {
+      display: none; /* Initially hidden */
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+  
+    /* Style each option */
+    .dropdown-option {
+      padding: 8px;
+      cursor: pointer;
+    }
+    .dropdown-option:hover {
+      background-color: #f1f1f1;
+    }
+  </style>
+  <style>
+    /* Background Layer */
+    #particles-js { 
+        position: absolute; 
+        width: 100%; 
+        height: 100vh; 
+        top: 0; 
+        left: 0; 
+    }
+</style>
+</head>
+<body>
+  <div id="particles-js"></div>
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script>
+        particlesJS('particles-js', {
+            "particles": {
+                "number": {
+                    "value": 100,
+                    "density": {
+                        "enable": true,
+                        "value_area": 800
+                    }
+                },
+                "color": {
+                    "value": "#2BBBAD"
+                },
+                "shape": {
+                    "type": "circle",
+                    "stroke": {
+                        "width": 0,
+                        "color": "#2BBBAD"
+                    },
+                    "polygon": {
+                        "nb_sides": 5
+                    }
+                },
+                "opacity": {
+                    "value": 0.5,
+                    "random": false,
+                    "anim": {
+                        "enable": false,
+                        "speed": 1,
+                        "opacity_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "size": {
+                    "value": 3,
+                    "random": true,
+                    "anim": {
+                        "enable": false,
+                        "speed": 4,
+                        "size_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 150,
+                    "color": "#2BBBAD",
+                    "opacity": 0.4,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 6,
+                    "direction": "none",
+                    "random": false,
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false,
+                    "attract": {
+                        "enable": false,
+                        "rotateX": 600,
+                        "rotateY": 1200
+                    }
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": {
+                        "enable": true,
+                        "mode": "repulse"
+                    },
+                    "onclick": {
+                        "enable": true,
+                        "mode": "push"
+                    },
+                    "resize": true
+                },
+                "modes": {
+                    "grab": {
+                        "distance": 400,
+                        "line_linked": {
+                            "opacity": 1
+                        }
+                    },
+                    "bubble": {
+                        "distance": 400,
+                        "size": 40,
+                        "duration": 2,
+                        "opacity": 0.8,
+                        "speed": 3
+                    },
+                    "repulse": {
+                        "distance": 200,
+                        "duration": 0.4
+                    },
+                    "push": {
+                        "particles_nb": 4
+                    },
+                    "remove": {
+                        "particles_nb": 2
+                    }
+                }
+            },
+            "retina_detect": true
+        });
+    </script>
+  <div class="container">
+    <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3"><a href="."><img src="https://emta.co.in/f.png" width="110" height="32" alt="Tabler" class="navbar-brand-image" /></a></h1>
+    <form method="POST" class="register-container" id="register" enctype="multipart/form-data" onsubmit="return validateForm()">
+      {% csrf_token %}
+
+      <div class="top">
+        <header><h4>Candidate Form</h4></header>
+      </div>
+      <p style="font-size: 20px;">Join us for a bright future! Register on this form to secure your placement in top companies.</p>
+      {% if messages %}
+  <div class="alert alert-danger" role="alert">
+      {% for message in messages %}
+          {{ message }}
+      {% endfor %}
+  </div>
+  <script>
+      // You can add your JS to show a pop-up, like a modal, or use this alert box as the notification.
+      alert("A profile with this mobile number or email already exists.");
+  </script>
+{% endif %}
+
+      <div class="input-field">
+        <input type="text" name="first_name" id="first_name" required oninput="capitalizeFirstLetter(this)">
+        <label for="first_name">First Name</label>
+      </div>
+      <div class="input-field">
+        <input type="text" name="last_name" id="last_name" oninput="capitalizeFirstLetter(this)">
+        <label for="last_name">Last Name</label>
+      </div>
+      
+      <script>
+        function capitalizeFirstLetter(input) {
+          const words = input.value.split(' ');
+          input.value = words.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+        }
+      </script>
+      
+      <div class="input-field">
+        <select name="qualification" required>
+          <option value="" disabled selected>Select your highest qualification</option>
+          <option value="Secondary School">Secondary School</option>
+          <option value="Higher Secondary School">Higher Secondary School</option>
+          <option value="Graduate">Graduate</option>
+          <option value="Post-Graduate">Post-Graduate</option>
+          <option value="Ph.D.">Ph.D.</option>
+          <option value="Others">Other's</option>
+        </select>
+        <label>Qualification</label>
+      </div>
+      <div class="input-field">
+        <select name="Job_Type" required>
+          <option value="" disabled selected>Select Job Type</option>
+          <option value="Full-Time">Full-Time</option>
+          <option value="Part-Time">Part-Time</option>
+          <option value="Work From Home (WFH)">Work From Home (WFH)</option>
+          <option value="Internship">Internship</option>
+          <option value="Others">Other's</option>
+        </select>
+        <label>Job Type</label>
+      </div>
+      <div class="input-field">
+        <input type="text" name="sector" id="sector">
+        <label for="sector">Sector (Ex. Telecalling, Sales, Operation etc )</label>
+      </div>
+      <div class="input-field">
+        <input type="tel" name="mobile_number" id="mobile_number" required pattern="[0-9]{10}">
+        <label for="mobile_number">Mobile Number (Ex. 12xxxxxx89)</label>
+      </div>
+      <div class="input-field">
+        <input type="email" name="email" id="email" required pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$">
+        <label for="email">Email (Ex. abc@xyz.com)</label>
+      </div>
+      <div class="file-field input-field">
+        <div class="btn custom-btn">
+          <span>Upload Your Image</span>
+          <input type="file" name="candidate_image" id="candidate_image" accept=".pdf,.docx,.jpg,.jpeg,.png,.img">
+        </div>
+        <div class="file-path-wrapper">
+          <input class="file-path validate" type="text" placeholder="Upload your Image">
+        </div>
+      </div>
+      
+      <div class="dropdown-container">
+        <input type="text" class="dropdown-search" placeholder="Job Preferred Location" oninput="filterOptions()" onclick="toggleDropdown()" />
+      
+        <div id="dropdownOptions" class="dropdown-options">
+          <div class="dropdown-option" onclick="selectOption(this)">Alirajpur</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Anuppur</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Ashoknagar</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Balaghat</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Barwani</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Betul</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Bhind</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Bhopal</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Burhanpur</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Chhindwara</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Chhattarpur</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Damoh</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Datia</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Dewas</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Dhar</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Dindori</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Guna</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Gwalior</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Harda</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Hoshangabad</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Indore</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Jabalpur</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Jhabua</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Katni</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Khargone</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Khandwa</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Mandla</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Mandsaur</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Morena</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Narsimhapur</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Neemuch</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Panna</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Rajgarh</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Raisen</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Ratlam</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Rewa</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Sagar</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Satna</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Sehore</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Seoni</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Shahdol</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Shajapur</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Sheopur</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Shivpuri</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Sidhi</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Singrauli</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Tikamgarh</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Ujjain</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Umaria</div>
+          <div class="dropdown-option" onclick="selectOption(this)">Other's</div>
+        </div>
+      </div>
+      
+      <script>
+        function toggleDropdown() {
+          const options = document.getElementById("dropdownOptions");
+          options.style.display = options.style.display === "block" ? "none" : "block";
+        }
+      
+        function filterOptions() {
+          const input = document.querySelector(".dropdown-search");
+          const filter = input.value.toLowerCase();
+          const options = document.getElementById("dropdownOptions");
+          const optionItems = options.getElementsByClassName("dropdown-option");
+      
+          for (let i = 0; i < optionItems.length; i++) {
+            const optionText = optionItems[i].textContent || optionItems[i].innerText;
+            optionItems[i].style.display = optionText.toLowerCase().indexOf(filter) > -1 ? "" : "none";
+          }
+        }
+      
+        function selectOption(option) {
+          document.querySelector(".dropdown-search").value = option.textContent;
+          toggleDropdown(); // Hide dropdown after selection
+        }
+      
+        document.addEventListener("click", function(event) {
+          const dropdown = document.querySelector(".dropdown-container");
+          if (!dropdown.contains(event.target)) {
+            document.getElementById("dropdownOptions").style.display = "none";
+          }
+        });
+      </script>
+      
+      <div class="input-field">
+        <input type="hidden" name="refer_code" id="refer_code" value="{{ initial_data.refer_code }}">
+        <label for="refer_code">Enter Refer Code</label>
+      </div>
+      
+      <div class="file-field input-field">
+        <div class="btn custom-btn">
+          <span>Upload Your Resume</span>
+          <input type="file" name="resume" id="resume" accept=".pdf,.docx,.jpg,.jpeg,.png,.img">
+        </div>
+        <div class="file-path-wrapper">
+          <input class="file-path validate" type="text" placeholder="Upload your resume">
+        </div>
+      </div>
+      
+      <div id="resumeError" style="display: none; color: red;">Please upload a valid file.</div>
+      <div class="input-field">
+        <label>
+          <input type="checkbox" id="terms"  />
+          <span>I agree to the <a class="modal-trigger" href="#termsModal">terms and conditions</a></span>
+        </label>
+      </div><br><br>
+      <div class="button-container">
+        <button type="submit" class="btn waves-effect waves-light">Register Now</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Terms and Conditions Modal -->
+  <div id="termsModal" class="modal">
+    <div class="modal-content">
+      <h4>Terms and Conditions</h4>
+      <p>1. I confirm that all information provided in my profile update is accurate, truthful, and up-to-date to the best of my knowledge.</p>
+<p>2. I consent to the use of my updated profile information by the job portal for the purpose of job matching and placement services.</p>
+<p>3. I acknowledge that my updated profile information will be stored securely and will be used in accordance with the job portal's Privacy Policy.</p>
+<p>4. I agree to comply with the job portal's policies and guidelines when updating my profile.</p>
+<p>5. I understand that the job portal is not liable for any inaccuracies in the information I provide or for any consequences arising from the use of such information.</p>
+<p>6. I acknowledge that I have the right to modify or update my profile information at any time, and I will do so responsibly.</p>
+<p>7. I agree to be notified of any significant changes to the terms and conditions related to my profile and its updates.</p>
+<p>8. I consent to the job portal using my updated personal information to connect me with potential employers and job opportunities. I also agree that my contact details and employment status will be shared with the vendor who referred me via referral QR code or link. I allow EMTA's representatives and EMTA vendors to contact me through various means such as call, SMS, email, and video conference.</p>
+<p>9. I understand that my updated profile information will be retained by the job portal for as long as my account is active or as required by applicable laws. If I wish to deactivate my account, I will contact EMTA's representatives officially through call and email to request deactivation.</p>
+<p>10. I acknowledge that the job portal reserves the right to suspend or terminate my account if I violate these terms and conditions or provide false information.</p>
+<p>11. I agree that the job portal may amend these terms and conditions from time to time, and I will review any updates promptly.</p>
+<p>12. By updating my profile, I agree to the current terms and conditions as well as any future updates communicated to me.</p>
+
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-close waves-effect waves-green btn-flat">Agree</a>
+    </div>
+  </div>
+
+  <!-- Import Materialize JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      M.AutoInit();
+
+      const form = document.getElementById('register');
+      form.addEventListener('submit', function(event) {
+        const termsCheckbox = document.getElementById('terms');
+        if (!termsCheckbox.checked) {
+          event.preventDefault();
+          alert('You must agree to the terms and conditions before submitting the form.');
+        }
+      });
+    });
+    
+  </script>
+ 
+ <script>
+  $(document).ready(function() {
+      $('.selectpicker').selectpicker();
+  });
+  </script>
+
+  
+  
+</body>
+</html>
+
+

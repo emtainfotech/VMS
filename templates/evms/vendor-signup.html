@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Signup - EVMS</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,500,600,700,800&display=swap"
+        rel="stylesheet">
+        <link href="/static/pics/EMTA.jpeg" rel="icon" type="image/png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            height: 100vh; 
+            background: url('/static/bg.jpg');
+            background-size: cover; /* Cover the entire viewport */
+            background-position: center; /* Center the image */
+            background-repeat: no-repeat;
+            
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative;
+            font-family: 'Poppins', sans-serif; /* Ensure text uses the specified font */
+        }
+
+        /* Background Layer */
+        #particles-js { 
+            position: absolute; 
+            width: 100%; 
+            height: 100vh; 
+            top: 0; 
+            left: 0; 
+            z-index: -1; 
+        }
+
+        /* Fade-in effect for the form container */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 1s forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Slide-in effect for input fields */
+        .slide-in {
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.5s forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .error-text {
+            display: none;
+        }
+
+        .error-border {
+            border-color: red;
+        }
+
+        .show-password-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #4c51bf;
+        }
+
+        .password-container {
+            position: relative;
+        }
+    </style>
+</head>
+<body class="bg-info-100">
+    <div id="particles-js"></div>
+    <div class="min-h-screen flex items-center justify-center fade-in">
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
+          <div class="flex justify-center mb-6">
+            <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3"><a href="."><img src="https://emta.co.in/f.png" width="110" height="32" alt="Tabler" class="navbar-brand-image" /></a></h1>
+          
+        </div>
+            <header class="text-center">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">EVMS - Vendor Signup</h2>
+                <p class="text-lg mb-6">Refer and Earn - Integrated Vendor Management System for Manpower Consultants.</p>
+                <span class="text-gray-500">Have an account? <a href="{% url 'vendor_login' %}" class="text-blue-500">Login</a></span>
+            </header>
+
+            {% if messages %}
+            <ul class="mb-4">
+                {% for message in messages %}
+                <li class="text-red-500">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <form method="POST" id="register" enctype="multipart/form-data" onsubmit="return validateForm()">
+                {% csrf_token %}
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                               name="first_name" placeholder="Firstname" oninput="capitalizeFirstLetter(this)" required>
+                    </div>
+                    <div>
+                        <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                               name="last_name" placeholder="Lastname" oninput="capitalizeFirstLetter(this)">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                           name="username" placeholder="Enter a Username (ex.EMTA0001)" autocomplete="off" 
+                           pattern="[EMTA]{4}[0-9]{4}" title="Username must contain 'EMTA' and numbers, e.g., EMTA0001" 
+                           value="{{ suggested_username }}" required readonly>
+                </div>
+                
+
+                <div class="mb-4">
+                    <input type="tel" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                           name="mobile_number" placeholder="Mobile Number" pattern="[0-9]{10}" title="Enter a valid 10-digit mobile number" required>
+                </div>
+
+                <div class="mb-4">
+                    <input type="email" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                           name="email" placeholder="Email" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" required>
+                </div>
+
+                <div class="mb-4 password-container">
+                    <input type="password" id="password1" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                           name="password1" placeholder="Create Password (Ex@123)" 
+                           pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*[@$!%*?&])(?!^[0-9]*$).{5,}$" 
+                           title="Password must be at least 5 characters long, contain upper and lower case letters, and a special character" required>
+                    <button type="button" class="show-password-btn" id="togglePassword1">
+                        <i class="bx bx-show"></i>
+                    </button>
+                </div>
+
+                <div class="mb-4 password-container">
+                    <input type="password" id="password2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                           name="password2" placeholder="Confirm Password" required>
+                    <button type="button" class="show-password-btn" id="togglePassword2">
+                        <i class="bx bx-show"></i>
+                    </button>
+                    <p class="text-red-500 text-sm error-text" id="passwordError">Passwords do not match.</p>
+                </div>
+
+                <div class="mb-6">
+                    <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">Register</button>
+                </div>
+                <div class="mt-6 text-center text-sm text-gray-600">
+                    Have an account?  <a href="{% url 'vendor_login' %}" class="text-indigo-600 hover:text-indigo-500">Login In</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script>
+        particlesJS('particles-js', {
+            "particles": {
+                "number": {
+                    "value": 100,
+                    "density": {
+                        "enable": true,
+                        "value_area": 800
+                    }
+                },
+                "color": {
+                    "value": "#ffffff"
+                },
+                "shape": {
+                    "type": "circle",
+                    "stroke": {
+                        "width": 0,
+                        "color": "#000000"
+                    },
+                    "polygon": {
+                        "nb_sides": 5
+                    }
+                },
+                "opacity": {
+                    "value": 0.5,
+                    "random": false,
+                    "anim": {
+                        "enable": false,
+                        "speed": 1,
+                        "opacity_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "size": {
+                    "value": 3,
+                    "random": true,
+                    "anim": {
+                        "enable": false,
+                        "speed": 4,
+                        "size_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 150,
+                    "color": "#ffffff",
+                    "opacity": 0.4,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 6,
+                    "direction": "none",
+                    "random": false,
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false,
+                    "attract": {
+                        "enable": false,
+                        "rotateX": 600,
+                        "rotateY": 1200
+                    }
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": {
+                        "enable": true,
+                        "mode": "repulse"
+                    },
+                    "onclick": {
+                        "enable": true,
+                        "mode": "push"
+                    },
+                    "resize": true
+                },
+                "modes": {
+                    "grab": {
+                        "distance": 400,
+                        "line_linked": {
+                            "opacity": 1
+                        }
+                    },
+                    "bubble": {
+                        "distance": 400,
+                        "size": 40,
+                        "duration": 2,
+                        "opacity": 0.8,
+                        "speed": 3
+                    },
+                    "repulse": {
+                        "distance": 200,
+                        "duration": 0.4
+                    },
+                    "push": {
+                        "particles_nb": 4
+                    },
+                    "remove": {
+                        "particles_nb": 2
+                    }
+                }
+            },
+            "retina_detect": true
+        });
+
+        // Capitalize first letter of names
+        function capitalizeFirstLetter(input) {
+            input.value = input.value.charAt(0).toUpperCase() + input.value.slice(1);
+        }
+
+        // Form validation
+        function validateForm() {
+            const password1 = document.getElementById('password1');
+            const password2 = document.getElementById('password2');
+            const passwordError = document.getElementById('passwordError');
+
+            // Check if passwords match
+            if (password1.value !== password2.value) {
+                passwordError.style.display = 'block';
+                password1.classList.add('error-border');
+                password2.classList.add('error-border');
+                return false;
+            } else {
+                passwordError.style.display = 'none';
+                password1.classList.remove('error-border');
+                password2.classList.remove('error-border');
+                return true;
+            }
+        }
+
+        // Toggle password visibility
+        document.getElementById('togglePassword1').addEventListener('click', function () {
+            const passwordField = document.getElementById('password1');
+            const passwordIcon = this.querySelector('i');
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                passwordIcon.classList.remove('bx-show');
+                passwordIcon.classList.add('bx-hide');
+            } else {
+                passwordField.type = 'password';
+                passwordIcon.classList.remove('bx-hide');
+                passwordIcon.classList.add('bx-show');
+            }
+        });
+
+        document.getElementById('togglePassword2').addEventListener('click', function () {
+            const passwordField = document.getElementById('password2');
+            const passwordIcon = this.querySelector('i');
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                passwordIcon.classList.remove('bx-show');
+                passwordIcon.classList.add('bx-hide');
+            } else {
+                passwordField.type = 'password';
+                passwordIcon.classList.remove('bx-hide');
+                passwordIcon.classList.add('bx-show');
+            }
+        });
+    </script>
+</body>
+</html>

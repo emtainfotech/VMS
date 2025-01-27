@@ -1,0 +1,474 @@
+{% extends "employee/base.html" %}
+
+{% block content %}
+
+<div class="page-body">
+    <div class="container-xl">
+      <div class="row row-cards">
+        <div class="col-12">
+            <div class="card-header">
+              <h4 class="card-title">Company Details</h4>
+            </div>
+            <div class="card-body">
+              <div class="row g-5">
+               
+      <div class="col-lg-12">
+        <div class="row row-cards">
+          <div class="col-12">
+            <form method="POST" enctype="multipart/form-data" class="card">
+              {% csrf_token %}
+              <div class="card-body">
+               
+                <div class="row row-cards">
+                  <div class="col-md-5">
+                    <div class="mb-3">
+                      <label class="form-label">Company Name</label>
+                      <input type="text" class="form-control" name="company_name"  required>
+                      <input type="hidden" class="form-control" name="employee_name"  value="{{user.username}}" required>
+                    </div>
+                  </div>
+                  
+                  <div class="col-sm-6 col-md-2">
+                    <div class="mb-3">
+                      <label class="form-label">Company Code</label>
+                      <input type="text" class="form-control" name="company_unique_code"  required>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Job Profile</label>
+                      <input type="text" name='third_party_name' class="form-control" required>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-2">
+                    <div class="mb-3">
+                      <label class="form-label">Vacancy Code</label>
+                      <input type="tel" class="form-control" name="company_vacancy_unique_code"  required>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Company Location</label>
+                      <select type="text" class="form-select" placeholder="Select Location" id="select-location" required name="company_location" multiple>
+                        {% for district in districts %}
+                        <option value="{{ district }}" {% if Company_registration.company_location == district %}selected{% endif %}>
+                            {{ district }}
+                        </option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                  <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                      var el;
+                      window.TomSelect && (new TomSelect(el = document.getElementById('select-location'), {
+                        copyClassesToDropdown: false,
+                        dropdownParent: 'body',
+                        controlInput: '<input>',
+                        render:{
+                          item: function(data,escape) {
+                            if( data.customProperties ){
+                              return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
+                            }
+                            return '<div>' + escape(data.text) + '</div>';
+                          },
+                          option: function(data,escape){
+                            if( data.customProperties ){
+                              return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
+                            }
+                            return '<div>' + escape(data.text) + '</div>';
+                          },
+                        },
+                      }));
+                    });
+                  </script>
+                  {% comment %} <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Vacancy Status</label>
+                      <select name="vacancy_status" class="form-select" required>
+                        <option value="Male" {% if Company_registration.vacancy_status == "Male" %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if Company_registration.vacancy_status == "Female" %}selected{% endif %}>Female</option>
+                        <option value="Male" {% if Company_registration.vacancy_status == "Male" %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if Company_registration.vacancy_status == "Female" %}selected{% endif %}>Female</option>
+                        <option value="Male" {% if Company_registration.vacancy_status == "Male" %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if Company_registration.vacancy_status == "Female" %}selected{% endif %}>Female</option>
+                    </select>
+                    </div>
+                  </div> {% endcomment %}
+                  <div class="col-md-3">
+                    <div class="mb-2">
+                      <label class="form-label">Company Logo</label>
+                      <input type="file" class="form-control" name="company_logo" >
+                    </div>
+                  </div>
+                  <div class="col-sm-4  col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Vacancy Opening Date</label>
+                      <input type="date" class="form-control" name="vacancy_opening_date" required>
+                    </div>
+                  </div>
+                  <div class="col-sm-4 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Company Email Address</label>
+                      <input type="text" class="form-control" name="company_email_address" >
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Contact Person</label>
+                      <input type="text" class="form-control" name="company_contact_person_name" required>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                      <label class="form-label">Contact Details</label>
+                      <input type="test" name='company_contact_person_contact_details' class="form-control" required>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-2">
+                    <div class="mb-3">
+                      <label class="form-label">Contact Person Designation</label>
+                      <select name="company_contact_person_designation" class="form-select" >
+                        <option value="EVMS" {% if Company_registration.company_contact_person_designation == "EVMS" %}selected{% endif %}>HR</option>
+                          <option value="Walk-In" {% if Company_registration.company_contact_person_designation == "Walk-In" %}selected{% endif %}>CEO</option>
+                          <option value="Job Hai" {% if Company_registration.company_contact_person_designation == "Job Hai" %}selected{% endif %}>Admin</option>
+                          <option value="Naukari" {% if Company_registration.company_contact_person_designation == "Naukari" %}selected{% endif %}>Boss</option>
+                          <option value="Apna" {% if Company_registration.company_contact_person_designation == "Apna" %}selected{% endif %}>Employee</option>
+                          <option value="Expertia" {% if Company_registration.company_contact_person_designation == "Expertia" %}selected{% endif %}>Expertia</option>
+                          <option value="Instagram" {% if Company_registration.company_contact_person_designation == "Instagram" %}selected{% endif %}>Instagram</option>
+                          <option value="Website" {% if Company_registration.company_contact_person_designation == "Website" %}selected{% endif %}>Website</option>
+                          <option value="Indeed" {% if Company_registration.company_contact_person_designation == "Indeed" %}selected{% endif %}>Indeed</option>
+                          <option value="Facebook" {% if Company_registration.company_contact_person_designation == "Facebook" %}selected{% endif %}>Facebook</option>
+                          <option value="Linkedin" {% if Company_registration.company_contact_person_designation == "Expertia" %}selected{% endif %}>Expertia</option>
+                          <option value="Personal Refference" {% if Company_registration.company_contact_person_designation == "Personal Refference" %}selected{% endif %}>Personal Refference</option>
+                          <option value="Other" {% if Company_registration.company_contact_person_designation == "Other" %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Job Opening Origin</label>
+                      <select name="job_opening_origin" class="form-select" >
+                        <option value="EVMS" {% if Company_registration.job_opening_origin == "EVMS" %}selected{% endif %}>EVMS</option>
+                          <option value="Walk-In" {% if Company_registration.job_opening_origin == "Walk-In" %}selected{% endif %}>Walk-In</option>
+                          <option value="Job Hai" {% if Company_registration.job_opening_origin == "Job Hai" %}selected{% endif %}>Job Hai</option>
+                          <option value="Naukari" {% if Company_registration.job_opening_origin == "Naukari" %}selected{% endif %}>Naukari</option>
+                          <option value="Apna" {% if Company_registration.job_opening_origin == "Apna" %}selected{% endif %}>Apna</option>
+                          <option value="Expertia" {% if Company_registration.job_opening_origin == "Expertia" %}selected{% endif %}>Expertia</option>
+                          <option value="Instagram" {% if Company_registration.job_opening_origin == "Instagram" %}selected{% endif %}>Instagram</option>
+                          <option value="Website" {% if Company_registration.job_opening_origin == "Website" %}selected{% endif %}>Website</option>
+                          <option value="Indeed" {% if Company_registration.job_opening_origin == "Indeed" %}selected{% endif %}>Indeed</option>
+                          <option value="Facebook" {% if Company_registration.job_opening_origin == "Facebook" %}selected{% endif %}>Facebook</option>
+                          <option value="Linkedin" {% if Company_registration.job_opening_origin == "Expertia" %}selected{% endif %}>Expertia</option>
+                          <option value="Personal Refference" {% if Company_registration.job_opening_origin == "Personal Refference" %}selected{% endif %}>Personal Refference</option>
+                          <option value="Other" {% if Company_registration.job_opening_origin == "Other" %}selected{% endif %}>Other</option>
+                        </select>
+                      </div>
+                    </div>
+                    <script>
+                      document.addEventListener("DOMContentLoaded", function () {
+                        var el;
+                        window.TomSelect && (new TomSelect(el = document.getElementById('select-prefered-location'), {
+                          copyClassesToDropdown: false,
+                          dropdownParent: 'body',
+                          controlInput: '<input>',
+                          render:{
+                            item: function(data,escape) {
+                              if( data.customProperties ){
+                              return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
+                            }
+                            return '<div>' + escape(data.text) + '</div>';
+                          },
+                          option: function(data,escape){
+                            if( data.customProperties ){
+                              return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
+                            }
+                            return '<div>' + escape(data.text) + '</div>';
+                          },
+                        },
+                      }));
+                    });
+                  </script>
+                  
+                  <div class="col-sm-6 col-md-2">
+                    <div class="mb-3">
+                      <div class="form-label">Gender Prefferance</div>
+                      <select name="gender" class="form-select" required>
+                        <option value="Both" {% if Company_registration.gender == "Both" %}selected{% endif %}>Both</option>
+                        <option value="Male" {% if Company_registration.gender == "Male" %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if Company_registration.gender == "Female" %}selected{% endif %}>Female</option>
+                    </select>
+                    </div>
+                  </div>
+                  
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <div class="form-label">Qualification</div>
+                      <select class="form-select" name='minimum_education_qualification'>
+                        <option disabled selected value="select highest minimum_education_qualification" {% if Company_registration.minimum_education_qualification == "select highest minimum_education_qualification" %}selected{% endif %}>select highest minimum_education_qualification</option>
+                        <option value="Secondary School" {% if Company_registration.minimum_education_qualification == "Secondary School" %}selected{% endif %}>Secondary School</option>
+                        <option value="Higher Secondary School" {% if Company_registration.minimum_education_qualification == "Higher Secondary School" %}selected{% endif %}>Higher Secondary School</option>
+                        <option value="Graduate" {% if Company_registration.minimum_education_qualification == "Graduate" %}selected{% endif %}>Graduate</option>
+                        <option value="Post-Graduate" {% if Company_registration.minimum_education_qualification == "Post-Graduate" %}selected{% endif %}>Post-Graduate</option>
+                        <option value="Ph.D." {% if Company_registration.minimum_education_qualification == "Ph.D." %}selected{% endif %}>Ph.D.</option>
+                        <option value="Others" {% if Company_registration.minimum_education_qualification == "Others" %}selected{% endif %}>Others</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Specialization (If Any)</label>
+                      <input type="text" class="form-control" name="specialization"  placeholder="specialization" >
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                      <label class="form-label">Sector</label>
+                      <select type="text" class="form-select"  required name='sector_type' >
+                       {% for job_sector in job_sectors %}
+                        <option value="{{ job_sector }}" {% if Company_registration.sector_type == '{{ job_sector }}' %}selected{% endif %}>
+                            {{ job_sector }}
+                        </option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Department</label>
+                      <select type="text" class="form-select" placeholder="Select Company Department" id="select-departmnet"  name='department_name' multiple>
+                        {% for department in departments %}
+                        <option value="{{ department }}" {% if Company_registration.department == '{{ department }}' %}selected{% endif %}>
+                            {{ department }}
+                        </option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                      var el;
+                      window.TomSelect && (new TomSelect(el = document.getElementById('select-departmnet'), {
+                        copyClassesToDropdown: false,
+                        dropdownParent: 'body',
+                        controlInput: '<input>',
+                        render:{
+                          item: function(data,escape) {
+                            if( data.customProperties ){
+                              return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
+                            }
+                            return '<div>' + escape(data.text) + '</div>';
+                          },
+                          option: function(data,escape){
+                            if( data.customProperties ){
+                              return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
+                            }
+                            return '<div>' + escape(data.text) + '</div>';
+                          },
+                        },
+                      }));
+                    });
+                  </script>
+                  
+                  <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                      <label class="form-label">Interview Address</label>
+                      <input type="text" name='interview_address' class="form-control" required>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-2">
+                    <div class="mb-3">
+                      <label class="form-label">Payroll</label>
+                      <select name="payroll" class="form-select" id="payrollSelect" required>
+                        <option value="Self" {% if Company_registration.payroll == "Self" %}selected{% endif %}>Self</option>
+                        <option value="Third Party" {% if Company_registration.payroll == "Third Party" %}selected{% endif %}>Third Party</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="col-sm-6 col-md-3" id="thirdPartyInput" style="display: none;">
+                    <div class="mb-3">
+                      <label class="form-label">Third-Party Payroll</label>
+                      <input type="text" name="third_party_name" class="form-control">
+                    </div>
+                  </div>
+                  
+                  <script>
+                    // JavaScript to toggle visibility based on dropdown selection
+                    document.addEventListener("DOMContentLoaded", function () {
+                      const payrollSelect = document.getElementById("payrollSelect");
+                      const thirdPartyInput = document.getElementById("thirdPartyInput");
+                  
+                      // Function to toggle the input visibility
+                      function toggleThirdPartyInput() {
+                        if (payrollSelect.value === "Third Party") {
+                          thirdPartyInput.style.display = "block";
+                        } else {
+                          thirdPartyInput.style.display = "none";
+                        }
+                      }
+                  
+                      // Initial check based on server-side rendering
+                      toggleThirdPartyInput();
+                  
+                      // Add event listener for change event
+                      payrollSelect.addEventListener("change", toggleThirdPartyInput);
+                    });
+                  </script>
+                  
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Minimum Age</label>
+                      <input type="text" name='minimum_age' class="form-control" />
+                    </div>
+                  </div>
+                
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Maximum Age</label>
+                      <input type="text" name='maximum_age' class="form-control" />
+                    </div>
+                  </div>
+                    <div class="col-sm-6 col-md-2">
+                      <div class="mb-3">
+                        <label class="form-label">Minimum Experience</label>
+                        <input type="text" name='minimum_experience' class="form-control" />
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-2">
+                      <div class="mb-3">
+                        <label class="form-label">Maximum Experience</label>
+                        <input type="text" name='maximum_experience' class="form-control" />
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-2">
+                      <div class="mb-3">
+                        <label class="form-label">Fresher Allowed</label>
+                        <select name="fresher_status" class="form-select" required>
+                          <option value="Both" {% if Company_registration.fresher_status == "Both" %}selected{% endif %}>Both</option>
+                          <option value="Yes" {% if Company_registration.fresher_status == "Yes" %}selected{% endif %}>Yes</option>
+                          <option value="No" {% if Company_registration.fresher_status == "No" %}selected{% endif %}>No</option>
+                      </select>
+                      </div>
+                    </div>
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Minimum Salary Package/Range</label>
+                      <input type="text" name='minimum_salary_range' class="form-control" required />
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Maximum Salary Package/Range</label>
+                      <input type="text" name='maximum_salary_range' class="form-control" />
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Status of Incentive</label>
+                      <select class="form-control form-select" name='status_of_incentive'>
+                        <option value="No" {% if Company_registration.status_of_incentive == "No" %}selected{% endif %}>No</option>
+                        <option value="Yes" {% if Company_registration.status_of_incentive == "Yes" %}selected{% endif %}>Yes</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Vacancy Close Date</label>
+                      <input type="date" name='vacancy_closing_date' class="form-control" />
+                    </div>
+                  </div><div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                      <label class="form-label">Special Instructions</label>
+                      <input type="text" name='special_instruction' class="form-control" />
+                    </div>
+                  </div><div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                      <label class="form-label">Company USP</label>
+                      <input type="text" name='company_usp' class="form-control" />
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="mb-3">
+                      <label class="form-label">Status of Proposal</label>
+                      <select class="form-control form-select" name='status_of_proposal'>
+                        <option value="None" {% if Company_registration.status_of_proposal == "None" %}selected{% endif %}>None</option>
+<option value="Lead Generate" {% if Company_registration.status_of_proposal == "Lead Generate" %}selected{% endif %}>Lead Generate</option>
+<option value="Follow-Up" {% if Company_registration.status_of_proposal == "Follow-Up" %}selected{% endif %}>Follow-Up</option>
+<option value="Shortlisted for Banking Counselling" {% if Company_registration.status_of_proposal == "Shortlisted for Banking Counselling" %}selected{% endif %}>Shortlisted for Banking Counselling</option>
+<option value="RNR" {% if Company_registration.status_of_proposal == "RNR" %}selected{% endif %}>RNR</option>
+<option value="Switch Off" {% if Company_registration.status_of_proposal == "Switch Off" %}selected{% endif %}>Switch Off</option>
+<option value="Not Intrested" {% if Company_registration.status_of_proposal == "Not Intrested" %}selected{% endif %}>Not Intrested</option>
+<option value="Sharing Resume" {% if Company_registration.status_of_proposal == "Sharing Resume" %}selected{% endif %}>Sharing Resume</option>
+<option value="Hold" {% if Company_registration.status_of_proposal == "Hold" %}selected{% endif %}>Hold</option>
+<option value="Not Eligeble" {% if Company_registration.status_of_proposal == "Not Eligeble" %}selected{% endif %}>Not Eligeble</option>
+<option value="Call Back" {% if Company_registration.status_of_proposal == "Call Back" %}selected{% endif %}>Call Back</option>
+<option value="Coming Tomorrow" {% if Company_registration.status_of_proposal == "Coming Tomorrow" %}selected{% endif %}>Coming Tomorrow</option>
+<option value="Busy" {% if Company_registration.status_of_proposal == "Busy" %}selected{% endif %}>Busy</option>
+<option value="Not Available" {% if Company_registration.status_of_proposal == "Not Available" %}selected{% endif %}>Not Available</option>
+<option value="Got a Job" {% if Company_registration.status_of_proposal == "Got a Job" %}selected{% endif %}>Got a Job</option>
+<option value="Call After Some Time" {% if Company_registration.status_of_proposal == "Call After Some Time" %}selected{% endif %}>Call After Some Time</option>
+<option value="No Incoming" {% if Company_registration.status_of_proposal == "No Incoming" %}selected{% endif %}>No Incoming</option>
+<option value="Temporary Not Available" {% if Company_registration.status_of_proposal == "Temporary Not Available" %}selected{% endif %}>Temporary Not Available</option>
+<option value="Out Of Town" {% if Company_registration.status_of_proposal == "Out Of Town" %}selected{% endif %}>Out Of Town</option>
+
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Invoice Generate Date</label>
+                      <input type="date" name='invoice_generation_date' class="form-control" />
+                    </div>
+                  </div><div class="col-sm-6 col-md-3">
+                    <div class="mb-3">
+                      <label class="form-label">Payout Date</label>
+                      <input type="date" name='payout_date' class="form-control" />
+                    </div>
+                  </div>
+                  
+                  <div class="col-sm-6 col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">Payment Conditions</label>
+                      <input type="text" name='payment_condiation' class="form-control" />
+                    </div>
+                  </div><div class="col-sm-6 col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">Replacement Criteria</label>
+                      <input type="text" name='replacement_criteria' class="form-control" />
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">Remark</label>
+                      <input type="text" name='remark' class="form-control" >
+                    </div>
+                  </div>
+              </div>
+              <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary">Submit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+<!-- Libs JS -->
+<script src="/static/dist/libs/nouislider/dist/nouislider.min.js?1692870487" defer></script>
+<script src="/static/dist/libs/litepicker/dist/litepicker.js?1692870487" defer></script>
+<script src="/static/dist/libs/tom-select/dist/js/tom-select.base.min.js?1692870487" defer></script>
+<!-- Tabler Core -->
+<script src="/static/dist/js/tabler.min.js?1692870487" defer></script>
+<script src="/static/dist/js/demo.min.js?1692870487" defer></script>
+
+{% endblock content %}
+
+
+
