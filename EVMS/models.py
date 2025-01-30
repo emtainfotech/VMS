@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import timedelta, time, datetime
+import pytz
+from django.utils.timezone import now
 
 # Create your models here.
 class Vendor(models.Model):
@@ -32,6 +35,7 @@ class Vendor_profile_details(models.Model) :
     pan_card_number = models.CharField(max_length=15)
     adhar_card_image = models.FileField(upload_to='adhar/')
     pan_card_image = models.FileField(upload_to='pan/')
+    location = models.CharField(max_length=255)
 
 class Vendor_bussiness_details(models.Model) :
     vendor = models.OneToOneField(Vendor, on_delete=models.CASCADE)
@@ -66,28 +70,46 @@ class Vendor_bank_details(models.Model) :
     
 class Candidate(models.Model):
     refer_code = models.CharField(max_length=50)
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    qualification = models.CharField(max_length = 100)
-    mobile_number = models.BigIntegerField()
-    email = models.EmailField()
-    status = models.CharField(max_length=10, default='Pending')
-    Contact = models.CharField(max_length=10 , default='No')
-    resume = models.FileField(upload_to='candidate/resume/')
-    sector = models.CharField(max_length=50)
-    commission = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    location = models.CharField(max_length=50)
-    totalCommission = models.CharField(max_length=100, default='0')
-    Contact_by = models.CharField(max_length=50,default='None')
-    Remark = models.CharField(max_length=200)
-    commission_Generate_date = models.CharField(max_length=20,default=0)
-    Payment_Status = models.CharField(max_length=30, default='Pending')
-    Job_Type = models.CharField(max_length=30)
-    Payment_complete_date = models.CharField(max_length=20)
-    authentication_status = models.CharField(max_length=20)
-    submission_time = models.DateTimeField()
-    candidate_image = models.ImageField(upload_to='candidate_images/', null=True, blank=True)
+    register_time = models.DateTimeField(default=now)
+    employee_name = models.CharField(max_length=50, blank=True, null=True)
+    candidate_name = models.CharField(max_length=255)
+    unique_code = models.CharField(max_length=255)
+    candidate_mobile_number = models.CharField(max_length=15)
+    candidate_alternate_mobile_number = models.CharField(max_length=15, blank=True, null=True)
+    candidate_email_address = models.EmailField(blank=True, null=True)
+    gender = models.CharField(max_length=10, blank=True, null=True)
+    lead_source = models.CharField(max_length=255,default='EVMS')
+    preferred_location = models.CharField(max_length=255, blank=True, null=True)
+    origin_location = models.CharField(max_length=255, blank=True, null=True)
+    qualification = models.CharField(max_length=255)
+    diploma = models.CharField(max_length=255, blank=True, null=True)
+    sector = models.CharField(max_length=255, blank=True, null=True)
+    job_type = models.CharField(max_length=255, blank=True, null=True)
+    department = models.CharField(max_length=255, blank=True, null=True)
+    experience_year = models.IntegerField(blank=True, null=True)
+    experience_month = models.IntegerField(blank=True, null=True)
+    current_company = models.CharField(max_length=255, blank=True, null=True)
+    current_working_status = models.CharField(max_length=50)
+    current_salary = models.CharField(max_length=10, blank=True, null=True)
+    expected_salary = models.CharField(max_length=10, blank=True, null=True)
+    call_connection = models.CharField(max_length=255, blank=True, null=True)
+    calling_remark = models.CharField(max_length=255, blank=True, null=True)
+    lead_generate = models.CharField(max_length=255, blank=True, null=True)
+    send_for_interview = models.CharField(max_length=255, blank=True, null=True)
+    next_follow_up_date = models.CharField(max_length=255,blank=True, null=True)
+    candidate_photo = models.FileField(upload_to='candidate-photo/')
+    candidate_resume = models.FileField(upload_to='candidate-resume/')
+    remark = models.CharField(max_length=255,blank=True, null=True)
+    submit_by = models.CharField(max_length=100)
+    selection_status = models.CharField(max_length=10, blank=True, null=True)
+    company_name = models.CharField(max_length=10, blank=True, null=True)
+    offered_salary = models.CharField(max_length=255, blank=True, null=True)
+    selection_date = models.CharField(max_length=255, blank=True, null=True)
+    candidate_joining_date = models.CharField(max_length=255, blank=True, null=True)
+    emta_commission = models.CharField(max_length=255, blank=True, null=True)
+    payout_date = models.CharField(max_length=255, blank=True, null=True)
     unique_id = models.CharField(max_length=10, unique=True, blank=True, null=True)
+    employee_name = models.CharField(max_length=255, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if not self.unique_id:

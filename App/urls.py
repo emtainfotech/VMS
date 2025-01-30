@@ -59,6 +59,13 @@ urlpatterns = [
     path('admin-company-list/',admin_company_list,name = 'admin_company_list'),
     path('admin-company-registration/',admin_company_registration,name = 'admin_company_registration'),
     path('admin-company-profile/<int:id>/', admin_company_profile, name='admin_company_profile'),
+    path('admin-vendor-list/',admin_vendor_list,name = 'admin_vendor_list'),
+    path('evms-candidate-list/',admin_evms_candidate_list,name = 'admin_evms_candidate_list'),
+    path('vendor-candidate-list/<int:id>/',admin_vendor_candidate_list,name = 'admin_vendor_candidate_list'),
+    path('evms-candidate-profile/<int:id>/',evms_candidate_profile,name = 'evms_candidate_profile'),
+    path('evms-vendor-candidate-profile/<int:id>/',evms_vendor_candidate_profile,name = 'evms_vendor_candidate_profile'),
+    
+    
     path('admin/', admin.site.urls),
 ]
 

@@ -24,6 +24,7 @@ from celery import shared_task
 import re
 from django.utils.timezone import localtime, make_aware
 from datetime import datetime, timedelta, time
+from EVMS.models import *
 
 
 IST = pytz.timezone('Asia/Kolkata')
@@ -2013,3 +2014,403 @@ def admin_company_profile(request,id) :
             messages.success(request, 'company Calling details updated successfully!')
         return redirect('admin_company_profile', id=id)
     return render(request,'hrms/company-profile.html',{'company':company})
+
+
+def admin_vendor_list(request) :
+    vendors = Vendor.objects.all().order_by('-id')
+    return render(request,'hrms/admin-vendor-list.html',{'vendors':vendors})
+
+def admin_evms_candidate_list(request) :
+    candidates = Candidate.objects.all().order_by('-id')
+    return render(request,'hrms/admin-evms-candidate-list.html',{'candidates':candidates})
+
+# def admin_vendor_candidate_list(request,id) :
+#     vendor = get_object_or_404(Vendor, id=id)
+    
+#     return render(request,'hrms/admin-vendor-candidate-list.html',{'candidates':candidates,'vendor':vendor})
+
+def admin_vendor_candidate_list(request, id):
+    vendor = get_object_or_404(Vendor, id=id)
+    candidates = Candidate.objects.filter(refer_code=vendor.refer_code).order_by('-id')
+    vendor_profile_detail, _ = Vendor_profile_details.objects.get_or_create(vendor=vendor)
+    vendor_bussiness_detail, _ = Vendor_bussiness_details.objects.get_or_create(vendor=vendor)
+    vendor_bank_detail, _ = Vendor_bank_details.objects.get_or_create(vendor=vendor)
+
+    if request.method == 'POST':
+        if 'submit_vendor_profile_details' in request.POST:
+            # Handle Employee fields
+            first_name = request.POST.get('first_name')
+            last_name = request.POST.get('last_name')
+            mobile_number = request.POST.get('mobile_number')
+            email = request.POST.get('email')
+            vendor_profile_image = request.FILES.get('vendor_profile_image')
+            date_of_birth = request.POST.get('date_of_birth')
+            
+            vendor.first_name = first_name
+            vendor.last_name = last_name
+            vendor.mobile_number = mobile_number
+            vendor.email = email
+            vendor.date_of_birth = date_of_birth
+            
+            if vendor_profile_image:
+                vendor.vendor_profile_image = vendor_profile_image
+            vendor.save()
+            gender = request.POST.get('gender')
+            address = request.POST.get('address')
+            adhar_card_number = request.POST.get('adhar_card_number')
+            adhar_card_image = request.FILES.get('adhar_card_image')
+            pan_card_number = request.POST.get('pan_card_number')
+            pan_card_image = request.FILES.get('pan_card_image')
+            location = request.POST.get('location')
+            vendor_profile_detail.gender = gender
+            vendor_profile_detail.address = address
+            vendor_profile_detail.adhar_card_number = adhar_card_number
+            vendor_profile_detail.pan_card_number = pan_card_number
+            vendor_profile_detail.location = location
+            if adhar_card_image:
+                vendor_profile_detail.adhar_card_image = adhar_card_image
+            if pan_card_image:
+                vendor_profile_detail.pan_card_image = pan_card_image    
+            vendor_profile_detail.save()
+
+            messages.success(request, 'Profile details updated successfully!')
+
+        elif 'submit_vendor_bussiness_details' in request.POST:
+            # Handle Emergency Contact fields
+            shop_name = request.POST.get('shop_name')
+            Contact_number = request.POST.get('Contact_number')
+            Busness_email = request.POST.get('Busness_email')
+            Gumasta_number = request.POST.get('Gumasta_number')
+            gumasta_image = request.FILES.get('gumasta_image')
+            gst_number = request.POST.get('gst_number')
+            gst_image = request.FILES.get('gst_image')
+
+            Bpan_number = request.POST.get('Bpan_number')
+            Bpan_image = request.FILES.get('Bpan_image')
+            MSME_number = request.POST.get('MSME_number')
+            MSME_image = request.FILES.get('MSME_image')
+            Bphoto_outer = request.FILES.get('Bphoto_outer')
+            
+            Bphoto_inside = request.FILES.get('Bphoto_inside')
+            VCname = request.POST.get('VCname')
+            VCmobile = request.POST.get('VCmobile')
+            VCaddress = request.POST.get('VCaddress')
+
+            # Update EmergencyContact fields
+            vendor_bussiness_detail.shop_name = shop_name
+            vendor_bussiness_detail.Contact_number = Contact_number
+            vendor_bussiness_detail.Busness_email = Busness_email
+            vendor_bussiness_detail.Gumasta_number = Gumasta_number
+            vendor_bussiness_detail.gst_number = gst_number
+            vendor_bussiness_detail.Bpan_number = Bpan_number
+            vendor_bussiness_detail.MSME_number = MSME_number
+            vendor_bussiness_detail.VCname = VCname
+            vendor_bussiness_detail.VCmobile = VCmobile
+            vendor_bussiness_detail.VCaddress = VCaddress
+            
+            if gst_image:
+                vendor_bussiness_detail.gst_image = gst_image
+            if gumasta_image:
+                vendor_bussiness_detail.gumasta_image = gumasta_image    
+            if Bpan_image:
+                vendor_bussiness_detail.Bpan_image = Bpan_image
+            if MSME_image:
+                vendor_bussiness_detail.MSME_image = MSME_image    
+            if Bphoto_outer:
+                vendor_bussiness_detail.Bphoto_outer = Bphoto_outer
+            if Bphoto_inside:
+                vendor_bussiness_detail.Bphoto_inside = Bphoto_inside    
+            vendor_bussiness_detail.save()
+
+            messages.success(request, 'Bussiness details updated successfully!')
+            
+        elif 'submit_vendor_bank_details' in request.POST:
+            # Handle form submission for bank details
+            account_holder_name = request.POST.get('account_holder_name')
+            bank_name = request.POST.get('bank_name')
+            account_number = request.POST.get('account_number')
+            confirm_account_number = request.POST.get('confirm_account_number')
+            ifs_code = request.POST.get('ifs_code')
+            account_type = request.POST.get('account_type')
+            micr_code = request.POST.get('micr_code')
+            bank_document = request.FILES.get('bank_document')
+            preffered_payout_date = request.POST.get('preffered_payout_date')
+
+            # Ensure account number and confirm account number match
+            if account_number != confirm_account_number:
+                messages.error(request, "Account numbers do not match!")
+                return redirect('employee-bank-details', id=employee.id)  # Redirect back to the same page
+
+            # Update or create bank details for the employee
+            vendor_bank_detail.account_holder_name = account_holder_name
+            vendor_bank_detail.bank_name = bank_name
+            vendor_bank_detail.account_number = account_number
+            vendor_bank_detail.confirm_account_number = confirm_account_number
+            vendor_bank_detail.ifs_code = ifs_code
+            vendor_bank_detail.micr_code = micr_code
+            vendor_bank_detail.account_type = account_type
+            vendor_bank_detail.preffered_payout_date = preffered_payout_date
+            if bank_document:
+                vendor_bank_detail.bank_document = bank_document  
+            vendor_bank_detail.save()
+
+            messages.success(request, 'Bank details updated successfully!')
+            
+            
+
+        return redirect('admin_vendor_candidate_list', id=vendor.id)  # Adjust 'employee-details' to your URL name
+    districts = [
+        "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
+        "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
+        "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni",
+        "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch",
+        "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni",
+        "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
+        "Ujjain", "Umaria", "Vidisha"
+    ]
+    context = {
+        'vendor': vendor,
+        'vendor_profile_detail': vendor_profile_detail,
+        'vendor_bussiness_detail': vendor_bussiness_detail,
+        'vendor_bank_detail': vendor_bank_detail,
+        'districts' : districts,
+        'candidates' : candidates
+    }
+    return render(request, 'hrms/admin-vendor-candidate-list.html', context)
+
+
+
+
+def evms_candidate_profile(request,id) :
+    candidate = get_object_or_404(Candidate, id=id)
+    employees = Employee.objects.all()
+    if request.method == 'POST':
+        if 'candidate_personal_information' in request.POST:
+            # Handle Employee fields
+            candidate_name = request.POST.get('candidate_name')
+            employee_name = request.POST.get('employee_name')
+            candidate_mobile_number = request.POST.get('candidate_mobile_number')
+            candidate_email_address = request.POST.get('candidate_email_address')
+            gender = request.POST.get('gender')
+            lead_source = request.POST.get('lead_source')
+            candidate_photo = request.FILES.get('candidate_photo')
+            candidate_resume = request.FILES.get('candidate_resume')
+            submit_by = request.POST.get('submit_by')
+            
+            candidate.candidate_name = candidate_name
+            candidate.employee_name = employee_name
+            candidate.candidate_mobile_number = candidate_mobile_number
+            candidate.candidate_email_address = candidate_email_address
+            candidate.gender = gender
+            candidate.lead_source = lead_source
+            submit_by=submit_by
+            if candidate_photo:
+                candidate.candidate_photo = candidate_photo
+            if candidate_resume:
+                candidate.candidate_resume = candidate_resume
+            candidate.save()
+
+            messages.success(request, 'Candidate details updated successfully!')
+
+        elif 'candidate_details' in request.POST:
+            # Handle Emergency Contact fields
+            candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
+            preferred_location = request.POST.get('preferred_location')
+            origin_location = request.POST.get('origin_location')
+            qualification = request.POST.get('qualification')
+            diploma = request.POST.get('diploma')
+            sector = request.POST.get('sector')
+            department = request.POST.get('department')
+            experience_year = request.POST.get('experience_year')
+            experience_month = request.POST.get('experience_month')
+            current_company = request.POST.get('current_company')
+            current_working_status = request.POST.get('current_working_status')
+            current_salary = request.POST.get('current_salary')
+            expected_salary = request.POST.get('expected_salary')
+            submit_by = request.POST.get('submit_by')
+
+            # Update EmergencyContact fields
+            candidate.candidate_alternate_mobile_number = candidate_alternate_mobile_number
+            candidate.preferred_location = preferred_location
+            candidate.origin_location = origin_location
+            candidate.qualification = qualification
+            candidate.diploma = diploma
+            candidate.sector = sector
+            candidate.department = department
+            candidate.experience_year = experience_year
+            candidate.experience_month = experience_month
+            candidate.current_company = current_company
+            candidate.current_working_status = current_working_status
+            candidate.current_salary = current_salary
+            candidate.expected_salary = expected_salary
+            submit_by=submit_by
+            candidate.save()
+
+            messages.success(request, 'Candidate details updated successfully!')
+            
+        elif 'submit_calling_remark' in request.POST:
+            # Handle Social Media details form submission
+            call_connection = request.POST.get('call_connection')
+            calling_remark = request.POST.get('calling_remark')
+            lead_generate = request.POST.get('lead_generate')
+            send_for_interview = request.POST.get('send_for_interview')
+            next_follow_up_date = request.POST.get('next_follow_up_date')
+            submit_by = request.POST.get('submit_by')
+
+            candidate.call_connection = call_connection
+            candidate.calling_remark = calling_remark
+            candidate.lead_generate = lead_generate
+            candidate.send_for_interview = send_for_interview
+            candidate.next_follow_up_date = next_follow_up_date
+            candidate.submit_by = submit_by
+            candidate.save()
+            
+            messages.success(request, 'Candidate Calling details updated successfully!')
+            
+        elif 'submit_secection_record' in request.POST:
+            # Handle form submission for bank details
+            selection_status = request.POST.get('selection_status')
+            company_name = request.POST.get('company_name')
+            offered_salary = request.POST.get('offered_salary')
+            selection_date = request.POST.get('selection_date')
+            candidate_joining_date = request.POST.get('candidate_joining_date')
+            emta_commission = request.POST.get('emta_commission')
+            payout_date = request.POST.get('payout_date')
+
+            # Update or create bank details for the employee
+            candidate.selection_status = selection_status
+            candidate.company_name = company_name
+            candidate.offered_salary = offered_salary
+            candidate.selection_date = selection_date
+            candidate.candidate_joining_date = candidate_joining_date
+            candidate.emta_commission = emta_commission
+            candidate.payout_date = payout_date
+            candidate.save()
+
+            messages.success(request, 'Secection details updated successfully!')
+            
+            
+
+        return redirect('evms_candidate_profile', id=id)
+    context = {
+        'candidate': candidate,
+        'employees' : employees
+    }
+    return render(request,'hrms/evms-candidate-profile.html ',context)
+
+def evms_vendor_candidate_profile(request,id) :
+    candidate = get_object_or_404(Candidate, id=id)
+    employees = Employee.objects.all()
+    if request.method == 'POST':
+        if 'candidate_personal_information' in request.POST:
+            # Handle Employee fields
+            candidate_name = request.POST.get('candidate_name')
+            employee_name = request.POST.get('employee_name')
+            candidate_mobile_number = request.POST.get('candidate_mobile_number')
+            candidate_email_address = request.POST.get('candidate_email_address')
+            gender = request.POST.get('gender')
+            lead_source = request.POST.get('lead_source')
+            candidate_photo = request.FILES.get('candidate_photo')
+            candidate_resume = request.FILES.get('candidate_resume')
+            submit_by = request.POST.get('submit_by')
+            
+            candidate.candidate_name = candidate_name
+            candidate.employee_name = employee_name
+            candidate.candidate_mobile_number = candidate_mobile_number
+            candidate.candidate_email_address = candidate_email_address
+            candidate.gender = gender
+            candidate.lead_source = lead_source
+            submit_by=submit_by
+            if candidate_photo:
+                candidate.candidate_photo = candidate_photo
+            if candidate_resume:
+                candidate.candidate_resume = candidate_resume
+            candidate.save()
+
+            messages.success(request, 'Candidate details updated successfully!')
+
+        elif 'candidate_details' in request.POST:
+            # Handle Emergency Contact fields
+            candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
+            preferred_location = request.POST.get('preferred_location')
+            origin_location = request.POST.get('origin_location')
+            qualification = request.POST.get('qualification')
+            diploma = request.POST.get('diploma')
+            sector = request.POST.get('sector')
+            department = request.POST.get('department')
+            experience_year = request.POST.get('experience_year')
+            experience_month = request.POST.get('experience_month')
+            current_company = request.POST.get('current_company')
+            current_working_status = request.POST.get('current_working_status')
+            current_salary = request.POST.get('current_salary')
+            expected_salary = request.POST.get('expected_salary')
+            submit_by = request.POST.get('submit_by')
+
+            # Update EmergencyContact fields
+            candidate.candidate_alternate_mobile_number = candidate_alternate_mobile_number
+            candidate.preferred_location = preferred_location
+            candidate.origin_location = origin_location
+            candidate.qualification = qualification
+            candidate.diploma = diploma
+            candidate.sector = sector
+            candidate.department = department
+            candidate.experience_year = experience_year
+            candidate.experience_month = experience_month
+            candidate.current_company = current_company
+            candidate.current_working_status = current_working_status
+            candidate.current_salary = current_salary
+            candidate.expected_salary = expected_salary
+            submit_by=submit_by
+            candidate.save()
+
+            messages.success(request, 'Candidate details updated successfully!')
+            
+        elif 'submit_calling_remark' in request.POST:
+            # Handle Social Media details form submission
+            call_connection = request.POST.get('call_connection')
+            calling_remark = request.POST.get('calling_remark')
+            lead_generate = request.POST.get('lead_generate')
+            send_for_interview = request.POST.get('send_for_interview')
+            next_follow_up_date = request.POST.get('next_follow_up_date')
+            submit_by = request.POST.get('submit_by')
+
+            candidate.call_connection = call_connection
+            candidate.calling_remark = calling_remark
+            candidate.lead_generate = lead_generate
+            candidate.send_for_interview = send_for_interview
+            candidate.next_follow_up_date = next_follow_up_date
+            candidate.submit_by = submit_by
+            candidate.save()
+            
+            messages.success(request, 'Candidate Calling details updated successfully!')
+            
+        elif 'submit_secection_record' in request.POST:
+            # Handle form submission for bank details
+            selection_status = request.POST.get('selection_status')
+            company_name = request.POST.get('company_name')
+            offered_salary = request.POST.get('offered_salary')
+            selection_date = request.POST.get('selection_date')
+            candidate_joining_date = request.POST.get('candidate_joining_date')
+            emta_commission = request.POST.get('emta_commission')
+            payout_date = request.POST.get('payout_date')
+
+            # Update or create bank details for the employee
+            candidate.selection_status = selection_status
+            candidate.company_name = company_name
+            candidate.offered_salary = offered_salary
+            candidate.selection_date = selection_date
+            candidate.candidate_joining_date = candidate_joining_date
+            candidate.emta_commission = emta_commission
+            candidate.payout_date = payout_date
+            candidate.save()
+
+            messages.success(request, 'Secection details updated successfully!')
+            
+            
+
+        return redirect('evms_vendor_candidate_profile', id=id)
+    context = {
+        'candidate': candidate,
+        'employees' : employees
+    }
+    return render(request,'hrms/evms-vendor-candidate-profile.html',context)

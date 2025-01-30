@@ -179,11 +179,13 @@ def vendor_profile(request, id):
             email = request.POST.get('email')
             vendor_profile_image = request.FILES.get('vendor_profile_image')
             date_of_birth = request.POST.get('date_of_birth')
+            
             vendor.first_name = first_name
             vendor.last_name = last_name
             vendor.mobile_number = mobile_number
             vendor.email = email
             vendor.date_of_birth = date_of_birth
+            
             if vendor_profile_image:
                 vendor.vendor_profile_image = vendor_profile_image
             vendor.save()
@@ -193,10 +195,12 @@ def vendor_profile(request, id):
             adhar_card_image = request.FILES.get('adhar_card_image')
             pan_card_number = request.POST.get('pan_card_number')
             pan_card_image = request.FILES.get('pan_card_image')
+            location = request.POST.get('location')
             vendor_profile_detail.gender = gender
             vendor_profile_detail.address = address
             vendor_profile_detail.adhar_card_number = adhar_card_number
             vendor_profile_detail.pan_card_number = pan_card_number
+            vendor_profile_detail.location = location
             if adhar_card_image:
                 vendor_profile_detail.adhar_card_image = adhar_card_image
             if pan_card_image:
@@ -289,61 +293,94 @@ def vendor_profile(request, id):
             
 
         return redirect('vendor_profile', id=vendor.id)  # Adjust 'employee-details' to your URL name
-
+    districts = [
+        "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
+        "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
+        "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni",
+        "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch",
+        "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni",
+        "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
+        "Ujjain", "Umaria", "Vidisha"
+    ]
     context = {
         'vendor': vendor,
         'vendor_profile_detail': vendor_profile_detail,
         'vendor_bussiness_detail': vendor_bussiness_detail,
-        'vendor_bank_detail': vendor_bank_detail
+        'vendor_bank_detail': vendor_bank_detail,
+        'districts' : districts
     }
     return render(request, 'evms/vendor-profile.html', context)
 
 
 def candidate_form(request):
     if request.method == 'POST':
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
+        candidate_name = request.POST.get('candidate_name')
+        candidate_mobile_number = request.POST.get('candidate_mobile_number')
+        candidate_email_address = request.POST.get('candidate_email_address')
         qualification = request.POST.get('qualification')
-        mobile_number = request.POST.get('mobile_number')
-        email = request.POST.get('email')
-        resume = request.FILES.get('resume')
-        sector = request.POST.get('sector')
-        location = request.POST.getlist('location')
+        sector = request.POST.getlist('sector')
+        job_type = request.POST.get('job_type')
+        preferred_location = request.POST.getlist('preferred_location')
+        candidate_resume = request.FILES.get('candidate_resume')
+        candidate_photo = request.FILES.get('candidate_photo')
         refer_code = request.POST.get('refer_code', '')
-        Job_Type = request.POST.get('Job_Type')
-        candidate_image = request.FILES.get('candidate_image')
-        submission_time = timezone.localtime().strftime('%Y-%m-%d %H:%M:%S')
+        sector_str = ', '.join(sector)
+        preferred_location_str = ', '.join(preferred_location)
         
-        # Check if a candidate with the same mobile number or email already exists
+        # Check if a candidate with the same mobile number or candidate_email_address already exists
         existing_candidate = Candidate.objects.filter(
-            mobile_number=mobile_number
-        ).exists() or Candidate.objects.filter(email=email).exists()
+            candidate_mobile_number=candidate_mobile_number
+        ).exists() or Candidate.objects.filter(candidate_email_address=candidate_email_address).exists()
 
         if existing_candidate:
             # Add a message to display on the frontend
             messages.error(request, "A profile with this mobile number or email already exists.")
-            return render(request, 'candidateform.html', {'initial_data': {'refer_code': refer_code}})
+            return render(request, 'evms/candidate-apply-form.html', {'initial_data': {'refer_code': refer_code}})
         else:
             # If no existing candidate, proceed to create a new one
             candidate = Candidate.objects.create(
-                first_name=first_name,
-                last_name=last_name,
+                candidate_name=candidate_name,
                 qualification=qualification,
-                mobile_number=mobile_number,
-                email=email,
-                resume=resume,
-                sector=sector,
-                location=location,
+                candidate_mobile_number=candidate_mobile_number,
+                candidate_email_address=candidate_email_address,
+                candidate_resume=candidate_resume,
+                sector=sector_str,
+                preferred_location=preferred_location_str,
                 refer_code=refer_code,
-                Job_Type=Job_Type,
-                submission_time=submission_time,
-                candidate_image=candidate_image,
+                job_type=job_type,
+                candidate_photo=candidate_photo,
             )
 
-            return redirect(CandidateSuccess, candidate_id=candidate.id)
+            # return redirect(CandidateSuccess, candidate_id=candidate.id)
+            return redirect ('thankyou')
 
     else:
         refer_code = request.GET.get('ref', '')
         initial_data = {'refer_code': refer_code}
-        return render(request, 'evms/candidate-apply-form.html', {'initial_data': initial_data})
+        districts = [
+        "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
+        "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
+        "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni",
+        "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch",
+        "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni",
+        "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
+        "Ujjain", "Umaria", "Vidisha"
+        ]
+        job_sectors = [
+        "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
+        "Healthcare and Pharmaceuticals","Education and Training",
+        "Retail and E-commerce", "Manufacturing and Production","Real Estate and Construction", "Hospitality and Tourism",
+        "Media and Entertainment", "Telecommunications","Logistics and Supply Chain","Marketing and Advertising","Human Resources",
+        "Legal and Compliance","Engineering and Infrastructure","Automobile Industry",
+        "Fashion and Textile", "FMCG (Fast Moving Consumer Goods)",
+        "Agriculture and Farming", "Insurance","Government Sector","NGO and Social Services",
+        "Energy and Power","Aviation and Aerospace"
+        ]
+        return render(request, 'evms/candidate-apply-form.html', {'initial_data': initial_data,'job_sectors':job_sectors,'districts':districts})
+    
+def term_and_conditions(request) :
+    return render (request,'evms/candidate-t&c.html')
+
+def thankyou(request) :
+    return render (request,'evms/thankyou.html')
     

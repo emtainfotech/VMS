@@ -144,12 +144,8 @@ def employee_profile_view(request,id):
         
         # Check if additional info exists or create a new instance
         additional_info, _ = EmployeeAdditionalInfo.objects.get_or_create(employee=employee)
-
-        # Check if emergency contact exists or create a new instance
         emergency_contact, _ = EmergencyContact.objects.get_or_create(user=employee.user)
-        
         social_media, _ = EmployeeSocialMedia.objects.get_or_create(employee=employee)
-        
         bank_details, _ = EmployeeBankDetails.objects.get_or_create(employee=employee)
 
         if request.method == 'POST':
@@ -260,9 +256,6 @@ def employee_profile_view(request,id):
                 bank_details.save()
 
                 messages.success(request, 'Bank details updated successfully!')
-                
-                
-
             return redirect('employee_profile_view', id=employee.id)  # Adjust 'employee-details' to your URL name
 
         context = {

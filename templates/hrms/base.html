@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>EMTA - HRMS</title>
-    <link rel="shortcut icon" href="https://emta.co.in/f.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/m.png" type="image/x-icon">
     <!-- CSS files -->
     <link href="/static/dist/css/tabler.min.css?1692870487" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -168,13 +168,23 @@
                     <span class="nav-link-title">Candidates</span>
                   </a>
                 </li>
-                <li class="nav-item  {% if request.path == '/designation/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'designation_view' %}">
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-reserved-line"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 20h6" /><path d="M12 14v6" /><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" /><path d="M9 9h6" /></svg>
+                      <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-coin-rupee"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M15 8h-6h1a3 3 0 0 1 0 6h-1l3 3" /><path d="M9 11h6" /></svg>
                     </span>
-                    <span class="nav-link-title">Designations</span>
+                    <span class="nav-link-title">EVMS</span>
                   </a>
+                  <div class="dropdown-menu">
+                    <div class="dropdown-menu-columns">
+                      <div class="dropdown-menu-column">
+                        <a class="dropdown-item" href="{% url 'admin_vendor_list' %}">Vendor's</a>
+                        <a class="dropdown-item" href="{% url 'admin_evms_candidate_list' %}">Candidate's</a>
+                        <a class="dropdown-item" href="{% url 'pay_list_view' %}">Pay List</a>
+                        <a class="dropdown-item" href="{% url 'holiday_view' %}">Transaction History</a>       
+                      </div>
+                    </div>
+                  </div>
                 </li>
                 <li class="nav-item  {% if request.path == '/employee-attendence/' %}active{% endif %}">
                   <a class="nav-link" href="{% url 'attendence_view' %}">
@@ -183,62 +193,22 @@
                     <span class="nav-link-title">Employee Attendance</span>
                   </a>
                 </li>
-                <li class="nav-item  {% if request.path == '/leave-request/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'leave_request_view' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <i class="fas fa-exclamation-circle late"></i>
-                    </span>
-                    <span class="nav-link-title">Leave Request</span>
-                  </a>
-                </li>
-                <li class="nav-item  {% if request.path == '/holiday/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'holiday_view' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <i class="fas fa-sun holiday"></i>
-                    </span>
-                    <span class="nav-link-title">Holiday's</span>
-                  </a>
-                </li>
-                <li class="nav-item  {% if request.path == '/projects/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'project_view' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-database"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 6m-8 0a8 3 0 1 0 16 0a8 3 0 1 0 -16 0" /><path d="M4 6v6a8 3 0 0 0 16 0v-6" /><path d="M4 12v6a8 3 0 0 0 16 0v-6" /></svg>
-                    </span>
-                    <span class="nav-link-title">Project's</span>
-                  </a>
-                </li>
                 <li class="nav-item dropdown">
                   <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                    {% comment %} <span class="nav-link-icon d-md-none d-lg-inline-block">
                       <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-coin-rupee"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M15 8h-6h1a3 3 0 0 1 0 6h-1l3 3" /><path d="M9 11h6" /></svg>
-                    </span>
-                    <span class="nav-link-title">Salary Information</span>
+                    </span> {% endcomment %}
+                    <span class="nav-link-title">Other Information</span>
                   </a>
                   <div class="dropdown-menu">
                     <div class="dropdown-menu-columns">
                       <div class="dropdown-menu-column">
+                        <a class="dropdown-item" href="{% url 'designation_view' %}">Designations</a>
+                        <a class="dropdown-item" href="{% url 'leave_request_view' %}">Leave Request</a>
+                        <a class="dropdown-item" href="{% url 'holiday_view' %}">Holidays</a>
                         <a class="dropdown-item" href="{% url 'pay_list_view' %}">Pay List</a>
                         <a class="dropdown-item" href="{% url 'office_expense_view' %}">Office Expense</a>
-                        {% comment %} <div class="dropend">
-                          <a class="dropdown-item dropdown-toggle" href="#sidebar-authentication" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">Authentication</a>
-                          <div class="dropdown-menu">
-                            <a href="./sign-in.html" class="dropdown-item">Sign in</a>
-                            <a href="./sign-in-link.html" class="dropdown-item">Sign in link</a>
-                            <a href="./sign-in-illustration.html" class="dropdown-item">Sign in with illustration</a>
-                            <a href="./sign-in-cover.html" class="dropdown-item">Sign in with cover</a>
-                            <a href="./sign-up.html" class="dropdown-item">Sign up</a>
-                            <a href="./forgot-password.html" class="dropdown-item">Forgot password</a>
-                            <a href="./terms-of-service.html" class="dropdown-item">Terms of service</a>
-                            <a href="./auth-lock.html" class="dropdown-item">Lock screen</a>
-                            <a href="./2-step-verification.html" class="dropdown-item">2 step verification</a>
-                            <a href="./2-step-verification-code.html" class="dropdown-item">2 step verification code</a>
-                          </div>
-                        </div> {% endcomment %}
                         
-                        {% comment %} <a class="dropdown-item" href="./badges.html">
-                          Badges
-                          <span class="badge badge-sm bg-green-lt text-uppercase ms-auto">New</span>
-                        </a> {% endcomment %}
                         <a class="dropdown-item" href="{% url 'incentive_view' %}">Incentive</a>
                         <a class="dropdown-item" href="{% url 'bonus_view' %}">Bonus</a>
                       
@@ -249,12 +219,8 @@
                         <a class="dropdown-item" href="{% url 'assign_task' %}">Assign Task</a>
                       </div>
                       <div class="dropdown-menu-column">
-                        
-                        
                         <a class="dropdown-item" href="{% url 'termination_view' %}">Termination</a>
-                        
                         <a class="dropdown-item" href="{% url 'announcement_view' %}">Announcement</a>
-                       
                         <a class="dropdown-item" href="{% url 'team_meeting_view' %}">Team Meeting's</a>
                         <a class="dropdown-item" href="{% url 'awards_view' %}">Award's</a>
                         <a class="dropdown-item" href="{% url 'office_activity_view' %}">Office Activity's</a>
@@ -266,21 +232,6 @@
                   </div>
                 </li>
               </ul>
-              {% comment %} <div class="my-2 my-md-0 flex-grow-1 flex-md-grow-0 order-first order-md-last">
-                <form action="./" method="get" autocomplete="off" novalidate>
-                  <div class="input-icon">
-                    <span class="input-icon-addon">
-                      <!-- Download SVG icon from http://tabler-icons.io/i/search -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-                        <path d="M21 21l-6 -6" />
-                      </svg>
-                    </span>
-                    <input type="text" value="" class="form-control" placeholder="Search…" aria-label="Search in website" />
-                  </div>
-                </form>
-              </div> {% endcomment %}
             </div>
           </div>
         </div>
