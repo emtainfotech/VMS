@@ -186,13 +186,13 @@
                     </div>
                   </div>
                 </li>
-                <li class="nav-item  {% if request.path == '/employee-attendence/' %}active{% endif %}">
+                {% comment %} <li class="nav-item  {% if request.path == '/employee-attendence/' %}active{% endif %}">
                   <a class="nav-link" href="{% url 'attendence_view' %}">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                       <i class="fas fa-calendar-day day-off"></i></span>
                     <span class="nav-link-title">Employee Attendance</span>
                   </a>
-                </li>
+                </li> {% endcomment %}
                 <li class="nav-item dropdown">
                   <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
                     {% comment %} <span class="nav-link-icon d-md-none d-lg-inline-block">

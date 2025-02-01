@@ -3,61 +3,41 @@
 {% block content %}
   <!-- Add Custom Styles -->
   <style>
-    .attendance-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    
-    .attendance-table th,
-    .attendance-table td {
-      padding: 10px;
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
       text-align: center;
-    }
-    
-    .attendance-table th {
-      background-color: #f4f4f4;
-    }
-    
-    .attendance-table td {
-      font-size: 18px;
-    }
-    
-    .attendance-table .status-icon {
-      font-size: 20px;
-    }
-    
-    .icon {
-      font-size: 20px;
-    }
-    
-    .present {
-      color: green;
-    }
-    
-    .absent {
-      color: red;
-    }
-    
-    .on-leave {
-      color: purple;
-    }
-    
-    .holiday {
-      color: gold;
-    }
-    
-    .day-off {
-      color: blue;
-    }
-    
-    .half-day {
-      color: orange;
-    }
-    
-    .late {
-      color: yellow;
-    }
+  }
+  
+  .calendar-header {
+      font-weight: bold;
+      padding: 10px;
+      background: #f8f9fa;
+      border-bottom: 2px solid #dee2e6;
+  }
+  
+  .calendar-cell {
+      padding: 10px;
+      min-height: 80px;
+      border: 1px solid #dee2e6;
+      position: relative;
+  }
+  
+  .current-day {
+      border: 2px solid green;
+  }
+  
+  .date {
+      font-weight: bold;
+      display: block;
+  }
+  
+  .empty {
+      background: #f8f9fa;
+      border: none;
+  }
+  
   </style>
   <div class="page-wrapper">
     <!-- Page header -->
@@ -82,43 +62,90 @@
               <span class="legend-item"><i class="fas fa-times-circle absent"></i>&nbsp;&nbsp; → &nbsp;&nbsp; Absent</span>&nbsp;&nbsp; |&nbsp;&nbsp;
               <span class="legend-item"><i class="fas fa-bed on-leave"></i>&nbsp;&nbsp; → &nbsp;&nbsp; On Leave</span>
             </div>
-            <!-- Attendance Table -->
-            <div class="table-responsive">
-                <table class="table attendance-table text-center">
-                    <thead>
-                        <tr>
-                            <th>Employee</th>
-                            {% for day in days_range %}
-                                <th>{{ day }}</th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for employee_id, data in attendance_data.items %}
-                        <tr>
-                            <td class="employee-info">
-                                <img src="{{ data.employee.employee_photo.url }}" class="object-cover card-img-start rounded-circle" style="height: 36;width: 36px;" alt="Employee" class="employee-img" />
-                                <span class="text-secondary">{{ data.employee.first_name }} {{ data.employee.last_name }}</span>
-                            </td>
-                            {% for attendance in data.attendance %}
-                            <td>
-                                {% if attendance.status == "present" %}
-                                    <i class="fas fa-check-circle present"></i>
-                                {% elif attendance.status == "on_leave" %}
-                                    <i class="fas fa-bed on-leave"></i>
-                                {% elif attendance.status == "holiday" %}
-                                    <i class="fas fa-sun holiday"></i>
-                                {% else %}
-                                    <i class="fas fa-times-circle absent"></i>
-                                {% endif %}
-                            </td>
-                            {% endfor %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+<!-- Attendance Table -->
+<div class="container mt-4">
+  <div class="d-flex justify-content-between">
+      <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn btn-light">
+          <i class="fas fa-chevron-left"></i> Previous Month
+      </a>
+      <h4>{{ month }} - {{ year }}</h4>
+      <a href="?month={{ next_month }}&year={{ next_year }}" class="btn btn-light">
+          Next Month <i class="fas fa-chevron-right"></i>
+      </a>
+  </div>
+
+  {% for employee_id, data in attendance_data.items %}
+  <div class="mt-4">
+      <h5>{{ data.employee.user.first_name }} {{ data.employee.user.last_name }}</h5>
+      <div class="calendar-grid mt-3">
+          <!-- Weekday Headers -->
+          <div class="calendar-header">Mon</div>
+          <div class="calendar-header">Tue</div>
+          <div class="calendar-header">Wed</div>
+          <div class="calendar-header">Thu</div>
+          <div class="calendar-header">Fri</div>
+          <div class="calendar-header">Sat</div>
+          <div class="calendar-header">Sun</div>
+
+          <!-- Empty cells for the first week (FIXED) -->
+          {% for _ in empty_start_days %}
+          <div class="calendar-cell empty"></div>
+          {% endfor %}
+
+          <!-- Loop through the days of the month -->
+          {% for entry in data.attendance %}
+          <div class="calendar-cell {% if entry.date == today %} current-day {% endif %}">
+              <span class="date">{{ entry.date.day }}</span>
+
+              <!-- Attendance Status -->
+              {% if entry.status == "present" %}
+              <span class="text-success"><i class="fas fa-check-circle"></i> Present</span>
+              {% elif entry.status == "on_leave" %}
+              <span class="text-primary"><i class="fas fa-door-open"></i> On Leave</span>
+              {% elif entry.status == "holiday" %}
+              <span class="text-warning"><i class="fas fa-sun"></i> Holiday</span>
+              {% else %}
+              <span class="text-danger"><i class="fas fa-times-circle"></i> Absent</span>
+              {% endif %}
+          </div>
+          {% endfor %}
+      </div>
+  </div>
+  {% endfor %}
+</div>
+
+
+<style>
+  .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+  }
+  .calendar-header {
+      font-weight: bold;
+      text-align: center;
+      padding: 8px;
+      background: #f1f1f1;
+      border-radius: 5px;
+  }
+  .calendar-cell {
+      text-align: center;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      min-height: 80px;
+  }
+  .empty {
+      background: transparent;
+      border: none;
+  }
+  .current-day {
+      background: #007bff;
+      color: #fff;
+      font-weight: bold;
+  }
+</style>
+
         
         </div>
       </div>

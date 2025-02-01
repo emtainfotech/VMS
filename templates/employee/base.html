@@ -122,8 +122,6 @@
             <div class="nav-item dropdown">
               <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
                 <img class="avatar avatar-sm" src="{{user.employee.employee_photo.url}}" alt="{{user.username}}">
-
-
                 <div class="d-none d-xl-block ps-2">
                   <div>{{user.username}}</div>
                   <div class="mt-1 small text-secondary">{{user.employee.designation}}</div>
@@ -131,7 +129,7 @@
               </a>
               <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                 <a href="{% url 'employee_profile_view' user.id %}" class="dropdown-item">Profile</a>
-                <a href="{% url 'employee_logout' %}" class="dropdown-item">Logout</a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#modal-report" class="dropdown-item">Logout</a>
               </div>
             </div>
           </div>
@@ -183,13 +181,23 @@
                   </a>
                 </li>
                 
-                <li class="nav-item  {% if request.path == '/designation/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'employee_dashboard' %}">
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-reserved-line"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 20h6" /><path d="M12 14v6" /><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" /><path d="M9 9h6" /></svg>
+                      <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-coin-rupee"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M15 8h-6h1a3 3 0 0 1 0 6h-1l3 3" /><path d="M9 11h6" /></svg>
                     </span>
-                    <span class="nav-link-title">Task</span>
+                    <span class="nav-link-title">EVMS</span>
                   </a>
+                  <div class="dropdown-menu">
+                    <div class="dropdown-menu-columns">
+                      <div class="dropdown-menu-column">
+                        <a class="dropdown-item" href="{% url 'employee_vendor_list' %}">Vendor's</a>
+                        <a class="dropdown-item" href="{% url 'employee_evms_candidate_list' %}">Candidate's</a>
+                        <a class="dropdown-item" href="{% url 'pay_list_view' %}">Pay List</a>
+                        <a class="dropdown-item" href="{% url 'holiday_view' %}">Transaction History</a>       
+                      </div>
+                    </div>
+                  </div>
                 </li>
                 <li class="nav-item  {% if request.path == '/employee-attendence/' %}active{% endif %}">
                   <a class="nav-link" href="{% url 'employee_leave_request_view' %}">

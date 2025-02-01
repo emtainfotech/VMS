@@ -17,8 +17,8 @@ urlpatterns = [
     path('candidate-list/',admin_candidate_list,name = 'admin_candidate_list'),
     path('candidate-details/<int:id>/', admin_candidate_profile, name='candidate-details'),
     path('designation/',designation_view,name = 'designation_view'),
-    path('designation/delete/<int:id>/', delete_designation, name='delete-designation'),
-    path('employee-attendence/',attendence_view,name = 'attendence_view'),
+    # path('designation/delete/<int:id>/', delete_designation, name='delete-designation'),
+    # path('employee-attendence/',attendence_view,name = 'attendence_view'),
     path('leave-request/',leave_request_view,name = 'leave_request_view'),
     path('holiday/',holiday_view,name = 'holiday_view'),
     path('projects/',project_view,name = 'project_view'),
@@ -64,6 +64,7 @@ urlpatterns = [
     path('vendor-candidate-list/<int:id>/',admin_vendor_candidate_list,name = 'admin_vendor_candidate_list'),
     path('evms-candidate-profile/<int:id>/',evms_candidate_profile,name = 'evms_candidate_profile'),
     path('evms-vendor-candidate-profile/<int:id>/',evms_vendor_candidate_profile,name = 'evms_vendor_candidate_profile'),
+    path("download-attendance/<int:user_id>/", download_attendance_excel, name="download_attendance_excel"),
     
     
     path('admin/', admin.site.urls),

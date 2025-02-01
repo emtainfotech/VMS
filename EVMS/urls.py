@@ -13,6 +13,8 @@ urlpatterns = [
     path('vendor-dashboard/',vendor_dashboard,name = 'vendor_dashboard'),
     path('vendor-profile/<int:id>/',vendor_profile,name = 'vendor_profile'),
     path('candidateform/', candidate_form, name='candidate_form'),
+    path("bulk-upload/", bulk_upload_candidates, name="bulk_upload_candidates"),
+    path("download-sample/", download_sample_excel, name="download_sample_excel"),
     path('term-and-conditions/', term_and_conditions, name='term_and_conditions'),
     path('thankyou/', thankyou, name='thankyou'),
     

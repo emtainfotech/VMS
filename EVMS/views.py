@@ -30,6 +30,7 @@ import pandas as pd
 import pytz
 from django.http import JsonResponse
 import re
+import os
 
 
 def vendor_signup(request):
@@ -120,7 +121,7 @@ def vendor_dashboard(request):
             referral_link = request.build_absolute_uri('/candidateform/?ref={}'.format(vendor.refer_code))
             candidates = Candidate.objects.filter(refer_code=vendor.refer_code).order_by('-id')
             num_candidates = candidates.count()
-            total_commission = candidates.aggregate(total_commission=Sum('commission'))['total_commission']
+            # total_commission = candidates.aggregate(total_commission=Sum('commission'))['total_commission']
 
             # Generate QR code
             qr = qrcode.QRCode(
@@ -152,7 +153,7 @@ def vendor_dashboard(request):
                 'last_name': request.user.last_name,
                 'candidates': candidates,
                 'num_candidates': num_candidates,
-                'total_commission': total_commission,
+                # 'total_commission': total_commission,
                 'referral_link': referral_link,
                 'qr_code_url': vendor.qr_code.url if vendor.qr_code else None,
             }
@@ -383,4 +384,92 @@ def term_and_conditions(request) :
 
 def thankyou(request) :
     return render (request,'evms/thankyou.html')
+
+
+def bulk_upload_candidates(request):
+    vendor = Vendor.objects.get(user=request.user)
+    if request.method == "POST" and request.FILES.get("excel_file"):
+        if 'submit_vendor_profile_details' in request.POST:
+            excel_file = request.FILES["excel_file"]
+        
+        # Save the file temporarily
+        file_path = default_storage.save("temp/" + excel_file.name, excel_file)
+        full_path = os.path.join(default_storage.location, file_path)
+
+        try:
+            # Read Excel File
+            df = pd.read_excel(full_path, engine="openpyxl")
+            required_columns = [
+                "candidate_name", "candidate_mobile_number", "candidate_email_address",
+                "qualification", "sector", "job_type", "preferred_location",
+                "refer_code"
+            ]
+            
+            # Validate required columns
+            if not all(col in df.columns for col in required_columns):
+                messages.error(request, "Invalid Excel format. Please use the sample template.")
+                return redirect("bulk_upload_candidates")
+
+            created_count = 0
+            duplicate_count = 0
+
+            for _, row in df.iterrows():
+                mobile_number = str(row["candidate_mobile_number"]).strip()
+                email_address = str(row["candidate_email_address"]).strip()
+
+                # Check for duplicates
+                if Candidate.objects.filter(candidate_mobile_number=mobile_number).exists() or \
+                   Candidate.objects.filter(candidate_email_address=email_address).exists():
+                    duplicate_count += 1
+                    continue
+
+                # Create candidate record
+                Candidate.objects.create(
+                    candidate_name=row["candidate_name"],
+                    candidate_mobile_number=mobile_number,
+                    candidate_email_address=email_address,
+                    qualification=row["qualification"],
+                    sector=row["sector"],
+                    job_type=row["job_type"],
+                    preferred_location=row["preferred_location"],
+                    refer_code=row.get("refer_code", ""),
+                )
+                created_count += 1
+
+            messages.success(request, f"Successfully added {created_count} candidates. {duplicate_count} duplicates skipped.")
+
+        except Exception as e:
+            messages.error(request, f"Error processing file: {str(e)}")
+        
+        finally:
+            # Clean up the temporary file
+            os.remove(full_path)
+
+    return render(request, "evms/candidate-bulk-upload.html",{'vendor':vendor})
+
+
+
+
+def download_sample_excel(request):
+    refer_code = request.GET.get("refer_code", "YOUR_REF_CODE")
+
+    data = {
+        "candidate_name": ["John Doe"],
+        "candidate_mobile_number": ["9876543210"],
+        "candidate_email_address": ["johndoe@example.com"],
+        "qualification": ["MBA"],
+        "sector": ["Banking, Insurance"],
+        "job_type": ["Full-Time"],
+        "preferred_location": ["Mumbai, Delhi"],
+        "refer_code": [refer_code],
+    }
+
+    df = pd.DataFrame(data)
+
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = 'attachment; filename="Candidate_Sample.xlsx"'
     
+    with pd.ExcelWriter(response, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False)
+
+    return response

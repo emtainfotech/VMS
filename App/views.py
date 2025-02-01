@@ -25,6 +25,11 @@ import re
 from django.utils.timezone import localtime, make_aware
 from datetime import datetime, timedelta, time
 from EVMS.models import *
+import openpyxl
+from django.http import HttpResponse
+from django.utils.timezone import localtime
+from datetime import datetime
+from django.db.models import Sum, Min, Max
 
 
 IST = pytz.timezone('Asia/Kolkata')
@@ -193,14 +198,25 @@ def home(request):
         return render(request, '404.html', status=404)
 
 
+from django.shortcuts import render, get_object_or_404
+from django.utils.timezone import localtime
+from datetime import datetime, timedelta, date
+import calendar
+from .models import Employee, EmployeeSession, Holiday, LeaveRequest
+
+from datetime import datetime, date, timedelta
+import calendar
+from django.shortcuts import render, get_object_or_404
+from django.utils.timezone import localtime
+from .models import Employee, EmployeeSession, Holiday, LeaveRequest
 
 def employee_attendence_details(request, user_id):
     if request.user.is_staff or request.user.is_superuser:
         today = localtime().date()
-
-        # Fetch the date range from the request, if provided
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
+
+        # Handling date range filter
         if start_date and end_date:
             try:
                 start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -210,85 +226,108 @@ def employee_attendence_details(request, user_id):
         else:
             start_date = end_date = None
 
-        # Filter sessions based on the date range or default to today's date
+        # Get the current month and year
+        year = int(request.GET.get("year", today.year))
+        month = int(request.GET.get("month", today.month))
+        first_weekday, num_days = calendar.monthrange(year, month)
+
+        # Fetch holidays from the database
+        holidays = set(Holiday.objects.filter(date__year=year, date__month=month).values_list('date', flat=True))
+
+        employee = get_object_or_404(Employee, user_id=user_id)
+
+        attendance_data = []
+        present_days = set()
+        absent_days = set()
+        half_days = set()
+        leave_days = set()  # ✅ Track leave days
+
+        for day in range(1, num_days + 1):
+            current_date = date(year, month, day)
+            status = "present"
+
+            # Check if it's a holiday or Sunday
+            if current_date in holidays or current_date.weekday() == 6:
+                status = "holiday"
+                holidays.add(day)  # ✅ Add to holidays set
+
+            # Check if employee is on approved leave
+            elif LeaveRequest.objects.filter(
+                employee=employee, start_date__lte=current_date, end_date__gte=current_date, status="Approved"
+            ).exists():
+                status = "on_leave"
+                leave_days.add(day)  # ✅ Add to leave days set
+
+            else:
+                # Check if the employee was present
+                sessions = EmployeeSession.objects.filter(user_id=user_id, login_time__date=current_date)
+                total_time = sum((session.total_time for session in sessions if session.total_time), timedelta())
+
+                # Convert total time to hours
+                total_hours = total_time.total_seconds() / 3600
+
+                if total_hours < 4 and total_hours > 0:
+                    status = "half_day"
+                    half_days.add(day)
+                elif sessions.exists():
+                    present_days.add(day)
+                else:
+                    absent_days.add(day)
+
+            attendance_data.append({
+                "date": current_date,
+                "status": status
+            })
+
+        # Get session data for today or the selected range
+        session_filter = {"user_id": user_id}
         if start_date and end_date:
-            sessions = EmployeeSession.objects.filter(
-                user_id=user_id, 
-                login_time__date__range=(start_date, end_date)
-            )
+            session_filter["login_time__date__range"] = (start_date, end_date)
         else:
-            sessions = EmployeeSession.objects.filter(
-                user_id=user_id, 
-                login_time__date=today
-            )
+            session_filter["login_time__date"] = today
 
-        # Compute total login time for the filtered sessions
-        total_time = timedelta()
-        session_data = []
-        for session in sessions.order_by('-id'):
-            session_duration = session.total_time or timedelta()
-            total_time += session_duration
-            session_data.append({
-                "login_time": localtime(session.login_time).strftime('%Y-%m-%d %H:%M:%S'),
-                "logout_time": localtime(session.logout_time).strftime('%Y-%m-%d %H:%M:%S') if session.logout_time else "Automatically Logged Out",
-                "total_time": str(session_duration) if session_duration else "N/A",
-            })
+        sessions = EmployeeSession.objects.filter(**session_filter).order_by('-id')
 
-        # Format total login time
-        hours, remainder = divmod(total_time.total_seconds(), 3600)
-        minutes, seconds = divmod(remainder, 60)
-        total_login_time_formatted = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
+        # Calculate total login time
+        total_time = sum((session.total_time or timedelta() for session in sessions), timedelta())
+        total_login_time_formatted = str(timedelta(seconds=total_time.total_seconds()))
 
-        # Fetch daily summary
-        daily_summary = (
-            EmployeeSession.objects.filter(user_id=user_id)
-            .values('login_time__date')
-            .annotate(
-                first_login=Min('login_time'),
-                last_login=Max('logout_time'),
-                total_time=Sum('total_time')
-            )
-            .order_by('login_time__date')
-        )
-
-        day_summary = []
-        for record in daily_summary:
-            day_summary.append({
-                "date": record['login_time__date'],
-                "first_login": localtime(record['first_login']).strftime('%Y-%m-%d %H:%M:%S') if record['first_login'] else "N/A",
-                "last_login": localtime(record['last_login']).strftime('%Y-%m-%d %H:%M:%S') if record['last_login'] else "N/A",
-                "total_time": str(record['total_time']) if record['total_time'] else "N/A",
-            })
-
-        # Fetch monthly summary
-        monthly_summary = (
-            EmployeeSession.objects.filter(user_id=user_id)
-            .values('login_time__year', 'login_time__month')
-            .annotate(
-                total_time=Sum('total_time')
-            )
-            .order_by('login_time__year', 'login_time__month')
-        )
-
-        month_summary = []
-        for record in monthly_summary:
-            month_name = datetime(record['login_time__year'], record['login_time__month'], 1).strftime('%B %Y')
-            month_summary.append({
-                "month": month_name,
-                "total_time": str(record['total_time']) if record['total_time'] else "N/A",
-            })
+        # Compute empty cells for the start of the month
+        empty_start_days = list(range(first_weekday))
 
         return render(request, 'hrms/employee_attendence_details.html', {
-            "today_sessions": session_data,
+            "attendance_data": attendance_data,
+            "days_range": range(1, num_days + 1),
+            "empty_start_days": empty_start_days,
+            "month": month,
+            "year": year,
+            "prev_month": month - 1 if month > 1 else 12,
+            "prev_year": year if month > 1 else year - 1,
+            "next_month": month + 1 if month < 12 else 1,
+            "next_year": year if month < 12 else year + 1,
+            "today_sessions": [
+                {
+                    "login_time": localtime(session.login_time).strftime('%Y-%m-%d %H:%M:%S'),
+                    "logout_time": localtime(session.logout_time).strftime('%Y-%m-%d %H:%M:%S') if session.logout_time else "Currently Working",
+                    "logout_reason": session.logout_reason if session.logout_reason else "Currently Working",
+                    "total_time": str(session.total_time) if session.total_time else "Currently Working",
+                }
+                for session in sessions
+            ],
             "total_login_time_today": total_login_time_formatted,
-            "daily_summary": day_summary,
-            "monthly_summary": month_summary,
-            "start_date": start_date,
-            "end_date": end_date,
+            "present_days": present_days,
+            "absent_days": absent_days,
+            "holidays": holidays,
+            "leave_days": leave_days,  # ✅ Pass leave days to template
+            "half_days": half_days,
+            "user_id": user_id,
         })
     else:
-        # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
+
+
+
+
 
 def employee_view(request):
     if request.user.is_staff or request.user.is_superuser:
@@ -881,52 +920,77 @@ def delete_designation(request, id):
     messages.success(request, 'Designation deleted successfully!')
 
     return redirect('designation_view')
-def attendence_view(request):
-    if request.user.is_staff or request.user.is_superuser:
-        # Fetch all employees from Employee model (which is related to User)
-        employees = Employee.objects.all()
-        holidays = Holiday.objects.values_list('date', flat=True)
-        
-        # Create a dictionary to hold attendance data for each employee
-        attendance_data = {}
-        today = date.today()
-        num_days = calendar.monthrange(today.year, today.month)[1]
 
-        for employee in employees:
-            attendance_data[employee.id] = {
-                "employee": employee,
-                "attendance": []
-            }
-            
-            # Generate attendance for the current month
-            for day in range(1, num_days + 1):
-                current_date = date(today.year, today.month, day)
-                
-                # Default status
-                status = 'present'
-                
-                # Check if the date is a holiday
-                if current_date in holidays or current_date.weekday() == 6:  # 6 represents Sunday
-                    status = 'holiday'
-                # Check if the employee is on leave
-                elif LeaveRequest.objects.filter(
-                    employee=employee,  # Corrected here
-                    start_date__lte=current_date, 
-                    end_date__gte=current_date, 
-                    status='Approved'
-                ).exists():
-                    status = 'on_leave'
-                
-                # Add to attendance
-                attendance_data[employee.id]["attendance"].append({
-                    "date": current_date,
-                    "status": status
-                })
+from django.shortcuts import render
+from datetime import date
+import calendar
+from .models import Employee, Holiday, LeaveRequest  # Ensure models are correctly imported
 
-        return render(request, 'hrms/attendence.html', {'attendance_data': attendance_data, 'days_range': range(1, num_days + 1)})
-    else:
-        # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
+# def attendence_view(request):
+#     today = date.today()
+    
+#     # Get month & year from request (for navigation), default to current
+#     year = int(request.GET.get("year", today.year))
+#     month = int(request.GET.get("month", today.month))
+
+#     # Get total days & first weekday of the month
+#     first_weekday, num_days = calendar.monthrange(year, month)
+
+#     # Fetch holidays in the current month
+#     holidays = set(Holiday.objects.filter(date__year=year, date__month=month).values_list('date', flat=True))
+
+#     # If user is staff or superuser, show attendance for all employees
+#     if request.user.is_staff or request.user.is_superuser:
+#         employees = Employee.objects.select_related("user").all()
+#     else:
+#         # If a regular user, only show their attendance
+#         employees = Employee.objects.filter(user=request.user)
+
+#     attendance_data = {}
+
+#     for employee in employees:
+#         attendance_data[employee.id] = {
+#             "employee": employee,
+#             "attendance": []
+#         }
+
+#         # Generate attendance for the selected month
+#         for day in range(1, num_days + 1):
+#             current_date = date(year, month, day)
+
+#             # Default status
+#             status = "present"
+
+#             # Check if holiday or Sunday
+#             if current_date in holidays or current_date.weekday() == 6:
+#                 status = "holiday"
+#             elif LeaveRequest.objects.filter(
+#                 employee=employee,
+#                 start_date__lte=current_date, 
+#                 end_date__gte=current_date, 
+#                 status="Approved"
+#             ).exists():
+#                 status = "on_leave"
+
+#             attendance_data[employee.id]["attendance"].append({
+#                 "date": current_date,
+#                 "status": status
+#             })
+
+#     context = {
+#         "attendance_data": attendance_data,
+#         "days_range": list(range(1, num_days + 1)),  # Convert range to list
+#         "empty_start_days": list(range(first_weekday)),  # FIX: Precompute empty start days
+#         "month": month,
+#         "year": year,
+#         "prev_month": month - 1 if month > 1 else 12,
+#         "prev_year": year if month > 1 else year - 1,
+#         "next_month": month + 1 if month < 12 else 1,
+#         "next_year": year if month < 12 else year + 1,
+#     }
+
+#     return render(request, "hrms/attendence.html", context)
+
 
 
 
@@ -2414,3 +2478,87 @@ def evms_vendor_candidate_profile(request,id) :
         'employees' : employees
     }
     return render(request,'hrms/evms-vendor-candidate-profile.html',context)
+
+def download_attendance_excel(request, user_id):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return HttpResponse("Unauthorized", status=403)
+
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    if not start_date or not end_date:
+        return HttpResponse("Invalid Date Range", status=400)
+
+    try:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+    except ValueError:
+        return HttpResponse("Invalid Date Format", status=400)
+
+    # Fetch holidays and leaves
+    holidays = set(Holiday.objects.filter(date__range=(start_date, end_date)).values_list('date', flat=True))
+    leave_days = set(LeaveRequest.objects.filter(
+        employee__user_id=user_id,
+        start_date__lte=end_date, end_date__gte=start_date,
+        status="Approved"
+    ).values_list('start_date', flat=True))
+
+    # Fetch attendance data
+    attendance_data = (
+        EmployeeSession.objects.filter(
+            user_id=user_id, login_time__date__range=(start_date, end_date)
+        )
+        .values("login_time__date")
+        .annotate(
+            first_login=Min("login_time"),
+            last_logout=Max("logout_time"),
+            total_time=Sum("total_time"),
+            login_count=Count("id"),
+            logout_reason=Max("logout_reason")
+        )
+        .order_by("login_time__date")
+    )
+
+    # Create an Excel workbook and sheet
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Attendance Data"
+
+    # Header row
+    headers = ["Date", "Status", "First Login", "Last Logout", "Logout Reason", "Total Time", "Login Count"]
+    ws.append(headers)
+
+    # Generate attendance data for each day
+    date_range = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
+    attendance_dict = {record["login_time__date"]: record for record in attendance_data}
+
+    for day in date_range:
+        status = "Absent"
+        record = attendance_dict.get(day, None)
+
+        if day in holidays:
+            status = "Holiday"
+        elif day in leave_days:
+            status = "On Leave"
+        elif record:
+            if record["total_time"] and record["total_time"].total_seconds() > 14400:  # More than 4 hours
+                status = "Present"
+            elif record["total_time"] and 0 < record["total_time"].total_seconds() <= 14400:
+                status = "Half-Day"
+
+        ws.append([
+            day.strftime("%Y-%m-%d"),
+            status,
+            localtime(record["first_login"]).strftime("%Y-%m-%d %H:%M:%S") if record and record["first_login"] else "N/A",
+            localtime(record["last_logout"]).strftime("%Y-%m-%d %H:%M:%S") if record and record["last_logout"] else "N/A",
+            record["logout_reason"] if record and record["logout_reason"] else "Currently Working",
+            str(record["total_time"]) if record and record["total_time"] else "N/A",
+            record["login_count"] if record else 0,
+        ])
+
+    # Generate response
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = f'attachment; filename="Attendance_{user_id}.xlsx"'
+    wb.save(response)
+
+    return response

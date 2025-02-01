@@ -92,6 +92,7 @@ class EmployeeSession(models.Model):
     logout_time = models.DateTimeField(null=True, blank=True)  # Store logout time in IST
     total_time = models.DurationField(default=timedelta(0), null=True, blank=True)
     last_activity = models.DateTimeField(default=now)
+    logout_reason = models.CharField(max_length=255)
 
     def calculate_work_hours(self):
         if not self.logout_time:

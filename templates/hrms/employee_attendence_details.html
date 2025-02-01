@@ -2,6 +2,43 @@
 {% extends 'hrms/base.html' %}
 
 {% block content %}
+<style>
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    text-align: center;
+}
+
+.calendar-header {
+    font-weight: bold;
+    padding: 10px;
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.calendar-cell {
+    padding: 10px;
+    min-height: 80px;
+    border: 1px solid #dee2e6;
+    position: relative;
+}
+
+.current-day {
+    border: 2px solid green;
+}
+
+.date {
+    font-weight: bold;
+    display: block;
+}
+
+.empty {
+    background: #f8f9fa;
+    border: none;
+}
+
+</style>
   <div class="page-wrapper">
     <!-- Page header -->
     <div class="page-header d-print-none">
@@ -11,6 +48,28 @@
             <!-- Page pre-title -->
             {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
             <h2 class="page-title" style="margin-bottom: 50px;">Attendence Details</h2>
+          </div>
+          <div class="col-auto ms-auto d-print-none">
+            <div class="btn-list">
+              {% comment %} <span class="d-none d-sm-inline"><a href="#" class="btn">New view</a></span> {% endcomment %}
+              <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
+                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 5l0 14" />
+
+                  <path d="M5 12l14 0" />
+                </svg>Download Attendence Statement's
+              </a>
+              <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Download Attendence Statement's">
+                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 5l0 14" />
+                  <path d="M5 12l14 0" />
+                </svg>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -24,7 +83,7 @@
                 <div class="card-header">
                   <h3 class="card-title">Today Attendence Record</h3>
                 </div>
-                <div class="card-body border-bottom py-3">
+                {% comment %} <div class="card-body border-bottom py-3">
                   <div class="d-flex">
                     <div class="text-secondary">
                       Show<div class="mx-2 d-inline-block">
@@ -37,9 +96,9 @@
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> {% endcomment %}
                 <div class="table-responsive">
-                  <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
+                  <table class="table card-table table-vcenter text-nowrap datatable" >
                     <thead>
                       <tr>
                         <th class="w-1">
@@ -48,6 +107,7 @@
                         <th>Login Time</th>
                         <th>Logout Time</th>
                         <th>Session Duration</th>
+                        <th>Logout Reason</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -67,12 +127,16 @@
                             <span class="me-2"></span>
                             {{ session.total_time }}
                           </td>
+                          <td>
+                            <span class="me-2"></span>
+                            {{ session.logout_reason }}
+                          </td>
                         </tr>
                       {% endfor %}
                     </tbody>
                   </table>
                 </div>
-                <div class="card-footer d-flex align-items-center">
+                {% comment %} <div class="card-footer d-flex align-items-center">
                   <p class="m-0 text-secondary">
                     Showing <span>1</span> to <span>8</span> of <span>16</span> entries
                   </p>
@@ -111,33 +175,19 @@
                       </a>
                     </li>
                   </ul>
-                </div>
+                </div> {% endcomment %}
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="page-header d-print-none">
+      {% comment %} <div class="page-header d-print-none">
         <div class="container-xl">
           <div class="row g-2 align-items-center">
             <div class="col-12">
               <div class="card">
                 <div class="card-header">
                   <h3 class="card-title">Monthly Attendence Record</h3>
-                </div>
-                <div class="card-body border-bottom py-3">
-                  <div class="d-flex">
-                    <div class="text-secondary">
-                      Show<div class="mx-2 d-inline-block">
-                        <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
-                      </div>entries
-                    </div>
-                    <div class="ms-auto text-secondary">
-                      Search:<div class="ms-2 d-inline-block">
-                        <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
-                      </div>
-                    </div>
-                  </div>
                 </div>
                 <div class="table-responsive">
                   <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
@@ -179,50 +229,93 @@
                     </tbody>
                   </table>
                 </div>
-                <div class="card-footer d-flex align-items-center">
-                  <p class="m-0 text-secondary">
-                    Showing <span>1</span> to <span>8</span> of <span>16</span> entries
-                  </p>
-                  <ul class="pagination m-0 ms-auto">
-                    <li class="page-item disabled">
-                      <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                          <path d="M15 6l-6 6l6 6" />
-                        </svg>prev
-                      </a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">1</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">2</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">3</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">4</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">5</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">
-                        next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                          <path d="M9 6l6 6l-6 6" />
-                        </svg>
-                      </a>
-                    </li>
-                  </ul>
-                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </div> {% endcomment %}
   </div>
+
+  <div class="container mt-4">
+    <div class="d-flex justify-content-between">
+        <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn btn-light">
+            <i class="fas fa-chevron-left"></i> Previous Month
+        </a>
+        <h4>{{ month }} - {{ year }}</h4>
+        <a href="?month={{ next_month }}&year={{ next_year }}" class="btn btn-light">
+            Next Month <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+
+    <div class="calendar-grid mt-3">
+        <!-- Weekday Headers -->
+        <div class="calendar-header">Mon</div>
+        <div class="calendar-header">Tue</div>
+        <div class="calendar-header">Wed</div>
+        <div class="calendar-header">Thu</div>
+        <div class="calendar-header">Fri</div>
+        <div class="calendar-header">Sat</div>
+        <div class="calendar-header">Sun</div>
+
+        <!-- Empty cells for the first week -->
+        {% for _ in empty_start_days %}
+        <div class="calendar-cell empty"></div>
+        {% endfor %}
+
+        <!-- Loop through the days of the month -->
+        {% for day in days_range %}
+    <div class="calendar-cell {% if day == today.day and month == today.month and year == today.year %} current-day {% endif %}">
+        <span class="date">{{ day }}</span>
+
+        <!-- Display the correct attendance status -->
+        {% if day in present_days %}
+            <span class="text-success"><i class="fas fa-check-circle"></i> Present</span>
+        {% elif day in half_days %}
+            <span class="text-warning"><i class="fas fa-adjust"></i> Half-Day</span>
+        {% elif day in holidays %}
+            <span class="text-primary"><i class="fas fa-sun"></i> Holiday</span>
+        {% elif day in leave_days %}
+            <span class="text-info"><i class="fas fa-plane"></i> On Leave</span>
+        {% elif day in absent_days %}
+            <span class="text-danger"><i class="fas fa-times-circle"></i> Absent</span>
+        {% else %}
+            <span class="text-secondary"><i class="fas fa-question-circle"></i> No Data</span>
+        {% endif %}
+    </div>
+{% endfor %}
+
+    
+    </div>
+</div>
+
+
+<!-- Logout Reason Modal -->
+<div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Download Statement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="GET" action="{% url 'download_attendance_excel' user_id=user_id  %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Start Date</label>
+            <input type="date" class="form-control" name="start_date" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">End Date </label>
+            <input type="date" class="form-control" name="end_date" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</a>
+          <button type="submit" class="btn btn-primary ms-auto">Download</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

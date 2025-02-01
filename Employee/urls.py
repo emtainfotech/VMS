@@ -25,6 +25,11 @@ urlpatterns = [
     path('employee-company-list/',employee_company_list,name = 'employee_company_list'),
     path('employee-company-registration/',employee_company_registration,name = 'employee_company_registration'),
     path('employee-company-profile/<int:id>/', employee_company_profile, name='employee_company_profile'),
+    path('employee-vendor-list/',employee_vendor_list,name = 'employee_vendor_list'),
+    path('evms-candidate-list/',employee_evms_candidate_list,name = 'employee_evms_candidate_list'),
+    path('vendor-candidate-list/<int:id>/',employee_vendor_candidate_list,name = 'employee_vendor_candidate_list'),
+    path('evms-candidate-profile/<int:id>/',evms_candidate_profile,name = 'evms_candidate_profile'),
+    path('evms-vendor-candidate-profile/<int:id>/',evms_vendor_candidate_profile,name = 'evms_vendor_candidate_profile'),
     
     path('admin/', admin.site.urls),
 ]
