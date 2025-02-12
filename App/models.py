@@ -9,18 +9,26 @@ class Employee(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     contact_number = models.CharField(max_length=15)
-    email = models.EmailField(unique=True)  # You can remove the unique constraint here too if you don't need it
+    email = models.EmailField(unique=True)  
     employee_id = models.CharField(max_length=50, unique=True)
-    password = models.CharField(max_length=255)  # The password can be stored directly in the User model
-    address = models.TextField()
+    password = models.CharField(max_length=255)
     designation = models.CharField(max_length=100, null=True)
+    department = models.CharField(max_length=100, null=True, blank=True)
     joining_date = models.DateField()
     employee_photo = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.employee_id})"
     
-
+class Employee_address(models.Model) :
+    employee = models.OneToOneField('Employee', on_delete=models.CASCADE, related_name='employee_address')
+    permanent_address = models.CharField(max_length=100, null=True, blank=True)
+    present_address = models.CharField(max_length=100, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    state = models.CharField(max_length=100, null=True, blank=True)
+    country = models.CharField(max_length=100, null=True, blank=True)
+    zip_code = models.CharField(max_length=100, null=True, blank=True)
+    nationality = models.CharField(max_length=100, null=True, blank=True)
 
 
 class EmployeeAdditionalInfo(models.Model):
@@ -32,44 +40,29 @@ class EmployeeAdditionalInfo(models.Model):
         ('Other', 'Other'),
     ]
     gender = models.CharField(max_length=10, choices=gender_choices)
-    department = models.CharField(max_length=100, null=True, blank=True)
-    designation = models.CharField(max_length=100)
+    blood_group = models.CharField(max_length=100, null=True, blank=True)
+    reporting_to = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return f"Additional Info for {self.employee.first_name} {self.employee.last_name}"
     
-class EmergencyContact(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="emergency_contact")
+class Family_details(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='family_member')
+    member_name = models.CharField(max_length=100, blank=True)
+    relation = models.CharField(max_length=100, blank=True)
+    contact_number = models.CharField(max_length=100, blank=True)
+    date_of_birth = models.CharField(max_length=100, blank=True)
     
-    # Primary contact fields
-    primary_full_name = models.CharField(max_length=255)
-    primary_relationship = models.CharField(max_length=100)
-    primary_phone_1 = models.CharField(max_length=15)
-    primary_phone_2 = models.CharField(max_length=15, blank=True)
-    primary_email = models.EmailField()
-    primary_address = models.TextField()
-    
-    # Secondary contact fields
-    secondary_full_name = models.CharField(max_length=255, blank=True)
-    secondary_relationship = models.CharField(max_length=100, blank=True)
-    secondary_phone_1 = models.CharField(max_length=15, blank=True)
-    secondary_phone_2 = models.CharField(max_length=15, blank=True)
-    secondary_email = models.EmailField(null=True, blank=True)
-    secondary_address = models.TextField(null=True, blank=True)
+class Education_details(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='education_details')
+    cource_name = models.CharField(max_length=200, blank=True)
+    institution_name = models.CharField(max_length=200, blank=True)
+    start_year = models.CharField(max_length=200, blank=True)
+    end_year = models.CharField(max_length=200, blank=True)
+    grade = models.CharField(max_length=20, blank=True)
+    description = models.CharField(max_length=200, blank=True)
+    education_certificate = models.FileField(upload_to='Education-Certificate/', null=True, blank=True)
 
-    def __str__(self):
-        return f"Emergency Contact for {self.user.username}"
-
-class EmployeeSocialMedia(models.Model):
-    employee = models.OneToOneField(Employee, on_delete=models.CASCADE, related_name='social_media')
-    instagram = models.URLField(blank=True)
-    facebook = models.URLField(blank=True)
-    linkedin = models.URLField(blank=True)
-    twitter = models.URLField(blank=True)
-    whatsapp = models.CharField(max_length=20, blank=True)
-
-    def __str__(self):
-        return f"Social Media of {self.employee.first_name} {self.employee.last_name}"
     
 class EmployeeBankDetails(models.Model):
     employee = models.OneToOneField(Employee, on_delete=models.CASCADE, related_name='bank_details')
@@ -82,6 +75,24 @@ class EmployeeBankDetails(models.Model):
 
     def __str__(self):
         return f"Bank Details of {self.employee.first_name} {self.employee.last_name}"
+    
+class Experience_details(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='experience_details')
+    organization_name = models.CharField(max_length=200, blank=True)
+    designation_name = models.CharField(max_length=200, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    description = models.CharField(max_length=200, blank=True)
+    experience_certificate = models.FileField(upload_to='Experience-Certificate/', null=True)
+
+    
+class Documents_details(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='documents_details')
+    document_number = models.CharField(max_length=200, blank=True)
+    document_type = models.CharField(max_length=200, blank=True)
+    document_file = models.FileField(upload_to='Employee-Documents/', null=True)
+
+    
 
 # Define IST timezone globally
 IST = pytz.timezone('Asia/Kolkata')
@@ -324,6 +335,7 @@ class Announcement(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     description = models.TextField()
+    announcements_image = models.FileField(upload_to='Announcement-image/')
 
     def __str__(self):
         return self.title

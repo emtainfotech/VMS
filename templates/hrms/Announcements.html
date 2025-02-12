@@ -161,7 +161,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="post">
+          <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="row">
               <div class="col-md-12 mb-3">
@@ -182,6 +182,10 @@
               <div class="col-md-12 mb-3">
                 <label class="form-label">Description</label>
                 <textarea class="form-control" name="description" required></textarea>
+              </div>
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Announcement Poster</label>
+                <input type="file" class="form-control" name="announcements_image" required />
               </div>
             </div>
 

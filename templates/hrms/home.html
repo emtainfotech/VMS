@@ -50,8 +50,8 @@
                 <div class="h1 mb-3">{{employee_count}}</div>
               </div>
             </div>
-          </div>
-          <div class="col-sm-6 col-lg-3">
+          </div><hr>
+          {% comment %} <div class="col-sm-6 col-lg-3">
             <div class="card">
               <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -62,8 +62,8 @@
                 </div>
               </div>
             </div>
-          </div>
-          <div class="col-sm-6 col-lg-3">
+          </div> {% endcomment %}
+          {% comment %} <div class="col-sm-6 col-lg-3">
             <div class="card">
               <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -74,13 +74,13 @@
                 </div>
               </div>
             </div>
-          </div>
-          <div class="col-sm-6 col-lg-3">
+          </div> {% endcomment %}
+          {% comment %} <div class="col-sm-6 col-lg-3">
             <div class="card">
               <div class="card-body">
                 <div class="d-flex align-items-center">
                   <div class="subheader">Total Revenue this Month</div>
-                  {% comment %} <div class="ms-auto lh-1">
+                  <div class="ms-auto lh-1">
                     <div class="dropdown">
                       <a class="dropdown-toggle text-secondary" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Last 7 days</a>
                       <div class="dropdown-menu dropdown-menu-end">
@@ -89,16 +89,16 @@
                         <a class="dropdown-item" href="#">Last 3 months</a>
                       </div>
                     </div>
-                  </div> {% endcomment %}
+                  </div>
                 </div>
                 <div class="d-flex align-items-baseline">
                   <div class="h1 mb-3 me-2">{{monthly_earning}}</div>
                 </div>
               </div>
             </div>
-          </div>
+          </div> {% endcomment %}
 
-          <div class="col-12">
+          {% comment %} <div class="col-12">
             <div class="row row-cards">
               <div class="col-sm-6 col-lg-3">
                 <div class="card card-sm">
@@ -153,7 +153,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </div> {% endcomment %}
           <div class="col-md-12 col-lg-6">
             <div class="card">
               <div class="card-header">
@@ -344,7 +344,38 @@
               </div>
             </div>
           </div>
-          <div class="col-12">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Announcement's</h3>
+              </div>
+              <div class="card-body">
+                <div id="carousel-captions" class="carousel slide" data-bs-ride="carousel">
+                  <div class="carousel-inner">
+                    {% for announcement in announcements %}
+                    <div class="carousel-item active">
+                      <img class="d-block w-100" alt="" src="{{announcement.announcements_image.url}}" style="height: 500px;">
+                      <div class="carousel-caption-background d-none d-md-block"></div>
+                      <div class="carousel-caption d-none d-md-block">
+                        <h3>{{ announcement.title }}</h3>
+                        <p>{{ announcement.description }}</p>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  </div>
+                  <a class="carousel-control-prev" href="#carousel-captions" role="button" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                  </a>
+                  <a class="carousel-control-next" href="#carousel-captions" role="button" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% comment %} <div class="col-12">
             <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Today's Selection</h3>
@@ -457,7 +488,7 @@
                 </ul>
               </div>
             </div>
-          </div>
+          </div> {% endcomment %}
           {% comment %} <div class="col-md-6 col-lg-4">
             <div class="card">
               <div class="card-header">

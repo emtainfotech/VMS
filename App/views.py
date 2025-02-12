@@ -91,6 +91,7 @@ def home(request):
         today = localtime().date()
         today1 = date.today()
         start_of_month = today.replace(day=1)
+        announcements = Announcement.objects.all()
         meetings = Meeting.objects.filter(date=Ajj)
         leaverequests = LeaveRequest.objects.filter(status='Approved', start_date=today)
         office_expenses = OfficeExpense.objects.filter(purchase_date=today).order_by('-id')
@@ -192,6 +193,7 @@ def home(request):
             'todays_earning': todays_earning,
             'monthly_earning': monthly_earning,
             'month_total_placement': month_total_placement,
+            'announcements' : announcements
         })
     else:
         # If the user is not an admin, show a 404 page
@@ -327,12 +329,9 @@ def employee_attendence_details(request, user_id):
 
 
 
-
-
 def employee_view(request):
     if request.user.is_staff or request.user.is_superuser:
         employees = Employee.objects.all()
-        socials = EmployeeSocialMedia.objects.all()
         designations = Designation.objects.all()
 
         if request.method == 'POST':
@@ -345,6 +344,7 @@ def employee_view(request):
             employee_id = request.POST.get('employee_id')
             password = request.POST.get('password')
             address = request.POST.get('address')
+            department = request.POST.get('department')
             designation = request.POST.get('designation')
             joining_date = request.POST.get('joining_date')
             employee_photo = request.FILES.get('employee_photo')
@@ -356,13 +356,13 @@ def employee_view(request):
 
             # Check if the username or email already exists in User model
             if User.objects.filter(username=username).exists():
-                return render(request, 'hrms/employee.html', {'error': 'Username already exists','employees': employees, 'socials': socials, 'designations': designations})
+                return render(request, 'hrms/employee.html', {'error': 'Username already exists','employees': employees,  'designations': designations})
 
             if Employee.objects.filter(email=email).exists():
-                return render(request, 'hrms/employee.html', {'error': 'An employee with this email already exists','employees': employees, 'socials': socials, 'designations': designations})
+                return render(request, 'hrms/employee.html', {'error': 'An employee with this email already exists','employees': employees,  'designations': designations})
 
             if Employee.objects.filter(employee_id=employee_id).exists():
-                return render(request, 'hrms/employee.html', {'error': 'An employee with this Employee ID already exists','employees': employees, 'socials': socials, 'designations': designations})
+                return render(request, 'hrms/employee.html', {'error': 'An employee with this Employee ID already exists','employees': employees,  'designations': designations})
 
             # Create the User object
             user = User.objects.create_user(username=username, password=password, email=email)
@@ -372,13 +372,13 @@ def employee_view(request):
                 user.save()
             # Create the Employee object
             employee = Employee.objects.create(
-                user=user,  # Associate the User with the Employee
+                user=user,  
                 first_name=first_name,
                 last_name=last_name,
                 contact_number=contact_number,
                 email=email,
                 employee_id=employee_id,
-                address=address,
+                department = department,
                 designation=designation,
                 joining_date=joining_date,
                 employee_photo=employee_photo,
@@ -387,7 +387,7 @@ def employee_view(request):
             # Redirect to the employee list page or success page
             return redirect('employee_view')  # Redirect to employee list after successful creation
 
-        return render(request, 'hrms/employee.html', {'employees': employees, 'socials': socials, 'designations': designations})
+        return render(request, 'hrms/employee.html', {'employees': employees,  'designations': designations})
     else:
         # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
@@ -396,18 +396,10 @@ def employee_details_view(request, id):
     if request.user.is_staff or request.user.is_superuser:
         # Fetch the employee object or return a 404
         employee = get_object_or_404(Employee, id=id)
-        
         attendance_sheet = MonthlyAttendance.objects.filter(employee=employee.user).order_by('year', 'month')
         designations = Designation.objects.all()
-
-        # Check if additional info exists or create a new instance
         additional_info, _ = EmployeeAdditionalInfo.objects.get_or_create(employee=employee)
-
-        # Check if emergency contact exists or create a new instance
-        emergency_contact, _ = EmergencyContact.objects.get_or_create(user=employee.user)
-        
-        social_media, _ = EmployeeSocialMedia.objects.get_or_create(employee=employee)
-        
+        address_details, _ = Employee_address.objects.get_or_create(employee=employee)
         bank_details, _ = EmployeeBankDetails.objects.get_or_create(employee=employee)
 
         if request.method == 'POST':
@@ -434,65 +426,119 @@ def employee_details_view(request, id):
                 gender = request.POST.get('gender')
                 department = request.POST.get('department')
                 designation = request.POST.get('designation')
+                blood_group = request.POST.get('blood_group')
+                reporting_to = request.POST.get('reporting_to')
 
                 additional_info.date_of_birth = date_of_birth
                 additional_info.gender = gender
-                additional_info.department = department
-                additional_info.designation = designation
+                employee.department = department
+                employee.designation = designation
+                additional_info.blood_group = blood_group
+                additional_info.reporting_to = reporting_to
                 additional_info.save()
 
                 messages.success(request, 'Employee details updated successfully!')
 
-            elif 'submit_emergency_contact' in request.POST:
+            elif 'sumbit_family_details' in request.POST:
                 # Handle Emergency Contact fields
-                primary_full_name = request.POST.get('primary_full_name')
-                primary_relationship = request.POST.get('primary_relationship')
-                primary_phone_1 = request.POST.get('primary_phone_1')
-                primary_phone_2 = request.POST.get('primary_phone_2')
-                primary_email = request.POST.get('primary_email')
-                primary_address = request.POST.get('primary_address')
+                member_name = request.POST.get('member_name')
+                relation = request.POST.get('relation')
+                contact_number = request.POST.get('contact_number')
+                date_of_birth = request.POST.get('date_of_birth')
 
-                secondary_full_name = request.POST.get('secondary_full_name')
-                secondary_relationship = request.POST.get('secondary_relationship')
-                secondary_phone_1 = request.POST.get('secondary_phone_1')
-                secondary_phone_2 = request.POST.get('secondary_phone_2')
-                secondary_email = request.POST.get('secondary_email')
-                secondary_address = request.POST.get('secondary_address')
-
-                # Update EmergencyContact fields
-                emergency_contact.primary_full_name = primary_full_name
-                emergency_contact.primary_relationship = primary_relationship
-                emergency_contact.primary_phone_1 = primary_phone_1
-                emergency_contact.primary_phone_2 = primary_phone_2
-                emergency_contact.primary_email = primary_email
-                emergency_contact.primary_address = primary_address
-
-                emergency_contact.secondary_full_name = secondary_full_name
-                emergency_contact.secondary_relationship = secondary_relationship
-                emergency_contact.secondary_phone_1 = secondary_phone_1
-                emergency_contact.secondary_phone_2 = secondary_phone_2
-                emergency_contact.secondary_email = secondary_email
-                emergency_contact.secondary_address = secondary_address
-                emergency_contact.save()
+                Family_details.objects.create(
+                    employee=employee,
+                    member_name=member_name,
+                    relation=relation,
+                    contact_number=contact_number,
+                    date_of_birth=date_of_birth
+                )
 
                 messages.success(request, 'Emergency contact details updated successfully!')
                 
-            elif 'submit_social_media' in request.POST:
+            elif 'submit_address_details' in request.POST:
                 # Handle Social Media details form submission
-                instagram = request.POST.get('instagram')
-                facebook = request.POST.get('facebook')
-                linkedin = request.POST.get('linkedin')
-                twitter = request.POST.get('twitter')
-                whatsapp = request.POST.get('whatsapp')
+                permanent_address = request.POST.get('permanent_address')
+                present_address = request.POST.get('present_address')
+                city = request.POST.get('city')
+                state = request.POST.get('state')
+                country = request.POST.get('country')
+                zip_code = request.POST.get('zip_code')
+                nationality = request.POST.get('nationality')
 
-                social_media.instagram = instagram
-                social_media.facebook = facebook
-                social_media.linkedin = linkedin
-                social_media.twitter = twitter
-                social_media.whatsapp = whatsapp
-                social_media.save()
+                address_details.permanent_address = permanent_address
+                address_details.present_address = present_address
+                address_details.city = city
+                address_details.state = state
+                address_details.country = country
+                address_details.zip_code = zip_code
+                address_details.nationality = nationality
+                address_details.save()
                 
-                messages.success(request, 'Social Media details updated successfully!')
+                messages.success(request, 'Address details updated successfully!')
+                
+            elif 'submit_education_details' in request.POST:
+                # Retrieve form data
+                cource_name = request.POST.get('cource_name')
+                institution_name = request.POST.get('institution_name')
+                start_year = request.POST.get('start_year')
+                end_year = request.POST.get('end_year')
+                grade = request.POST.get('grade')
+                description = request.POST.get('description')
+                education_certificate = request.FILES.get('education_certificate')
+
+                # Create a new education record for the employee
+                Education_details.objects.create(
+                    employee=employee,  # Ensure you have the employee instance already fetched
+                    cource_name=cource_name,
+                    institution_name=institution_name,
+                    start_year=start_year,
+                    end_year=end_year,
+                    grade=grade,
+                    description=description,
+                    education_certificate=education_certificate
+                )
+
+                # Add a success message
+                messages.success(request, 'Education details updated successfully!')
+
+            
+            elif 'submit_experience_details' in request.POST:
+                # Handle Social Media details form submission
+                organization_name = request.POST.get('organization_name')
+                designation_name = request.POST.get('designation_name')
+                start_date = request.POST.get('start_date')
+                end_date = request.POST.get('end_date')
+                description = request.POST.get('description')
+                experience_certificate = request.FILES.get('experience_certificate')
+
+                Experience_details.objects.create(
+                    employee = employee,
+                    organization_name = organization_name,
+                    designation_name = designation_name,
+                    start_date = start_date,
+                    end_date = end_date,
+                    description = description,
+                    experience_certificate = experience_certificate
+                )
+                
+                messages.success(request, 'Experience details updated successfully!')
+             
+            elif 'submit_documents_details' in request.POST:
+                document_number = request.POST.get('document_number')
+                document_type = request.POST.get('document_type')
+                document_file = request.FILES.get('document_file')
+
+                # Create a new document record for the employee
+                Documents_details.objects.create(
+                    employee=employee,  # Use the employee fetched at the start of the view
+                    document_type=document_type,
+                    document_number=document_number,
+                    document_file=document_file
+                )
+
+                messages.success(request, 'Document details added successfully!')
+
                 
             elif 'submit_bank_account' in request.POST:
                 # Handle form submission for bank details
@@ -522,15 +568,23 @@ def employee_details_view(request, id):
                 
 
             return redirect('employee-details', id=employee.id)  # Adjust 'employee-details' to your URL name
+        # Get all document details related to the employee
+        docs = Documents_details.objects.filter(employee=employee)
+        education_details = Education_details.objects.filter(employee=employee)
+        experience_details = Experience_details.objects.filter(employee=employee)
+        family_details = Family_details.objects.filter(employee=employee)
 
         context = {
             'employee': employee,
             'additional_info': additional_info,
-            'emergency_contact': emergency_contact,
-            'social_media': social_media,
+            'address_details': address_details,
+            'family_details' : family_details,
+            'education_details' : education_details,
+            'experience_details' : experience_details,
             'bank_details': bank_details,
             'attendance_sheet' : attendance_sheet,
-            'designations' : designations
+            'designations' : designations,
+            'docs' : docs
         }
         return render(request, 'hrms/employee-details.html', context)
     else:
@@ -925,74 +979,6 @@ from django.shortcuts import render
 from datetime import date
 import calendar
 from .models import Employee, Holiday, LeaveRequest  # Ensure models are correctly imported
-
-# def attendence_view(request):
-#     today = date.today()
-    
-#     # Get month & year from request (for navigation), default to current
-#     year = int(request.GET.get("year", today.year))
-#     month = int(request.GET.get("month", today.month))
-
-#     # Get total days & first weekday of the month
-#     first_weekday, num_days = calendar.monthrange(year, month)
-
-#     # Fetch holidays in the current month
-#     holidays = set(Holiday.objects.filter(date__year=year, date__month=month).values_list('date', flat=True))
-
-#     # If user is staff or superuser, show attendance for all employees
-#     if request.user.is_staff or request.user.is_superuser:
-#         employees = Employee.objects.select_related("user").all()
-#     else:
-#         # If a regular user, only show their attendance
-#         employees = Employee.objects.filter(user=request.user)
-
-#     attendance_data = {}
-
-#     for employee in employees:
-#         attendance_data[employee.id] = {
-#             "employee": employee,
-#             "attendance": []
-#         }
-
-#         # Generate attendance for the selected month
-#         for day in range(1, num_days + 1):
-#             current_date = date(year, month, day)
-
-#             # Default status
-#             status = "present"
-
-#             # Check if holiday or Sunday
-#             if current_date in holidays or current_date.weekday() == 6:
-#                 status = "holiday"
-#             elif LeaveRequest.objects.filter(
-#                 employee=employee,
-#                 start_date__lte=current_date, 
-#                 end_date__gte=current_date, 
-#                 status="Approved"
-#             ).exists():
-#                 status = "on_leave"
-
-#             attendance_data[employee.id]["attendance"].append({
-#                 "date": current_date,
-#                 "status": status
-#             })
-
-#     context = {
-#         "attendance_data": attendance_data,
-#         "days_range": list(range(1, num_days + 1)),  # Convert range to list
-#         "empty_start_days": list(range(first_weekday)),  # FIX: Precompute empty start days
-#         "month": month,
-#         "year": year,
-#         "prev_month": month - 1 if month > 1 else 12,
-#         "prev_year": year if month > 1 else year - 1,
-#         "next_month": month + 1 if month < 12 else 1,
-#         "next_year": year if month < 12 else year + 1,
-#     }
-
-#     return render(request, "hrms/attendence.html", context)
-
-
-
 
 
 def save_monthly_attendance():
@@ -1557,13 +1543,15 @@ def announcement_view(request):
             start_date = request.POST.get('start_date')
             end_date = request.POST.get('end_date')
             description = request.POST.get('description')
+            announcements_image = request.FILES.get('announcements_image')
 
             # Create a new Announcement record
             Announcement.objects.create(
                 title=title,
                 start_date=start_date,
                 end_date=end_date,
-                description=description
+                description=description,
+                announcements_image = announcements_image
             )
 
             return redirect('announcement_view')  
