@@ -683,7 +683,7 @@
 
 <img id="screen" width="800" height="500" />
 <script>
-    var socket = new WebSocket("ws://emtavms.com/ws/screen/");
+    var socket = new WebSocket("wss://emtavms.com/ws/screen/");
     socket.onmessage = function(event) {
         var data = JSON.parse(event.data);
         document.getElementById("screen").src = "data:image/jpeg;base64," + data.image;
