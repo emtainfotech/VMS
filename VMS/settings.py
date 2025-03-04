@@ -139,3 +139,8 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
