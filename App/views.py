@@ -465,10 +465,7 @@ def employee_view(request):
                 employee_photo=employee_photo,
             )
             
-            Notification.objects.create(
-                notification_type='New Joining',
-                message=f'{first_name} {last_name} has joined the company in the {department} department as a {designation}. Please welcome them!',
-            )
+            
 
             # Redirect to the employee list page or success page
             return redirect('employee_view')  # Redirect to employee list after successful creation
@@ -1769,12 +1766,6 @@ def announcement_view(request):
                 end_date=end_date,
                 description=description,
                 announcements_image = announcements_image
-            )
-
-            Notification.objects.create(
-                user=request.user,  # Assign the logged-in user (admin/staff)
-                notification_type='Announcement',
-                message=f'{title} from {start_date} to {end_date}. {description}.',
             )
 
             return redirect('announcement_view')  
