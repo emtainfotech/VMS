@@ -16,7 +16,6 @@ urlpatterns = [
     path('office-employee-expense/',office_employee_expense_view,name = 'office_employee_expense_view'),
     path('employee/resignation/', employee_resignation_view, name='employee_resignation_view'),
     path('delete-resignation/<int:resignation_id>/', delete_employee_resignation_view, name='delete_employee_resignation_view'),
-    path('task-assign/',assign_task,name = 'assign_task'),
     path('update-task-status/<int:task_id>/', update_task_status, name='update_task_status'),
     path('employee-update-task-status/<int:task_id>/', employee_update_task_status, name='employee_update_task_status'),
     path('employee-candidate-list/',employee_candidate_list,name = 'employee_candidate_list'),
@@ -30,7 +29,20 @@ urlpatterns = [
     path('vendor-candidate-list/<int:id>/',employee_vendor_candidate_list,name = 'employee_vendor_candidate_list'),
     path('evms-candidate-profile/<int:id>/',evms_candidate_profile,name = 'evms_candidate_profile'),
     path('evms-vendor-candidate-profile/<int:id>/',evms_vendor_candidate_profile,name = 'evms_vendor_candidate_profile'),
-    
+    path('punch-in/', punch_in, name='punch_in'),
+    path('punch-out/', punch_out, name='punch_out'),  # Punch Out URL
+    path('birthdays-anniversaries/', birthday_and_anniversary_today, name='birthdays_anniversaries'),
+    path('same-designation-list-json/', same_designation_list_json, name='same_designation_list_json'),
+    path('ticket-list/', ticket_view, name='ticket_view'),
+    path('performance-dashboard/',employee_performance_dashboard, name = 'employee_performance_dashboard'),
+    path('employee-today-call-performance/',employee_chart_data, name = 'employee_chart_data'),
+    path('employee-chart-data/', overall_employee_chart_data, name='overall_employee_chart_data'),
+    path('each-day/',each_employee_chart_data, name = 'each_employee_chart_data'),
+    path('get-placement-data/',get_revenue_placement_data, name = 'get_revenue_placement_data'),
+    path('leave-details/', employee_leave_details, name='employee_leave_details'),
+    path('employee-leave-details/', employee_attendance_details, name='employee_attendance_details'),
+    path('work-hours-summary/',work_hours_summary, name='work_hours_summary'),
+
     path('admin/', admin.site.urls),
 ]
 

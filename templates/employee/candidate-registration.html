@@ -307,20 +307,22 @@
                             <input type="file" name='candidate_resume' class="form-control" />
                           </div>
                         </div>
+                        <hr>
                         <div class="col-md-4">
                           <div class="mb-3">
                             <label class="form-label">Call Connection</label>
-                            <select class="form-control form-select" name='call_connection'>
+                            <select class="form-control form-select" name='call_connection' required>
+                              <option disabled selected >Select Status</option>
                               <option value="Yes" {% if Candidate_registration.call_connection == "Yes" %}selected{% endif %}>Yes</option>
                               <option value="No" {% if Candidate_registration.call_connection == "No" %}selected{% endif %}>No</option>
-                          
                             </select>
                           </div>
                         </div>
                         <div class="col-md-4">
                           <div class="mb-3">
                             <label class="form-label">Calling Remark</label>
-                            <select class="form-control form-select" name='calling_remark'>
+                            <select class="form-control form-select" name='calling_remark' required>
+                              <option disabled selected >Select Remark</option>
                               <option value="None" {% if Candidate_registration.calling_remark == "None" %}selected{% endif %}>None</option>
 <option value="Lead Generate" {% if Candidate_registration.calling_remark == "Lead Generate" %}selected{% endif %}>Lead Generate</option>
 <option value="Follow-Up" {% if Candidate_registration.calling_remark == "Follow-Up" %}selected{% endif %}>Follow-Up</option>
@@ -347,7 +349,8 @@
                         <div class="col-md-4">
                           <div class="mb-3">
                             <label class="form-label">Lead Generate</label>
-                            <select class="form-control form-select" name='lead_generate'>
+                            <select class="form-control form-select" name='lead_generate' required>
+                              <option disabled selected >Select Status</option>
                               <option value="No" {% if Candidate_registration.lead_generate == "No" %}selected{% endif %}>No</option>
                               <option value="Yes" {% if Candidate_registration.lead_generate == "Yes" %}selected{% endif %}>Yes</option>
                           

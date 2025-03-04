@@ -47,7 +47,7 @@
           <div class="col">
             <!-- Page pre-title -->
             {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
-            <h2 class="page-title" style="margin-bottom: 50px;">Attendence Details</h2>
+            <h2 class="page-title" style="margin-bottom: 50px;">Attendence Details - {{employee_name}}</h2>
           </div>
           <div class="col-auto ms-auto d-print-none">
             <div class="btn-list">
@@ -75,219 +75,166 @@
       </div>
     </div>
     
+  
+    <div class="container mt-4">
+      <div class="d-flex justify-content-between">
+          <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn btn-light">
+              <i class="fas fa-chevron-left"></i> Previous Month
+          </a>
+          <h4>{{ month }} - {{ year }}</h4>
+          <a href="?month={{ next_month }}&year={{ next_year }}" class="btn btn-light">
+              Next Month <i class="fas fa-chevron-right"></i>
+          </a>
+      </div>
+  
+      <div class="calendar-grid mt-3">
+          <!-- Weekday Headers -->
+          <div class="calendar-header">Mon</div>
+          <div class="calendar-header">Tue</div>
+          <div class="calendar-header">Wed</div>
+          <div class="calendar-header">Thu</div>
+          <div class="calendar-header">Fri</div>
+          <div class="calendar-header">Sat</div>
+          <div class="calendar-header">Sun</div>
+  
+          <!-- Empty cells for the first week -->
+          {% for _ in empty_start_days %}
+          <div class="calendar-cell empty"></div>
+          {% endfor %}
+  
+          <!-- Loop through the days of the month -->
+          {% for day in days_range %}
+          <div class="calendar-cell {% if day == today.day and month == today.month and year == today.year %} current-day {% endif %}" data-date="{{ year }}-{{ month }}-{{ day }}" onclick="showSessionDetails('{{ year }}-{{ month }}-{{ day }}')">
+            <span class="date">{{ day }}</span>
+          <!-- Display the correct attendance status -->
+          {% if day in present_days %}
+              <span class="text-success"><i class="fas fa-check-circle"></i> Present</span>
+          {% elif day in half_days %}
+              <span class="text-warning"><i class="fas fa-adjust"></i> Half-Day</span>
+          {% elif day in holidays %}
+              <span class="text-primary"><i class="fas fa-sun"></i> Holiday</span>
+          {% elif day in leave_days %}
+              <span class="text-info"><i class="fas fa-plane"></i> On Leave</span>
+          {% elif day in absent_days %}
+              <span class="text-danger"><i class="fas fa-times-circle"></i> Absent</span>
+          {% else %}
+              <span class="text-secondary"><i class="fas fa-question-circle"></i> No Data</span>
+          {% endif %}
+      </div>
+  {% endfor %}
+    </div>
     <div class="page-header d-print-none">
         <div class="container-xl">
           <div class="row g-2 align-items-center">
             <div class="col-12">
               <div class="card">
-                <div class="card-header">
-                  <h3 class="card-title">Today Attendence Record</h3>
+                <div class="card-header d-flex justify-content-between">
+                  <h3 id="selected-date" class="mt-3">Sessions for Today</h3>
+                  <p id="total-duration" class="text-muted">Total Punch Time: 0:00:00</p>
                 </div>
-                {% comment %} <div class="card-body border-bottom py-3">
-                  <div class="d-flex">
-                    <div class="text-secondary">
-                      Show<div class="mx-2 d-inline-block">
-                        <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
-                      </div>entries
-                    </div>
-                    <div class="ms-auto text-secondary">
-                      Search:<div class="ms-2 d-inline-block">
-                        <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
-                      </div>
-                    </div>
-                  </div>
-                </div> {% endcomment %}
                 <div class="table-responsive">
-                  <table class="table card-table table-vcenter text-nowrap datatable" >
+                  <table class="table card-table table-vcenter text-nowrap datatable">
                     <thead>
-                      <tr>
-                        <th class="w-1">
-                          No. 
-                        </th>
-                        <th>Login Time</th>
-                        <th>Logout Time</th>
-                        <th>Session Duration</th>
-                        <th>Logout Reason</th>
-                      </tr>
+                        <tr>
+                            <th class="w-1">No.</th>
+                            <th>Punch In Time</th>
+                            <th>Punch Out Time</th>
+                            <th>Duration</th>
+                            <th>Punch Out Reason</th>
+                        </tr>
                     </thead>
                     <tbody>
-
-                      {% for session in today_sessions %}
-                        <tr>
-                          <td>
-                            <span class="text-secondary">{{ forloop.counter }}</span>
-                          </td>
-                          <td>{{ session.login_time }}</td>
-  
-                          <td>
-                            <span class="me-2"></span>
-                            {{ session.logout_time }}
-                          </td>
-                          <td>
-                            <span class="me-2"></span>
-                            {{ session.total_time }}
-                          </td>
-                          <td>
-                            <span class="me-2"></span>
-                            {{ session.logout_reason }}
-                          </td>
-                        </tr>
-                      {% endfor %}
+                        <!-- Rows will be populated dynamically using JavaScript -->
                     </tbody>
-                  </table>
+                    
+                </table>
+                
                 </div>
-                {% comment %} <div class="card-footer d-flex align-items-center">
-                  <p class="m-0 text-secondary">
-                    Showing <span>1</span> to <span>8</span> of <span>16</span> entries
-                  </p>
-                  <ul class="pagination m-0 ms-auto">
-                    <li class="page-item disabled">
-                      <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                          <path d="M15 6l-6 6l6 6" />
-                        </svg>prev
-                      </a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">1</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">2</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">3</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">4</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">5</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">
-                        next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                          <path d="M9 6l6 6l-6 6" />
-                        </svg>
-                      </a>
-                    </li>
-                  </ul>
-                </div> {% endcomment %}
+                
               </div>
             </div>
           </div>
         </div>
       </div>
-      {% comment %} <div class="page-header d-print-none">
-        <div class="container-xl">
-          <div class="row g-2 align-items-center">
-            <div class="col-12">
-              <div class="card">
-                <div class="card-header">
-                  <h3 class="card-title">Monthly Attendence Record</h3>
-                </div>
-                <div class="table-responsive">
-                  <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
-                    <thead>
-                      <tr>
-                        <th class="w-1">
-                          No. 
-                        </th>
-                      <th>Date</th>
-                      <th>First Login</th>
-                      <th>Last Login</th>
-                      <th>Total Login Time</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for summary in daily_summary %}
-                  
-                        <tr>
-                          <td>
-                            <span class="text-secondary">{{ forloop.counter }}</span>
-                          </td>
-                          <td>{{ summary.date }}</td>
-  
-                          <td>
-                            <span class="me-2"></span>
-                            {{ summary.first_login }}
-                          </td>
-                          <td>
-                            <span class="me-2"></span>
-                            {{ summary.last_login }}
-                          </td>
-                          <td>
-                            <span class="me-2"></span>
-                            {{ summary.total_time }}
-                          </td>
-                        
-                        </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> {% endcomment %}
+      
   </div>
 
-  <div class="container mt-4">
-    <div class="d-flex justify-content-between">
-        <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn btn-light">
-            <i class="fas fa-chevron-left"></i> Previous Month
-        </a>
-        <h4>{{ month }} - {{ year }}</h4>
-        <a href="?month={{ next_month }}&year={{ next_year }}" class="btn btn-light">
-            Next Month <i class="fas fa-chevron-right"></i>
-        </a>
-    </div>
-
-    <div class="calendar-grid mt-3">
-        <!-- Weekday Headers -->
-        <div class="calendar-header">Mon</div>
-        <div class="calendar-header">Tue</div>
-        <div class="calendar-header">Wed</div>
-        <div class="calendar-header">Thu</div>
-        <div class="calendar-header">Fri</div>
-        <div class="calendar-header">Sat</div>
-        <div class="calendar-header">Sun</div>
-
-        <!-- Empty cells for the first week -->
-        {% for _ in empty_start_days %}
-        <div class="calendar-cell empty"></div>
-        {% endfor %}
-
-        <!-- Loop through the days of the month -->
-        {% for day in days_range %}
-    <div class="calendar-cell {% if day == today.day and month == today.month and year == today.year %} current-day {% endif %}">
-        <span class="date">{{ day }}</span>
-
-        <!-- Display the correct attendance status -->
-        {% if day in present_days %}
-            <span class="text-success"><i class="fas fa-check-circle"></i> Present</span>
-        {% elif day in half_days %}
-            <span class="text-warning"><i class="fas fa-adjust"></i> Half-Day</span>
-        {% elif day in holidays %}
-            <span class="text-primary"><i class="fas fa-sun"></i> Holiday</span>
-        {% elif day in leave_days %}
-            <span class="text-info"><i class="fas fa-plane"></i> On Leave</span>
-        {% elif day in absent_days %}
-            <span class="text-danger"><i class="fas fa-times-circle"></i> Absent</span>
-        {% else %}
-            <span class="text-secondary"><i class="fas fa-question-circle"></i> No Data</span>
-        {% endif %}
-    </div>
-{% endfor %}
-
-    
-    </div>
+  
 </div>
 
+<script>
+  function showSessionDetails(date) {
+      fetch(`{% url "get_session_details" %}?date=${date}`, {
+          method: 'GET',
+      })
+      .then(response => response.json())
+      .then(data => {
+          const tableBody = document.querySelector('.datatable tbody');
+          tableBody.innerHTML = '';  // Clear existing rows
+  
+          // Show selected date above the table
+          const dateHeader = document.querySelector('#selected-date');
+          dateHeader.textContent = `Sessions for ${data.selected_date}`;
+  
+          // Show total punch time for the selected date
+          const totalDurationElement = document.querySelector('#total-duration');
+          totalDurationElement.textContent = `Total Punch Time: ${data.total_duration}`;
+  
+          // Populate table with session data
+          if (data.sessions && data.sessions.length > 0) {
+              data.sessions.forEach((session, index) => {
+                  const row = document.createElement('tr');
+                  row.innerHTML = `
+                      <td><span class="text-secondary">${index + 1}</span></td>
+                      <td>${session.punch_in_time}</td>
+                      <td>${session.punch_out_time}</td>
+                      <td>${session.total_time}</td>
+                      <td>${session.punch_out_reason}</td>
+                  `;
+                  tableBody.appendChild(row);
+              });
+          } else {
+              const row = document.createElement('tr');
+              row.innerHTML = `<td colspan="5" class="text-center">No sessions available for the selected date.</td>`;
+              tableBody.appendChild(row);
+          }
+      })
+      .catch(error => {
+          console.error('Error fetching session details:', error);
+      });
+  }
+  
+  // Call the function with today's date on page load
+  document.addEventListener("DOMContentLoaded", function() {
+      const today = new Date().toISOString().slice(0, 10);  // Format: YYYY-MM-DD
+      showSessionDetails(today);
+  });
+  </script>
+  
+  
+  
+
+  
+  <div class="modal fade" id="sessionModal" tabindex="-1" role="dialog" aria-labelledby="sessionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sessionModalLabel">Session Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><strong>First Login:</strong> <span id="modalLoginTime"></span></p>
+                <p><strong>Last Logout:</strong> <span id="modalLogoutTime"></span></p>
+                <p><strong>Total Login Time:</strong> <span id="modalTotalTime"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Logout Reason Modal -->
 <div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">

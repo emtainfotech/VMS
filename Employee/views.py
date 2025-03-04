@@ -66,32 +66,33 @@ def employee_dashboard(request):
         today = datetime.today().date()
         start_of_month = today.replace(day=1)
         logged_in_employee = get_object_or_404(Employee, user=request.user)
+        additional_info, _ = EmployeeAdditionalInfo.objects.get_or_create(employee=logged_in_employee)
         tasks = Task.objects.filter(assigned_to=logged_in_employee).order_by('-id')
         today = now().date()
 
-        # Fetch all sessions for the logged-in user for today
-        sessions = EmployeeSession.objects.filter(user=request.user, login_time__date=today).order_by('-id')
+        # Fetch all sessions for today for the logged-in user
+        sessions = EmployeeSession.objects.filter(user=request.user, punch_in_time__date=today)
 
-        # Compute total login time for today
-        total_time = timedelta()
-        session_data = []
+        # Initialize session to None
+        session = None
+
+        # Calculate total login duration for today
+        total_work_duration = timedelta()  # Initialize to 0 duration
         for session in sessions:
-            # If logout_time is None, set duration to 0
-            session_duration = session.total_time or timedelta()
-            total_time += session_duration
+            if session.punch_out_time:
+                # Add the duration of completed sessions
+                total_work_duration += session.punch_out_time - session.punch_in_time
+            else:
+                # If the session is ongoing, calculate duration up to the current time
+                total_work_duration += now() - session.punch_in_time
 
-            session_data.append({
-                "login_time": session.login_time_ist.strftime('%Y-%m-%d %H:%M:%S'),
-                "logout_time": (
-                    session.logout_time_ist.strftime('%Y-%m-%d %H:%M:%S') if session.logout_time else "No Record"
-                ),
-                "total_time": str(session.total_time) if session.total_time else "N/A",
-            })
-
-        # Convert total login time to hours, minutes, and seconds
-        hours, remainder = divmod(total_time.total_seconds(), 3600)
+        # Convert the total duration to a readable format
+        hours, remainder = divmod(total_work_duration.total_seconds(), 3600)
         minutes, seconds = divmod(remainder, 60)
-        total_login_time_formatted = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
+        total_punch_in_time_formatted = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
+        
+        # Get the first login of the day, if any
+        first_punch_in_time = sessions.first().punch_in_time if sessions.exists() else None
 
         meetings = Meeting.objects.filter(date=today).order_by('-id')
         office_expenses = OfficeExpense.objects.filter(employee_name=logged_in_employee, purchase_date=today).order_by('-id')
@@ -123,8 +124,10 @@ def employee_dashboard(request):
         ).aggregate(total_earning=Sum('emta_commission', output_field=models.FloatField()))['total_earning'] or 0.0
 
         context = {
+            'session': session,
             'sessions': sessions,
             'meetings': meetings,
+            'additional_info' : additional_info,
             'office_expenses': office_expenses,
             'notifications': notifications,
             'logged_in_employee': logged_in_employee,
@@ -136,28 +139,68 @@ def employee_dashboard(request):
             'total_placement': total_placement,
             'todays_earning': todays_earning,
             'monthly_earning': monthly_earning,
-            "sessions_json": json.dumps(session_data, indent=4),
-            "total_login_time": total_login_time_formatted,
+            "total_punch_in_time_formatted": total_punch_in_time_formatted,
+            'first_punch_in_time': first_punch_in_time
         }
 
         return render(request, 'employee/dashboard.html', context)
     else:
         return render(request, 'employee/login.html', {'error': 'User not authenticated'})
 
+@login_required
+def punch_in(request):
+    if request.method == 'POST':
+        # Check if the employee already has an open session for today
+        today = now().date()
+        open_session = EmployeeSession.objects.filter(user=request.user, punch_in_time__date=today, punch_out_time=None).first()
+
+        if open_session:
+            return JsonResponse({'error': 'Already punched in'}, status=400)
+
+        # Create a new session record
+        session = EmployeeSession.objects.create(user=request.user, punch_in_time=now())
+        return JsonResponse({'message': 'Punch In successful', 'punch_in_time': session.punch_in_time.strftime('%Y-%m-%d %H:%M:%S')})
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@login_required
+def punch_out(request):
+    if request.method == 'POST':
+        punch_out_reason = request.POST.get('punch_out_reason', '')
+
+        # Find the employee's open session
+        today = now().date()
+        open_session = EmployeeSession.objects.filter(user=request.user, punch_in_time__date=today, punch_out_time=None).first()
+
+        if not open_session:
+            return JsonResponse({'error': 'No open session to punch out'}, status=400)
+
+        # Set the logout time and reason
+        open_session.punch_out_time = now()
+        open_session.total_time = open_session.punch_out_time - open_session.punch_in_time
+        open_session.punch_out_reason = punch_out_reason
+        open_session.save()
+
+        return JsonResponse({'message': 'Punch Out successful', 'punch_out_time': open_session.punch_out_time.strftime('%Y-%m-%d %H:%M:%S')})
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
 
 @login_required
 def employee_profile_view(request,id):
     if request.user.is_authenticated:
+        # Fetch the employee object or return a 404
         employee = get_object_or_404(Employee, user=request.user)
-        
-        # Check if additional info exists or create a new instance
+        attendance_sheet = MonthlyAttendance.objects.filter(employee=employee.user).order_by('year', 'month')
+        designations = Designation.objects.all()
         additional_info, _ = EmployeeAdditionalInfo.objects.get_or_create(employee=employee)
-        emergency_contact, _ = EmergencyContact.objects.get_or_create(user=employee.user)
-        social_media, _ = EmployeeSocialMedia.objects.get_or_create(employee=employee)
+        address_details, _ = Employee_address.objects.get_or_create(employee=employee)
         bank_details, _ = EmployeeBankDetails.objects.get_or_create(employee=employee)
 
         if request.method == 'POST':
-            if 'employee_submit_employee_details' in request.POST:
+            if 'submit_employee_details' in request.POST:
                 # Handle Employee fields
                 first_name = request.POST.get('first_name')
                 last_name = request.POST.get('last_name')
@@ -180,67 +223,121 @@ def employee_profile_view(request,id):
                 gender = request.POST.get('gender')
                 department = request.POST.get('department')
                 designation = request.POST.get('designation')
+                blood_group = request.POST.get('blood_group')
+                reporting_to = request.POST.get('reporting_to')
 
                 additional_info.date_of_birth = date_of_birth
                 additional_info.gender = gender
-                additional_info.department = department
-                additional_info.designation = designation
+                employee.department = department
+                employee.designation = designation
+                additional_info.blood_group = blood_group
+                additional_info.reporting_to = reporting_to
                 additional_info.save()
 
                 messages.success(request, 'Employee details updated successfully!')
 
-            elif 'employee_submit_emergency_contact' in request.POST:
+            elif 'sumbit_family_details' in request.POST:
                 # Handle Emergency Contact fields
-                primary_full_name = request.POST.get('primary_full_name')
-                primary_relationship = request.POST.get('primary_relationship')
-                primary_phone_1 = request.POST.get('primary_phone_1')
-                primary_phone_2 = request.POST.get('primary_phone_2')
-                primary_email = request.POST.get('primary_email')
-                primary_address = request.POST.get('primary_address')
+                member_name = request.POST.get('member_name')
+                relation = request.POST.get('relation')
+                contact_number = request.POST.get('contact_number')
+                date_of_birth = request.POST.get('date_of_birth')
 
-                secondary_full_name = request.POST.get('secondary_full_name')
-                secondary_relationship = request.POST.get('secondary_relationship')
-                secondary_phone_1 = request.POST.get('secondary_phone_1')
-                secondary_phone_2 = request.POST.get('secondary_phone_2')
-                secondary_email = request.POST.get('secondary_email')
-                secondary_address = request.POST.get('secondary_address')
-
-                # Update EmergencyContact fields
-                emergency_contact.primary_full_name = primary_full_name
-                emergency_contact.primary_relationship = primary_relationship
-                emergency_contact.primary_phone_1 = primary_phone_1
-                emergency_contact.primary_phone_2 = primary_phone_2
-                emergency_contact.primary_email = primary_email
-                emergency_contact.primary_address = primary_address
-
-                emergency_contact.secondary_full_name = secondary_full_name
-                emergency_contact.secondary_relationship = secondary_relationship
-                emergency_contact.secondary_phone_1 = secondary_phone_1
-                emergency_contact.secondary_phone_2 = secondary_phone_2
-                emergency_contact.secondary_email = secondary_email
-                emergency_contact.secondary_address = secondary_address
-                emergency_contact.save()
+                Family_details.objects.create(
+                    employee=employee,
+                    member_name=member_name,
+                    relation=relation,
+                    contact_number=contact_number,
+                    date_of_birth=date_of_birth
+                )
 
                 messages.success(request, 'Emergency contact details updated successfully!')
                 
-            elif 'employee_submit_social_media' in request.POST:
+            elif 'submit_address_details' in request.POST:
                 # Handle Social Media details form submission
-                instagram = request.POST.get('instagram')
-                facebook = request.POST.get('facebook')
-                linkedin = request.POST.get('linkedin')
-                twitter = request.POST.get('twitter')
-                whatsapp = request.POST.get('whatsapp')
+                permanent_address = request.POST.get('permanent_address')
+                present_address = request.POST.get('present_address')
+                city = request.POST.get('city')
+                state = request.POST.get('state')
+                country = request.POST.get('country')
+                zip_code = request.POST.get('zip_code')
+                nationality = request.POST.get('nationality')
 
-                social_media.instagram = instagram
-                social_media.facebook = facebook
-                social_media.linkedin = linkedin
-                social_media.twitter = twitter
-                social_media.whatsapp = whatsapp
-                social_media.save()
+                address_details.permanent_address = permanent_address
+                address_details.present_address = present_address
+                address_details.city = city
+                address_details.state = state
+                address_details.country = country
+                address_details.zip_code = zip_code
+                address_details.nationality = nationality
+                address_details.save()
                 
-                messages.success(request, 'Social Media details updated successfully!')
+                messages.success(request, 'Address details updated successfully!')
                 
-            elif 'employee_submit_bank_account' in request.POST:
+            elif 'submit_education_details' in request.POST:
+                # Retrieve form data
+                cource_name = request.POST.get('cource_name')
+                institution_name = request.POST.get('institution_name')
+                start_year = request.POST.get('start_year')
+                end_year = request.POST.get('end_year')
+                grade = request.POST.get('grade')
+                description = request.POST.get('description')
+                education_certificate = request.FILES.get('education_certificate')
+
+                # Create a new education record for the employee
+                Education_details.objects.create(
+                    employee=employee,  # Ensure you have the employee instance already fetched
+                    cource_name=cource_name,
+                    institution_name=institution_name,
+                    start_year=start_year,
+                    end_year=end_year,
+                    grade=grade,
+                    description=description,
+                    education_certificate=education_certificate
+                )
+
+                # Add a success message
+                messages.success(request, 'Education details updated successfully!')
+
+            
+            elif 'submit_experience_details' in request.POST:
+                # Handle Social Media details form submission
+                organization_name = request.POST.get('organization_name')
+                designation_name = request.POST.get('designation_name')
+                start_date = request.POST.get('start_date')
+                end_date = request.POST.get('end_date')
+                description = request.POST.get('description')
+                experience_certificate = request.FILES.get('experience_certificate')
+
+                Experience_details.objects.create(
+                    employee = employee,
+                    organization_name = organization_name,
+                    designation_name = designation_name,
+                    start_date = start_date,
+                    end_date = end_date,
+                    description = description,
+                    experience_certificate = experience_certificate
+                )
+                
+                messages.success(request, 'Experience details updated successfully!')
+             
+            elif 'submit_documents_details' in request.POST:
+                document_number = request.POST.get('document_number')
+                document_type = request.POST.get('document_type')
+                document_file = request.FILES.get('document_file')
+
+                # Create a new document record for the employee
+                Documents_details.objects.create(
+                    employee=employee,  # Use the employee fetched at the start of the view
+                    document_type=document_type,
+                    document_number=document_number,
+                    document_file=document_file
+                )
+
+                messages.success(request, 'Document details added successfully!')
+
+                
+            elif 'submit_bank_account' in request.POST:
                 # Handle form submission for bank details
                 account_holder_name = request.POST.get('account_holder_name')
                 bank_name = request.POST.get('bank_name')
@@ -264,16 +361,29 @@ def employee_profile_view(request,id):
                 bank_details.save()
 
                 messages.success(request, 'Bank details updated successfully!')
+                
+                
+
             return redirect('employee_profile_view', id=employee.id)  # Adjust 'employee-details' to your URL name
+        # Get all document details related to the employee
+        docs = Documents_details.objects.filter(employee=employee)
+        education_details = Education_details.objects.filter(employee=employee)
+        experience_details = Experience_details.objects.filter(employee=employee)
+        family_details = Family_details.objects.filter(employee=employee)
 
         context = {
             'employee': employee,
             'additional_info': additional_info,
-            'emergency_contact': emergency_contact,
-            'social_media': social_media,
+            'address_details': address_details,
+            'family_details' : family_details,
+            'education_details' : education_details,
+            'experience_details' : experience_details,
             'bank_details': bank_details,
+            'attendance_sheet' : attendance_sheet,
+            'designations' : designations,
+            'docs' : docs
         }
-        return render(request, 'employee/profile.html', context)
+        return render(request, 'employee/employee-profile.html', context)
     else:
         return render(request, 'employee/login.html', {'error': 'User not authenticated'})
 
@@ -286,7 +396,7 @@ def employee_leave_request_view(request):
         start_date = request.POST.get('start_date')  # Get the start date
         end_date = request.POST.get('end_date')  # Get the end date
         attachment = request.FILES.get('name')  # Get the file (if any)
-
+        status = request.POST.get('status','Hold')  # Get the status
         # Basic validation (you can expand this as needed)
         if not reason or not start_date or not end_date:
             return render(request, 'employee/leave-request.html', {
@@ -306,7 +416,8 @@ def employee_leave_request_view(request):
             reason=reason,
             attachment=file_path,
             start_date=start_date,
-            end_date=end_date
+            end_date=end_date,
+            status=status
         )
 
         return redirect('employee_leave_request_view')  # Redirect to the leave request list view
@@ -427,37 +538,6 @@ def delete_employee_resignation_view(request, resignation_id):
     resignation.delete()
     return redirect('employee_resignation_view') 
 
-def assign_task(request) :
-    employees = Employee.objects.all()
-    tasks = Task.objects.all().order_by('-id')
-    if request.method == 'POST':
-        # Extract data from the POST request
-        
-        title = request.POST.get('title')
-        description = request.POST.get('description')
-        assigned_to_id = request.POST.get('assigned_to')
-        due_date = request.POST.get('due_date')
-        priority = request.POST.get('priority')
-
-        # Validate the data
-        if not title or not description or not assigned_to_id or not due_date or not priority:
-            return render(request, 'hrms/assign-task.html', {
-                'error': 'All fields are required!'
-            })
-
-        # Save the task to the database
-        assigned_to = Employee.objects.get(id=assigned_to_id)
-        Task.objects.create(
-            title=title,
-            description=description,
-            assigned_to=assigned_to,
-            due_date=due_date,
-            priority=priority
-        )
-
-        return redirect('assign_task')  # Redirect to the task list view
-
-    return render(request, 'hrms/assign-task.html', {'employees': employees, 'tasks': tasks})
 
 def update_task_status(request,task_id) :
     if request.method == 'POST':
@@ -474,7 +554,11 @@ def employee_update_task_status(request,task_id) :
         status = request.POST.get('status')
         task.status = status
         task.save()
-
+        Notification.objects.create(
+            user=task.assigned_to.user,
+            notification_type='Task',
+            message=f"Task '{task.title}' has been marked as {status}"
+            )
         return redirect('assign_task')
 
 def employee_candidate_list(request) :
@@ -1541,3 +1625,535 @@ def evms_vendor_candidate_profile(request,id) :
     }
     return render(request,'employee/evms-vendor-candidate-profile.html',context)
 
+
+def birthday_and_anniversary_today(request):
+    today = date.today()
+
+    # Get all employees
+    employees = EmployeeAdditionalInfo.objects.filter(date_of_birth__isnull=False)
+
+    # Filter for birthdays today
+    birthdays_today = []
+    for emp in employees:
+        if emp.date_of_birth:
+            dob_this_year = emp.date_of_birth.replace(year=today.year)
+            if dob_this_year == today:
+                birthdays_today.append(emp)
+
+    # Filter for work anniversaries today
+    anniversaries_today = []
+    for emp in employees:
+        joining_date = emp.employee.joining_date
+        if joining_date:
+            anniversary_this_year = joining_date.replace(year=today.year)
+            if anniversary_this_year == today:
+                anniversaries_today.append(emp)
+
+    response_data = {
+        "birthdays_today": [
+            {
+                "name": f"{emp.employee.first_name} {emp.employee.last_name}",
+                "designation": emp.employee.designation,
+                "photo_url": emp.employee.employee_photo.url if emp.employee.employee_photo else "",  # Ensure the photo field is properly handled
+                "date_of_birth": emp.date_of_birth.strftime("%d %b %Y"),
+            }
+            for emp in birthdays_today
+        ],
+        "anniversaries_today": [
+            {
+                "name": f"{emp.employee.first_name} {emp.employee.last_name}",
+                "designation": emp.employee.designation,
+                "photo_url": emp.employee.employee_photo.url if emp.employee.employee_photo else "",
+                "joining_date": emp.employee.joining_date.strftime("%d %b %Y"),
+            }
+            for emp in anniversaries_today
+        ],
+    }
+
+    return JsonResponse(response_data)
+
+
+@login_required
+def same_designation_list_json(request):
+    # Get the logged-in user's employee record
+    try:
+        logged_in_employee = Employee.objects.get(user=request.user)
+    except Employee.DoesNotExist:
+        return JsonResponse({'error': 'Employee record not found for the logged-in user'}, status=404)
+
+    # Get the designation and department of the logged-in employee
+    designation = logged_in_employee.designation
+    department = logged_in_employee.department
+
+    # Query for all employees with the same designation and department, excluding the logged-in employee
+    same_department_and_designation_employees = Employee.objects.filter(
+        department=department
+    ).exclude(id=logged_in_employee.id)
+
+    # Serialize employee data to JSON format
+    employee_list = [
+        {
+            'id': emp.id,
+            'name': f"{emp.first_name} {emp.last_name}",
+            'designation': emp.designation,
+            'department': emp.department,
+            'email': emp.user.email if emp.user else None,
+        }
+        for emp in same_department_and_designation_employees
+    ]
+
+    # Return the list in JSON format
+    return JsonResponse({
+        'designation': designation,
+        'department': department,
+        'employees': employee_list,
+    })
+
+
+import uuid
+
+from django.utils.dateparse import parse_datetime
+from datetime import datetime
+
+def ticket_view(request):
+    logged_in_employee = Employee.objects.get(user=request.user)
+    if request.method == 'POST':
+        # Generate a unique ticket number
+        ticket_number = f"TIC-{uuid.uuid4().hex[:8].upper()}"
+        
+        # Capture form data from POST request
+        ticket_name = request.POST.get('ticket_name')
+        ticket_description = request.POST.get('ticket_description')
+        ticket_status = request.POST.get('ticket_status')
+        ticket_priority = request.POST.get('ticket_priority')
+        ticket_category = request.POST.get('ticket_category')
+        ticket_assign_to = Employee.objects.get(id=int(request.POST.get('ticket_assign_to')))
+        ticket_remark = request.POST.get('ticket_remark')
+
+        # Handle date fields safely
+        ticket_created_date = request.POST.get('ticket_created_date', '').strip()
+        ticket_closed_date = request.POST.get('ticket_closed_date', '').strip()
+
+        # Convert to datetime format, or set to None if empty
+        ticket_created_date = parse_datetime(ticket_created_date) if ticket_created_date else None
+        ticket_closed_date = parse_datetime(ticket_closed_date) if ticket_closed_date else None
+
+        # Create a new Ticket record
+        Ticket.objects.create(
+            ticket_number=ticket_number,
+            ticket_name=ticket_name,
+            ticket_description=ticket_description,
+            ticket_status=ticket_status,
+            ticket_priority=ticket_priority,
+            ticket_category=ticket_category,
+            ticket_assign_to=ticket_assign_to,
+            ticket_assign_by=logged_in_employee,
+            ticket_created_date=ticket_created_date,
+            ticket_closed_date=ticket_closed_date,
+            ticket_remark=ticket_remark
+        )
+
+        # Redirect to the same page after saving
+        return redirect('ticket_view')
+
+    # Get all tickets and employees in the IT department
+    tickets = Ticket.objects.all()
+    employees = Employee.objects.filter(department="IT")  
+
+    return render(request, 'employee/ticket.html', {'tickets': tickets, 'employees': employees})
+
+
+def employee_performance_dashboard(request) :
+    today = now().date()
+    leads = Candidate_registration.objects.filter(lead_generate='Yes').order_by('-id')
+    follow_ups = Candidate_registration.objects.filter(next_follow_up_date=today).order_by('-id')
+    interviews = Candidate_registration.objects.filter(send_for_interview='Yes',selection_status='Pending').order_by('-id')
+    placements = Candidate_registration.objects.filter(selection_status='Selected',selection_date = today).order_by('-id')
+    
+    context = {
+        'leads': leads,
+        'follow_ups': follow_ups,
+        'interviews': interviews,
+        'placements': placements
+    }
+    return render(request,'employee/employee-performance-dashboard.html',context)
+
+
+def employee_chart_data(request):
+    today1 = now().date()
+    logged_in_employee = request.user.employee  # Assuming Employee is linked to User
+
+    # Fetch data counts
+    total_call_count = Candidate_registration.objects.filter(
+        register_time__date=today1, employee_name=logged_in_employee
+    ).count()
+    
+    total_connected_call = Candidate_registration.objects.filter(
+        call_connection='Yes', register_time__date=today1, employee_name=logged_in_employee
+    ).count()
+    
+    total_non_connected_call = Candidate_registration.objects.filter(
+        call_connection='No', register_time__date=today1, employee_name=logged_in_employee
+    ).count()
+    
+    total_lead_generate = Candidate_registration.objects.filter(
+        lead_generate='Yes', register_time__date=today1, employee_name=logged_in_employee
+    ).count()
+    
+    total_placement = Candidate_registration.objects.filter(
+        selection_status='Selected', register_time__date=today1, employee_name=logged_in_employee
+    ).count()
+
+    # Prepare JSON response
+    data = {
+        "series": [total_call_count, total_connected_call, total_lead_generate, total_placement, total_non_connected_call],
+        "labels": ["Total Calls", "Connected Calls", "Leads Generated", "Placements", "Non-Connected Calls"]
+    }
+
+    return JsonResponse(data)
+
+
+
+def overall_employee_chart_data(request):
+    today = now().date()
+    logged_in_employee = request.user.employee  # Assuming Employee is linked to User
+
+    # Get the filter parameter from the request (default to 'week')
+    filter_type = request.GET.get('filter', 'week')
+
+    # Determine the start date based on the filter type
+    if filter_type == 'week':
+        start_date = today - timedelta(days=7)
+    elif filter_type == 'month':
+        start_date = today - timedelta(days=30)
+    elif filter_type == 'year':
+        start_date = today - timedelta(days=365)
+    else:
+        return JsonResponse({'error': 'Invalid filter type'}, status=400)
+
+    # Fetch data counts
+    total_call_count = Candidate_registration.objects.filter(
+        register_time__date__gte=start_date, register_time__date__lte=today, employee_name=logged_in_employee
+    ).count()
+
+    total_connected_call = Candidate_registration.objects.filter(
+        call_connection='Yes', register_time__date__gte=start_date, register_time__date__lte=today, employee_name=logged_in_employee
+    ).count()
+
+    total_non_connected_call = Candidate_registration.objects.filter(
+        call_connection='No', register_time__date__gte=start_date, register_time__date__lte=today, employee_name=logged_in_employee
+    ).count()
+
+    total_lead_generate = Candidate_registration.objects.filter(
+        lead_generate='Yes', register_time__date__gte=start_date, register_time__date__lte=today, employee_name=logged_in_employee
+    ).count()
+
+    total_placement = Candidate_registration.objects.filter(
+        selection_status='Selected', register_time__date__gte=start_date, register_time__date__lte=today, employee_name=logged_in_employee
+    ).count()
+
+    # Prepare JSON response with counts in labels
+    data = {
+        "series": [total_call_count, total_connected_call, total_lead_generate, total_placement, total_non_connected_call],
+        "labels": [
+            f"Total Calls ({total_call_count})",
+            f"Connected Calls ({total_connected_call})",
+            f"Leads Generated ({total_lead_generate})",
+            f"Placements ({total_placement})",
+            f"Non-Connected Calls ({total_non_connected_call})"
+        ],
+        "filter": filter_type
+    }
+
+    return JsonResponse(data)
+
+from django.db.models.functions import TruncWeek, TruncMonth, TruncYear
+
+def each_employee_chart_data(request):
+    today = now().date()
+    logged_in_employee = request.user.employee  # Get the logged-in employee
+    filter_type = request.GET.get("filter", "week")  # Default filter is 'week'
+
+    if filter_type == "week":
+        date_trunc = TruncWeek("register_time")  # Group by week
+    elif filter_type == "month":
+        date_trunc = TruncMonth("register_time")  # Group by month
+    elif filter_type == "year":
+        date_trunc = TruncYear("register_time")  # Group by year
+    else:
+        return JsonResponse({"error": "Invalid filter"}, status=400)
+
+    # Fetch aggregated data based on the selected filter
+    data_queryset = (
+        Candidate_registration.objects.filter(employee_name=logged_in_employee)
+        .annotate(period=date_trunc)
+        .values("period")
+        .annotate(
+            total_calls=Count("id"),
+            connected_calls=Count("id", filter=models.Q(call_connection="Yes")),
+            leads_generated=Count("id", filter=models.Q(lead_generate="Yes"))
+        )
+        .order_by("period")
+    )
+
+    # Format data for the chart
+    labels = []
+    total_calls = []
+    connected_calls = []
+    leads_generated = []
+
+    for entry in data_queryset:
+        labels.append(entry["period"].strftime("%Y-%m-%d"))  # Convert date format
+        total_calls.append(entry["total_calls"])
+        connected_calls.append(entry["connected_calls"])
+        leads_generated.append(entry["leads_generated"])
+
+    # Return JSON response
+    return JsonResponse({
+        "labels": labels,
+        "total_calls": total_calls,
+        "connected_calls": connected_calls,
+        "leads_generated": leads_generated
+    })
+
+
+
+def get_revenue_placement_data(request):
+    filter_type = request.GET.get("filter", "week")
+
+    today = datetime.today()
+    start_of_week = today - timedelta(days=today.weekday())  # Monday
+    start_of_month = today.replace(day=1)  # 1st of the month
+    start_of_year = today.replace(month=1, day=1)  # 1st Jan
+
+    if filter_type == "week":
+        start_date = start_of_week
+    elif filter_type == "month":
+        start_date = start_of_month
+    elif filter_type == "year":
+        start_date = start_of_year
+    else:
+        return JsonResponse({"error": "Invalid filter"}, status=400)
+
+    # Fetch placement dates
+    placements_qs = Candidate_registration.objects.filter(register_time__date__gte=start_date)
+    placements_by_date = (
+        placements_qs.values("register_time__date").annotate(count=Sum(1))  # Count placements per date
+    )
+
+    # Fetch revenue
+    total_revenue = placements_qs.aggregate(total_earning=Sum("emta_commission"))["total_earning"] or 0.0
+
+    # Generate labels and data
+    labels = sorted(set(p["register_time__date"] for p in placements_by_date))
+    placement_data = [next((p["count"] for p in placements_by_date if p["register_time__date"] == date), 0) for date in labels]
+    revenue_data = [total_revenue] * len(labels)  # Apply same revenue across dates
+
+    return JsonResponse({
+        "placements": placement_data,
+        "revenue": revenue_data,
+        "labels": [date.strftime("%d-%m-%Y") for date in labels]
+    })
+
+
+def employee_leave_details(request):
+    """Return attendance data for the logged-in user from joining date to today."""
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Unauthorized"}, status=403)
+
+    employee = Employee.objects.filter(user=request.user).first()
+    if not employee:
+        return JsonResponse({"error": "Employee data not found"}, status=404)
+
+    today = localtime().date()
+    start_date = employee.joining_date  # Start from employee's joining date
+
+    # Get attendance records
+    present_days = 0
+    late_days = 0
+    absent_days = 0
+    leave_days = 0
+    half_days = 0
+
+    # Fetch holidays
+    holidays = set(Holiday.objects.values_list('date', flat=True))
+
+    delta = timedelta(days=1)
+    current_date = start_date
+
+    while current_date <= today:
+        # Skip holidays and Sundays
+        if current_date in holidays or current_date.weekday() == 6:
+            current_date += delta
+            continue
+
+        # Check for leave requests
+        if LeaveRequest.objects.filter(
+            employee=employee, start_date__lte=current_date, end_date__gte=current_date, status="Approved"
+        ).exists():
+            leave_days += 1
+
+        else:
+            sessions = EmployeeSession.objects.filter(user=employee.user, punch_in_time__date=current_date)
+            total_time = sum((session.total_time for session in sessions if session.total_time), timedelta())
+
+            # Convert total time to hours
+            total_hours = total_time.total_seconds() / 3600
+
+            if total_hours < 4 and total_hours > 0:
+                half_days += 1
+            elif sessions.exists():
+                first_punch_in = sessions.earliest('punch_in_time').punch_in_time
+                punch_in_hour = first_punch_in.hour
+                punch_in_minute = first_punch_in.minute
+
+                # Determine late attendance
+                if punch_in_hour > 10 or (punch_in_hour == 10 and punch_in_minute > 10):
+                    late_days += 1
+                else:
+                    present_days += 1
+            else:
+                absent_days += 1
+
+        current_date += delta
+
+    # JSON response with chart data
+    data = {
+        "labels": ["On Time", "Late Attendance", "Absent", "Leave", "Half Day"],
+        "series": [present_days, late_days, absent_days, leave_days, half_days],
+    }
+    return JsonResponse(data)
+
+def employee_attendance_details(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Unauthorized"}, status=403)
+
+    employee = Employee.objects.filter(user=request.user).first()
+    if not employee:
+        return JsonResponse({"error": "Employee data not found"}, status=404)
+
+    today = localtime().date()
+    start_date = employee.joining_date
+    total_leaves = 24  # Defined total leaves
+
+    # Fetch holidays
+    holidays = set(Holiday.objects.values_list('date', flat=True))
+
+    # Fetch leave requests
+    approved_leaves = LeaveRequest.objects.filter(employee=employee, status="Approved").count()
+    pending_requests = LeaveRequest.objects.filter(employee=employee, status="Hold").count()
+
+    total_days = (today - start_date).days + 1  # Total days including today
+    worked_days = 0
+    absent_days = 0
+    
+    delta = timedelta(days=1)
+    current_date = start_date
+
+    while current_date <= today:
+        # Skip holidays and Sundays
+        if current_date in holidays or current_date.weekday() == 6:
+            current_date += delta
+            continue
+
+        # Check if employee has worked on the day
+        sessions = EmployeeSession.objects.filter(user=employee.user, punch_in_time__date=current_date)
+        if sessions.exists():
+            worked_days += 1
+        else:
+            absent_days += 1
+        
+        current_date += delta
+
+    # JSON response
+    data = {
+        "Total Leaves": total_leaves,
+        "Taken": approved_leaves,
+        "Absent": absent_days,
+        "Request": pending_requests,
+        "Worked Days": worked_days,
+        "Loss of Pay": absent_days  # Assuming loss of pay is equal to absent days
+    }
+    return JsonResponse(data)
+
+
+def format_decimal_hours(td):
+    """Convert timedelta to decimal hours format (e.g., 8.36)"""
+    total_seconds = td.total_seconds()
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) / 60
+    return f"{hours:.0f}.{int(minutes):02}"  # Example: 8.36
+
+def format_integer_hours(td):
+    """Convert timedelta to integer hours (e.g., 16)"""
+    return f"{int(td.total_seconds() // 3600)}"  # Example: 16
+
+def format_hours_minutes(td):
+    """Convert timedelta to '12h 36m' format"""
+    total_seconds = td.total_seconds()
+    hours = int(total_seconds // 3600)
+    minutes = int((total_seconds % 3600) // 60)
+    return f"{hours}h {minutes}m"  # Example: 12h 36m
+
+def calculate_work_hours(sessions):
+    """Calculate total working hours from employee sessions."""
+    return sum((session.total_time for session in sessions if session.total_time), timedelta())
+
+@login_required
+def work_hours_summary(request):
+    user = request.user
+    today = now().date()
+    week_start = today - timedelta(days=today.weekday())  # Monday as start of the week
+    month_start = today.replace(day=1)  # Start of the month
+
+    # Fetch today's sessions
+    today_sessions = EmployeeSession.objects.filter(user=user, punch_in_time__date=today)
+
+    # Get first punch-in and last punch-out
+    first_punch_in = today_sessions.order_by("punch_in_time").first()
+    last_punch_out = today_sessions.order_by("-punch_out_time").first()
+
+    # Calculate total logged-in time (first punch-in to last punch-out)
+    if first_punch_in and last_punch_out and last_punch_out.punch_out_time:
+        total_hours_today = last_punch_out.punch_out_time - first_punch_in.punch_in_time
+    else:
+        total_hours_today = timedelta()
+        
+    # Calculate another total logged-in time (first punch-in to last punch-out)
+    if first_punch_in and last_punch_out and last_punch_out.punch_out_time:
+        another_today_total_working_time = last_punch_out.punch_out_time - first_punch_in.punch_in_time
+    else:
+        another_today_total_working_time = timedelta()
+
+    # Actual working hours (sum of session working times)
+    today_productive_hours = calculate_work_hours(today_sessions)
+
+    # Break time = Total logged-in time - Actual working time
+    today_break_hours = max(total_hours_today - today_productive_hours, timedelta())
+
+    # Weekly and Monthly work hours
+    week_sessions = EmployeeSession.objects.filter(user=user, punch_in_time__date__gte=week_start)
+    month_sessions = EmployeeSession.objects.filter(user=user, punch_in_time__date__gte=month_start)
+
+    total_hours_week = calculate_work_hours(week_sessions)
+    total_hours_month = calculate_work_hours(month_sessions)
+
+    # Overtime calculations (Anything over 9 hours)
+    today_overtime = max(today_productive_hours - timedelta(hours=9), timedelta())
+    month_overtime = sum(
+        (max(session.total_time - timedelta(hours=9), timedelta()) for session in month_sessions if session.total_time),
+        timedelta()
+    )
+
+    response_data = {
+        "total_hours_today": format_decimal_hours(total_hours_today),  # Total logged-in time in decimal format
+        "total_hours_week": format_integer_hours(total_hours_week),  # 16 format
+        "total_hours_month": format_integer_hours(total_hours_month),  # 16 format
+        "month_overtime": format_integer_hours(month_overtime),  # 16 format
+        "today_productive_hours": format_hours_minutes(today_productive_hours),  # Working hours (e.g., 7h 45m)
+        "today_break_hours": format_hours_minutes(today_break_hours),  # Break time (e.g., 1h 15m)
+        "today_overtime": format_hours_minutes(today_overtime),  # Overtime (e.g., 0h 0m)
+        "another_today_total_working_time": format_hours_minutes(another_today_total_working_time)
+    }
+
+    return JsonResponse(response_data)

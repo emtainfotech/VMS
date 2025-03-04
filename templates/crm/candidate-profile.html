@@ -1,4 +1,4 @@
-{% extends "hrms/base.html" %}
+{% extends "crm/base.html" %}
 
 {% block content %}
 
@@ -48,13 +48,13 @@
                 {% endif %}
                 <div>
                   <h3 class="card-title mb-1">{{ candidate.candidate_name }}</h3>
-                  <p class="text-muted mb-2">{{ candidate.refer_code }}-{{ candidate.unique_id }}</p>
+                  <p class="text-muted mb-2">{{ candidate.unique_code }}</p>
                   <p>{{ candidate.candidate_mobile_number }}</p>
                   <p>
-                    <strong class="subheader">Follow-Up By:</strong> <br />{{candidate.employee_name}}
+                    <strong class="subheader">Address:</strong> <br />{{candidate.origin_location}}
                   </p>
                   <p>
-                    <strong class="subheader">Address:</strong> <br />{{candidate.origin_location}}
+                    <strong class="subheader">Follow-Up By:</strong> <br />{{candidate.employee_name}}
                   </p>
                 </div>
               </div>
@@ -258,16 +258,6 @@
                 <div class="mb-3">
                   <label class="form-label">Lead Source</label>
                   <input type="text" name="lead_source" class="form-control" value="{{ candidate.lead_source }}">
-                </div>
-              </div>
-              <div class="col-md-6 col-md-3">
-                <div class="mb-3">
-                  <label class="form-label">Follow-Up By</label>
-                  <select class="form-select" name="employee_name">
-                    {% for employee in employees %}
-                      <option value="{{ employee.first_name }} {{ employee.last_name }}"{% if candidate.employee_name == "{{ employee.first_name }} {{ employee.last_name }}" %}selected{% endif %}>{{ employee.first_name }} {{ employee.last_name }}</option>
-                    {% endfor %}
-                </select>                
                 </div>
               </div>
               <div class="col-md-6 mb-3">

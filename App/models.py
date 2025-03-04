@@ -99,54 +99,13 @@ IST = pytz.timezone('Asia/Kolkata')
 
 class EmployeeSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    login_time = models.DateTimeField(null=True, blank=True)  # Store login time in IST
-    logout_time = models.DateTimeField(null=True, blank=True)  # Store logout time in IST
+    punch_in_time = models.DateTimeField(null=True, blank=True)  # Store login time in IST
+    punch_out_time = models.DateTimeField(null=True, blank=True)  # Store logout time in IST
     total_time = models.DurationField(default=timedelta(0), null=True, blank=True)
     last_activity = models.DateTimeField(default=now)
-    logout_reason = models.CharField(max_length=255)
+    punch_out_reason = models.CharField(max_length=255)
 
-    def calculate_work_hours(self):
-        if not self.logout_time:
-            return timedelta(0)
-
-        # Convert login and logout times to IST (this should already be in IST)
-        login_ist = self.login_time
-        logout_ist = self.logout_time
-
-        # Define working hours in IST
-        work_start = datetime.combine(login_ist.date(), time(10, 0), IST)
-        work_end = datetime.combine(login_ist.date(), time(19, 30), IST)
-
-        # Adjust login/logout times within working hours
-        adjusted_login = max(login_ist, work_start)
-        adjusted_logout = min(logout_ist, work_end)
-
-        # Return zero timedelta if logout occurs before login
-        if adjusted_logout < adjusted_login:
-            return timedelta(0)
-
-        return adjusted_logout - adjusted_login
-
-    def save(self, *args, **kwargs):
-        # Ensure times are saved in IST
-        if not self.login_time:  # New session
-            self.login_time = datetime.now(IST)  # Set login time in IST
-        if self.logout_time is None:  # If logout_time is not set, don't update it
-            self.logout_time = self.logout_time or None  # Optional: You can manually set this later
-        if self.logout_time:  # If logout_time is set, calculate the total work time
-            self.total_time = self.calculate_work_hours()
-        super().save(*args, **kwargs)
-
-    @property
-    def login_time_ist(self):
-        """ Returns login_time in IST (already saved in IST) """
-        return self.login_time
-
-    @property
-    def logout_time_ist(self):
-        """ Returns logout_time in IST (already saved in IST) """
-        return self.logout_time
-
+    
 
 class Meeting(models.Model):
     title = models.CharField(max_length=255)
@@ -320,7 +279,6 @@ class Promotion(models.Model):
     
     
 class Termination(models.Model):
-
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     termination_type = models.CharField(max_length=100)
     notice_date = models.DateField()
@@ -344,7 +302,7 @@ class Announcement(models.Model):
 from django.contrib.auth.models import User
 
 class Notification(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link notification to a specific employee
+    user = models.ForeignKey(User, on_delete=models.CASCADE) # User who will receive the notification
     notification_type = models.CharField(max_length=200)
     message = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -394,9 +352,6 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
-    
-    
-
 
 class Candidate_registration(models.Model):
     employee_name = models.CharField(max_length=50)
@@ -409,12 +364,12 @@ class Candidate_registration(models.Model):
     lead_source = models.CharField(max_length=255)
     preferred_location = models.CharField(max_length=255, blank=True, null=True)
     origin_location = models.CharField(max_length=255, blank=True, null=True)
-    qualification = models.CharField(max_length=255)
+    qualification = models.CharField(max_length=255, blank=True, null=True)
     diploma = models.CharField(max_length=255, blank=True, null=True)
     sector = models.CharField(max_length=255, blank=True, null=True)
     department = models.CharField(max_length=255, blank=True, null=True)
-    experience_year = models.IntegerField(blank=True, null=True)
-    experience_month = models.IntegerField(blank=True, null=True)
+    experience_year = models.CharField(max_length=255, blank=True, null=True)
+    experience_month = models.CharField(max_length=255, blank=True, null=True)
     current_company = models.CharField(max_length=255, blank=True, null=True)
     current_working_status = models.CharField(max_length=50)
     current_salary = models.CharField(max_length=10, blank=True, null=True)
@@ -429,7 +384,7 @@ class Candidate_registration(models.Model):
     remark = models.CharField(max_length=255,blank=True, null=True)
     register_time = models.DateTimeField(default=now)
     submit_by = models.CharField(max_length=100)
-    selection_status = models.CharField(max_length=10, blank=True, null=True)
+    selection_status = models.CharField(max_length=10, default='Pending')
     company_name = models.CharField(max_length=10, blank=True, null=True)
     offered_salary = models.CharField(max_length=255, blank=True, null=True)
     selection_date = models.CharField(max_length=255, blank=True, null=True)
@@ -440,7 +395,24 @@ class Candidate_registration(models.Model):
     def __str__(self):
         return self.candidate_name
 
-
+class Candidate_chat(models.Model):
+    candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE)
+    chat_date = models.DateTimeField(auto_now_add=True)
+    chat_message = models.TextField()
+    chat_by = models.CharField(max_length=255)
+    
+    def __str__(self):
+        return self.candidate.candidate_name
+    
+class Candidate_Interview(models.Model):
+    candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE)
+    interview_date = models.CharField(max_length=255)
+    interview_time = models.CharField(max_length=255)
+    company_name = models.CharField(max_length=255)
+    status = models.CharField(max_length=255)
+    
+    def __str__(self):
+        return self.candidate.candidate_name
 
 class Company_registration(models.Model):
     employee_name = models.CharField(max_length=50)
@@ -486,3 +458,27 @@ class Company_registration(models.Model):
 
     def __str__(self):
         return self.company_name
+
+class Ticket(models.Model):
+    ticket_number = models.CharField(max_length=50, unique=True)
+    ticket_name = models.CharField(max_length=255)
+    ticket_description = models.TextField(blank=True, null=True)
+    ticket_status = models.CharField(
+        max_length=20,
+        choices=[('Open', 'Open'), ('In Progress', 'In Progress'), ('Closed', 'Closed')],
+        default='Open'
+    )
+    ticket_priority = models.CharField(
+        max_length=20,
+        choices=[('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')],
+        default='Medium'
+    )
+    ticket_category = models.CharField(max_length=100, blank=True, null=True)
+    ticket_assign_to = models.ForeignKey('Employee', related_name='assigned_tickets', on_delete=models.SET_NULL, null=True, blank=True)
+    ticket_assign_by = models.ForeignKey('Employee', related_name='created_tickets', on_delete=models.SET_NULL, null=True, blank=True)
+    ticket_created_date = models.DateTimeField(auto_now_add=True)
+    ticket_closed_date = models.DateTimeField(blank=True, null=True)
+    ticket_remark = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.ticket_number} - {self.ticket_name}"

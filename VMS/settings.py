@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'App',
     'EVMS',
-    'Employee'
+    'Employee',
+    'CRM'
 ]
 
 MIDDLEWARE = [
@@ -136,3 +137,5 @@ CSRF_TRUSTED_ORIGINS = [
     "https://emtavms.com",
     "https://www.emtavms.com",
 ]
+
+

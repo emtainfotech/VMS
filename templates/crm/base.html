@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <link rel="shortcut icon" href="/static/m.png" type="image/x-icon">
-    <title>EMTA - HRMS</title>
+    <title>EMTA - CRM</title>
     <!-- CSS files -->
     <link href="/static/dist/css/tabler.min.css?1692870487" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -27,31 +27,7 @@
     </style>
   </head>
   <body>
-  {% comment %} <form id="logout-form" method="POST" action="{% url 'employee_logout' %}" style="display:none;">
-      {% csrf_token %}
-      <button type="submit" id="logout-button">Logout</button>
-  </form>
-<script>
-    let inactivityTimer;
-
-    function resetTimer() {
-        clearTimeout(inactivityTimer);
-        // Set the timer for 10 minutes (600,000 ms)
-        inactivityTimer = setTimeout(logoutUser, 300000); // 5 minutes
-    }
-
-    function logoutUser() {
-        // Automatically click the logout button
-        document.getElementById('logout-button').click();
-    }
-
-    // Reset the timer on user interactions
-    window.onload = resetTimer;
-    document.onmousemove = resetTimer;
-    document.onkeydown = resetTimer;
-    document.onscroll = resetTimer;
-    document.ontouchstart = resetTimer;
-</script> {% endcomment %}
+    
     <script src="/static/dist/js/demo-theme.min.js?1692870487"></script>
     <div class="page">
       <!-- Navbar -->
@@ -128,7 +104,7 @@
               </a>
               <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                 <a href="{% url 'employee_profile_view' user.id %}" class="dropdown-item">Profile</a>
-                <a href="{% url 'employee_logout' %}"  class="dropdown-item">Logout</a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#modal-report" class="dropdown-item">Logout</a>
               </div>
             </div>
           </div>
@@ -140,7 +116,7 @@
             <div class="container-xl">
               <ul class="navbar-nav">
                 <li class="nav-item  {% if request.path == '/Dashboard/' %}active  {% endif %}">
-                  <a class="nav-link" href="{% url 'employee_dashboard' %}">
+                  <a class="nav-link" href="{% url 'crm_dashboard' %}">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                       <!-- Download SVG icon from http://tabler-icons.io/i/home -->
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -192,58 +168,11 @@
                       <div class="dropdown-menu-column">
                         <a class="dropdown-item" href="{% url 'employee_vendor_list' %}">Vendor's</a>
                         <a class="dropdown-item" href="{% url 'employee_evms_candidate_list' %}">Candidate's</a>
-                        <a class="dropdown-item" href="{% url 'pay_list_view' %}">Pay List</a>
-                        <a class="dropdown-item" href="{% url 'holiday_view' %}">Transaction History</a>       
+                        {% comment %} <a class="dropdown-item" href="{% url 'pay_list_view' %}">Pay List</a>
+                        <a class="dropdown-item" href="{% url 'holiday_view' %}">Transaction History</a>        {% endcomment %}
                       </div>
                     </div>
                   </div>
-                </li>
-                <li class="nav-item  {% if request.path == '/employee-attendence/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'employee_leave_request_view' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <i class="fas fa-calendar-day day-off"></i></span>
-                    <span class="nav-link-title">Leave Request</span>
-                  </a>
-                </li>
-                <li class="nav-item  {% if request.path == '/leave-request/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'employee_dashboard' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <i class="fas fa-exclamation-circle late"></i>
-                    </span>
-                    <span class="nav-link-title">Selection</span>
-                  </a>
-                </li>
-                <li class="nav-item  {% if request.path == '/holiday/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'employee_holiday_view' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <i class="fas fa-sun holiday"></i>
-                    </span>
-                    <span class="nav-link-title">Holiday's</span>
-                  </a>
-                </li>
-                <li class="nav-item  {% if request.path == '/projects/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'employee_holiday_view' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-database"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 6m-8 0a8 3 0 1 0 16 0a8 3 0 1 0 -16 0" /><path d="M4 6v6a8 3 0 0 0 16 0v-6" /><path d="M4 12v6a8 3 0 0 0 16 0v-6" /></svg>
-                    </span>
-                    <span class="nav-link-title">DSR</span>
-                  </a>
-                </li>
-                <li class="nav-item  {% if request.path == '/holiday/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'office_employee_expense_view' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <i class="fas fa-sun holiday"></i>
-                    </span>
-                    <span class="nav-link-title">Expense</span>
-                  </a>
-                </li>
-                <li class="nav-item  {% if request.path == '/holiday/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'employee_resignation_view' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <i class="fas fa-sun holiday"></i>
-                    </span>
-                    <span class="nav-link-title">Resignation</span>
-                  </a>
                 </li>
               </ul>
             </div>

@@ -6,5 +6,6 @@ urlpatterns = [
     path('', include('EVMS.urls')),
     path('hrms/', include('App.urls')),
     path('employee/', include('Employee.urls')),
+    path('crm/', include('CRM.urls')),
     path('admin/', admin.site.urls),
 ]

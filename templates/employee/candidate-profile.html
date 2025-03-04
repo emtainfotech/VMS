@@ -426,7 +426,7 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Call Connection Status</label>
                     <select class="form-select" name="selection_status">
-                      <option disabled selected value="Select Candidate Selection Status" {% if candidate.selection_status == "Select Candidate Selection Status" %}selected{% endif %}>Select Candidate Selection Status</option>
+                      <option value="Select Candidate Selection Status" {% if candidate.selection_status == "Select Candidate Selection Status" %}selected{% endif %}>Select Candidate Selection Status</option>
                       <option value="Selected" {% if candidate.selection_status == "Selected" %}selected{% endif %}>Selected</option>
                       <option value="Rejected" {% if candidate.selection_status == "Rejected" %}selected{% endif %}>Rejected</option>
                       <option value="Pending" {% if candidate.selection_status == "Pending" %}selected{% endif %}>Pending</option>

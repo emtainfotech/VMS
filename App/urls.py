@@ -13,9 +13,6 @@ urlpatterns = [
     path('employee/',employee_view,name = 'employee_view'),
     path('employee-details/<int:id>/',employee_details_view,name = 'employee_details_view'),
     path('employee-details/<int:id>/', employee_details_view, name='employee-details'),
-    path('admin-candidate-registration/',admin_candidate_registration,name = 'admin_candidate_registration'),
-    path('candidate-list/',admin_candidate_list,name = 'admin_candidate_list'),
-    path('candidate-details/<int:id>/', admin_candidate_profile, name='candidate-details'),
     path('designation/',designation_view,name = 'designation_view'),
     path('designation/delete/<int:id>/', delete_designation, name='delete-designation'),
     # path('employee-attendence/',attendence_view,name = 'attendence_view'),
@@ -56,17 +53,14 @@ urlpatterns = [
     path('delete-warning/<int:warning_id>/', delete_warning, name='delete_warning'),
     path('update-leave-status/<int:leave_id>/', update_leave_status, name='update_leave_status'),
     path('employee-attendence_details/<int:user_id>/', employee_attendence_details, name='employee_attendence_details'),
-    path('admin-company-list/',admin_company_list,name = 'admin_company_list'),
-    path('admin-company-registration/',admin_company_registration,name = 'admin_company_registration'),
-    path('admin-company-profile/<int:id>/', admin_company_profile, name='admin_company_profile'),
-    path('admin-vendor-list/',admin_vendor_list,name = 'admin_vendor_list'),
-    path('evms-candidate-list/',admin_evms_candidate_list,name = 'admin_evms_candidate_list'),
-    path('vendor-candidate-list/<int:id>/',admin_vendor_candidate_list,name = 'admin_vendor_candidate_list'),
-    path('evms-candidate-profile/<int:id>/',evms_candidate_profile,name = 'evms_candidate_profile'),
-    path('evms-vendor-candidate-profile/<int:id>/',evms_vendor_candidate_profile,name = 'evms_vendor_candidate_profile'),
     path("download-attendance/<int:user_id>/", download_attendance_excel, name="download_attendance_excel"),
+    path('department-employee-count/', department_employee_count, name='department_employee_count'),
+    path('get-session-details/', get_session_details, name='get_session_details'),
+    path('attendance-status/', today_employee_attendance_status, name='today_employee_attendance_status'),
+    path('employee-attendance-list/', employee_attendance_list, name='employee_attendance_list'),
+    path('task-assign/',assign_task,name = 'assign_task'),
     
-    
+
     path('admin/', admin.site.urls),
 ]
 

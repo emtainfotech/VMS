@@ -1,7 +1,8 @@
-{% extends 'hrms/base.html' %}
+{% extends "crm/base.html" %}
 
 {% block content %}
-  <div class="page-wrapper">
+
+<div class="page-wrapper">
     <!-- Page header -->
     <div class="page-header d-print-none">
       <div class="container-xl">
@@ -9,18 +10,18 @@
           <div class="col">
             <!-- Page pre-title -->
             {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
-            <h2 class="page-title">Company's</h2>
+            <h2 class="page-title">Your Candidates</h2>
           </div>
           <!-- Page title actions -->
           <div class="col-auto ms-auto d-print-none">
             <div class="btn-list">
-              <a href="{% url 'admin_company_registration' %}" class="btn btn-primary d-none d-sm-inline-block">
+              <a href="{% url 'admin_candidate_registration' %}" class="btn btn-primary d-none d-sm-inline-block">
                 <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                   <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                   <path d="M12 5l0 14" />
                   <path d="M5 12l14 0" />
-                </svg>Add New Company
+                </svg>Add New Candidate
               </a>
               <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
                 <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
@@ -63,61 +64,56 @@
                         <thead>
                           <tr>
                             <th class="w-1">No.</th>
-                            <th>Logo</th>
-                            <th>Company Name</th>
+                            <th>Hendle By</th>
+                            <th>Photo</th>
+                            <th>Candidate Name</th>
                             <th>Unique Code</th>
-                            <th>Vacancy Code</th>
-                            <th>Job Profile</th>
-                            <th>Sector</th>
-                            <th>Location</th>
-                            <th>Handle By</th>
+                            <th>Mobile No.</th>
+                            <th>Register At</th>
+                            <th>Selection</th>
                             <th>Profile</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {% for company in companys %}
+                          {% for candidate in candidates %}
                             <tr>
                               <td>
                                 <span class="text-secondary">{{ forloop.counter }}</span>
                               </td>
                               <td>
-                                {% if company.company_logo %}
-                                  <img src="{{ company.company_logo.url }}" class="avatar me-3" alt="" />
+                                <span class="me-2"></span>
+                                {{ candidate.employee_name }}
+                              </td>
+                              <td>
+                                {% if candidate.candidate_photo %}
+                                  <img src="{{ candidate.candidate_photo.url }}" class="avatar me-3" alt="" />
                                 {% else %}
                                   No Photo
                                 {% endif %}
                               </td>
                               <td>
                                 <span class="me-2"></span>
-                                <a href="{% url 'admin_company_profile' company.id %}">{{ company.company_name }}</a>
+                                <a href="{% url 'candidate-details' candidate.id %}">{{ candidate.candidate_name }}</a>
                               </td>
                               <td>
                                 <span class="me-2"></span>
-                                {{ company.company_unique_code }}
+                                {{ candidate.unique_code }}
                               </td>
                               <td>
                                 <span class="me-2"></span>
-                                {{ company.company_vacancy_unique_code }}
+                                {{ candidate.candidate_mobile_number }}
                               </td>
                               <td>
                                 <span class="me-2"></span>
-                                {{ company.sector_type }}
+                                {{ candidate.register_time }}
                               </td>
                               <td>
                                 <span class="me-2"></span>
-                                {{ company.job_profile }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ company.company_location }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{company.employee_name}}
+                                {{candidate.selection_status}}
                               </td>
                               <td>
                                 <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
-                                  <a href="{% url 'admin_company_profile' company.id %}" class="btn btn-bitbucket w-100 btn-icon">
+                                  <a href="{% url 'candidate-details' candidate.id %}" class="btn btn-bitbucket w-100 btn-icon">
                                     <!-- Download SVG icon from http://tabler-icons.io/i/brand-github -->
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                       <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -180,4 +176,5 @@
       </div>
     </div>
   </div>
-{% endblock %}
+
+{% endblock content %}

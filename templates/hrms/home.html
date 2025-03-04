@@ -154,7 +154,7 @@
               </div>
             </div>
           </div> {% endcomment %}
-          <div class="col-md-12 col-lg-6">
+          <div class="col-md-12 col-lg-4">
             <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Meeting Schedule</h3>
@@ -184,7 +184,7 @@
             </div>
           </div>
 
-          <div class="col-md-12 col-lg-6">
+          <div class="col-md-12 col-lg-4">
             <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Today's Attendance</h3>
@@ -211,8 +211,7 @@
               </div>
             </div>
           </div>
-
-          <div class="col-lg-6">
+          <div class="col-lg-4">
             <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Today Leave</h3>
@@ -240,7 +239,60 @@
               </div>
             </div>
           </div>
-          <div class="col-lg-6">
+          <div class="col-md-12 col-lg-4">
+            <div class="card">
+              <div class="card-body">
+                <h3 class="card-title">Department Wise Employee</h3>
+                <div id="department-wise-employee-chart"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6 col-xl-4">
+            <div class="card">
+              <div class="card-body">
+                <h3 class="card-title">Todays Attendence</h3>
+                <div id="chart-demo-pie"></div>
+                <a href="{% url 'employee_attendance_list' %}" class="text-decoration-none">
+                  View
+              </a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Announcement's</h3>
+              </div>
+              <div class="card-body">
+                <div id="carousel-captions" class="carousel slide" data-bs-ride="carousel">
+                  <div class="carousel-inner">
+                    {% for announcement in announcements %}
+                    <div class="carousel-item active">
+                      <img class="d-block w-100" alt="" src="{{announcement.announcements_image.url}}" style="height: 200px;">
+                      <div class="carousel-caption-background d-none d-md-block"></div>
+                      <div class="carousel-caption d-none d-md-block">
+                        <h3>{{ announcement.title }}</h3>
+                        <p>{{ announcement.description }}</p>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  </div>
+                  <a class="carousel-control-prev" href="#carousel-captions" role="button" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                  </a>
+                  <a class="carousel-control-next" href="#carousel-captions" role="button" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          
+          <div class="col-lg-4">
             <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Today Expense</h3>
@@ -274,13 +326,44 @@
               </div>
             </div>
           </div>
+          <div class="col-lg-4">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Recent Activity</h3>
+              </div>
+              <div class="card-table table-responsive">
+                <table class="table table-vcenter">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Message</th>
+                      <th>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for notification in notifications %}
+                    <tr>
+                      <td class="w-1">
+                        <span class="avatar avatar-sm">{{forloop.counter}}</span>
+                      </td>
+                      <td >
+                        <div class="text-truncate">{{ notification.message }}</div>
+                      </td>
+                      <td class="text-nowrap text-secondary">{{ notification.created_at }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
           
-          <div class="col-md-12 col-lg-6">
+          <div class="col-md-12 col-lg-4">
             <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Leave Requests</h3>
               </div>
-              <div class="card-table table-responsive">
+              <div class="card-table table-responsive ">
                 <table class="table table-vcenter">
                   <thead>
                     <tr>
@@ -305,7 +388,10 @@
               </div>
             </div>
           </div>
-          <div class="col-md-12 col-lg-6">
+
+          
+
+          <div class="col-md-12 col-lg-12">
             <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Tasks Assigned</h3>
@@ -344,172 +430,66 @@
               </div>
             </div>
           </div>
-          <div class="col-md-6">
+          
+          
+          
+          
+
+          <div class="col-4">
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">Announcement's</h3>
+                <h3 class="card-title">Birthdays</h3>
               </div>
-              <div class="card-body">
-                <div id="carousel-captions" class="carousel slide" data-bs-ride="carousel">
-                  <div class="carousel-inner">
-                    {% for announcement in announcements %}
-                    <div class="carousel-item active">
-                      <img class="d-block w-100" alt="" src="{{announcement.announcements_image.url}}" style="height: 500px;">
-                      <div class="carousel-caption-background d-none d-md-block"></div>
-                      <div class="carousel-caption d-none d-md-block">
-                        <h3>{{ announcement.title }}</h3>
-                        <p>{{ announcement.description }}</p>
-                      </div>
+              <div class="list-group list-group-flush list-group-hoverable">
+                {% for date, employees in grouped_birthdays.items %}
+                <div class="list-group-item">
+                  <h5>{{ date }}</h5>
+                  {% for employee in employees %}
+                  <div class="row align-items-center mt-3">
+                    <div class="col-auto">
+                      <a href="#">
+                        <span class="avatar" style="background-image: url('{{ employee.employee.employee_photo.url }}')"></span>
+                      </a>
                     </div>
-                    {% endfor %}
+                    <div class="col text-truncate">
+                      <a href="#" class="text-reset d-block">{{ employee.employee.first_name }} {{ employee.employee.last_name }}</a>
+                      <div class="d-block text-secondary text-truncate mt-n1">{{ employee.employee.designation }}</div>
+                    </div>
                   </div>
-                  <a class="carousel-control-prev" href="#carousel-captions" role="button" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Previous</span>
-                  </a>
-                  <a class="carousel-control-next" href="#carousel-captions" role="button" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Next</span>
-                  </a>
+                  {% endfor %}
                 </div>
+                {% endfor %}
               </div>
             </div>
           </div>
-          {% comment %} <div class="col-12">
+
+          <div class="col-4">
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">Today's Selection</h3>
+                <h3 class="card-title">Work Anniversaries</h3>
               </div>
-              <div class="card-body border-bottom py-3">
-                <div class="d-flex">
-                  <div class="text-secondary">
-                    Show<div class="mx-2 d-inline-block">
-                      <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
-                    </div>entries
-                  </div>
-                  <div class="ms-auto text-secondary">
-                    Search:<div class="ms-2 d-inline-block">
-                      <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
+              <div class="list-group list-group-flush list-group-hoverable">
+                {% for date, employees in grouped_anniversaries.items %}
+                <div class="list-group-item">
+                  <h5>{{ date }}</h5>
+                  {% for emp in employees %}
+                  <div class="row align-items-center mt-2">
+                    <div class="col-auto">
+                      <a href="#">
+                        <span class="avatar" style="background-image: url({{ emp.employee.employee_photo.url }})"></span>
+                      </a>
+                    </div>
+                    <div class="col text-truncate">
+                      <a href="#" class="text-reset d-block">{{ emp.employee.first_name }} {{ emp.employee.last_name }}</a>
+                      <div class="d-block text-secondary text-truncate mt-n1">{{ emp.employee.designation }}</div>
                     </div>
                   </div>
+                  {% endfor %}
                 </div>
-              </div>
-              <div class="table-responsive">
-                <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
-                  <thead>
-                    <tr>
-                      <th class="w-1">
-                        No. <!-- Download SVG icon from http://tabler-icons.io/i/chevron-up -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm icon-thick" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                          <path d="M6 15l6 -6l6 6" />
-                        </svg>
-                      </th>
-                      <th>Name</th>
-                      <th>Unique ID</th>
-                      <th>Company</th>
-                      <th>Handle By</th>
-                      <th>Salary Offered</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for selected_candidate in selected_candidates %}
-                    <tr>
-                      <td>
-                        {{forloop.counter}}
-                      </td>
-                      <td>
-                        <a href="{% url 'candidate-details' selected_candidate.id  %}" >
-                        <span class="text-secondary">{{selected_candidate.candidate_name}}</span></a>
-                      </td>
-                      <td>
-                        {{selected_candidate.unique_code}}</a>
-                      </td>
-                      <td>
-                        {{selected_candidate.company_name}}
-                      </td>
-                      <td>{{selected_candidate.employee_name}}</td>
-                      <td>{{selected_candidate.offered_salary}}</td>
-                      <td>
-                        {% if selected_candidate.selection_status == "Selected" %}
-                          <span class="badge bg-success me-1"></span> {{ selected_candidate.selection_status }}
-                        {% elif selected_candidate.selection_status == "Rejected" %}
-                          <span class="badge bg-danger me-1"></span> {{ selected_candidate.selection_status }}
-                        {% else %}
-                          <span class="badge bg-warning me-1"></span> {{ selected_candidate.selection_status }}
-                        {% endif %}
-                      </td>
-                      
-                      
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-              <div class="card-footer d-flex align-items-center">
-                <p class="m-0 text-secondary">
-                  Showing <span>1</span> to <span>8</span> of <span>16</span> entries
-                </p>
-                <ul class="pagination m-0 ms-auto">
-                  <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                      <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M15 6l-6 6l6 6" />
-                      </svg>prev
-                    </a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">1</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">2</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">3</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">4</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">5</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">
-                      next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M9 6l6 6l-6 6" />
-                      </svg>
-                    </a>
-                  </li>
-                </ul>
+                {% endfor %}
               </div>
             </div>
-          </div> {% endcomment %}
-          {% comment %} <div class="col-md-6 col-lg-4">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Social Media</h3>
-              </div>
-              <table class="table card-table table-vcenter">
-                <thead>
-                  <tr>
-                    <th>Network</th>
-                    <th>Handle By</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Instagram</td>
-                    <td>3,550</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div> {% endcomment %}
+          </div>
           
         </div>
       </div>
@@ -613,4 +593,93 @@
       </div>
     </div>
   </div>
+
+  {% comment %} department wise employee chart {% endcomment %}
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      fetch('{% url "department_employee_count" %}')
+      .then(response => {
+          if (!response.ok) {
+              throw new Error("Network response was not ok " + response.statusText);
+          }
+          return response.json();
+      })
+      .then(data => {
+          if (!data.length) {
+              console.error("No data received");
+              return;
+          }
+  
+          // Extract department names and counts
+          const departments = data.map(item => item.department);
+          const employeeCounts = data.map(item => item.count);
+  
+          // Check extracted data
+          console.log("Departments:", departments);
+          console.log("Employee Counts:", employeeCounts);
+  
+          new ApexCharts(document.getElementById('department-wise-employee-chart'), {
+              chart: {
+                  type: "bar",
+                  height: 240,
+              },
+              plotOptions: {
+                  bar: {
+                      barHeight: '50%',
+                      horizontal: true,
+                  }
+              },
+              series: [{
+                  name: "Number of Employees",
+                  data: employeeCounts
+              }],
+              xaxis: {
+                  categories: departments,
+              },
+          }).render();
+      })
+      .catch(error => {
+          console.error("Error fetching or rendering data:", error);
+      });
+  });
+  
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        function fetchAttendanceData() {
+            fetch('{% url "today_employee_attendance_status" %}')
+                .then(response => response.json())
+                .then(data => {
+                    const { present, late, absent, leave } = data;
+
+                    window.ApexCharts && (new ApexCharts(document.getElementById('chart-demo-pie'), {
+                        chart: {
+                            type: "donut",
+                            fontFamily: 'inherit',
+                            height: 240
+                        },
+                        series: [present, late, absent, leave],
+                        labels: ["Present", "Late", "Absent", "On Leave"],
+                        colors: [
+                            tabler.getColor("success"),   // Present
+                            tabler.getColor("warning"),   // Late
+                            tabler.getColor("danger"),    // Absent
+                            tabler.getColor("info")       // On Leave
+                        ],
+                        legend: {
+                            show: true,
+                            position: 'bottom'
+                        }
+                    })).render();
+                })
+                .catch(error => console.error("Error fetching attendance data:", error));
+        }
+
+        fetchAttendanceData();
+    });
+</script>
+
+  
 {% endblock %}

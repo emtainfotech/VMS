@@ -1,0 +1,545 @@
+{% extends 'employee/base.html' %}
+
+{% block content %}
+  <div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col">
+            <!-- Page pre-title -->
+            {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
+            <h2 class="page-title" style="margin-bottom: 50px;">Performance Dashboard</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+
+          {% comment %} Generated Leads {% endcomment %}
+
+          <div class="col-md-12 col-lg-6">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Lead's</h3>
+              </div>
+              <div class="card-table table-responsive">
+                <table class="table table-vcenter scrollable scroller">
+                  <thead>
+                    <tr>
+                      <th>No.</th>
+                      <th>Name</th>
+                      <th>Unique Code</th>
+                      <th>Mobile Number</th>
+                      <th>Follow Up Date</th>
+                      <th>Profile</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for lead  in leads %}
+                    <tr>
+                      <td>{{ forloop.counter }}</td>
+                      <td>{{ lead.candidate_name }}</td>
+                      <td>{{ lead.unique_code }}</td>
+                      <td>{{ lead.candidate_mobile_number }}</td>
+                      <td>{{ lead.next_follow_up_date }}</td>
+                      <td>
+                        <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
+                          <a href="{% url 'employee_candidate_profile' lead.id %}" class="btn btn-bitbucket w-100 btn-icon">
+                            <!-- Download SVG icon from http://tabler-icons.io/i/brand-github -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                              <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path>
+                            </svg>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {% comment %} Follow-up Candidate  {% endcomment %}
+
+          <div class="col-md-12 col-lg-6">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Today's Follow-up</h3>
+              </div>
+              <div class="card-table table-responsive">
+                <table class="table table-vcenter scrollable scroller">
+                  <thead>
+                    <tr>
+                      <th>No.</th>
+                      <th>Name</th>
+                      <th>Unique Code</th>
+                      <th>Mobile Number</th>
+                      <th>Follow Up Date</th>
+                      <th>Profile</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for follow_up  in follow_ups %}
+                    <tr>
+                      <td>{{ forloop.counter }}</td>
+                      <td>{{ follow_up.candidate_name }}</td>
+                      <td>{{ follow_up.unique_code }}</td>
+                      <td>{{ follow_up.candidate_mobile_number }}</td>
+                      <td>{{ follow_up.next_follow_up_date }}</td>
+                      <td>
+                        <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
+                          <a href="{% url 'employee_candidate_profile' follow_up.id %}" class="btn btn-bitbucket w-100 btn-icon">
+                            <!-- Download SVG icon from http://tabler-icons.io/i/brand-github -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                              <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path>
+                            </svg>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {% comment %} Send for Interview {% endcomment %}
+
+          <div class="col-md-12 col-lg-6">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Send for Interview</h3>
+              </div>
+              <div class="card-table table-responsive">
+                <table class="table table-vcenter scrollable scroller">
+                  <thead>
+                    <tr>
+                      <th>No.</th>
+                      <th>Name</th>
+                      <th>Unique Code</th>
+                      <th>Mobile Number</th>
+                      <th>Company Name</th>
+                      <th>Status</th>
+                      <th>Profile</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for interview  in interviews %}
+                    <tr>
+                      <td>{{ forloop.counter }}</td>
+                      <td>{{ interview.candidate_name }}</td>
+                      <td>{{ interview.unique_code }}</td>
+                      <td>{{ interview.candidate_mobile_number }}</td>
+                      <td>{{ interview.company_name }}</td>
+                      <td>{{ interview.selection_status }}</td>
+                      <td>
+                        <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
+                          <a href="{% url 'employee_candidate_profile' interview.id %}" class="btn btn-bitbucket w-100 btn-icon">
+                            <!-- Download SVG icon from http://tabler-icons.io/i/brand-github -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                              <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path>
+                            </svg>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {% comment %} Placements {% endcomment %}
+
+          <div class="col-md-12 col-lg-6">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Placements</h3>
+              </div>
+              <div class="card-table table-responsive">
+                <table class="table table-vcenter scrollable scroller">
+                  <thead>
+                    <tr>
+                      <th>No.</th>
+                      <th>Name</th>
+                      <th>Unique Code</th>
+                      <th>Mobile Number</th>
+                      <th>Company Name</th>
+                      <th>Status</th>
+                      <th>Profile</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for placement  in placements %}
+                    <tr>
+                      <td>{{ forloop.counter }}</td>
+                      <td>{{ placement.candidate_name }}</td>
+                      <td>{{ placement.unique_code }}</td>
+                      <td>{{ placement.candidate_mobile_number }}</td>
+                      <td>{{ placement.company_name }}</td>
+                      <td>{{ placement.selection_status }}</td>
+                      <td>
+                        <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
+                          <a href="{% url 'employee_candidate_profile' placement.id %}" class="btn btn-bitbucket w-100 btn-icon">
+                            <!-- Download SVG icon from http://tabler-icons.io/i/brand-github -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                              <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path>
+                            </svg>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+
+
+          {% comment %} <div class="col-lg-6 col-xl-6" style="height: 210px;">
+            <div class="card">
+              <div class="card-body">
+                <h3 class="card-title">Overall Performance</h3>
+                <div id="chart-demo-pie"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6 col-xl-6" style="height: 210px;">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h3 class="card-title">Overall Performance</h3>
+                  <div class="col-lg-6 col-xl-6"></div>
+                  <select id="chartFilter" class="form-select">
+                    <option value="week">Week</option>
+                    <option value="month">Month</option>
+                    <option value="year">Year</option>
+                  </select>
+                </div>
+                <div id="chart-combination"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6 col-xl-6" style="height: 210px;">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h3 class="card-title">Weekly Performance</h3>
+                  
+                  <div class="d-flex justify-content-between align-items-center gap-2">
+                    <button id="week-btn" class="btn btn-primary btn-sm">Weekly</button>
+                    <button id="month-btn" class="btn btn-primary btn-sm">Monthly</button>
+                    <button id="year-btn" class="btn btn-primary btn-sm">Yearly</button>
+                  </div>
+                </div>
+                <div id="chart-completion-tasks-8"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6 col-xl-6" style="height: 210px;">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h3 class="card-title">Revenue Performance</h3>
+                  <div class="col-lg-6 col-xl-6"></div>
+                  <select id="chartFilter" class="form-select">
+                      <option value="week">Weekly</option>
+                      <option value="month">Monthly</option>
+                      <option value="year">Yearly</option>
+                  </select>
+              </div>
+              <div id="chart-temperature"></div>
+              </div>
+            </div>
+          </div> {% endcomment %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      fetch('{% url "employee_chart_data" %}') // Adjust the endpoint URL as needed
+        .then((response) => response.json())
+        .then((data) => {
+          if (window.ApexCharts) {
+            new ApexCharts(document.getElementById('chart-demo-pie'), {
+              chart: {
+                type: 'donut',
+                fontFamily: 'inherit',
+                height: 240,
+                sparkline: { enabled: true },
+                animations: { enabled: false }
+              },
+              fill: { opacity: 1 },
+              series: data.series, // Dynamically set data from JSON
+              labels: data.labels, // Labels from JSON
+              tooltip: { theme: 'dark' },
+              grid: { strokeDashArray: 5 },
+              colors: [tabler.getColor('primary'), tabler.getColor('secondary'), tabler.getColor('warning', 0.6), tabler.getColor('success'), tabler.getColor('danger')],
+              legend: {
+                show: true,
+                position: 'bottom',
+                offsetY: 12,
+                markers: { width: 10, height: 10, radius: 100 },
+                itemMargin: { horizontal: 8, vertical: 8 }
+              },
+              tooltip: { fillSeriesColor: false }
+            }).render()
+          }
+        })
+        .catch((error) => console.error('Error loading chart data:', error))
+    })
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      let chart // Store chart instance
+    
+      function loadChartData(filterType) {
+        fetch(`{% url "overall_employee_chart_data" %}?filter=${filterType}`)
+          .then((response) => response.json())
+          .then((data) => {
+            const options = {
+              chart: {
+                type: 'bar',
+                fontFamily: 'inherit',
+                height: 240,
+                parentHeightOffset: 0,
+                toolbar: { show: false },
+                animations: { enabled: false }
+              },
+              plotOptions: { bar: { columnWidth: '50%' } },
+              dataLabels: { enabled: false },
+              fill: { opacity: 1 },
+              series: [
+                {
+                  name: 'Total Calls',
+                  data: [data.series[0]]
+                },
+                {
+                  name: 'Connected Calls',
+                  data: [data.series[1]]
+                },
+                {
+                  name: 'Leads Generated',
+                  data: [data.series[2]]
+                },
+                {
+                  name: 'Placements',
+                  data: [data.series[3]]
+                },
+                {
+                  name: 'Non-Connected Calls',
+                  data: [data.series[4]]
+                }
+              ],
+              tooltip: { theme: 'dark' },
+              grid: { strokeDashArray: 4 },
+              xaxis: {
+                labels: { padding: 0 },
+                categories: [data.filter.toUpperCase()] // Label based on selected filter
+              },
+              yaxis: { labels: { padding: 4 } },
+              colors: [tabler.getColor('primary'), tabler.getColor('secondary'), tabler.getColor('warning'), tabler.getColor('success'), tabler.getColor('red')],
+              legend: { show: true }
+            }
+    
+            if (!chart) {
+              chart = new ApexCharts(document.getElementById('chart-combination'), options)
+              chart.render()
+            } else {
+              chart.updateOptions(options)
+            }
+          })
+          .catch((error) => console.error('Error loading chart data:', error))
+      }
+    
+      // Load chart initially
+      loadChartData('week')
+    
+      // Update chart on dropdown change
+      document.getElementById('chartFilter').addEventListener('change', function () {
+        loadChartData(this.value)
+      })
+    })
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      let chart // Global variable for the chart instance
+      let filterType = 'week' // Default filter type
+    
+      function fetchChartData(filter) {
+        fetch(`{% url "each_employee_chart_data" %}?filter=${filter}`)
+          .then((response) => response.json())
+          .then((data) => {
+            if (chart) {
+              // Update existing chart with new data
+              chart.updateOptions({
+                series: [
+                  { name: 'Total Calls', data: data.total_calls },
+                  { name: 'Connected Calls', data: data.connected_calls },
+                  { name: 'Leads Generated', data: data.leads_generated }
+                ],
+                xaxis: {
+                  categories: data.labels // Dates (weekly, monthly, yearly)
+                }
+              })
+            } else {
+              // Initialize chart on first load
+              chart = new ApexCharts(document.getElementById('chart-completion-tasks-8'), {
+                chart: {
+                  type: 'bar',
+                  fontFamily: 'inherit',
+                  height: 240,
+                  parentHeightOffset: 0,
+                  toolbar: { show: false },
+                  animations: { enabled: false }
+                },
+                plotOptions: {
+                  bar: { columnWidth: '50%' }
+                },
+                dataLabels: { enabled: false },
+                fill: { opacity: 1 },
+                series: [
+                  { name: 'Total Calls', data: data.total_calls },
+                  { name: 'Connected Calls', data: data.connected_calls },
+                  { name: 'Leads Generated', data: data.leads_generated }
+                ],
+                tooltip: { theme: 'dark' },
+                grid: {
+                  padding: { top: -20, right: 0, left: -4, bottom: -4 },
+                  strokeDashArray: 4
+                },
+                xaxis: {
+                  labels: { padding: 0 },
+                  tooltip: { enabled: false },
+                  axisBorder: { show: false },
+                  categories: data.labels
+                },
+                yaxis: { labels: { padding: 4 } },
+                colors: [tabler.getColor('primary'), tabler.getColor('green'), tabler.getColor('red')],
+                legend: { show: true }
+              })
+    
+              chart.render()
+            }
+          })
+          .catch((error) => console.error('Error fetching data:', error))
+      }
+    
+      // Load default (weekly) data
+      fetchChartData(filterType)
+    
+      // Event listeners for buttons
+      document.getElementById('week-btn').addEventListener('click', function () {
+        filterType = 'week'
+        fetchChartData(filterType)
+      })
+    
+      document.getElementById('month-btn').addEventListener('click', function () {
+        filterType = 'month'
+        fetchChartData(filterType)
+      })
+    
+      document.getElementById('year-btn').addEventListener('click', function () {
+        filterType = 'year'
+        fetchChartData(filterType)
+      })
+    })
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let chart;
+        let filterType = "week"; // Default filter
+
+        function fetchChartData(filter) {
+            console.log("Fetching data for filter:", filter);
+
+            fetch(`{% url "get_revenue_placement_data" %}?filter=${filter}`) // Django API URL
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Received data:", data);
+
+                    if (!data.placements || !data.revenue || !data.labels) {
+                        console.error("Invalid API response:", data);
+                        return;
+                    }
+
+                    if (chart) {
+                        // Update existing chart
+                        chart.updateOptions({
+                            series: [
+                                { name: "Total Placements", data: data.placements },
+                                { name: "Total Revenue", data: data.revenue }
+                            ],
+                            xaxis: { categories: data.labels }
+                        });
+                    } else {
+                        // Create a new chart
+                        chart = new ApexCharts(document.getElementById("chart-temperature"), {
+                            chart: {
+                                type: "line",
+                                fontFamily: "inherit",
+                                height: 240,
+                                parentHeightOffset: 0,
+                                toolbar: { show: false },
+                                animations: { enabled: false }
+                            },
+                            fill: { opacity: 1 },
+                            stroke: { width: 2, lineCap: "round", curve: "smooth" },
+                            series: [
+                                { name: "Total Placements", data: data.placements },
+                                { name: "Total Revenue", data: data.revenue }
+                            ],
+                            tooltip: { theme: "dark" },
+                            grid: {
+                                padding: { top: -20, right: 0, left: -4, bottom: -4 },
+                                strokeDashArray: 4
+                            },
+                            dataLabels: { enabled: true },
+                            xaxis: { labels: { padding: 0 }, categories: data.labels },
+                            yaxis: { labels: { padding: 4 } },
+                            colors: [tabler.getColor("primary"), tabler.getColor("green")],
+                            legend: { show: false },
+                            markers: { size: 2 }
+                        });
+
+                        chart.render();
+                    }
+                })
+                .catch(error => console.error("Error fetching data:", error));
+        }
+
+        // Load default data
+        fetchChartData(filterType);
+
+        // Dropdown event listener
+        document.getElementById("chartFilter").addEventListener("change", function () {
+            filterType = this.value;
+            fetchChartData(filterType);
+        });
+    });
+</script>
+{% endblock %}

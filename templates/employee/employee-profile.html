@@ -40,14 +40,15 @@
             <div class="row g-0">
               <!-- Left Image Section -->
               <div class="col-7">
-                <img src="{{employee.employee_photo.url}}"  class="object-cover card-img-start rounded-circle" style="height: 125px; width: 125px;" alt="Profile Picture" />
+                <img src="{{employee.employee_photo.url}}" style="height: 125px;width: 125px;" class="object-cover card-img-start rounded-circle" alt="Profile Picture" />
                 <div>
-                  <h3 class="card-title mb-1">{{ employee.user.first_name }} {{ employee.user.last_name }}</h3>
-                  <p class="text-muted mb-2">{{ employee.designation }}</p>
-                  <p>{{ employee.employee_id }}</p>
+                  <h4 class="card-title mb-1">{{ employee.employee_id }} - {{ employee.first_name }} {{ employee.last_name }}</h4>
+                  <p class="text-muted mb-2">{{ employee.designation }} - {{ employee.department }}</p>
+                  
                   <p>
                     <strong class="subheader">Date of Join:</strong> <br />{{ employee.joining_date }}
                   </p>
+                  {% comment %} <button class="btn btn-primary btn-sm">Send Message</button> {% endcomment %}
                 </div>
               </div>
               <!-- Right Content Section -->
@@ -62,9 +63,9 @@
                   <p>
                     <strong class="subheader">Birthday:</strong><br /> {{ additional_info.date_of_birth }}
                   </p>
-                  <p>
+                  {% comment %} <p>
                     <strong class="subheader">Address:</strong><br /> {{ employee.address }}
-                  </p>
+                  </p> {% endcomment %}
                   <p>
                     <strong class="subheader">Gender:</strong><br /> {{ additional_info.gender }}
                   </p>
@@ -78,56 +79,54 @@
       <div class="col-lg-5">
         <div class="card p-4">
           <div class="card-body">
-            <h5 class="card-title mb-4">Emergency Contact</h5>
+            <h5 class="card-title mb-4">Address Details</h5>
             <div class="row">
               <!-- Primary Contact -->
               <div class="col-md-6">
-                <h6 class="text-label">Primary Contact</h6>
                 <p>
-                  <strong class="subheader">Name:</strong><br /> {{emergency_contact.primary_full_name}}
+                  <strong class="subheader">Permanent Address:</strong><br>
+                  {{address_details.permanent_address}}
                 </p>
                 <p>
-                  <strong class="subheader">Relationship:</strong><br /> {{emergency_contact.primary_relationship}}
+                  <strong class="subheader">Present Address:</strong><br>
+                  {{address_details.present_address}}
                 </p>
                 <p>
-                  <strong class="subheader">Phone:</strong> <br />{{emergency_contact.primary_phone_1}}, {{emergency_contact.primary_phone_2}}
+                  <strong class="subheader">City:</strong><br>
+                  {{address_details.city}}
                 </p>
                 <p>
-                  <strong class="subheader">Email:</strong> <br />{{emergency_contact.primary_email}}
+                  <strong class="subheader">State:</strong> <br>
+                  {{address_details.state}} 
                 </p>
-                <p>
-                  <strong class="subheader">Address:</strong> <br />{{emergency_contact.primary_address}}
-                </p>
+                
               </div>
               <!-- Secondary Contact -->
               <div class="col-md-6">
-                <h6 class="text-label">Secondary Contact</h6>
+                
                 <p>
-                  <strong class="subheader">Name:</strong><br /> {{emergency_contact.secondary_full_name}}
+                  <strong class="subheader">Country:</strong> 
+                  <br /> {{address_details.country}}
                 </p>
                 <p>
-                  <strong class="subheader">Relationship:</strong><br /> {{emergency_contact.secondary_relationship}}
+                  <strong class="subheader">Zip Code:</strong> 
+                  <br /> {{address_details.zip_code}}
                 </p>
                 <p>
-                  <strong class="subheader">Phone:</strong> <br />{{emergency_contact.secondary_phone_1}}, {{emergency_contact.secondary_phone_2}} 
-                </p>
-                <p>
-                  <strong class="subheader">Email:</strong><br />{{emergency_contact.secondary_email}} 
-                </p>
-                <p>
-                  <strong class="subheader">Address:</strong><br /> {{emergency_contact.secondary_address}}
+                  <strong class="subheader">Nationality:</strong> 
+                  <br /> {{address_details.nationality}}
                 </p>
               </div>
             </div>
             <!-- Edit Icon -->
-            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-contact"><i class="bi bi-pencil"></i></a></span>
+            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-address"><i class="bi bi-pencil"></i></a></span>
           </div>
         </div>
       </div>
 
-      <div class="col-lg-6 mt-3">
+      {% comment %} <div class="col-lg-6 mt-3">
         <div class="card p-4">
-          <h5 class="card-title mb-4">Social Media Account</h5>
+          <h5 class="card-title mb-4">Document's</h5>
           <div class="card-body">
             <div class="row">
               <!-- Primary Contact -->
@@ -169,9 +168,9 @@
             </div>
           </div>
           <!-- Edit Icon -->
-          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-social"><i class="bi bi-pencil"></i></a></span>
+          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-document"><i class="bi bi-pencil"></i></a></span>
         </div>
-      </div>
+      </div> {% endcomment %}
 
       <div class="col-lg-6 mt-3">
         <div class="card p-4">
@@ -223,30 +222,37 @@
       <div class="col-lg-12 mt-5">
         <div class="card p-4">
           <div class="card-body">
-            <h5 class="card-title mb-4">Attendence Record</h5>
+            <h5 class="card-title mb-4">Education Details</h5>
             <div class="row">
-              
               <div class="col-md-12">
                 <div class="table-responsive">
                   <table class="table attendance-table text-center">
                       <thead>
                           <tr>
-                              <th>Month</th>
-                              <th>Year</th>
-                              <th>Total Present</th>
-                              <th>Total Absent</th>
-                              <th>Total Half Day</th>
+                              <th>No.</th>
+                              <th>Institution Name</th>
+                              <th>Course Name</th>
+                              <th>Period</th>
+                              <th>Pass Grade</th>
+                              <th>Document</th>
+                              <th>Description</th>
                               
                           </tr>
                       </thead>
                       <tbody>
-                        {% for record in attendance_sheet %}
+                        {% for edu in education_details %}
                           <tr>
-                              <td>{{ record.month }}</td>
-                              <td>{{ record.year }}</td>
-                              <td>{{ record.total_present }}</td>
-                              <td>{{ record.total_absent }}</td>
-                              <td>{{ record.total_half_day }}</td>
+                              <td>{{ forloop.counter }}</td>
+                              <td>{{ edu.cource_name }}</td>
+                              <td>{{ edu.institution_name }}</td>
+                              <td>{{ edu.start_year }} - {{ edu.end_year }}</td>
+                              <td>{{ edu.grade }}</td>
+                              <td>{% if edu.education_certificate %}
+                                <a href="{{ edu.education_certificate.url }}">View Attechment</a>
+                              {% else %}
+                                No Attechment 
+                              {% endif %}</td>
+                              <td>{{ edu.description }}</td>
                           </tr>
                           {% endfor %}
                       </tbody>
@@ -255,7 +261,135 @@
               </div>
             </div>
             <!-- Edit Icon -->
-            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-contact"><i class="bi bi-pencil"></i></a></span>
+            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-education"><i class="bi bi-pencil"></i></a></span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-12 mt-5">
+        <div class="card p-4">
+          <div class="card-body">
+            <h5 class="card-title mb-4">Experience Details Details</h5>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="table-responsive">
+                  <table class="table attendance-table text-center">
+                      <thead>
+                          <tr>
+                              <th>No.</th>
+                              <th>Organization</th>
+                              <th>Designation</th>
+                              <th>Period</th>
+                              <th>Experience</th>
+                              <th>Description</th>
+                              <th>Experience Certificate</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                        {% for experience in experience_details %}
+                          <tr>
+                              <td>{{ forloop.counter }}</td>
+                              <td>{{ experience.organization_name }}</td>
+                              <td>{{ experience.designation_name }}</td>
+                              <td class="experience-duration" 
+                                  data-start="{{ experience.start_date }}" 
+                                  data-end="{{ experience.end_date }}">
+                                  {{ experience.start_date }} - {{ experience.end_date }}
+                              </td>
+                              <td class="total-experience"></td>
+
+                              <td>{{ experience.description }}</td>
+                              <td>{% if experience.experience_certificate %}
+                                <a href="{{ experience.experience_certificate.url }}">View Attechment</a>
+                              {% else %}
+                                No Attechment 
+                              {% endif %}</td>
+                              
+                          </tr>
+                          {% endfor %}
+                      </tbody>
+                  </table>
+              </div>
+              </div>
+            </div>
+            <!-- Edit Icon -->
+            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-experience"><i class="bi bi-pencil"></i></a></span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-12 mt-5">
+        <div class="card p-4">
+          <div class="card-body">
+            <h5 class="card-title mb-4">Document's Details</h5>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="table-responsive">
+                  <table class="table attendance-table text-center">
+                      <thead>
+                          <tr>
+                              <th>No.</th>
+                              <th>Type</th>
+                              <th>Document Number</th>
+                              <th>Attechment</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                        {% for doc in docs %}
+                          <tr>
+                              <td>{{ forloop.counter }}</td>
+                              <td>{{ doc.document_type }}</td>
+                              <td>{{ doc.document_number }}</td>
+                              <td>{% if doc.document_file %}
+                                <a href="{{ doc.document_file.url }}">View Documment</a>
+                              {% else %}
+                                No Document Attech
+                              {% endif %}</td>
+                              
+                          </tr>
+                          {% endfor %}
+                      </tbody>
+                  </table>
+              </div>
+              </div>
+            </div>
+            <!-- Edit Icon -->
+            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-document"><i class="bi bi-pencil"></i></a></span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-12 mt-5">
+        <div class="card p-4">
+          <div class="card-body">
+            <h5 class="card-title mb-4">Family Details</h5>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="table-responsive">
+                  <table class="table attendance-table text-center">
+                      <thead>
+                          <tr>
+                              <th>No.</th>
+                              <th>Name</th>
+                              <th>Relation</th>
+                              <th>Contact No.</th>
+                              <th>Date of Birth</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                        {% for family in family_details %}
+                        <tr>
+                          <td>{{forloop.counter}}</td>
+                          <td>{{family.member_name}}</td>
+                          <td>{{family.relation}}</td>
+                          <td>{{family.contact_number}}</td>
+                          <td>{{family.date_of_birth}}</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                  </table>
+              </div>
+              </div>
+            </div>
+            <!-- Edit Icon -->
+            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-family"><i class="bi bi-pencil"></i></a></span>
           </div>
         </div>
       </div>
@@ -314,115 +448,71 @@
                   <option value="Other" {% if additional_info.gender == "Other" %}selected{% endif %}>Other</option>
                 </select>
               </div>
-              {% comment %} <div class="col-md-6 mb-3">
-                <label class="form-label">Department</label>
-                <select class="form-select" name="department">
-                  <option value="Private" {% if additional_info.department == "Private" %}selected{% endif %}>Private</option>
-                  <option value="Public" {% if additional_info.department == "Public" %}selected{% endif %}>Public</option>
-                  <option value="Hidden" {% if additional_info.department == "Hidden" %}selected{% endif %}>Hidden</option>
-                </select>
-              </div> {% endcomment %}
-              <!-- Designation & Joining Date -->
-              <div class="col-lg-12 mb-3">
-                <label class="form-label">Designation</label>
-                <select class="form-control" name="designation" required>
-                    {% for designation in designations %}
-                        <option value="{{ designation.name }}">{{ designation.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
             </div>
           
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" name="employee_submit_employee_details" class="btn btn-primary">Save Changes</button>
+              <button type="submit" name="submit_employee_details" class="btn btn-primary">Save Changes</button>
             </div>
           </form>
           
         </div>
+        
       </div>
     </div>
   </div>
 
   {% comment %}contact{% endcomment %}
 
-  <div class="modal modal-blur fade" id="modal-contact" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal modal-blur fade" id="modal-address" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Emergency Contact</h5>
+          <h5 class="modal-title">Address Details</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <form method="post">
             {% csrf_token %}
-            <h5 class="text-secondary">Primary Contact</h5>
-            <hr />
             <div class="row">
             <div class="col-md-6 mb-3">
-                <label class="form-label">Full Name <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="primary_full_name" 
-                       value="{{ emergency_contact.primary_full_name }}" required>
+                <label class="form-label">Permanent Address <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="permanent_address" 
+                       value="{{ address_details.permanent_address }}" required>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Relationship <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="primary_relationship" 
-                       value="{{ emergency_contact.primary_relationship }}" required>
+                <label class="form-label">Present Address <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="present_address" 
+                       value="{{ address_details.present_address }}" required>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Phone Number 1 <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="primary_phone_1" 
-                       value="{{ emergency_contact.primary_phone_1 }}" required>
+                <label class="form-label">City<span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="city" 
+                       value="{{ address_details.city }}" required>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Phone Number 2</label>
-                <input type="text" class="form-control" name="primary_phone_2" 
-                       value="{{ emergency_contact.primary_phone_2 }}">
+                <label class="form-label">State<span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="state" 
+                       value="{{ address_details.state }}">
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Email Address </label>
-                <input type="email" class="form-control" name="primary_email" 
-                       value="{{ emergency_contact.primary_email }}" >
+                <label class="form-label">Country<span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="country" 
+                       value="{{ address_details.country }}" >
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Address <span class="text-danger">*</span></label>
-                <textarea class="form-control" name="primary_address" rows="2" required>{{ emergency_contact.primary_address }}</textarea>
-            </div>
-    
-            <h5 class="text-secondary">Secondary Contact</h5>
-            <hr />
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Full Name</label>
-                <input type="text" class="form-control" name="secondary_full_name" 
-                       value="{{ emergency_contact.secondary_full_name }}">
+                <label class="form-label">ZIP Code <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="zip_code" 
+                       value="{{ address_details.zip_code }}" >
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Relationship</label>
-                <input type="text" class="form-control" name="secondary_relationship" 
-                       value="{{ emergency_contact.secondary_relationship }}">
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Phone Number 1</label>
-                <input type="text" class="form-control" name="secondary_phone_1" 
-                       value="{{ emergency_contact.secondary_phone_1 }}">
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Phone Number 2</label>
-                <input type="text" class="form-control" name="secondary_phone_2" 
-                       value="{{ emergency_contact.secondary_phone_2 }}">
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Email Address</label>
-                <input type="email" class="form-control" name="secondary_email" 
-                       value="{{ emergency_contact.secondary_email }}">
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Address</label>
-                <textarea class="form-control" name="secondary_address" rows="2">{{ emergency_contact.secondary_address }}</textarea>
-            </div>
+              <label class="form-label">Nationality<span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="nationality" 
+                     value="{{ address_details.nationality }}" >
+          </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" name="employee_submit_emergency_contact" class="btn btn-primary">Save Changes</button>
+              <button type="submit" name="submit_address_details" class="btn btn-primary">Save Changes</button>
             </div>
         </form>
         </div>
@@ -432,41 +522,33 @@
   </div>
 
   {% comment %}Education{% endcomment %}
-  <div class="modal modal-blur fade" id="modal-social" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal modal-blur fade" id="modal-document" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Social Media Account Details</h5>
+          <h5 class="modal-title">Add Document's</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="post">
+          <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Instagram</label>
-                    <input type="text" name="instagram" class="form-control" value="{{ social_media.instagram }}">
+                    <label class="form-label">Document Type</label>
+                    <input type="text" name="document_type" class="form-control" >
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Facebook</label>
-                    <input type="text" name="facebook" class="form-control" value="{{ social_media.facebook }}">
+                    <label class="form-label">Document Number</label>
+                    <input type="text" name="document_number" class="form-control" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">LinkedIn</label>
-                    <input type="text" name="linkedin" class="form-control" value="{{ social_media.linkedin }}">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Twitter</label>
-                    <input type="text" name="twitter" class="form-control" value="{{ social_media.twitter }}">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">WhatsApp</label>
-                    <input type="text" name="whatsapp" class="form-control" value="{{ social_media.whatsapp }}">
+                    <label class="form-label">Attech Certificate</label>
+                    <input type="file" name="document_file" class="form-control" >
                 </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" name="employee_submit_social_media" class="btn btn-primary">Save Changes</button>
+              <button type="submit" name="submit_documents_details" class="btn btn-primary">Save Changes</button>
             </div>
         </form>
         </div>
@@ -520,7 +602,7 @@
         
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" name="employee_submit_bank_account" class="btn btn-primary">Submit</button>
+                    <button type="submit" name="submit_bank_account" class="btn btn-primary">Submit</button>
                 </div>
             </div>
         </form>
@@ -530,7 +612,185 @@
     </div>
   </div>
 
-  {% comment %}success{% endcomment %}
+  <div class="modal modal-blur fade" id="modal-education" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Document Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Course Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="cource_name"  required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Institution Name<span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="institution_name" >
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Start Year<span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="start_year" min="1900" max="2100" required>
+          </div>
+          <div class="col-md-6 mb-3">
+              <label class="form-label">End Year<span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="end_year" min="1900" max="2100">
+          </div>
+          
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Grade<span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="grade"  >
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Certificate<span class="text-danger">*</span></label>
+              <input type="file" class="form-control" name="education_certificate" >
+          </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Description <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="description"  >
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" name="submit_education_details" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
 
+  <div class="modal modal-blur fade" id="modal-experience" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Experience Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Organization Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="organization_name" required>
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Designation <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="designation_name" required>
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" name="start_date" required>
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="end_date">
+                </div>
+        
+                
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Experience Certificate</label>
+                  <input type="file" class="form-control" name="experience_certificate">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Description <span class="text-danger">*</span></label>
+                    <textarea class="form-control" name="description" rows="3" required></textarea>
+                </div>
 
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="submit_experience_details" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </form>
+        
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="modal-family" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Family Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Member Name<span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="member_name" required>
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Relation<span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="relation" required>
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Contact Number<span class="text-danger">*</span></label>
+                    <input type="tel" class="form-control" name="contact_number" required>
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" class="form-control" name="date_of_birth">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="sumbit_family_details" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </form>
+        
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll("tr").forEach(row => {
+            let startTd = row.querySelector(".experience-duration");
+            let experienceTd = row.querySelector(".total-experience");
+    
+            if (startTd && experienceTd) {
+                let startDate = new Date(startTd.dataset.start);
+                let endDate = startTd.dataset.end ? new Date(startTd.dataset.end) : new Date(); // Use today if end_date is missing
+    
+                if (!isNaN(startDate) && !isNaN(endDate)) {
+                    let years = endDate.getFullYear() - startDate.getFullYear();
+                    let months = endDate.getMonth() - startDate.getMonth();
+                    let days = endDate.getDate() - startDate.getDate();
+    
+                    if (days < 0) {
+                        months -= 1;
+                        days += new Date(endDate.getFullYear(), endDate.getMonth(), 0).getDate();
+                    }
+                    if (months < 0) {
+                        years -= 1;
+                        months += 12;
+                    }
+    
+                    experienceTd.innerText = `${years} years, ${months} months, ${days} days`;
+                } else {
+                    experienceTd.innerText = "Invalid dates";
+                }
+            }
+        });
+    });
+    </script>
 {% endblock %}

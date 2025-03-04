@@ -91,9 +91,10 @@ def home(request):
         today = localtime().date()
         today1 = date.today()
         start_of_month = today.replace(day=1)
+        end_date = today + timedelta(days=30)
         announcements = Announcement.objects.all()
         meetings = Meeting.objects.filter(date=Ajj)
-        leaverequests = LeaveRequest.objects.filter(status='Approved', start_date=today)
+        leaverequests = LeaveRequest.objects.filter(status='Approved',start_date__lte=end_date, end_date__gte=today )
         office_expenses = OfficeExpense.objects.filter(purchase_date=today).order_by('-id')
         leaves = LeaveRequest.objects.filter(status='Hold').order_by('-id')
         employee_count = Employee.objects.all().count()
@@ -119,9 +120,9 @@ def home(request):
 
         # Query sessions for today
         sessions = EmployeeSession.objects.filter(
-            login_time__date=today,
-            login_time__gte=datetime.combine(today, time(9, 30)),  # After 9:30 AM
-            login_time__lte=datetime.combine(today, time(20, 0))  # Before 8:00 PM
+            punch_in_time__date=today,
+            punch_in_time__gte=datetime.combine(today, time(9, 30)),  # After 9:30 AM
+            punch_in_time__lte=datetime.combine(today, time(20, 0))  # Before 8:00 PM
         )
 
         session_data = []
@@ -138,11 +139,11 @@ def home(request):
             # Calculate total login time for the employee by summing up all session durations
             total_time = timedelta(0)
             for session in employee_sessions:
-                if session.logout_time:
-                    session_duration = session.logout_time - session.login_time
+                if session.punch_out_time:
+                    session_duration = session.punch_out_time - session.punch_in_time
                 else:
                     # If no logout time, assume the session is ongoing; calculate up to now
-                    session_duration = now() - session.login_time
+                    session_duration = now() - session.punch_in_time
                 total_time += session_duration
 
             # Convert total_time to hours and minutes for display
@@ -175,6 +176,53 @@ def home(request):
         total_hours = total_time_today.seconds // 3600
         total_minutes = (total_time_today.seconds % 3600) // 60
         total_time_str = f"{total_hours}h {total_minutes}m"
+        
+        
+
+        # Get all employees with date of birth
+        employees = EmployeeAdditionalInfo.objects.filter(date_of_birth__isnull=False)
+
+        # Filter for upcoming birthdays in the next 30 days
+        upcoming_birthdays = []
+        for emp in employees:
+            if emp.date_of_birth:
+                dob_this_year = emp.date_of_birth.replace(year=today.year)
+                if today <= dob_this_year <= end_date:
+                    # Add the employee's upcoming birthday to the list
+                    upcoming_birthdays.append((dob_this_year, emp))
+
+        # Sort the list by date
+        upcoming_birthdays.sort(key=lambda x: x[0])
+
+        # Group by date for display
+        grouped_birthdays = {}
+        for birthday_date, emp in upcoming_birthdays:
+            formatted_date = birthday_date.strftime("%d %b %Y")
+            if formatted_date not in grouped_birthdays:
+                grouped_birthdays[formatted_date] = []
+            grouped_birthdays[formatted_date].append(emp)
+            
+        # Filter for upcoming work anniversaries
+        upcoming_anniversaries = []
+        for emp in employees:
+            joining_date = emp.employee.joining_date
+            if joining_date:
+                anniversary_this_year = joining_date.replace(year=today.year)
+                if today <= anniversary_this_year <= end_date:
+                    upcoming_anniversaries.append((anniversary_this_year, emp))
+
+        # Sort by date
+        upcoming_anniversaries.sort(key=lambda x: x[0])
+
+        # Group by date
+        grouped_anniversaries = {}
+        for anniversary_date, emp in upcoming_anniversaries:
+            formatted_date = anniversary_date.strftime("%d %b %Y")
+            if formatted_date not in grouped_anniversaries:
+                grouped_anniversaries[formatted_date] = []
+            grouped_anniversaries[formatted_date].append(emp)
+            
+        notifications = Notification.objects.all().order_by('-id')[:5]
 
         return render(request, 'hrms/home.html', {
             'sessions': session_data,  # Employee session data
@@ -193,24 +241,15 @@ def home(request):
             'todays_earning': todays_earning,
             'monthly_earning': monthly_earning,
             'month_total_placement': month_total_placement,
-            'announcements' : announcements
+            'announcements' : announcements,
+            'grouped_birthdays': grouped_birthdays,
+            'grouped_anniversaries': grouped_anniversaries,
+            'notifications': notifications,
         })
     else:
         # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
 
-
-from django.shortcuts import render, get_object_or_404
-from django.utils.timezone import localtime
-from datetime import datetime, timedelta, date
-import calendar
-from .models import Employee, EmployeeSession, Holiday, LeaveRequest
-
-from datetime import datetime, date, timedelta
-import calendar
-from django.shortcuts import render, get_object_or_404
-from django.utils.timezone import localtime
-from .models import Employee, EmployeeSession, Holiday, LeaveRequest
 
 def employee_attendence_details(request, user_id):
     if request.user.is_staff or request.user.is_superuser:
@@ -262,7 +301,7 @@ def employee_attendence_details(request, user_id):
 
             else:
                 # Check if the employee was present
-                sessions = EmployeeSession.objects.filter(user_id=user_id, login_time__date=current_date)
+                sessions = EmployeeSession.objects.filter(user_id=user_id, punch_in_time__date=current_date)
                 total_time = sum((session.total_time for session in sessions if session.total_time), timedelta())
 
                 # Convert total time to hours
@@ -284,18 +323,20 @@ def employee_attendence_details(request, user_id):
         # Get session data for today or the selected range
         session_filter = {"user_id": user_id}
         if start_date and end_date:
-            session_filter["login_time__date__range"] = (start_date, end_date)
+            session_filter["punch_in_time__date__range"] = (start_date, end_date)
         else:
-            session_filter["login_time__date"] = today
+            session_filter["punch_in_time__date"] = today
 
         sessions = EmployeeSession.objects.filter(**session_filter).order_by('-id')
 
         # Calculate total login time
         total_time = sum((session.total_time or timedelta() for session in sessions), timedelta())
-        total_login_time_formatted = str(timedelta(seconds=total_time.total_seconds()))
+        total_punch_in_time_formatted = str(timedelta(seconds=total_time.total_seconds()))
 
         # Compute empty cells for the start of the month
         empty_start_days = list(range(first_weekday))
+        
+        employee_name = f"{employee.first_name} {employee.last_name} ({employee.employee_id})"
 
         return render(request, 'hrms/employee_attendence_details.html', {
             "attendance_data": attendance_data,
@@ -309,26 +350,66 @@ def employee_attendence_details(request, user_id):
             "next_year": year if month < 12 else year + 1,
             "today_sessions": [
                 {
-                    "login_time": localtime(session.login_time).strftime('%Y-%m-%d %H:%M:%S'),
-                    "logout_time": localtime(session.logout_time).strftime('%Y-%m-%d %H:%M:%S') if session.logout_time else "Currently Working",
-                    "logout_reason": session.logout_reason if session.logout_reason else "Currently Working",
+                    "punch_in_time": localtime(session.punch_in_time).strftime('%Y-%m-%d %H:%M:%S'),
+                    "punch_out_time": localtime(session.punch_out_time).strftime('%Y-%m-%d %H:%M:%S') if session.punch_out_time else "Currently Working",
+                    "punch_out_reason": session.punch_out_reason if session.punch_out_reason else "Currently Working",
                     "total_time": str(session.total_time) if session.total_time else "Currently Working",
                 }
                 for session in sessions
             ],
-            "total_login_time_today": total_login_time_formatted,
+            "total_punch_in_time_today": total_punch_in_time_formatted,
             "present_days": present_days,
             "absent_days": absent_days,
             "holidays": holidays,
             "leave_days": leave_days,  # ✅ Pass leave days to template
             "half_days": half_days,
             "user_id": user_id,
+            "employee_name": employee_name,
         })
     else:
         return render(request, '404.html', status=404)
 
+def get_session_details(request):
+    # Get the selected date from the request, default to today if no date provided
+    date_str = request.GET.get('date')
+    if date_str:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+    else:
+        date_obj = date.today()
 
+    # Query sessions for the selected date
+    sessions = EmployeeSession.objects.filter(punch_in_time__date=date_obj)
 
+    # Format session data for JSON response
+    session_data = []
+    total_duration = timedelta(0)  # Initialize total punch time
+    ist = pytz.timezone('Asia/Kolkata')  # Indian timezone
+
+    for session in sessions:
+        # Convert punch times to IST
+        punch_in_time = session.punch_in_time.astimezone(ist).strftime('%I:%M %p') if session.punch_in_time else "N/A"
+        punch_out_time = session.punch_out_time.astimezone(ist).strftime('%I:%M %p') if session.punch_out_time else "N/A"
+        
+        # Add session duration to total if it exists
+        if session.total_time:
+            total_duration += session.total_time
+
+        session_data.append({
+            "punch_in_time": punch_in_time,
+            "punch_out_time": punch_out_time,
+            "total_time": str(session.total_time) if session.total_time else "N/A",
+            "punch_out_reason": session.punch_out_reason or "N/A"
+        })
+
+    # Format total duration as HH:MM:SS
+    total_duration_str = str(total_duration) if total_duration > timedelta(0) else "No punch time recorded"
+
+    return JsonResponse({
+        "sessions": session_data,
+        "selected_date": date_obj.strftime('%Y-%m-%d'),
+        "total_duration": total_duration_str
+    })
+    
 def employee_view(request):
     if request.user.is_staff or request.user.is_superuser:
         employees = Employee.objects.all()
@@ -382,6 +463,11 @@ def employee_view(request):
                 designation=designation,
                 joining_date=joining_date,
                 employee_photo=employee_photo,
+            )
+            
+            Notification.objects.create(
+                notification_type='New Joining',
+                message=f'{first_name} {last_name} has joined the company in the {department} department as a {designation}. Please welcome them!',
             )
 
             # Redirect to the employee list page or success page
@@ -965,6 +1051,128 @@ def designation_view(request):
         # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
     
+def department_employee_count(request):
+    # Ensure the user is staff or superuser
+    if request.user.is_staff or request.user.is_superuser:
+        # Aggregate the count of employees in each department
+        employee_counts = (
+            Employee.objects
+            .values('department')
+            .annotate(count=Count('id'))
+            .order_by('department')
+        )
+        # Return the data as JSON
+        return JsonResponse(list(employee_counts), safe=False)
+    else:
+        # If the user is not an admin, show a 404 page
+        return render(request, '404.html', status=404)
+    
+
+
+from datetime import date, datetime
+from django.http import JsonResponse
+from .models import Employee, EmployeeSession, LeaveRequest, Holiday  # Adjust imports if needed
+
+def today_employee_attendance_status(request):
+    if request.user.is_staff or request.user.is_superuser:
+        today = date.today()
+
+        # Get all employees
+        employees = Employee.objects.all()
+
+        # Initialize attendance counters
+        present_count = 0
+        late_count = 0
+        absent_count = 0
+        leave_count = 0
+
+        # Check holidays for today
+        holiday_count = Holiday.objects.filter(date=today).count()
+
+        # Iterate through each employee and check attendance
+        for employee in employees:
+            # Check if the employee is on approved leave
+            if LeaveRequest.objects.filter(
+                employee=employee, start_date__lte=today, end_date__gte=today, status="Approved"
+            ).exists():
+                leave_count += 1
+                continue
+
+            # Check login sessions for today
+            sessions = EmployeeSession.objects.filter(user=employee.user, punch_in_time__date=today)
+
+            if sessions.exists():
+                # If logged in before or at 10:15, mark as present
+                if sessions.filter(punch_in_time__time__lte=datetime.strptime("10:15:00", "%H:%M:%S").time()).exists():
+                    present_count += 1
+                else:
+                    # Otherwise, mark as late
+                    late_count += 1
+            else:
+                # If no session is found, mark as absent
+                absent_count += 1
+
+        # Prepare the response data
+        attendance_data = {
+            "present": present_count,
+            "late": late_count,
+            "absent": absent_count,
+            "leave": leave_count,
+            "holiday": holiday_count
+        }
+
+        return JsonResponse(attendance_data)
+    else:
+        return render(request, '404.html', status=404)
+
+def employee_attendance_list(request):
+    if request.user.is_staff or request.user.is_superuser:
+        today = date.today()
+
+        # Check if today is a holiday
+        is_holiday = Holiday.objects.filter(date=today).exists()
+
+        employee_attendance_data = []
+
+        # Get all employees
+        employees = Employee.objects.all()
+
+        for employee in employees:
+            status = "Absent"  # Default to absent
+
+            # Check if employee is on approved leave
+            if LeaveRequest.objects.filter(
+                employee=employee, start_date__lte=today, end_date__gte=today, status="Approved"
+            ).exists():
+                status = "On Leave"
+            elif is_holiday:
+                status = "Holiday"
+            else:
+                # Check login sessions for today
+                sessions = EmployeeSession.objects.filter(user=employee.user, punch_in_time__date=today)
+
+                if sessions.exists():
+                    # Mark as present if logged in before or at 10:15 AM
+                    if sessions.filter(punch_in_time__time__lte=datetime.strptime("10:15:00", "%H:%M:%S").time()).exists():
+                        status = "Present"
+                    else:
+                        # Mark as late if logged in after 10:15 AM
+                        status = "Late"
+
+            # Append employee data and status
+            employee_attendance_data.append({
+                "employee_id": employee.employee_id,
+                "employee_name": f"{employee.first_name} {employee.last_name}",
+                "status": status
+            })
+
+        # Render the data to the template
+        return render(request, 'hrms/employee_attendance_list.html', {
+            "employee_attendance_data": employee_attendance_data
+        })
+    else:
+        return render(request, '404.html', status=404)
+    
 def delete_designation(request, id):
     # Get the designation object or return a 404 if not found
     designation = get_object_or_404(Designation, id=id)
@@ -975,10 +1183,7 @@ def delete_designation(request, id):
 
     return redirect('designation_view')
 
-from django.shortcuts import render
-from datetime import date
-import calendar
-from .models import Employee, Holiday, LeaveRequest  # Ensure models are correctly imported
+
 
 
 def save_monthly_attendance():
@@ -1048,14 +1253,26 @@ def holiday_view(request):
             name = request.POST.get('name')
             if date and day and name:
                 Holiday.objects.create(date=date, day=day, name=name)
+                Notification.objects.create(
+                notification_type='Holiday',
+                message=f'{name} on {date} has been added.',
+                )
             return redirect('holiday_view')  # Redirect to avoid form resubmission
+
+            
 
         elif request.method == "GET" and "delete_id" in request.GET:
             # Deleting a holiday
             delete_id = request.GET.get("delete_id")
             holiday = get_object_or_404(Holiday, id=delete_id)
             holiday.delete()
+            Notification.objects.create(
+                notification_type='Holiday',
+                message=f'{holiday.name} on {holiday.date} has been deleted.',
+            )
             return redirect('holiday_view')  # Redirect to refresh the list after deletion
+
+            
 
         # Fetch all holidays to display
         holidays = Holiday.objects.all().order_by('-id')
@@ -1519,7 +1736,7 @@ def termination_view(request):
             Notification.objects.create(
                 user=employee.user,  # Assuming `Employee` has a related `User` model
                 notification_type='termination',
-                message=f'Your employment has been terminated. Termination type: {termination_type}.',
+                message=f'{employee} employment has been terminated. Termination type: {termination_type}.',
             )
 
             return redirect('termination_view')
@@ -1554,6 +1771,12 @@ def announcement_view(request):
                 announcements_image = announcements_image
             )
 
+            Notification.objects.create(
+                user=request.user,  # Assign the logged-in user (admin/staff)
+                notification_type='Announcement',
+                message=f'{title} from {start_date} to {end_date}. {description}.',
+            )
+
             return redirect('announcement_view')  
 
         return render(request, 'hrms/Announcements.html',{'announcements': announcements})
@@ -1579,6 +1802,11 @@ def team_meeting_view(request) :
 
             # Validate the data
             if title and date and time and location:
+                # Create a notification for the employee about the termination
+                Notification.objects.create(
+                    notification_type='Meeting',
+                    message=f'{department} department Meeting Schedule at {date} on {time}.',
+                )
                 # Save the meeting data to the database
                 meeting = Meeting(
                     title=title,
@@ -1594,6 +1822,7 @@ def team_meeting_view(request) :
             else:
                 # Return error if validation fails
                 return HttpResponse('All fields are required!', status=400)
+            
         else:
             return render(request,'hrms/team-meeting.html',{'meetings' : meetings})
     else:
@@ -1627,8 +1856,14 @@ def awards_view(request):
                     gift=gift,
                     description=description
                 )
+                Notification.objects.create(
+                user=employee.user,
+                notification_type='Awrad',
+                message=f'{award_type} on {award_date} to {employee_id}.',
+                )
                 # Redirect to avoid form resubmission
                 return redirect('awards_view')
+
 
         # Fetch all employees for the dropdown
         employees = Employee.objects.all()
@@ -1707,7 +1942,7 @@ def warning_view(request):
             Notification.objects.create(
             user=employee.user, 
             notification_type='Warning',
-            message=f"{subject} on {warning_date} . For : {description}.",
+            message=f"{employee} Warning for {subject} on {warning_date}.",
             )
 
             return redirect('warning_view')
@@ -2494,17 +2729,17 @@ def download_attendance_excel(request, user_id):
     # Fetch attendance data
     attendance_data = (
         EmployeeSession.objects.filter(
-            user_id=user_id, login_time__date__range=(start_date, end_date)
+            user_id=user_id, punch_in_time__date__range=(start_date, end_date)
         )
-        .values("login_time__date")
+        .values("punch_in_time__date")
         .annotate(
-            first_login=Min("login_time"),
-            last_logout=Max("logout_time"),
+            first_login=Min("punch_in_time"),
+            last_logout=Max("punch_out_time"),
             total_time=Sum("total_time"),
             login_count=Count("id"),
-            logout_reason=Max("logout_reason")
+            punch_out_reason=Max("punch_out_reason")
         )
-        .order_by("login_time__date")
+        .order_by("punch_in_time__date")
     )
 
     # Create an Excel workbook and sheet
@@ -2518,7 +2753,7 @@ def download_attendance_excel(request, user_id):
 
     # Generate attendance data for each day
     date_range = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
-    attendance_dict = {record["login_time__date"]: record for record in attendance_data}
+    attendance_dict = {record["punch_in_time__date"]: record for record in attendance_data}
 
     for day in date_range:
         status = "Absent"
@@ -2539,7 +2774,7 @@ def download_attendance_excel(request, user_id):
             status,
             localtime(record["first_login"]).strftime("%Y-%m-%d %H:%M:%S") if record and record["first_login"] else "N/A",
             localtime(record["last_logout"]).strftime("%Y-%m-%d %H:%M:%S") if record and record["last_logout"] else "N/A",
-            record["logout_reason"] if record and record["logout_reason"] else "Currently Working",
+            record["punch_out_reason"] if record and record["punch_out_reason"] else "Currently Working",
             str(record["total_time"]) if record and record["total_time"] else "N/A",
             record["login_count"] if record else 0,
         ])
@@ -2550,3 +2785,42 @@ def download_attendance_excel(request, user_id):
     wb.save(response)
 
     return response
+
+
+def assign_task(request) :
+    employees = Employee.objects.all()
+    tasks = Task.objects.all().order_by('-id')
+    if request.method == 'POST':
+        # Extract data from the POST request
+        
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        assigned_to_id = request.POST.get('assigned_to')
+        due_date = request.POST.get('due_date')
+        priority = request.POST.get('priority')
+
+        # Validate the data
+        if not title or not description or not assigned_to_id or not due_date or not priority:
+            return render(request, 'hrms/assign-task.html', {
+                'error': 'All fields are required!'
+            })
+
+        # Save the task to the database
+        assigned_to = Employee.objects.get(id=assigned_to_id)
+        Task.objects.create(
+            title=title,
+            description=description,
+            assigned_to=assigned_to,
+            due_date=due_date,
+            priority=priority
+        )
+        Notification.objects.create(
+            user=assigned_to.user,
+            notification_type='Task',
+            message=f'{assigned_to} have been assigned a new task: {title}, Due Date: {due_date}',
+            )
+        
+
+        return redirect('assign_task')  # Redirect to the task list view
+
+    return render(request, 'hrms/assign-task.html', {'employees': employees, 'tasks': tasks})

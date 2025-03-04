@@ -1,4 +1,4 @@
-{% extends "hrms/base.html" %}
+{% extends "crm/base.html" %}
 
 {% block content %}
 
@@ -8,20 +8,17 @@
       <div class="container-xl">
         <div class="row g-2 align-items-center">
           <div class="col">
-            <!-- Page pre-title -->
-            {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
-            <h2 class="page-title">Your Candidates</h2>
+            <h2 class="page-title">Vendor's</h2>
           </div>
           <!-- Page title actions -->
           <div class="col-auto ms-auto d-print-none">
-            <div class="btn-list">
-              <a href="{% url 'admin_candidate_registration' %}" class="btn btn-primary d-none d-sm-inline-block">
-                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+            {% comment %} <div class="btn-list">
+              <a href="{% url 'admin_vendor_registration' %}" class="btn btn-primary d-none d-sm-inline-block">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                   <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                   <path d="M12 5l0 14" />
                   <path d="M5 12l14 0" />
-                </svg>Add New Candidate
+                </svg>Add New vendor
               </a>
               <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
                 <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
@@ -31,7 +28,7 @@
                   <path d="M5 12l14 0" />
                 </svg>
               </a>
-            </div>
+            </div> {% endcomment %}
           </div>
         </div>
       </div>
@@ -64,56 +61,41 @@
                         <thead>
                           <tr>
                             <th class="w-1">No.</th>
-                            <th>Hendle By</th>
-                            <th>Photo</th>
-                            <th>Candidate Name</th>
-                            <th>Unique Code</th>
+                            <th>Vendor Code</th>
+                            <th>Vendor Photo</th>
+                            <th>Vendor Name</th>
                             <th>Mobile No.</th>
-                            <th>Register At</th>
-                            <th>Selection</th>
                             <th>Profile</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {% for candidate in candidates %}
+                          {% for vendor in vendors %}
                             <tr>
                               <td>
                                 <span class="text-secondary">{{ forloop.counter }}</span>
                               </td>
                               <td>
                                 <span class="me-2"></span>
-                                {{ candidate.employee_name }}
+                                {{ vendor.refer_code }}
                               </td>
                               <td>
-                                {% if candidate.candidate_photo %}
-                                  <img src="{{ candidate.candidate_photo.url }}" class="avatar me-3" alt="" />
+                                {% if vendor.vendor_profile_image %}
+                                  <img src="{{ vendor.vendor_profile_image.url }}" class="avatar me-3" alt="" />
                                 {% else %}
                                   No Photo
                                 {% endif %}
                               </td>
                               <td>
                                 <span class="me-2"></span>
-                                <a href="{% url 'candidate-details' candidate.id %}">{{ candidate.candidate_name }}</a>
+                                {{ vendor.user.first_name }} {{ vendor.user.last_name }}
                               </td>
                               <td>
                                 <span class="me-2"></span>
-                                {{ candidate.unique_code }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.candidate_mobile_number }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.register_time }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{candidate.selection_status}}
+                                {{ vendor.mobile_number }}
                               </td>
                               <td>
                                 <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
-                                  <a href="{% url 'candidate-details' candidate.id %}" class="btn btn-bitbucket w-100 btn-icon">
+                                  <a href="{% url 'admin_vendor_candidate_list' vendor.id %}" class="btn btn-bitbucket w-100 btn-icon">
                                     <!-- Download SVG icon from http://tabler-icons.io/i/brand-github -->
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                       <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>

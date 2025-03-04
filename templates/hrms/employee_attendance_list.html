@@ -1,0 +1,136 @@
+{% extends 'hrms/base.html' %}
+
+{% block content %}
+  <div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col">
+            <!-- Page pre-title -->
+            {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
+            <h2 class="page-title">Employee Attendence</h2>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col-12">
+            <div class="card">
+              {% comment %} <div class="card-header">
+                <h3 class="card-title">Designations</h3>
+              </div> {% endcomment %}
+              <div class="card-body border-bottom py-3">
+                <div class="d-flex">
+                  <div class="text-secondary">
+                    Show<div class="mx-2 d-inline-block">
+                      <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
+                    </div>entries
+                  </div>
+                  <div class="ms-auto text-secondary">
+                    Search:<div class="ms-2 d-inline-block">
+                      <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
+                  <thead>
+                    <tr>
+                      <th class="w-1">No.</th>
+                      <th>Employee Name</th>
+                      <th>Employee ID</th>
+                      <th>Attendance Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for employee in employee_attendance_data %}
+                      <tr>
+                        <!-- Serial number -->
+                        <td>
+                          <span class="text-secondary">{{ forloop.counter }}</span>
+                        </td>
+              
+                        <!-- Employee name -->
+                        <td>
+                          <span class="me-2"></span>{{ employee.employee_name }}
+                        </td>
+              
+                        <!-- Employee ID -->
+                        <td>
+                          <span class="me-2"></span>{{ employee.employee_id }}
+                        </td>
+                        
+                        <!-- Attendance status -->
+                        <td>
+                          {% if employee.status == "Present" %}
+                            <span class="badge bg-green text-green-fg">{{ employee.status }}</span>
+                          {% elif employee.status == "Late" %}
+                            <span class="badge bg-orange text-orange-fg">{{ employee.status }}</span>
+                          {% elif employee.status == "Absent" %}
+                            <span class="badge bg-red text-red-fg">{{ employee.status }}</span>
+                          {% elif employee.status == "On Leave" %}
+                            <span class="badge bg-cyan text-cyan-fg">{{ employee.status }}</span>
+                          {% elif employee.status == "Holiday" %}
+                            <span class="badge bg-secondary">{{ employee.status }}</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="card-footer d-flex align-items-center">
+                <p class="m-0 text-secondary">
+                  Showing <span>1</span> to <span>8</span> of <span>16</span> entries
+                </p>
+                <ul class="pagination m-0 ms-auto">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                      <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M15 6l-6 6l6 6" />
+                      </svg>prev
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">1</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">3</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">4</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">5</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">
+                      next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M9 6l6 6l-6 6" />
+                      </svg>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+{% endblock %}
