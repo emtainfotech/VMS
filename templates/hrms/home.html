@@ -682,11 +682,24 @@
 </script>
 
 <img id="screen" width="800" height="500" />
+
 <script>
-    var socket = new WebSocket("wss://emtavms.com/ws/screen/");
-    socket.onmessage = function(event) {
+    var employeeName = "employee"; // Change dynamically based on the logged-in user
+
+    var socket = new WebSocket("ws://emtavms.com/ws/screen/");
+
+    socket.onopen = function () {
+        socket.send(JSON.stringify({ employee_name: employeeName }));
+    };
+
+    socket.onmessage = function (event) {
         var data = JSON.parse(event.data);
-        document.getElementById("screen").src = "data:image/jpeg;base64," + data.image;
+        if (data.image) {
+            document.getElementById("screen").src = "data:image/jpeg;base64," + data.image;
+        } else {
+            console.error("Image not found");
+        }
     };
 </script>
+
 {% endblock %}

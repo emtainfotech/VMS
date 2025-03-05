@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'App',
     'EVMS',
     'Employee',
-    'CRM'
+    'CRM',
+    
 ]
 
 MIDDLEWARE = [

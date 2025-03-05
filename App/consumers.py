@@ -11,7 +11,7 @@ class ScreenConsumer(AsyncWebsocketConsumer):
         image_data = data['image']
         
         # Decode and save the image if needed
-        with open("static/screenshots/employee.jpg", "wb") as f:
+        with open("media/Employee-Screen/employee.jpg", "wb") as f:
             f.write(base64.b64decode(image_data))
         
         # Send the image to the admin panel
