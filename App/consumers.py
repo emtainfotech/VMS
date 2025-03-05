@@ -5,7 +5,7 @@ import os
 
 class ScreenConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.employee_id = self.scope["url_route"]["kwargs"]["employee_id"]
+        self.employee_id = self.scope["url_route"]["kwargs"]["employee_id"]  # Ensure name matches URL parameter
         await self.accept()
 
     async def receive(self, text_data):
