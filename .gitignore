@@ -2,8 +2,5 @@
 *.sqlite3
 db.sqlite3
 
-# Ignore environment files
-.env
-.venv
-venv/
-__pycache__/
+
+

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Employee Screen</title>
+</head>
+<body>
+    <h2>Live Screen of Employee: {{ employee_id }}</h2>
+    <img id="live_screen" width="800" height="450" />
+
+    <script>
+        const employee_id = "{{ employee_id }}";
+        const token = new URLSearchParams(window.location.search).get("token");
+
+        if (!token) {
+            alert("Unauthorized: No token provided");
+        } else {
+            const ws = new WebSocket(`ws://127.0.0.1:8000/ws/screen/${employee_id}/?token=${token}`);
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                document.getElementById("live_screen").src = "data:image/jpeg;base64," + data.image;
+            };
+
+            ws.onerror = function() {
+                alert("WebSocket connection failed");
+            };
+        }
+    </script>
+</body>
+</html>

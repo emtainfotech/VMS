@@ -681,23 +681,16 @@
     });
 </script>
 
-<img id="screen" width="800" height="500" />
+<img id="screen_image" src="" alt="Employee Screen" width="800">
 
 <script>
-    var employeeName = "employee"; // Change dynamically based on the logged-in user
+    const employeeId = "Employee_PC_Name";  // Replace with actual employee name or ID
+    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/screen/${employeeId}/`);
 
-    var socket = new WebSocket("ws://emtavms.com/ws/screen/");
-
-    socket.onopen = function () {
-        socket.send(JSON.stringify({ employee_name: employeeName }));
-    };
-
-    socket.onmessage = function (event) {
-        var data = JSON.parse(event.data);
+    ws.onmessage = function(event) {
+        const data = JSON.parse(event.data);
         if (data.image) {
-            document.getElementById("screen").src = "data:image/jpeg;base64," + data.image;
-        } else {
-            console.error("Image not found");
+            document.getElementById("screen_image").src = "data:image/jpeg;base64," + data.image;
         }
     };
 </script>

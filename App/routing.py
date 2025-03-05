@@ -1,14 +1,7 @@
-from django.urls import re_path
+from django.urls import path
+from App.consumers import ScreenConsumer
 from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.auth import AuthMiddlewareStack
-from App.consumers import ScreenConsumer  # Ensure this import is correct
 
 websocket_urlpatterns = [
-    re_path(r'ws/screen/$', ScreenConsumer.as_asgi()),  # ✅ WebSocket path
+    path("ws/screen/<str:employee_id>/", ScreenConsumer.as_asgi()),
 ]
-
-application = ProtocolTypeRouter({
-    "websocket": AuthMiddlewareStack(
-        URLRouter(websocket_urlpatterns)
-    ),
-})
