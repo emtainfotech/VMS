@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'EVMS',
     'Employee',
     'CRM',
+    'daphne',
+    'channels',
     
 ]
 

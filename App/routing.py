@@ -1,7 +1,6 @@
 from django.urls import path
-from App.consumers import ScreenConsumer
-from channels.routing import ProtocolTypeRouter, URLRouter
+from VMS.consumers import MyWebSocketConsumer  # Import your WebSocket consumer
 
 websocket_urlpatterns = [
-    path("ws/screen/<str:employee_id>/", ScreenConsumer.as_asgi()),
+    path("ws/screen/<str:emp_id>/", MyWebSocketConsumer.as_asgi()),
 ]
