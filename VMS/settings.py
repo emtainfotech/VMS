@@ -42,8 +42,6 @@ INSTALLED_APPS = [
     'EVMS',
     'Employee',
     'CRM',
-    'daphne',
-    'channels',
     
 ]
 
@@ -142,8 +140,3 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    },
-}
