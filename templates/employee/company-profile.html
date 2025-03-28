@@ -1,4 +1,4 @@
-{% extends "employee/base.html" %}
+{% extends 'employee/performance-base.html' %}
 
 {% block content %}
 
@@ -32,203 +32,201 @@
     }
   </style>
 
-  <div class="container py-5">
-    <div class="row">
+  <div class="container py-4">
+    <div class="row g-4">
+      <!-- Personal Information Card -->
       <div class="col-lg-6">
-        <div class="card p-4">
+        <div class="card h-100">
+          <div class="card-header  d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Company Profile</h5>
+            <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-profile">
+              <i class="bi bi-pencil"></i> Edit
+            </a>
+          </div>
           <div class="card-body">
-            <h5 class="card-title mb-4">Personal Information</h5>
-            <div class="row g-0">
-              <!-- Left Image Section -->
-              <div class="col-6">
+            <div class="d-flex flex-column flex-md-row gap-4">
+              <!-- Company Logo Section -->
+              <div class="text-center">
                 {% if company.company_logo %}
-                <img src="{{company.company_logo.url}}" style="height: 125px;width: 125px;" class="object-cover card-img-start rounded-circle" alt="Profile Picture" />
+                  <img src="{{company.company_logo.url}}" class="rounded-circle object-cover" 
+                       style="width: 150px; height: 150px;" alt="Company Logo">
                 {% else %}
-                <p>No profile image uploaded.</p>
+                  <div class="d-flex align-items-center justify-content-center bg-light rounded-circle" 
+                       style="width: 150px; height: 150px;">
+                    <span class="text-muted">No Logo</span>
+                  </div>
                 {% endif %}
-                <div>
-                  <h3 class="card-title mb-1">{{ company.company_name }}</h3>
-                  <p class="text-muted mb-2">{{ company.company_unique_code }}</p>
-                  {% comment %} <p>{{ company.company_contact_person_contact_details }}</p> {% endcomment %}
+                
+                <div class="mt-3">
                   {% if company.vacancy_status == "Approved" %}
-                          <span class="badge bg-success me-1"></span> {{ company.vacancy_status }}
-                        {% elif company.vacancy_status == "Rejected" %}
-                          <span class="badge bg-danger me-1"></span> {{ company.vacancy_status }}
-                          {% elif company.vacancy_status == "Hold" %}
-                          <span class="badge bg-warning me-1"></span> {{ company.vacancy_status }}
-                        {% else %}
-                          <span class="badge bg-primary me-1"></span> {{ company.vacancy_status }}
-                        {% endif %}
-                  <p>
-                    <strong class="subheader">Location:</strong> <br />{{company.company_location}}
-                  </p>
+                    <span class="badge bg-success">{{ company.vacancy_status }}</span>
+                  {% elif company.vacancy_status == "Rejected" %}
+                    <span class="badge bg-danger">{{ company.vacancy_status }}</span>
+                  {% elif company.vacancy_status == "Hold" %}
+                    <span class="badge bg-warning">{{ company.vacancy_status }}</span>
+                  {% else %}
+                    <span class="badge bg-primary">{{ company.vacancy_status }}</span>
+                  {% endif %}
                 </div>
               </div>
-              <!-- Right Content Section -->
-              <div class="col">
-                <div class="card-body">
-                    <p>
-                      <strong class="subheader">Email:</strong><br /> {{ company.company_email_address }}
-                    </p>
-                  <p>
-                    <strong class="subheader">Vacancy Opening Date:</strong><br /> {{ company.vacancy_opening_date }}
-                  </p>
-                  <p>
-                    <strong class="subheader">Hendle By:</strong><br /> {{ company.employee_name }}
-                  </p>
-                  <p>
-                    <strong class="subheader">Profile Name: </strong><br /> {{ company.job_profile }}
-                  </p>
-                  <p>
-                    <strong class="subheader">Vacancy Code:</strong><br /> {{company.company_vacancy_unique_code}}
-                  </p>
+              
+              <!-- Company Details -->
+              <div class="flex-grow-1">
+                <h3 class="mb-2">{{ company.company_name }}</h3>
+                <p class="text-muted mb-3">{{ company.company_unique_code }}</p>
+                
+                <div class="row g-2">
+                  <div class="col-md-6">
+                    <div class="mb-2">
+                      <strong class="d-block text-muted small">Location</strong>
+                      {{ company.company_location }}
+                    </div>
+                    <div class="mb-2">
+                      <strong class="d-block text-muted small">Email</strong>
+                      {{ company.company_email_address|default:"-" }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-2">
+                      <strong class="d-block text-muted small">Opening Date</strong>
+                      {{ company.vacancy_opening_date|date:"M d, Y" }}
+                    </div>
+                    <div class="mb-2">
+                      <strong class="d-block text-muted small">Handled By</strong>
+                      {{ company.employee_name }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-2">
+                      <strong class="d-block text-muted small">Job Profile</strong>
+                      {{ company.job_profile|default:"-" }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-2">
+                      <strong class="d-block text-muted small">Vacancy Code</strong>
+                      {{ company.company_vacancy_unique_code }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-profile"><i class="bi bi-pencil"></i></a></span>
         </div>
       </div>
-      <div class="col-lg-6"> 
-        <div class="card p-4">
-          <div class="card-body">
-            <h5 class="card-title mb-4">company Details</h5>
-            <div class="row">
-              <!-- Primary Contact -->
-              <div class="col-md-6">
-                {% comment %} <h6 class="text-label">Primary Contact</h6> {% endcomment %}
-                <p>
-                  <strong class="subheader">Contact Person Name:</strong><br /> {{company.company_contact_person_name}}
-                </p>
-                <p>
-                  <strong class="subheader">Contact Person Designation:</strong><br /> {{company.company_contact_person_designation}}
-                </p>
-                <p>
-                  <strong class="subheader">Contact:</strong> <br />{{company.company_contact_person_contact_details}}
-                </p>
-                <p>
-                  <strong class="subheader">Interview Address:</strong> <br />{{company.interview_address}} 
-                </p>
-                <p>
-                  <strong class="subheader">Payroll:</strong> <br />{{company.payroll}} {% if company.third_party_name %}-{{company.third_party_name}} {%else%} {% endif %}
-                </p>
-                <p>
-                  <strong class="subheader">Job Origin:</strong> <br />{{company.job_opening_origin}} 
-                </p>
-                <p>
-                    <strong class="subheader">Qualification:</strong><br /> {{company.minimum_education_qualification}}
-                  </p>
-                  <p>
-                    <strong class="subheader">Gender:</strong><br /> {{company.gender}}
-                  </p>
-              </div>
-              <!-- Secondary Contact -->
-              <div class="col-md-6">
-                <p>
-                    <strong class="subheader">Specialization:</strong><br /> {{company.specialization}}
-                  </p>
-                <p>
-                  <strong class="subheader">Experience :</strong><br /> {{company.minimum_experience}} - {{company.maximum_experience}}
-                </p>
-                <p>
-                  <strong class="subheader">Sector Type :</strong> <br>{{company.sector_type}}
-                </p>
-                <p>
-                  <strong class="subheader">Department Name :</strong>  <br>{{company.department_name}}
-                </p>
-                <p>
-                  <strong class="subheader">Fresher :</strong><br />{{company.fresher_status}} 
-                </p>
-                <p>
-                  <strong class="subheader">Salary Range:</strong><br /> {{company.minimum_salary_range}} - {{company.maximum_salary_range}}
-                </p>
-                <p>
-                    <strong class="subheader">Vacancy Closing Date:</strong><br /> {{company.vacancy_closing_date}}
-                  </p>
-              </div>
-            </div>
-            <!-- Edit Icon -->
-            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-company-details"><i class="bi bi-pencil"></i></a></span>
+  
+      <!-- Company Details Card -->
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header  d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Employment Details</h5>
+            <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-company-details">
+              <i class="bi bi-pencil"></i> Edit
+            </a>
           </div>
-        </div>
-      </div>
-
-      <div class="col-lg-6 mt-3">
-        <div class="card p-4">
-          <h5 class="card-title mb-4">Company Remarks</h5>
           <div class="card-body">
             <div class="row">
-              <!-- Primary Contact -->
               <div class="col-md-6">
-                <p>
-                  <strong class="subheader">Special Instructions:</strong><br>{{ company.special_instruction }}
-                </p>
-                <p>
-                  <strong class="subheader">Company USP:</strong><br>{{ company.company_usp }}
-                </p>
-                <p>
-                  <strong class="subheader">Incentive:</strong><br>{{ company.status_of_incentive }}
-                </p>
-                <p>
-                  <strong class="subheader">Status of Proposal:</strong><br>{{ company.status_of_proposal }}
-                </p>
-                <p>
-                    <strong class="subheader">Invoice Generate Date:</strong><br>{{ company.invoice_generation_date }}
-                  </p>
-                  <p>
-                    <strong class="subheader">Payout Date:</strong><br>{{ company.payout_date }}
-                  </p>   
-                  <p>
-                    <strong class="subheader">Payment Condition:</strong><br>{{ company.payment_condiation }}
-                  </p>
-                  <p>
-                    <strong class="subheader">Replacement Criteria:</strong><br>{{ company.replacement_criteria }}
-                  </p>       
-                  <p>
-                    <strong class="subheader">Remark:</strong><br>{{ company.remark }}
-                  </p>       
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Contact Person</strong>
+                  {{ company.company_contact_person_name }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Designation</strong>
+                  {{ company.company_contact_person_designation|default:"-" }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Contact</strong>
+                  {{ company.company_contact_person_contact_details|default:"-" }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Interview Address</strong>
+                  {{ company.interview_address|default:"-" }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Payroll</strong>
+                  {{ company.payroll }}
+                  {% if company.third_party_name %} ({{ company.third_party_name }}){% endif %}
+                </div>
               </div>
               
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Job Origin</strong>
+                  {{ company.job_opening_origin|default:"-" }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Qualification</strong>
+                  {{ company.minimum_education_qualification|default:"-" }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Specialization</strong>
+                  {{ company.specialization|default:"-" }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Experience</strong>
+                  {{ company.minimum_experience|default:"-" }} - {{ company.maximum_experience|default:"-" }} years
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Salary Range</strong>
+                  {{ company.minimum_salary_range|default:"-" }} - {{ company.maximum_salary_range|default:"-" }}
+                </div>
+              </div>
             </div>
           </div>
-          <!-- Edit Icon -->
-          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-calling-remark"><i class="bi bi-pencil"></i></a></span>
         </div>
       </div>
-      <div class="col-lg-6 mt-3">
-        <div class="card p-4">
-          <h5 class="card-title mb-4">Selection Status</h5>
+  
+      <!-- Company Remarks Card -->
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header  d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Company Remarks</h5>
+            <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-calling-remark">
+              <i class="bi bi-pencil"></i> Edit
+            </a>
+          </div>
           <div class="card-body">
             <div class="row">
-              <!-- Primary Contact -->
               <div class="col-md-6">
-                <p>
-                  <strong class="subheader">Status of Selection:</strong><br>{{ company.selection_status }}
-                </p>
-                <p>
-                  <strong class="subheader">Company Name:</strong><br>{{ company.company_name }}
-                </p>
-                <p>
-                  <strong class="subheader">Salary Offered:</strong><br>{{ company.offered_salary }}
-                </p>
-                <p>
-                  <strong class="subheader">Selection Date:</strong><br>{{ company.selection_date }}
-                </p>
-                <p>
-                  <strong class="subheader">Joining Date:</strong><br>{{ company.company_joining_date }}
-                </p>
-                <p>
-                  <strong class="subheader">Our Commission:</strong><br>{{ company.emta_commission }}
-                </p>
-                <p>
-                  <strong class="subheader">Payout Date:</strong><br>{{ company.payout_date }}
-                </p>               
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Company USP</strong>
+                  {{ company.company_usp|default:"-" }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Incentive Status</strong>
+                  {{ company.status_of_incentive|default:"-" }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Proposal Status</strong>
+                  {{ company.status_of_proposal|default:"-" }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Payment Condition</strong>
+                  {{ company.payment_condiation|default:"-" }}
+                </div>
               </div>
               
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Invoice Date</strong>
+                  {{ company.invoice_generation_date |default:"-" }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Payout Date</strong>
+                  {{ company.payout_date|default:"-" }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Replacement Criteria</strong>
+                  {{ company.replacement_criteria|default:"-" }}
+                </div>
+                <div class="mb-3">
+                  <strong class="d-block text-muted small">Remarks</strong>
+                  {{ company.remark|default:"-" }}
+                </div>
+              </div>
             </div>
           </div>
-          <!-- Edit Icon -->
-          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-selection-record"><i class="bi bi-pencil"></i></a></span>
         </div>
       </div>
     </div>
@@ -239,56 +237,104 @@
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">company Profile</h5>
+          <h5 class="modal-title">Company Profile</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="POST" enctype="multipart/form-data">
+          <form id="profileForm" method="POST" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
             <div class="row">
+              <!-- Employee Name -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Employee Name</label>
-                <input type="text" class="form-control" name="employee_name" value="{{ company.employee_name }}" required />
+                <input type="text" class="form-control" name="employee_name" value="{{ company.employee_name }}" 
+                       required minlength="2" maxlength="100"
+                       pattern="^[a-zA-Z\s]*$" title="Only alphabets and spaces are allowed" />
+                <div class="invalid-feedback">
+                  Please provide a valid employee name (2-100 characters, alphabets only).
+                </div>
               </div>
+              
               <!-- Company Name -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Company Name</label>
-                <input type="text" class="form-control" name="company_name" value="{{ company.company_name }}" required />
+                <input type="text" class="form-control" name="company_name" value="{{ company.company_name }}" 
+                       required minlength="2" maxlength="100" />
+                <div class="invalid-feedback">
+                  Please provide a company name (2-100 characters).
+                </div>
               </div>
+              
               <!-- Company Logo -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Company Logo</label>
-                <input type="file" class="form-control" name="company_logo" />
+                <input type="file" class="form-control" name="company_logo" 
+                       accept="image/png, image/jpeg, image/jpg" />
+                <div class="invalid-feedback">
+                  Please upload a valid image file (PNG, JPG, JPEG).
+                </div>
               </div>
+              
               <!-- Company Location -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Company Location</label>
-                <input type="text" class="form-control" name="company_location" value="{{ company.company_location }}" required />
+                <input type="text" class="form-control" name="company_location" value="{{ company.company_location }}" 
+                       required minlength="5" maxlength="200" />
+                <div class="invalid-feedback">
+                  Please provide a company location (5-200 characters).
+                </div>
               </div>
+              
               <!-- Company Unique Code -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Company Unique Code</label>
-                <input type="text" class="form-control" name="company_unique_code" value="{{ company.company_unique_code }}" required />
+                <input type="text" class="form-control" name="company_unique_code" value="{{ company.company_unique_code }}" 
+                       required minlength="3" maxlength="50"
+                       pattern="^[a-zA-Z0-9\-_]*$" title="Only alphanumeric characters, hyphens and underscores are allowed" />
+                <div class="invalid-feedback">
+                  Please provide a valid unique code (3-50 characters, alphanumeric only).
+                </div>
               </div>
+              
               <!-- Job Profile -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Job Profile</label>
-                <input type="text" class="form-control" name="job_profile" value="{{ company.job_profile }}" />
+                <input type="text" class="form-control" name="job_profile" value="{{ company.job_profile }}" 
+                       maxlength="100" />
+                <div class="invalid-feedback">
+                  Job profile should be less than 100 characters.
+                </div>
               </div>
+              
               <!-- Vacancy Unique Code -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Vacancy Unique Code</label>
-                <input type="text" class="form-control" name="company_vacancy_unique_code" value="{{ company.company_vacancy_unique_code }}" required />
+                <input type="text" class="form-control" name="company_vacancy_unique_code" value="{{ company.company_vacancy_unique_code }}" 
+                       required minlength="3" maxlength="50"
+                       pattern="^[a-zA-Z0-9\-_]*$" title="Only alphanumeric characters, hyphens and underscores are allowed" />
+                <div class="invalid-feedback">
+                  Please provide a valid vacancy code (3-50 characters, alphanumeric only).
+                </div>
               </div>
+              
               <!-- Vacancy Opening Date -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Vacancy Opening Date</label>
-                <input type="date" class="form-control" name="vacancy_opening_date" value="{{ company.vacancy_opening_date }}" required />
+                <input type="date" class="form-control" name="vacancy_opening_date" value="{{ company.vacancy_opening_date | date:'Y-m-d' }}" 
+                       required />
+                <div class="invalid-feedback">
+                  Please select a valid opening date.
+                </div>
               </div>
+              
               <!-- Company Email Address -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Email Address</label>
-                <input type="email" class="form-control" name="company_email_address" value="{{ company.company_email_address }}" />
+                <input type="email" class="form-control" name="company_email_address" value="{{ company.company_email_address }}" 
+                       maxlength="100" />
+                <div class="invalid-feedback">
+                  Please provide a valid email address.
+                </div>
               </div>
             </div>
             <div class="modal-footer">
@@ -300,6 +346,73 @@
       </div>
     </div>
   </div>
+
+<script>
+// Client-side form validation
+(function() {
+  'use strict';
+  
+  // Fetch the form we want to apply validation to
+  const form = document.getElementById('profileForm');
+  
+  // Add validation on submit
+  form.addEventListener('submit', function(event) {
+    if (!form.checkValidity()) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    // Add validation class to show error messages
+    form.classList.add('was-validated');
+    
+    // Custom validation for file input
+    const fileInput = form.querySelector('input[type="file"]');
+    if (fileInput.files.length > 0) {
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      const file = fileInput.files[0];
+      
+      if (!validTypes.includes(file.type)) {
+        fileInput.setCustomValidity('Invalid file type. Please upload an image (JPEG, PNG, JPG).');
+        fileInput.classList.add('is-invalid');
+        event.preventDefault();
+      } else {
+        fileInput.setCustomValidity('');
+        fileInput.classList.remove('is-invalid');
+      }
+    }
+  }, false);
+  
+  // Add real-time validation for fields when they lose focus
+  const inputs = form.querySelectorAll('input');
+  inputs.forEach(input => {
+    input.addEventListener('blur', () => {
+      if (!input.checkValidity()) {
+        input.classList.add('is-invalid');
+      } else {
+        input.classList.remove('is-invalid');
+      }
+    });
+  });
+  
+  // Date validation - ensure date is not in the past
+  const dateInput = form.querySelector('input[type="date"]');
+  if (dateInput) {
+    dateInput.addEventListener('change', () => {
+      const selectedDate = new Date(dateInput.value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < today) {
+        dateInput.setCustomValidity('Opening date cannot be in the past.');
+        dateInput.classList.add('is-invalid');
+      } else {
+        dateInput.setCustomValidity('');
+        dateInput.classList.remove('is-invalid');
+      }
+    });
+  }
+})();
+</script>
   
 
   {% comment %}contact{% endcomment %}
@@ -307,112 +420,233 @@
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">company  Details</h5>
+          <h5 class="modal-title">Company Details</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
+          <form id="companyDetailsForm" method="post" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
-            <h5 class="text-secondary">company Information</h5>
+            <h5 class="text-secondary">Company Information</h5>
             <div class="row">
               <!-- Contact Person Name -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Contact Person Name</label>
-              <input type="text" class="form-control" name="company_contact_person_name" value="{{ company.company_contact_person_name }}" required />
-            </div>
-            <!-- Contact Person Details -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Contact Person Contact Details</label>
-              <input type="text" class="form-control" name="company_contact_person_contact_details" value="{{ company.company_contact_person_contact_details }}" />
-            </div>
-            <!-- Contact Person Designation -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Contact Person Designation</label>
-              <input type="text" class="form-control" name="company_contact_person_designation" value="{{ company.company_contact_person_designation }}" />
-            </div>
-            <!-- Interview Address -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Interview Address</label>
-              <input type="text" class="form-control" name="interview_address" value="{{ company.interview_address }}" required />
-            </div>
-            <!-- Payroll -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Payroll</label>
-              <input type="text" class="form-control" name="payroll" value="{{ company.payroll }}" />
-            </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Contact Person Name</label>
+                <input type="text" class="form-control" name="company_contact_person_name" 
+                       value="{{ company.company_contact_person_name }}" 
+                       required minlength="2" maxlength="100"
+                       pattern="^[a-zA-Z\s.]*$" 
+                       title="Only alphabets, spaces and dots are allowed" />
+                <div class="invalid-feedback">
+                  Please provide a valid contact person name (2-100 characters).
+                </div>
+              </div>
+              
+              <!-- Contact Person Details -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Contact Person Contact Details</label>
+                <input type="text" class="form-control" name="company_contact_person_contact_details" 
+                       value="{{ company.company_contact_person_contact_details }}"
+                       maxlength="20"
+                       pattern="^[0-9+\- ]*$" 
+                       title="Only numbers, +, - and spaces are allowed" />
+                <div class="invalid-feedback">
+                  Please provide valid contact details (numbers, +, - only).
+                </div>
+              </div>
+              
+              <!-- Contact Person Designation -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Contact Person Designation</label>
+                <input type="text" class="form-control" name="company_contact_person_designation" 
+                       value="{{ company.company_contact_person_designation }}"
+                       maxlength="50" />
+                <div class="invalid-feedback">
+                  Designation should be less than 50 characters.
+                </div>
+              </div>
+              
+              <!-- Interview Address -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Interview Address</label>
+                <input type="text" class="form-control" name="interview_address" 
+                       value="{{ company.interview_address }}" 
+                       required minlength="5" maxlength="200" />
+                <div class="invalid-feedback">
+                  Please provide a valid interview address (5-200 characters).
+                </div>
+              </div>
+              
+              <!-- Payroll -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Payroll</label>
+                <input type="text" class="form-control" name="payroll" 
+                       value="{{ company.payroll }}"
+                       maxlength="50" />
+                <div class="invalid-feedback">
+                  Payroll information should be less than 50 characters.
+                </div>
+              </div>
 
-            <!-- Minimum Salary Range -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Minimum Salary Range</label>
-              <input type="text" class="form-control" name="minimum_salary_range" value="{{ company.minimum_salary_range }}" />
+              <!-- Minimum Salary Range -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Minimum Salary Range</label>
+                <input type="number" class="form-control" name="minimum_salary_range" 
+                       value="{{ company.minimum_salary_range }}"
+                       min="0" step="0.01" />
+                <div class="invalid-feedback">
+                  Please enter a valid minimum salary (positive number).
+                </div>
+              </div>
+              
+              <!-- Maximum Salary Range -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Maximum Salary Range</label>
+                <input type="number" class="form-control" name="maximum_salary_range" 
+                       value="{{ company.maximum_salary_range }}"
+                       min="0" step="0.01" />
+                <div class="invalid-feedback">
+                  Please enter a valid maximum salary (positive number).
+                </div>
+              </div>
+              
+              <!-- Job Opening Origin -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Job Opening Origin</label>
+                <input type="text" class="form-control" name="job_opening_origin" 
+                       value="{{ company.job_opening_origin }}"
+                       maxlength="50" />
+                <div class="invalid-feedback">
+                  Job opening origin should be less than 50 characters.
+                </div>
+              </div>
+              
+              <!-- Sector Type -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Sector Type</label>
+                <input type="text" class="form-control" name="sector_type" 
+                       value="{{ company.sector_type }}"
+                       maxlength="50" />
+                <div class="invalid-feedback">
+                  Sector type should be less than 50 characters.
+                </div>
+              </div>
+              
+              <!-- Department Name -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Department Name</label>
+                <input type="text" class="form-control" name="department_name" 
+                       value="{{ company.department_name }}"
+                       maxlength="50" />
+                <div class="invalid-feedback">
+                  Department name should be less than 50 characters.
+                </div>
+              </div>
+              
+              <!-- Fresher Status -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Fresher Status</label>
+                <select class="form-select" name="fresher_status" required>
+                  <option value="">Select status</option>
+                  <option value="Yes" {% if company.fresher_status == 'Yes' %}selected{% endif %}>Yes</option>
+                  <option value="No" {% if company.fresher_status == 'No' %}selected{% endif %}>No</option>
+                  <option value="Both" {% if company.fresher_status == 'Both' %}selected{% endif %}>Both</option>
+                </select>
+                <div class="invalid-feedback">
+                  Please select fresher status.
+                </div>
+              </div>
+              
+              <!-- Minimum Age -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Minimum Age</label>
+                <input type="number" class="form-control" name="minimum_age" 
+                       value="{{ company.minimum_age }}"
+                       min="18" max="70" />
+                <div class="invalid-feedback">
+                  Please enter a valid age between 18 and 70.
+                </div>
+              </div>
+              
+              <!-- Maximum Age -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Maximum Age</label>
+                <input type="number" class="form-control" name="maximum_age" 
+                       value="{{ company.maximum_age }}"
+                       min="18" max="70" />
+                <div class="invalid-feedback">
+                  Please enter a valid age between 18 and 70.
+                </div>
+              </div>
+              
+              <!-- Gender -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Gender</label>
+                <select class="form-select" name="gender">
+                  <option value="">Select gender</option>
+                  <option value="Male" {% if company.gender == 'Male' %}selected{% endif %}>Male</option>
+                  <option value="Female" {% if company.gender == 'Female' %}selected{% endif %}>Female</option>
+                  <option value="Any" {% if company.gender == 'Any' %}selected{% endif %}>Any</option>
+                </select>
+                <div class="invalid-feedback">
+                  Please select a valid gender option.
+                </div>
+              </div>
+              
+              <!-- Minimum Experience -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Minimum Experience (years)</label>
+                <input type="number" class="form-control" name="minimum_experience" 
+                       value="{{ company.minimum_experience }}"
+                       min="0" max="50" step="0.1" />
+                <div class="invalid-feedback">
+                  Please enter valid experience (0-50 years).
+                </div>
+              </div>
+              
+              <!-- Maximum Experience -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Maximum Experience (years)</label>
+                <input type="number" class="form-control" name="maximum_experience" 
+                       value="{{ company.maximum_experience }}"
+                       min="0" max="50" step="0.5" />
+                <div class="invalid-feedback">
+                  Please enter valid experience (0-50 years).
+                </div>
+              </div>
+              
+              <!-- Minimum Education Qualification -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Minimum Education Qualification</label>
+                <input type="text" class="form-control" name="minimum_education_qualification" 
+                       value="{{ company.minimum_education_qualification }}"
+                       maxlength="100" />
+                <div class="invalid-feedback">
+                  Education qualification should be less than 100 characters.
+                </div>
+              </div>
+              
+              <!-- Specialization -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Specialization</label>
+                <input type="text" class="form-control" name="specialization" 
+                       value="{{ company.specialization }}"
+                       maxlength="100" />
+                <div class="invalid-feedback">
+                  Specialization should be less than 100 characters.
+                </div>
+              </div>
+              
+              <!-- Vacancy Closing Date -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Vacancy Closing Date</label>
+                <input type="date" class="form-control" name="vacancy_closing_date" 
+                       value="{{ company.vacancy_closing_date | date:'Y-m-d' }}" 
+                       required />
+                <div class="invalid-feedback">
+                  Please select a valid closing date.
+                </div>
+              </div>
             </div>
-            <!-- Maximum Salary Range -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Maximum Salary Range</label>
-              <input type="text" class="form-control" name="maximum_salary_range" value="{{ company.maximum_salary_range }}" />
-            </div>
-            <!-- Job Opening Origin -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Job Opening Origin</label>
-              <input type="text" class="form-control" name="job_opening_origin" value="{{ company.job_opening_origin }}" />
-            </div>
-            <!-- Sector Type -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Sector Type</label>
-              <input type="text" class="form-control" name="sector_type" value="{{ company.sector_type }}" />
-            </div>
-            <!-- Department Name -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Department Name</label>
-              <input type="text" class="form-control" name="department_name" value="{{ company.department_name }}" />
-            </div>
-            <!-- Fresher Status -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Fresher Status</label>
-              <input type="text" class="form-control" name="fresher_status" value="{{ company.fresher_status }}" required />
-            </div>
-            <!-- Minimum Age -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Minimum Age</label>
-              <input type="text" class="form-control" name="minimum_age" value="{{ company.minimum_age }}" />
-            </div>
-            <!-- Maximum Age -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Maximum Age</label>
-              <input type="text" class="form-control" name="maximum_age" value="{{ company.maximum_age }}" />
-            </div>
-            <!-- Gender -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Gender</label>
-              <input type="text" class="form-control" name="gender" value="{{ company.gender }}" />
-            </div>
-            <!-- Minimum Experience -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Minimum Experience</label>
-              <input type="text" class="form-control" name="minimum_experience" value="{{ company.minimum_experience }}" />
-            </div>
-            <!-- Maximum Experience -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Maximum Experience</label>
-              <input type="text" class="form-control" name="maximum_experience" value="{{ company.maximum_experience }}" />
-            </div>
-            <!-- Minimum Education Qualification -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Minimum Education Qualification</label>
-              <input type="text" class="form-control" name="minimum_education_qualification" value="{{ company.minimum_education_qualification }}" />
-            </div>
-            <!-- Specialization -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Specialization</label>
-              <input type="text" class="form-control" name="specialization" value="{{ company.specialization }}" />
-            </div>
-            
-            <!-- Vacancy Closing Date -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Vacancy Closing Date</label>
-              <input type="date" class="form-control" name="vacancy_closing_date" value="{{ company.vacancy_closing_date }}" required />
-            </div>
-          </div>
             
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -423,71 +657,292 @@
       </div>
     </div>
   </div>
+
+<script>
+// Client-side form validation for company details
+(function() {
+  'use strict';
+  
+  const form = document.getElementById('companyDetailsForm');
+  
+  form.addEventListener('submit', function(event) {
+    // Validate all fields
+    if (!form.checkValidity()) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    form.classList.add('was-validated');
+    
+    // Custom validation for date fields
+    const closingDateInput = form.querySelector('input[name="vacancy_closing_date"]');
+    if (closingDateInput.value) {
+      const closingDate = new Date(closingDateInput.value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (closingDate < today) {
+        closingDateInput.setCustomValidity('Closing date cannot be in the past.');
+        closingDateInput.classList.add('is-invalid');
+        event.preventDefault();
+      } else {
+        closingDateInput.setCustomValidity('');
+        closingDateInput.classList.remove('is-invalid');
+      }
+    }
+    
+    // Validate salary range (max should be >= min)
+    const minSalary = parseFloat(form.querySelector('input[name="minimum_salary_range"]').value);
+    const maxSalary = parseFloat(form.querySelector('input[name="maximum_salary_range"]').value);
+    
+    if (minSalary && maxSalary && maxSalary < minSalary) {
+      const maxSalaryInput = form.querySelector('input[name="maximum_salary_range"]');
+      maxSalaryInput.setCustomValidity('Maximum salary should be greater than or equal to minimum salary.');
+      maxSalaryInput.classList.add('is-invalid');
+      event.preventDefault();
+    }
+    
+    // Validate age range (max should be >= min)
+    const minAge = parseInt(form.querySelector('input[name="minimum_age"]').value);
+    const maxAge = parseInt(form.querySelector('input[name="maximum_age"]').value);
+    
+    if (minAge && maxAge && maxAge < minAge) {
+      const maxAgeInput = form.querySelector('input[name="maximum_age"]');
+      maxAgeInput.setCustomValidity('Maximum age should be greater than or equal to minimum age.');
+      maxAgeInput.classList.add('is-invalid');
+      event.preventDefault();
+    }
+    
+    // Validate experience range (max should be >= min)
+    const minExp = parseFloat(form.querySelector('input[name="minimum_experience"]').value);
+    const maxExp = parseFloat(form.querySelector('input[name="maximum_experience"]').value);
+    
+    if (minExp && maxExp && maxExp < minExp) {
+      const maxExpInput = form.querySelector('input[name="maximum_experience"]');
+      maxExpInput.setCustomValidity('Maximum experience should be greater than or equal to minimum experience.');
+      maxExpInput.classList.add('is-invalid');
+      event.preventDefault();
+    }
+  }, false);
+  
+  // Real-time validation for fields when they lose focus
+  const inputs = form.querySelectorAll('input, select');
+  inputs.forEach(input => {
+    input.addEventListener('blur', () => {
+      if (!input.checkValidity()) {
+        input.classList.add('is-invalid');
+      } else {
+        input.classList.remove('is-invalid');
+      }
+    });
+  });
+})();
+</script>
   
 
-  <div class="modal modal-blur fade" id="modal-calling-remark" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Calling Remark</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="row">
-                 <!-- Company USP -->
+<div class="modal modal-blur fade" id="modal-calling-remark" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Calling Remark</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="callingRemarkForm" method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <div class="row">
+            <!-- Company USP -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Company USP</label>
-              <input type="text" class="form-control" name="company_usp" value="{{ company.company_usp }}" />
+              <input type="text" class="form-control" name="company_usp" 
+                     value="{{ company.company_usp }}"
+                     maxlength="200" />
+              <div class="invalid-feedback">
+                Company USP should be less than 200 characters.
+              </div>
             </div>
+            
             <!-- Status of Incentive -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Status of Incentive</label>
-              <input type="text" class="form-control" name="status_of_incentive" value="{{ company.status_of_incentive }}" />
+              <select class="form-select" name="status_of_incentive">
+                <option value="">Select status</option>
+                <option value="Approved" {% if company.status_of_incentive == 'Approved' %}selected{% endif %}>Approved</option>
+                <option value="Pending" {% if company.status_of_incentive == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Rejected" {% if company.status_of_incentive == 'Rejected' %}selected{% endif %}>Rejected</option>
+                <option value="NA" {% if company.status_of_incentive == 'NA' %}selected{% endif %}>Not Applicable</option>
+              </select>
+              <div class="invalid-feedback">
+                Please select a valid incentive status.
+              </div>
             </div>
+            
             <!-- Status of Proposal -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Status of Proposal</label>
-              <input type="text" class="form-control" name="status_of_proposal" value="{{ company.status_of_proposal }}" required />
+              <select class="form-select" name="status_of_proposal" required>
+                <option value="">Select status</option>
+                <option value="Draft" {% if company.status_of_proposal == 'Draft' %}selected{% endif %}>Draft</option>
+                <option value="Submitted" {% if company.status_of_proposal == 'Submitted' %}selected{% endif %}>Submitted</option>
+                <option value="Approved" {% if company.status_of_proposal == 'Approved' %}selected{% endif %}>Approved</option>
+                <option value="Rejected" {% if company.status_of_proposal == 'Rejected' %}selected{% endif %}>Rejected</option>
+              </select>
+              <div class="invalid-feedback">
+                Please select proposal status (required).
+              </div>
             </div>
+            
             <!-- Invoice Generation Date -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Invoice Generation Date</label>
-              <input type="text" class="form-control" name="invoice_generation_date" value="{{ company.invoice_generation_date }}" />
+              <input type="date" class="form-control" name="invoice_generation_date" 
+                     value="{{ company.invoice_generation_date }}" />
+              <div class="invalid-feedback">
+                Please enter a valid date (YYYY-MM-DD format).
+              </div>
             </div>
+            
             <!-- Payout Date -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Payout Date</label>
-              <input type="text" class="form-control" name="payout_date" value="{{ company.payout_date }}" />
+              <input type="date" class="form-control" name="payout_date" 
+                     value="{{ company.payout_date }}" />
+              <div class="invalid-feedback">
+                Please enter a valid date (YYYY-MM-DD format).
+              </div>
             </div>
+            
             <!-- Payment Condition -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Payment Condition</label>
-              <input type="text" class="form-control" name="payment_condiation" value="{{ company.payment_condiation }}" />
+              <select class="form-select" name="payment_condiation">
+                <option value="">Select condition</option>
+                <option value="Advance" {% if company.payment_condiation == 'Advance' %}selected{% endif %}>Advance</option>
+                <option value="After Placement" {% if company.payment_condiation == 'After Placement' %}selected{% endif %}>After Placement</option>
+                <option value="Installments" {% if company.payment_condiation == 'Installments' %}selected{% endif %}>Installments</option>
+                <option value="NA" {% if company.payment_condiation == 'NA' %}selected{% endif %}>Not Applicable</option>
+              </select>
+              <div class="invalid-feedback">
+                Please select a valid payment condition.
+              </div>
             </div>
+            
             <!-- Replacement Criteria -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Replacement Criteria</label>
-              <input type="text" class="form-control" name="replacement_criteria" value="{{ company.replacement_criteria }}" />
+              <input type="text" class="form-control" name="replacement_criteria" 
+                     value="{{ company.replacement_criteria }}"
+                     maxlength="200" />
+              <div class="invalid-feedback">
+                Replacement criteria should be less than 200 characters.
+              </div>
             </div>
+            
             <!-- Remark -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Remark</label>
-              <input type="text" class="form-control" name="remark" value="{{ company.remark }}" />
+              <textarea class="form-control" name="remark" 
+                        maxlength="500">{{ company.remark }}</textarea>
+              <div class="invalid-feedback">
+                Remark should be less than 500 characters.
+              </div>
             </div>
           </div>
-        
-            <!-- Submit and Cancel Buttons -->
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" name="submit_calling_remark" class="btn btn-primary">Submit</button>
-            </div>
+          
+          <!-- Submit and Cancel Buttons -->
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" name="submit_calling_remark" class="btn btn-primary">Submit</button>
+          </div>
         </form>
-        </div>
       </div>
     </div>
   </div>
+</div>
+
+<script>
+// Client-side form validation for calling remark
+(function() {
+'use strict';
+
+const form = document.getElementById('callingRemarkForm');
+
+form.addEventListener('submit', function(event) {
+  // Validate all fields
+  if (!form.checkValidity()) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  
+  form.classList.add('was-validated');
+  
+  // Custom validation for date fields
+  const invoiceDateInput = form.querySelector('input[name="invoice_generation_date"]');
+  const payoutDateInput = form.querySelector('input[name="payout_date"]');
+  
+  // Validate invoice date if provided
+  if (invoiceDateInput.value) {
+    const invoiceDate = new Date(invoiceDateInput.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (invoiceDate > today) {
+      invoiceDateInput.setCustomValidity('Invoice date cannot be in the future.');
+      invoiceDateInput.classList.add('is-invalid');
+      event.preventDefault();
+    } else {
+      invoiceDateInput.setCustomValidity('');
+      invoiceDateInput.classList.remove('is-invalid');
+    }
+  }
+  
+  // Validate payout date if provided
+  if (payoutDateInput.value) {
+    const payoutDate = new Date(payoutDateInput.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (payoutDate < today) {
+      payoutDateInput.setCustomValidity('Payout date cannot be in the past.');
+      payoutDateInput.classList.add('is-invalid');
+      event.preventDefault();
+    } else {
+      payoutDateInput.setCustomValidity('');
+      payoutDateInput.classList.remove('is-invalid');
+    }
+  }
+  
+  // Validate that payout date is after invoice date if both are provided
+  if (invoiceDateInput.value && payoutDateInput.value) {
+    const invoiceDate = new Date(invoiceDateInput.value);
+    const payoutDate = new Date(payoutDateInput.value);
+    
+    if (payoutDate < invoiceDate) {
+      payoutDateInput.setCustomValidity('Payout date must be after invoice date.');
+      payoutDateInput.classList.add('is-invalid');
+      event.preventDefault();
+    }
+  }
+}, false);
+
+// Real-time validation for fields when they lose focus
+const inputs = form.querySelectorAll('input, select, textarea');
+inputs.forEach(input => {
+  input.addEventListener('blur', () => {
+    if (!input.checkValidity()) {
+      input.classList.add('is-invalid');
+    } else {
+      input.classList.remove('is-invalid');
+    }
+  });
+});
+
+// Initialize date pickers with some constraints
+const today = new Date().toISOString().split('T')[0];
+document.querySelector('input[name="invoice_generation_date"]').max = today;
+document.querySelector('input[name="payout_date"]').min = today;
+})();
+</script>
 
   <div class="modal modal-blur fade" id="modal-selection-record" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">

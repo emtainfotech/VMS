@@ -31,370 +31,387 @@
     }
   </style>
 
-  <div class="container py-5">
-    <div class="row">
-      <div class="col-lg-7">
-        <div class="card p-4">
-          <div class="card-body">
-            <h5 class="card-title mb-4">Personal Information</h5>
-            <div class="row g-0">
-              <!-- Left Image Section -->
-              <div class="col-7">
-                <img src="{{employee.employee_photo.url}}" style="height: 125px;width: 125px;" class="object-cover card-img-start rounded-circle" alt="Profile Picture" />
-                <div>
-                  <h4 class="card-title mb-1">{{ employee.employee_id }} - {{ employee.first_name }} {{ employee.last_name }}</h4>
-                  <p class="text-muted mb-2">{{ employee.designation }} - {{ employee.department }}</p>
-                  
-                  <p>
-                    <strong class="subheader">Date of Join:</strong> <br />{{ employee.joining_date }}
-                  </p>
-                  {% comment %} <button class="btn btn-primary btn-sm">Send Message</button> {% endcomment %}
+  <div class="container py-4">
+    <div class="row g-4">
+        <!-- Personal Information Card -->
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Personal Information</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-profile">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
                 </div>
-              </div>
-              <!-- Right Content Section -->
-              <div class="col">
                 <div class="card-body">
-                  <p>
-                    <strong class="subheader">Phone:</strong><br /> {{ employee.contact_number }}
-                  </p>
-                  <p>
-                    <strong class="subheader">Email:</strong><br /> {{ employee.user.email }}
-                  </p>
-                  <p>
-                    <strong class="subheader">Birthday:</strong><br /> {{ additional_info.date_of_birth }}
-                  </p>
-                  {% comment %} <p>
-                    <strong class="subheader">Address:</strong><br /> {{ employee.address }}
-                  </p> {% endcomment %}
-                  <p>
-                    <strong class="subheader">Gender:</strong><br /> {{ additional_info.gender }}
-                  </p>
+                    <div class="d-flex flex-column flex-md-row gap-4 align-items-start">
+                        <!-- Employee Photo -->
+                        <div class="text-center">
+                            {% if employee.employee_photo %}
+                            <img src="{{employee.employee_photo.url}}" 
+                                 class="rounded-circle object-cover border" 
+                                 style="width: 120px; height: 120px;" 
+                                 alt="Employee Photo">
+                            {% else %}
+                            <div class="d-flex align-items-center justify-content-center  rounded-circle border" 
+                                 style="width: 120px; height: 120px;">
+                                <span class="text-muted small">No Photo</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Employee Details -->
+                        <div class="flex-grow-1">
+                            <h4 class="mb-2">{{ employee.employee_id }} - {{ employee.first_name }} {{ employee.last_name }}</h4>
+                            <p class="text-muted mb-3">{{ employee.designation }} - {{ employee.department }}</p>
+                            
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <span class="d-block text-muted small">Date of Join</span>
+                                        <span class="fw-medium">{{ employee.joining_date|date:"M d, Y" }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="d-block text-muted small">Phone</span>
+                                        <span class="fw-medium">{{ employee.contact_number }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <span class="d-block text-muted small">Email</span>
+                                        <span class="fw-medium">{{ employee.user.email }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="d-block text-muted small">Birthday</span>
+                                        <span class="fw-medium">{{ additional_info.date_of_birth|date:"M d, Y" }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="d-block text-muted small">Gender</span>
+                                        <span class="fw-medium">{{ additional_info.gender }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
-          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-profile"><i class="bi bi-pencil"></i></a></span>
         </div>
-      </div>
-      <div class="col-lg-5">
-        <div class="card p-4">
-          <div class="card-body">
-            <h5 class="card-title mb-4">Address Details</h5>
-            <div class="row">
-              <!-- Primary Contact -->
-              <div class="col-md-6">
-                <p>
-                  <strong class="subheader">Permanent Address:</strong><br>
-                  {{address_details.permanent_address}}
-                </p>
-                <p>
-                  <strong class="subheader">Present Address:</strong><br>
-                  {{address_details.present_address}}
-                </p>
-                <p>
-                  <strong class="subheader">City:</strong><br>
-                  {{address_details.city}}
-                </p>
-                <p>
-                  <strong class="subheader">State:</strong> <br>
-                  {{address_details.state}} 
-                </p>
-                
-              </div>
-              <!-- Secondary Contact -->
-              <div class="col-md-6">
-                
-                <p>
-                  <strong class="subheader">Country:</strong> 
-                  <br /> {{address_details.country}}
-                </p>
-                <p>
-                  <strong class="subheader">Zip Code:</strong> 
-                  <br /> {{address_details.zip_code}}
-                </p>
-                <p>
-                  <strong class="subheader">Nationality:</strong> 
-                  <br /> {{address_details.nationality}}
-                </p>
-              </div>
+
+        <!-- Address Details Card -->
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Address Details</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-address">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Permanent Address</span>
+                                <span class="fw-medium">{{ address_details.permanent_address|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Present Address</span>
+                                <span class="fw-medium">{{ address_details.present_address|default:"-" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">City</span>
+                                <span class="fw-medium">{{ address_details.city|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">State</span>
+                                <span class="fw-medium">{{ address_details.state|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Country</span>
+                                <span class="fw-medium">{{ address_details.country|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Zip Code</span>
+                                <span class="fw-medium">{{ address_details.zip_code|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Nationality</span>
+                                <span class="fw-medium">{{ address_details.nationality|default:"-" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <!-- Edit Icon -->
-            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-address"><i class="bi bi-pencil"></i></a></span>
-          </div>
         </div>
+
+        <!-- Bank Account Card -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Bank Account</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-bank">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Account Holder</span>
+                                <span class="fw-medium">{{ bank_details.account_holder_name|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Account Number</span>
+                                <span class="fw-medium">{{ bank_details.account_number|default:"-" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Bank Name</span>
+                                <span class="fw-medium">{{ bank_details.bank_name|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Branch</span>
+                                <span class="fw-medium">{{ bank_details.branch_name|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">IFSC Code</span>
+                                <span class="fw-medium">{{ bank_details.ifsc_code|default:"-" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Family Details Card -->
+        <div class="col-lg-6 mt-4">
+          <div class="card">
+              <div class="card-header  d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">Family Details</h5>
+                  <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-family">
+                      <i class="bi bi-pencil"></i> Edit
+                  </a>
+              </div>
+              <div class="card-body">
+                  <div class="table-responsive">
+                      <table class="table table-hover">
+                          <thead class="table-light">
+                              <tr>
+                                  <th>#</th>
+                                  <th>Name</th>
+                                  <th>Relation</th>
+                                  <th>Contact No.</th>
+                                  <th>Date of Birth</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {% for family in family_details %}
+                              <tr>
+                                  <td>{{ forloop.counter }}</td>
+                                  <td>{{ family.member_name|default:"-" }}</td>
+                                  <td>{{ family.relation|default:"-" }}</td>
+                                  <td>{{ family.contact_number|default:"-" }}</td>
+                                  <td>{{ family.date_of_birth|date:"M d, Y"|default:"-" }}</td>
+                              </tr>
+                              {% empty %}
+                              <tr>
+                                  <td colspan="5" class="text-center text-muted">No family details available</td>
+                              </tr>
+                              {% endfor %}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
       </div>
 
-      {% comment %} <div class="col-lg-6 mt-3">
-        <div class="card p-4">
-          <h5 class="card-title mb-4">Document's</h5>
-          <div class="card-body">
-            <div class="row">
-              <!-- Primary Contact -->
-              <div class="col-md-6">
-                <p>
-                  <strong class="subheader">Instagram :</strong>
-                </p>
-                <p>
-                  <strong class="subheader">Whatsapp :</strong>
-                </p>
-                <p>
-                  <strong class="subheader">linkedin :</strong>
-                </p>
-                <p>
-                  <strong class="subheader">Twitter :</strong>
-                </p>
-                <p>
-                  <strong class="subheader">Facebook :</strong>
-                </p>
-              </div>
-              <!-- Secondary Contact -->
-              <div class="col-md-6">
-                <p>
-                  <strong class="subheader">{{ social_media.instagram }}</strong>
-                </p>
-                <p>
-                  <strong class="subheader">{{ social_media.whatsapp }}</strong>
-                </p>
-                <p>
-                  <strong class="subheader">{{ social_media.linkedin }}</strong>
-                </p>
-                <p>
-                  <strong class="subheader">{{ social_media.twitter }}</strong>
-                </p>
-                <p>
-                  <strong class="subheader">{{ social_media.facebook }}</strong>
-                </p>
-              </div>
+        <!-- Education Details Card -->
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Education Details</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-education">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Institution</th>
+                                    <th>Course</th>
+                                    <th>Period</th>
+                                    <th>Grade</th>
+                                    <th>Document</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for edu in education_details %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ edu.institution_name|default:"-" }}</td>
+                                    <td>{{ edu.cource_name|default:"-" }}</td>
+                                    <td>{{ edu.start_year|default:"-" }} - {{ edu.end_year|default:"-" }}</td>
+                                    <td>{{ edu.grade|default:"-" }}</td>
+                                    <td>
+                                        {% if edu.education_certificate %}
+                                        <a href="{{ edu.education_certificate.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                            <i class="bi bi-file-earmark-text"></i> View
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">No Document</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ edu.description|default:"-" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No education details available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-          </div>
-          <!-- Edit Icon -->
-          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-document"><i class="bi bi-pencil"></i></a></span>
         </div>
-      </div> {% endcomment %}
 
-      <div class="col-lg-6 mt-3">
-        <div class="card p-4">
-          <h5 class="card-title mb-4">Bank Account</h5>
-          <div class="card-body">
-            <div class="row">
-              <!-- Primary Contact -->
-              <div class="col-md-6">
-                <p>
-                  <strong class="subheader">Account Holder Name:</strong>
-                </p>
-                <p>
-                  <strong class="subheader">Account Number:</strong>
-                </p>
-                <p>
-                  <strong class="subheader">Bank Name:</strong>
-                </p>
-                <p>
-                  <strong class="subheader">Branch Name:</strong>
-                </p>
-                <p>
-                  <strong class="subheader">IFSC Code:</strong>
-                </p>
-              </div>
-              <!-- Secondary Contact -->
-              <div class="col-md-6">
-                <p>
-                  <strong class="subheader">{{ bank_details.account_holder_name }}</strong>
-                </p>
-                <p>
-                  <strong class="subheader">{{ bank_details.account_number }}</strong>
-                </p>
-                <p>
-                  <strong class="subheader">{{ bank_details.bank_name }}</strong>
-                </p>
-                <p>
-                  <strong class="subheader">{{ bank_details.branch_name }}</strong>
-                </p>
-                <p>
-                  <strong class="subheader">{{ bank_details.ifsc_code }}</strong>
-                </p>
-              </div>
+        <!-- Experience Details Card -->
+        <div class="col-lg-12 mt-4">
+            <div class="card">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Experience Details</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-experience">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Organization</th>
+                                    <th>Designation</th>
+                                    <th>Period</th>
+                                    <th>Duration</th>
+                                    <th>Description</th>
+                                    <th>Certificate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exp in experience_details %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ exp.organization_name|default:"-" }}</td>
+                                    <td>{{ exp.designation_name|default:"-" }}</td>
+                                    <td>
+                                        {{ exp.start_date|date:"M d, Y"|default:"-" }} - 
+                                        {{ exp.end_date|date:"M d, Y"|default:"Present" }}
+                                    </td>
+                                    <td class="experience-duration" 
+                                        data-start="{{ exp.start_date }}" 
+                                        data-end="{{ exp.end_date }}">
+                                        Calculating...
+                                    </td>
+                                    <td>{{ exp.description|default:"-" }}</td>
+                                    <td>
+                                        {% if exp.experience_certificate %}
+                                        <a href="{{ exp.experience_certificate.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                            <i class="bi bi-file-earmark-text"></i> View
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">No Document</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No experience details available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-          </div>
-          <!-- Edit Icon -->
-          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-bank"><i class="bi bi-pencil"></i></a></span>
         </div>
-      </div>
-      <div class="col-lg-12 mt-5">
-        <div class="card p-4">
-          <div class="card-body">
-            <h5 class="card-title mb-4">Education Details</h5>
-            <div class="row">
-              <div class="col-md-12">
-                <div class="table-responsive">
-                  <table class="table attendance-table text-center">
-                      <thead>
-                          <tr>
-                              <th>No.</th>
-                              <th>Institution Name</th>
-                              <th>Course Name</th>
-                              <th>Period</th>
-                              <th>Pass Grade</th>
-                              <th>Document</th>
-                              <th>Description</th>
-                              
-                          </tr>
-                      </thead>
-                      <tbody>
-                        {% for edu in education_details %}
-                          <tr>
-                              <td>{{ forloop.counter }}</td>
-                              <td>{{ edu.cource_name }}</td>
-                              <td>{{ edu.institution_name }}</td>
-                              <td>{{ edu.start_year }} - {{ edu.end_year }}</td>
-                              <td>{{ edu.grade }}</td>
-                              <td>{% if edu.education_certificate %}
-                                <a href="{{ edu.education_certificate.url }}">View Attechment</a>
-                              {% else %}
-                                No Attechment 
-                              {% endif %}</td>
-                              <td>{{ edu.description }}</td>
-                          </tr>
-                          {% endfor %}
-                      </tbody>
-                  </table>
-              </div>
-              </div>
-            </div>
-            <!-- Edit Icon -->
-            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-education"><i class="bi bi-pencil"></i></a></span>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-12 mt-5">
-        <div class="card p-4">
-          <div class="card-body">
-            <h5 class="card-title mb-4">Experience Details Details</h5>
-            <div class="row">
-              <div class="col-md-12">
-                <div class="table-responsive">
-                  <table class="table attendance-table text-center">
-                      <thead>
-                          <tr>
-                              <th>No.</th>
-                              <th>Organization</th>
-                              <th>Designation</th>
-                              <th>Period</th>
-                              <th>Experience</th>
-                              <th>Description</th>
-                              <th>Experience Certificate</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                        {% for experience in experience_details %}
-                          <tr>
-                              <td>{{ forloop.counter }}</td>
-                              <td>{{ experience.organization_name }}</td>
-                              <td>{{ experience.designation_name }}</td>
-                              <td class="experience-duration" 
-                                  data-start="{{ experience.start_date }}" 
-                                  data-end="{{ experience.end_date }}">
-                                  {{ experience.start_date }} - {{ experience.end_date }}
-                              </td>
-                              <td class="total-experience"></td>
 
-                              <td>{{ experience.description }}</td>
-                              <td>{% if experience.experience_certificate %}
-                                <a href="{{ experience.experience_certificate.url }}">View Attechment</a>
-                              {% else %}
-                                No Attechment 
-                              {% endif %}</td>
-                              
-                          </tr>
-                          {% endfor %}
-                      </tbody>
-                  </table>
-              </div>
-              </div>
+        <!-- Documents Card -->
+        <div class="col-lg-12 mt-4">
+            <div class="card">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Documents</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-document">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Type</th>
+                                    <th>Document Number</th>
+                                    <th>Attachment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in docs %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ doc.document_type|default:"-" }}</td>
+                                    <td>{{ doc.document_number|default:"-" }}</td>
+                                    <td>
+                                        {% if doc.document_file %}
+                                        <a href="{{ doc.document_file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                            <i class="bi bi-file-earmark-text"></i> View
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">No Document</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No documents available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <!-- Edit Icon -->
-            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-experience"><i class="bi bi-pencil"></i></a></span>
-          </div>
         </div>
-      </div>
-      <div class="col-lg-12 mt-5">
-        <div class="card p-4">
-          <div class="card-body">
-            <h5 class="card-title mb-4">Document's Details</h5>
-            <div class="row">
-              <div class="col-md-12">
-                <div class="table-responsive">
-                  <table class="table attendance-table text-center">
-                      <thead>
-                          <tr>
-                              <th>No.</th>
-                              <th>Type</th>
-                              <th>Document Number</th>
-                              <th>Attechment</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                        {% for doc in docs %}
-                          <tr>
-                              <td>{{ forloop.counter }}</td>
-                              <td>{{ doc.document_type }}</td>
-                              <td>{{ doc.document_number }}</td>
-                              <td>{% if doc.document_file %}
-                                <a href="{{ doc.document_file.url }}">View Documment</a>
-                              {% else %}
-                                No Document Attech
-                              {% endif %}</td>
-                              
-                          </tr>
-                          {% endfor %}
-                      </tbody>
-                  </table>
-              </div>
-              </div>
-            </div>
-            <!-- Edit Icon -->
-            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-document"><i class="bi bi-pencil"></i></a></span>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-12 mt-5">
-        <div class="card p-4">
-          <div class="card-body">
-            <h5 class="card-title mb-4">Family Details</h5>
-            <div class="row">
-              <div class="col-md-12">
-                <div class="table-responsive">
-                  <table class="table attendance-table text-center">
-                      <thead>
-                          <tr>
-                              <th>No.</th>
-                              <th>Name</th>
-                              <th>Relation</th>
-                              <th>Contact No.</th>
-                              <th>Date of Birth</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                        {% for family in family_details %}
-                        <tr>
-                          <td>{{forloop.counter}}</td>
-                          <td>{{family.member_name}}</td>
-                          <td>{{family.relation}}</td>
-                          <td>{{family.contact_number}}</td>
-                          <td>{{family.date_of_birth}}</td>
-                        </tr>
-                        {% endfor %}
-                      </tbody>
-                  </table>
-              </div>
-              </div>
-            </div>
-            <!-- Edit Icon -->
-            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-family"><i class="bi bi-pencil"></i></a></span>
-          </div>
-        </div>
-      </div>
+
+        
     </div>
-  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calculate and display experience duration
+    document.querySelectorAll('.experience-duration').forEach(el => {
+        const startDate = new Date(el.dataset.start);
+        const endDate = el.dataset.end ? new Date(el.dataset.end) : new Date();
+        
+        const diffInMs = endDate - startDate;
+        const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+        
+        const years = Math.floor(diffInDays / 365);
+        const months = Math.floor((diffInDays % 365) / 30);
+        
+        el.textContent = years > 0 ? 
+            `${years} year${years > 1 ? 's' : ''} ${months} month${months > 1 ? 's' : ''}` : 
+            `${months} month${months > 1 ? 's' : ''}`;
+    });
+});
+</script>
 
   {% comment %}profile details{% endcomment %}
 

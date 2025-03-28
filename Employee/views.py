@@ -1349,7 +1349,7 @@ def employee_vendor_candidate_list(request, id):
             # Ensure account number and confirm account number match
             if account_number != confirm_account_number:
                 messages.error(request, "Account numbers do not match!")
-                return redirect('employee-bank-details', id=employee.id)  # Redirect back to the same page
+                return redirect('employee-bank-details', id=vendor.id)  # Redirect back to the same page
 
             # Update or create bank details for the employee
             vendor_bank_detail.account_holder_name = account_holder_name
@@ -1391,7 +1391,7 @@ def employee_vendor_candidate_list(request, id):
 
 
 
-def evms_candidate_profile(request,id) :
+def employee_evms_candidate_profile(request,id) :
     candidate = get_object_or_404(Candidate, id=id)
     employees = Employee.objects.all()
     if request.method == 'POST':
@@ -1501,7 +1501,7 @@ def evms_candidate_profile(request,id) :
             
             
 
-        return redirect('evms_candidate_profile', id=id)
+        return redirect('employee_evms_candidate_profile', id=id)
     context = {
         'candidate': candidate,
         'employees' : employees
@@ -2157,3 +2157,41 @@ def work_hours_summary(request):
     }
 
     return JsonResponse(response_data)
+
+
+def employee_selected_candidate(request) :
+    logged_in_employee = Employee.objects.get(user=request.user)
+    candidates = Candidate_registration.objects.filter(employee_name=logged_in_employee, selection_status='Selected').order_by('-id')
+    context = {
+        'candidates': candidates
+    }
+    return render(request,'employee/selected-candidate.html',context)
+
+def employee_follow_up_candidate(request):
+    logged_in_employee = Employee.objects.get(user=request.user)
+    today = timezone.now().date()
+    date_range_start = today - timedelta(days=2)  # 25th if today is 27th
+    date_range_end = today + timedelta(days=3)    # 30th if today is 27th
+    
+    candidates = Candidate_registration.objects.filter(
+        employee_name=logged_in_employee,
+        next_follow_up_date__isnull=False,
+        next_follow_up_date__gte=date_range_start,
+        next_follow_up_date__lte=date_range_end
+    ).order_by('next_follow_up_date')  # Order by follow-up date
+    
+    context = {
+        'candidates': candidates,
+        'today': today
+    }
+    return render(request, 'employee/follow-up-candidate.html', context)
+
+
+def employee_generated_leads(request):
+    logged_in_employee = Employee.objects.get(user=request.user)
+    candidates = Candidate_registration.objects.filter(employee_name=logged_in_employee, lead_generate='Yes').order_by('-id')
+    context = {
+        'candidates': candidates
+    }
+    return render(request,'employee/employee-lead-generate.html',context)
+

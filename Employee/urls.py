@@ -27,7 +27,7 @@ urlpatterns = [
     path('employee-vendor-list/',employee_vendor_list,name = 'employee_vendor_list'),
     path('evms-candidate-list/',employee_evms_candidate_list,name = 'employee_evms_candidate_list'),
     path('vendor-candidate-list/<int:id>/',employee_vendor_candidate_list,name = 'employee_vendor_candidate_list'),
-    path('evms-candidate-profile/<int:id>/',evms_candidate_profile,name = 'evms_candidate_profile'),
+    path('evms-candidate-profile/<int:id>/',employee_evms_candidate_profile,name = 'employee_evms_candidate_profile'),
     path('evms-vendor-candidate-profile/<int:id>/',evms_vendor_candidate_profile,name = 'evms_vendor_candidate_profile'),
     path('punch-in/', punch_in, name='punch_in'),
     path('punch-out/', punch_out, name='punch_out'),  # Punch Out URL
@@ -42,7 +42,10 @@ urlpatterns = [
     path('leave-details/', employee_leave_details, name='employee_leave_details'),
     path('employee-leave-details/', employee_attendance_details, name='employee_attendance_details'),
     path('work-hours-summary/',work_hours_summary, name='work_hours_summary'),
-
+    path('selected-candidate-list/', employee_selected_candidate, name='employee_selected_candidate'),
+    path('follow-up-candidate',employee_follow_up_candidate, name = 'employee_follow_up_candidate'),
+    path('leads/',employee_generated_leads, name = 'employee_generated_leads'),
+    
     path('admin/', admin.site.urls),
 ]
 

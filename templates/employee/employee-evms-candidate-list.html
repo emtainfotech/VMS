@@ -1,4 +1,4 @@
-{% extends "employee/base.html" %}
+{% extends 'employee/performance-base.html' %}
 
 {% block content %}
 
@@ -70,7 +70,7 @@
                               </td>
                               <td>
                                 <span class="me-2"></span>
-                                <a href="{% url 'evms_candidate_profile' candidate.id %}">{{ candidate.candidate_name }}</a>
+                                <a href="{% url 'employee_evms_candidate_profile' candidate.id %}">{{ candidate.candidate_name }}</a>
                               </td>
                               <td>
                                 <span class="me-2"></span>
@@ -95,7 +95,7 @@
                               
                               <td>
                                 <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
-                                  <a href="{% url 'evms_candidate_profile' candidate.id %}" class="btn btn-bitbucket w-100 btn-icon">
+                                  <a href="{% url 'employee_evms_candidate_profile' candidate.id %}" class="btn btn-bitbucket w-100 btn-icon">
                                     <!-- Download SVG icon from http://tabler-icons.io/i/brand-github -->
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                       <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>

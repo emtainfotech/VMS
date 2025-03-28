@@ -681,18 +681,4 @@
     });
 </script>
 
-<img id="screen_image" src="" alt="Employee Screen" width="800">
-
-<script>
-    const employeeId = "Employee_PC_Name";  // Replace with actual employee name or ID
-    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/screen/${employeeId}/`);
-
-    ws.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        if (data.image) {
-            document.getElementById("screen_image").src = "data:image/jpeg;base64," + data.image;
-        }
-    };
-</script>
-
 {% endblock %}

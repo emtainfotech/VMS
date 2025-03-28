@@ -154,25 +154,67 @@
                 <div class="text-center">
                   <!-- Punch In or Punch Out -->
                   <h4 class="fw-medium d-flex align-items-center justify-content-center mb-4">
-                    <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-fingerprint"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18.9 7a8 8 0 0 1 1.1 5v1a6 6 0 0 0 .8 3" /><path d="M8 11a4 4 0 0 1 8 0v1a10 10 0 0 0 2 6" /><path d="M12 11v2a14 14 0 0 0 2.5 8" /><path d="M8 15a18 18 0 0 0 1.8 6" /><path d="M4.9 19a22 22 0 0 1 -.9 -7v-1a8 8 0 0 1 12 -6.95" /></svg>
-                    &nbsp; Punch In at {{ first_punch_in_time }}
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-fingerprint">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                          <path d="M18.9 7a8 8 0 0 1 1.1 5v1a6 6 0 0 0 .8 3" />
+                          <path d="M8 11a4 4 0 0 1 8 0v1a10 10 0 0 0 2 6" />
+                          <path d="M12 11v2a14 14 0 0 0 2.5 8" />
+                          <path d="M8 15a18 18 0 0 0 1.8 6" />
+                          <path d="M4.9 19a22 22 0 0 1 -.9 -7v-1a8 8 0 0 1 12 -6.95" />
+                      </svg>
+                      &nbsp; Punch In at {{ first_punch_in_time }}
                   </h4>
+              
                   {% if session and not session.punch_out_time %}
                   <!-- Show Punch Out button if punched in -->
                   <form id="punchOutForm" method="post" action="{% url 'punch_out' %}">
-                    {% csrf_token %}
-                    <button type="button" class="btn btn-warning w-100 text-white" data-bs-toggle="modal" data-bs-target="#modal-report">
-                      Punch Out
-                    </button>
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-warning w-100 text-white">Punch Out</button>
                   </form>
                   {% else %}
                   <!-- Show Punch In button if not punched in -->
                   <form id="punchInForm" method="post" action="{% url 'punch_in' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-warning w-100 text-white">Punch In</button>
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-warning w-100 text-white">Punch In</button>
                   </form>
                   {% endif %}
+              </div>
+              
+              <div class="modal modal-blur fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-status bg-success"></div>
+                    <div class="modal-body text-center py-4">
+                      <!-- Download SVG icon from http://tabler-icons.io/i/circle-check -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-green icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>
+                      <div class="modal-body" id="modalMessage">
+                        <!-- Message will be injected here -->
+                    </div>
+                      {% comment %} <div class="text-secondary">Your payment of $290 has been successfully submitted. Your invoice has been sent to support@tabler.io.</div> {% endcomment %}
+                    </div>
+                  </div>
                 </div>
+              </div>
+
+              {% comment %} <!-- Bootstrap Modal -->
+              <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-content">
+                          <div class="modal-header bg-success text-white">
+                              <h5 class="modal-title" id="successModalLabel">Success</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body" id="modalMessage">
+                              <!-- Message will be injected here -->
+                          </div>
+                          <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          </div>
+                      </div>
+                  </div>
+              </div> {% endcomment %}
+              
               </div>
             </div>
           </div>
@@ -922,47 +964,55 @@
 {% comment %} Punch In Error Handling {% endcomment %}
 
 <script>
-  // Handle Punch In form submission
-  document.getElementById('punchInForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    fetch(this.action, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': '{{ csrf_token }}'
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.message) {
-        alert(data.message);
-        location.reload();  // Reload to update the button status
-      } else {
-        alert('Punch In failed');
-      }
-    })
-    .catch(error => console.error('Error:', error));
-  });
+ // Function to show modal with message
+function showModal(message) {
+  document.getElementById('modalMessage').textContent = message;
+  let modal = new bootstrap.Modal(document.getElementById('successModal'));
+  modal.show();
+}
 
-  // Handle Punch Out form submission
-  document.getElementById('punchOutForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    fetch(this.action, {
+// Handle Punch In form submission
+document.getElementById('punchInForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  fetch(this.action, {
       method: 'POST',
       headers: {
-        'X-CSRFToken': '{{ csrf_token }}'
+          'X-CSRFToken': '{{ csrf_token }}'
       }
-    })
-    .then(response => response.json())
-    .then(data => {
+  })
+  .then(response => response.json())
+  .then(data => {
       if (data.message) {
-        alert(data.message);
-        location.reload();  // Reload to update the button status
+          showModal(data.message);  // Show success modal
+          setTimeout(() => location.reload(), 5000);  // Reload after 2 sec
       } else {
-        alert('Punch Out failed');
+          showModal('Punch In failed');
       }
-    })
-    .catch(error => console.error('Error:', error));
-  });
+  })
+  .catch(error => console.error('Error:', error));
+});
+
+// Handle Punch Out form submission
+document.getElementById('punchOutForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  fetch(this.action, {
+      method: 'POST',
+      headers: {
+          'X-CSRFToken': '{{ csrf_token }}'
+      }
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.message) {
+          showModal(data.message);  // Show success modal
+          setTimeout(() => location.reload(), 2000);  // Reload after 2 sec
+      } else {
+          showModal('Punch Out failed');
+      }
+  })
+  .catch(error => console.error('Error:', error));
+});
+
 </script>
 
 {% comment %} Leave Details {% endcomment %}

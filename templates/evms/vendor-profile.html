@@ -32,7 +32,7 @@
       <!-- Navbar -->
       <header class="navbar navbar-expand-md d-print-none">
         <div class="container-xl">
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          {% comment %} <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button> {% endcomment %}
           <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3"><a href="{% url "vendor_dashboard" %}"><img src="https://emta.co.in/f.png" width="110" height="32" alt="Tabler" class="navbar-brand-image" /></a></h1>
           <div class="navbar-nav flex-row order-md-last">
             <div class="nav-item d-none d-md-flex me-3">
@@ -145,465 +145,933 @@
       color: #6c63ff;
     }
   </style>
-
-  <div class="container py-5">
-    <div class="row">
+  <div class="container py-4">
+    <!-- Main Row -->
+    <div class="row g-4">
+      <!-- Personal Information Card -->
       <div class="col-lg-7">
-        <div class="card p-4">
-          <div class="card-body">
-            <h5 class="card-title mb-4">Personal Information</h5>
-            <div class="row g-0">
-              <!-- Left Image Section -->
-              <div class="col-7">
-                {% if vendor.vendor_profile_image %}
-                <img src="{{vendor.vendor_profile_image.url}}" style="height: 125px;width: 125px;" class="object-cover card-img-start rounded-circle" alt="Profile Picture" />
-                {% else %}
-                <p>No profile image uploaded.</p>
-                {% endif %}
-                <div>
-                  <h3 class="card-title mb-1">{{ user.first_name}}&nbsp; {{ user.last_name }}</h3>
-                  <p class="text-muted mb-2">{{ vendor.refer_code }}</p>
-                  <p>{{ vendor.mobile_number }}</p>
-                  <p>
-                    <strong class="subheader">Address:</strong> <br />{{vendor_profile_detail.address}}
-                  </p>
-                </div>
-              </div>
-              <!-- Right Content Section -->
-              <div class="col">
-                <div class="card-body">
-                    <p>
-                      <strong class="subheader">Email:</strong><br /> {{ vendor.user.email }}
-                    </p>
-                  <p>
-                    <strong class="subheader">DOB:</strong><br /> {{ vendor.date_of_birth }}
-                  </p>
-                  <p>
-                    <strong class="subheader">Adhar Number:</strong><br /> {{vendor_profile_detail.adhar_card_number}}
-                    {% if vendor_profile_detail.adhar_card_image %}
-                    <a href="{{vendor_profile_detail.adhar_card_image.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                    {% else %}
-                    <p>No profile image uploaded.</p>
-                    {% endif %}
-                    
-                  </p>
-                  <p>
-                    <strong class="subheader">Pan Number:</strong><br /> {{ vendor_profile_detail.pan_card_number }}
-                    {% if vendor_profile_detail.pan_card_image %}
-                    <a href="{{vendor_profile_detail.pan_card_image.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                    {% else %}
-                    <p>No profile image uploaded.</p>
-                    {% endif %}
-                    
-                  </p>
-                  <p>
-                    <strong class="subheader">Gender:</strong><br /> {{vendor_profile_detail.gender}}
-                  </p>
-                </div>
-              </div>
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">Personal Information</h5>
+              <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-profile">
+                <i class="bi bi-pencil me-1"></i> Edit
+              </a>
             </div>
-          </div>
-          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-profile"><i class="bi bi-pencil"></i></a></span>
-        </div>
-      </div>
-      <div class="col-lg-5">
-        <div class="card p-4">
-          <div class="card-body">
-            <h5 class="card-title mb-4">Vendor Bussiness Details</h5>
-            <div class="row">
-              <!-- Primary Contact -->
-              <div class="col-md-6">
-                {% comment %} <h6 class="text-label">Primary Contact</h6> {% endcomment %}
-                <p>
-                  <strong class="subheader">Shop Name:</strong><br /> {{vendor_bussiness_detail.shop_name}}
-                </p>
-                <p>
-                  <strong class="subheader">Bussiness Contact Number:</strong><br /> {{vendor_bussiness_detail.Contact_number}}
-                </p>
-                <p>
-                  <strong class="subheader">Bussiness Email Address:</strong> <br />{{vendor_bussiness_detail.Busness_email}}
-                </p>
-                <p>
-                  <strong class="subheader">GST Number:</strong> <br />{{vendor_bussiness_detail.gst_number}}  {% if vendor_bussiness_detail.gst_image %}
-                    <a href="{{vendor_bussiness_detail.gst_image.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                    {% else %}
-                    <p>No GST image uploaded.</p>
-                    {% endif %}
-                </p>
-                <p>
-                  <strong class="subheader">Gumasta Number:</strong> <br />{{vendor_bussiness_detail.Gumasta_number}}  {% if vendor_bussiness_detail.gumasta_image %}
-                    <a href="{{vendor_bussiness_detail.gumasta_image.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                    {% else %}
-                    <p>No Gumasta image uploaded.</p>
-                    {% endif %}
-                </p>
-                <p>
-                  <strong class="subheader">MSME Number:</strong> <br />{{vendor_bussiness_detail.MSME_number}}  {% if vendor_bussiness_detail.MSME_image %}
-                    <a href="{{vendor_bussiness_detail.MSME_image.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                    {% else %}
-                    <p>No MSME image uploaded.</p>
-                    {% endif %}
-                </p>
-              </div>
-              <!-- Secondary Contact -->
-              <div class="col-md-6">
-                
-                <p>
-                  <strong class="subheader">Bussiness Pan Number :</strong><br /> {{vendor_bussiness_detail.Bpan_number}}  {% if vendor_bussiness_detail.Bpan_image %}
-                    <a href="{{vendor_bussiness_detail.Bpan_image.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                    {% else %}
-                    <p>No Bussiness PAN image uploaded.</p>
-                    {% endif %}
-                </p>
-                <p>
-                  <strong class="subheader">Shop Image(Outside) :</strong>  {% if vendor_bussiness_detail.Bphoto_outer %}
-                    <a href="{{vendor_bussiness_detail.Bphoto_outer.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                    {% else %}
-                    <p>No Outside image uploaded.</p>
-                    {% endif %}
-                </p>
-                <p>
-                  <strong class="subheader">Shop Image(Inside) :</strong>   {% if vendor_bussiness_detail.Bphoto_inside %}
-                    <a href="{{vendor_bussiness_detail.Bphoto_inside.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                    {% else %}
-                    <p>No Inside image uploaded.</p>
-                    {% endif %}
-                </p>
-                <h4 class="text-label">Reference Check - </h4>
-                <p>
-                  <strong class="subheader">Name :</strong><br />{{vendor_bussiness_detail.VCname}} 
-                </p>
-                <p>
-                  <strong class="subheader">Mobile Number:</strong><br /> {{vendor_bussiness_detail.VCmobile}}
-                </p>
-                <p>
-                  <strong class="subheader">Address :</strong><br /> {{vendor_bussiness_detail.VCaddress}}
-                </p>
-              </div>
-            </div>
-            <!-- Edit Icon -->
-            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-vendor-business"><i class="bi bi-pencil"></i></a></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-6 mt-3">
-        <div class="card p-4">
-          <h5 class="card-title mb-4">Vendor Bank Account</h5>
           <div class="card-body">
             <div class="row">
-              <!-- Primary Contact -->
-              <div class="col-md-6">
-                <p>
-                  <strong class="subheader">Account Holder Name:</strong><br>{{ vendor_bank_detail.account_holder_name }}
-                </p>
-                <p>
-                  <strong class="subheader">Account Number:</strong><br>{{ vendor_bank_detail.account_number }}
-                </p>
-                <p>
-                  <strong class="subheader">IFSC Code:</strong><br>{{ vendor_bank_detail.ifs_code }}
-                </p>
-                <p>
-                  <strong class="subheader">MICR Code:</strong><br>{{ vendor_bank_detail.micr_code }}
-                </p>
-                               
-              </div>
-              <!-- Secondary Contact -->
-              <div class="col-md-6">
-                <p>
-                  <strong class="subheader">Bank Name:</strong><br>{{ vendor_bank_detail.bank_name }}
-                </p>
-                <p>
-                  <strong class="subheader">Account Type:</strong><br>{{ vendor_bank_detail.account_type }}
-                </p>
-                <p>
-                  <strong class="subheader">Preffered Payout Date: </strong><br>{{ vendor_bank_detail.preffered_payout_date }}
-                </p>
-                <p>
-                  <strong class="subheader">Bank Document: </strong><br>{% if vendor_bank_detail.bank_document %}
-                  <a href="{{vendor_bank_detail.bank_document.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
+              <!-- Profile Image and Basic Info -->
+              <div class="col-md-6 border-end ps-4">
+                <div class="d-flex flex-column align-items-center text-center mb-4">
+                  {% if vendor.vendor_profile_image %}
+                  <img src="{{vendor.vendor_profile_image.url}}" class="rounded-circle object-cover mb-3" 
+                       style="width: 120px; height: 120px;" alt="Profile Picture">
                   {% else %}
-                  <p>No Bank Document uploaded.</p>
+                  <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mb-3" 
+                       style="width: 120px; height: 120px;">
+                    <i class="bi bi-person fs-1 text-muted"></i>
+                  </div>
                   {% endif %}
-                </p>
+                  <h4 class="mb-1">{{ user.first_name }} {{ user.last_name }}</h4>
+                  <span class="badge bg-success text-white">{{ vendor.refer_code }}</span>
+                </div>
+                
+                {% comment %} <div class="vendor-contact">
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-telephone me-2 text-muted"></i>
+                    <span>{{ vendor.mobile_number }}</span>
+                  </div>
+                  <div class="d-flex align-items-start mb-3">
+                    <i class="bi bi-geo-alt me-2 text-muted mt-1"></i>
+                    <div>
+                      <strong>Address:</strong>
+                      <p class="mb-0">{{ vendor_profile_detail.address|default:"Not provided" }}</p>
+                    </div>
+                  </div>
+                </div> {% endcomment %}
+              </div>
+              
+              <!-- Detailed Personal Info -->
+              <div class="col-md-6 ps-4">
+                <div class="row g-3">
+                  <div class="col-12">
+                    <div class="d-flex align-items-center mb-2">
+                      <i class="bi bi-telephone me-2 text-muted"></i>
+                      <span>{{ vendor.mobile_number }}</span>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="info-item">
+                      <small class="text-muted d-block">Email</small>
+                      <strong>{{ vendor.user.email |default:"Not provided" }}</strong>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="info-item">
+                      <small class="text-muted d-block">Address</small>
+                      <strong>{{ vendor_profile_detail.address|default:"Not provided" }}</strong>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="info-item">
+                      <small class="text-muted d-block">Date of Birth</small>
+                      <strong>{{ vendor.date_of_birth|default:"Not provided" }}</strong>
+                    </div>
+                  </div>
+                  
+                  
+                  <div class="col-md-6">
+                    <div class="info-item">
+                      <small class="text-muted d-block">Gender</small>
+                      <strong>{{ vendor_profile_detail.gender|default:"Not provided" }}</strong>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <div class="info-item">
+                      <small class="text-muted d-block">Aadhar Number</small>
+                      <div class="d-flex align-items-center">
+                        <span>{{ vendor_profile_detail.adhar_card_number|default:"Not provided" }}</span>
+                        {% if vendor_profile_detail.adhar_card_image %}
+                        <a href="{{vendor_profile_detail.adhar_card_image.url}}" target="_blank" class="ms-2">
+                          <i class="bi bi-eye-fill text-primary"></i>
+                        </a>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <div class="info-item">
+                      <small class="text-muted d-block">PAN Number</small>
+                      <div class="d-flex align-items-center">
+                        <span>{{ vendor_profile_detail.pan_card_number|default:"Not provided" }}</span>
+                        {% if vendor_profile_detail.pan_card_image %}
+                        <a href="{{vendor_profile_detail.pan_card_image.url}}" target="_blank" class="ms-2">
+                          <i class="bi bi-eye-fill text-primary"></i>
+                        </a>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <!-- Edit Icon -->
-          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-bank"><i class="bi bi-pencil"></i></a></span>
         </div>
       </div>
-    </div>
-  </div>
-
-  {% comment %}profile details{% endcomment %}
-  <div class="modal modal-blur fade" id="modal-profile" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Vendor Profile</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="row">
-              <!-- Vendor Fields -->
-              <div class="col-md-6 mb-3">
-                <label class="form-label">First Name <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}" required />
+      
+      <!-- Business Details Card -->
+      <div class="col-lg-5">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">Business Details</h5>
+              <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-vendor-business">
+                <i class="bi bi-pencil me-1"></i> Edit
+              </a>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="info-item">
+                  <small class="text-muted d-block">Shop Name</small>
+                  <strong>{{ vendor_bussiness_detail.shop_name|default:"Not provided" }}</strong>
+                </div>
+                
+                <div class="info-item mt-3">
+                  <small class="text-muted d-block">Contact Number</small>
+                  <strong>{{ vendor_bussiness_detail.Contact_number|default:"Not provided" }}</strong>
+                </div>
+                
+                <div class="info-item mt-3">
+                  <small class="text-muted d-block">Business Email</small>
+                  <strong>{{ vendor_bussiness_detail.Busness_email|default:"Not provided" }}</strong>
+                </div>
+                
+                <div class="info-item mt-3">
+                  <small class="text-muted d-block">GST Number</small>
+                  <div class="d-flex align-items-center">
+                    <span>{{ vendor_bussiness_detail.gst_number|default:"Not provided" }}</span>
+                    {% if vendor_bussiness_detail.gst_image %}
+                    <a href="{{vendor_bussiness_detail.gst_image.url}}" target="_blank" class="ms-2">
+                      <i class="bi bi-eye-fill text-primary"></i>
+                    </a>
+                    {% endif %}
+                  </div>
+                </div>
               </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="last_name" value="{{ user.last_name }}" required />
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="mobile_number" value="{{ vendor.mobile_number }}" required />
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Email <span class="text-danger">*</span></label>
-                <input type="email" class="form-control" name="email" value="{{ user.email }}" required />
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Date of Birth</label>
-                <input type="date" class="form-control" name="date_of_birth" value="{{ vendor.date_of_birth }}" />
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Vendor Profile Image</label>
-                <input type="file" class="form-control" name="vendor_profile_image" />
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Gender</label>
-                <select class="form-select" name="gender">
-                  <option value="Male" {% if vendor_profile_detail.gender == "Male" %}selected{% endif %}>Male</option>
-                  <option value="Female" {% if vendor_profile_detail.gender == "Female" %}selected{% endif %}>Female</option>
-                  <option value="Other" {% if vendor_profile_detail.gender == "Other" %}selected{% endif %}>Other</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Address</label>
-                <input type="text" class="form-control" name="address" value="{{ vendor_profile_detail.address }}"/>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Location</label>
-                <select type="text" class="form-select"  name="location">
-                  <option disabled selected value="select location" {% if vendor_profile_detail.location == 'select Origin location' %}selected{% endif %}>select Origin location</option>
-                  {% for district in districts %}
-                  <option value="{{ district }}" {% if vendor_profile_detail.location == '{{ district }}' %}selected{% endif %}>
-                      {{ district }}
-                  </option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Aadhar Card Number</label>
-                <input type="text" class="form-control" name="adhar_card_number" value="{{ vendor_profile_detail.adhar_card_number }}" />
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Aadhar Card Image</label>
-                <input type="file" class="form-control" name="adhar_card_image"/>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">PAN Card Number</label>
-                <input type="text" class="form-control" name="pan_card_number" value="{{ vendor_profile_detail.pan_card_number }}" />
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">PAN Card Image</label>
-                <input type="file" class="form-control" name="pan_card_image" />
+              
+              <div class="col-md-6">
+                <div class="info-item">
+                  <small class="text-muted d-block">Business PAN</small>
+                  <div class="d-flex align-items-center">
+                    <span>{{ vendor_bussiness_detail.Bpan_number|default:"Not provided" }}</span>
+                    {% if vendor_bussiness_detail.Bpan_image %}
+                    <a href="{{vendor_bussiness_detail.Bpan_image.url}}" target="_blank" class="ms-2">
+                      <i class="bi bi-eye-fill text-primary"></i>
+                    </a>
+                    {% endif %}
+                  </div>
+                </div>
+                
+                <div class="info-item mt-3">
+                  <small class="text-muted d-block">Shop Photos</small>
+                  <div class="d-flex gap-2 mt-1">
+                    {% if vendor_bussiness_detail.Bphoto_outer %}
+                    <a href="{{vendor_bussiness_detail.Bphoto_outer.url}}" target="_blank" class="badge bg-light text-dark">
+                      <i class="bi bi-image me-1"></i> Outside
+                    </a>
+                    {% endif %}
+                    {% if vendor_bussiness_detail.Bphoto_inside %}
+                    <a href="{{vendor_bussiness_detail.Bphoto_inside.url}}" target="_blank" class="badge bg-light text-dark">
+                      <i class="bi bi-image me-1"></i> Inside
+                    </a>
+                    {% endif %}
+                  </div>
+                </div>
+                
+                <div class="reference-check mt-4 pt-3 border-top">
+                  <h6 class="text-muted mb-3">Reference Check</h6>
+                  <div class="info-item">
+                    <small class="text-muted d-block">Contact Name</small>
+                    <strong>{{ vendor_bussiness_detail.VCname|default:"Not provided" }}</strong>
+                  </div>
+                  
+                  <div class="info-item mt-2">
+                    <small class="text-muted d-block">Mobile Number</small>
+                    <strong>{{ vendor_bussiness_detail.VCmobile|default:"Not provided" }}</strong>
+                  </div>
+                  
+                  <div class="info-item mt-2">
+                    <small class="text-muted d-block">Address</small>
+                    <strong>{{ vendor_bussiness_detail.VCaddress|default:"Not provided" }}</strong>
+                  </div>
+                </div>
               </div>
             </div>
-  
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" name="submit_vendor_profile_details" class="btn btn-primary">Save Changes</button>
-            </div>
-          </form>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-  
-
-  {% comment %}contact{% endcomment %}
-  <div class="modal modal-blur fade" id="modal-vendor-business" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Vendor Business Details</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <h5 class="text-secondary">Business Information</h5>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Shop Name <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="shop_name" required value='{{vendor_bussiness_detail.shop_name}}'>
+      
+      <!-- Bank Account Card -->
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Personal Information</h5>
+              <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-profile">
+                  <i class="bi bi-pencil"></i> Edit
+              </a>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="info-item">
+                  <small class="text-muted d-block">Account Holder</small>
+                  <strong>{{ vendor_bank_detail.account_holder_name|default:"Not provided" }}</strong>
+                </div>
+                
+                <div class="info-item mt-3">
+                  <small class="text-muted d-block">Account Number</small>
+                  <strong>{{ vendor_bank_detail.account_number|default:"Not provided" }}</strong>
+                </div>
+                
+                <div class="info-item mt-3">
+                  <small class="text-muted d-block">IFSC Code</small>
+                  <strong>{{ vendor_bank_detail.ifs_code|default:"Not provided" }}</strong>
+                </div>
               </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="Contact_number" required value='{{vendor_bussiness_detail.Contact_number}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Business Email <span class="text-danger">*</span></label>
-                <input type="email" class="form-control" name="Busness_email" required value='{{vendor_bussiness_detail.Busness_email}}'>
-              </div>
-            </div>
-            <hr />
-            <h5 class="text-secondary">Document Details</h5>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Gumasta Number</label>
-                <input type="text" class="form-control" name="Gumasta_number" value='{{vendor_bussiness_detail.Gumasta_number}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Gumasta Certificate Image</label>
-                <input type="file" class="form-control" name="gumasta_image">
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">GST Number</label>
-                <input type="text" class="form-control" name="gst_number" value='{{vendor_bussiness_detail.gst_number}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">GST Certificate Image</label>
-                <input type="file" class="form-control" name="gst_image">
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">PAN Number</label>
-                <input type="text" class="form-control" name="Bpan_number" value='{{vendor_bussiness_detail.Bpan_number}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">PAN Card Image</label>
-                <input type="file" class="form-control" name="Bpan_image">
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">MSME Number</label>
-                <input type="text" class="form-control" name="MSME_number" value='{{vendor_bussiness_detail.MSME_number}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">MSME Certificate Image</label>
-                <input type="file" class="form-control" name="MSME_image">
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Business Photo (Outer View)</label>
-                <input type="file" class="form-control" name="Bphoto_outer">
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Business Photo (Inside View)</label>
-                <input type="file" class="form-control" name="Bphoto_inside">
+              
+              <div class="col-md-6">
+                <div class="info-item">
+                  <small class="text-muted d-block">Bank Name</small>
+                  <strong>{{ vendor_bank_detail.bank_name|default:"Not provided" }}</strong>
+                </div>
+                
+                <div class="info-item mt-3">
+                  <small class="text-muted d-block">Account Type</small>
+                  <strong>{{ vendor_bank_detail.account_type|default:"Not provided" }}</strong>
+                </div>
+                
+                <div class="info-item mt-3">
+                  <small class="text-muted d-block">Preferred Payout</small>
+                  <strong>{{ vendor_bank_detail.preffered_payout_date|default:"Not provided" }} of month</strong>
+                </div>
+                
+                {% if vendor_bank_detail.bank_document %}
+                <div class="info-item mt-3">
+                  <small class="text-muted d-block">Bank Document</small>
+                  <a href="{{vendor_bank_detail.bank_document.url}}" target="_blank" class="text-primary">
+                    <i class="bi bi-file-earmark-text me-1"></i> View Document
+                  </a>
+                </div>
+                {% endif %}
               </div>
             </div>
-            <hr />
-            <h5 class="text-secondary">Verification Contact</h5>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Verifier Contact Name</label>
-                <input type="text" class="form-control" name="VCname" value='{{vendor_bussiness_detail.VCname}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Verifier Contact Mobile</label>
-                <input type="text" class="form-control" name="VCmobile" value='{{vendor_bussiness_detail.VCmobile}}'>
-              </div>
-              <div class="col-md-12 mb-3">
-                <label class="form-label">Verifier Contact Address</label>
-                <input type="text" class="form-control" name="VCaddress" value='{{vendor_bussiness_detail.VCaddress}}'>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" name="submit_vendor_bussiness_details" class="btn btn-primary">Save Changes</button>
-            </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
   </div>
   
+  <style>
+    .card {
+      border: none;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(0,0,0,.05);
+    }
+    
+    .info-item {
+      padding: 0.5rem 0;
+    }
+    
+    .vendor-contact i {
+      min-width: 20px;
+    }
+    
+    .object-cover {
+      object-fit: cover;
+    }
+    
+    .shadow-sm {
+      box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
+    }
+  </style>
 
-  <div class="modal modal-blur fade" id="modal-bank" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Bank Account Details</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="row">
-                <!-- Account Holder Name -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Account Holder Name <span class="text-danger">*</span></label>
-                    <input type="text" name="account_holder_name" class="form-control" value="{{ vendor_bank_detail.account_holder_name }}" required />
-                </div>
-        
-                <!-- Bank Name -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Bank Name <span class="text-danger">*</span></label>
-                    <input type="text" name="bank_name" class="form-control" value="{{ vendor_bank_detail.bank_name }}" required />
-                </div>
-        
-                <!-- Account Number -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Account Number <span class="text-danger">*</span></label>
-                    <input type="text" name="account_number" class="form-control" value="{{ vendor_bank_detail.account_number }}" required />
-                </div>
-        
-                <!-- Confirm Account Number -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Confirm Account Number <span class="text-danger">*</span></label>
-                    <input type="text" name="confirm_account_number" class="form-control" value="{{ vendor_bank_detail.account_number }}" required />
-                </div>
-        
-                <!-- IFSC Code -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">IFSC Code <span class="text-danger">*</span></label>
-                    <input type="text" name="ifs_code" class="form-control" value="{{ vendor_bank_detail.ifs_code }}" required />
-                </div>
-        
-                <!-- Account Type -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Account Type <span class="text-danger">*</span></label>
-                    <select name="account_type" class="form-select" required>
-                        <option value="Saving" {% if vendor_bank_detail.account_type == "Saving" %}selected{% endif %}>Saving</option>
-                        <option value="Current" {% if vendor_bank_detail.account_type == "Current" %}selected{% endif %}>Current</option>
-                    </select>
-                </div>
-        
-                <!-- MICR Code -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">MICR Code</label>
-                    <input type="text" name="micr_code" class="form-control" value="{{ vendor_bank_detail.micr_code }}" />
-                </div>
-        
-                <!-- Bank Document -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Upload Bank Document</label>
-                    <input type="file" name="bank_document" class="form-control" value="{{ vendor_bank_detail.bank_document }}"/>
-                </div>
-        
-                <!-- Preferred Date of Payment -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Preferred Date of Payment <span class="text-danger">*</span></label>
-                    <select name="preffered_payout_date" class="form-select" required>
-                        <option value="15" {% if vendor_bank_detail.preffered_payout_date == "15" %}selected{% endif %}>15</option>
-                        <option value="30" {% if vendor_bank_detail.preffered_payout_date == "30" %}selected{% endif %}>30</option>
-                    </select>
-                </div>
+{% comment %}profile details{% endcomment %}
+<div class="modal modal-blur fade" id="modal-profile" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Vendor Profile</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="vendorProfileForm" method="POST" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <div class="row">
+            <!-- Vendor Fields -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">First Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}" 
+                     pattern="[A-Za-z ]{2,50}" title="Only letters and spaces (2-50 characters)" required />
+              <div class="invalid-feedback">Please enter a valid first name (2-50 letters)</div>
             </div>
-        
-            <!-- Submit and Cancel Buttons -->
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" name="submit_vendor_bank_details" class="btn btn-primary">Submit</button>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Last Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="last_name" value="{{ user.last_name }}" 
+                     pattern="[A-Za-z ]{2,50}" title="Only letters and spaces (2-50 characters)" required />
+              <div class="invalid-feedback">Please enter a valid last name (2-50 letters)</div>
             </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+              <input type="tel" class="form-control" name="mobile_number" value="{{ vendor.mobile_number }}" 
+                     pattern="[0-9]{10}" title="10 digit mobile number" required />
+              <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Email <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" name="email" value="{{ user.email }}" required />
+              <div class="invalid-feedback">Please enter a valid email address</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" class="form-control" name="date_of_birth" value="{{ vendor.date_of_birth }}" 
+                     max="{{ today|date:'Y-m-d' }}" />
+              <div class="invalid-feedback">Date cannot be in the future</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Vendor Profile Image</label>
+              <input type="file" class="form-control" name="vendor_profile_image" 
+                     accept="image/jpeg, image/png" />
+              <div class="invalid-feedback">Only JPEG or PNG images allowed (max 2MB)</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Gender</label>
+              <select class="form-select" name="gender" required>
+                <option value="">Select Gender</option>
+                <option value="Male" {% if vendor_profile_detail.gender == "Male" %}selected{% endif %}>Male</option>
+                <option value="Female" {% if vendor_profile_detail.gender == "Female" %}selected{% endif %}>Female</option>
+                <option value="Other" {% if vendor_profile_detail.gender == "Other" %}selected{% endif %}>Other</option>
+              </select>
+              <div class="invalid-feedback">Please select a gender</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Address</label>
+              <input type="text" class="form-control" name="address" value="{{ vendor_profile_detail.address }}"
+                     minlength="5" maxlength="200" />
+              <div class="invalid-feedback">Address must be 5-200 characters</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Location <span class="text-danger">*</span></label>
+              <select class="form-select" name="location" required>
+                <option value="">Select Location</option>
+                {% for district in districts %}
+                <option value="{{ district }}" {% if vendor_profile_detail.location == district %}selected{% endif %}>
+                  {{ district }}
+                </option>
+                {% endfor %}
+              </select>
+              <div class="invalid-feedback">Please select a location</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Aadhar Card Number</label>
+              <input type="text" class="form-control" name="adhar_card_number" 
+                     value="{{ vendor_profile_detail.adhar_card_number }}" 
+                     pattern="[0-9]{12}" title="12 digit Aadhar number" />
+              <div class="invalid-feedback">Please enter 12-digit Aadhar number</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Aadhar Card Image</label>
+              <input type="file" class="form-control" name="adhar_card_image" 
+                     accept="image/jpeg, image/png, application/pdf" />
+              <div class="invalid-feedback">Only JPEG, PNG or PDF allowed (max 2MB)</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">PAN Card Number</label>
+              <input type="text" class="form-control" name="pan_card_number" 
+                     value="{{ vendor_profile_detail.pan_card_number }}"
+                     pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" title="Format: ABCDE1234F" />
+              <div class="invalid-feedback">Please enter valid PAN (Format: ABCDE1234F)</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">PAN Card Image</label>
+              <input type="file" class="form-control" name="pan_card_image" 
+                     accept="image/jpeg, image/png, application/pdf" />
+              <div class="invalid-feedback">Only JPEG, PNG or PDF allowed (max 2MB)</div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" name="submit_vendor_profile_details" class="btn btn-primary">Save Changes</button>
+          </div>
         </form>
-        </div>
       </div>
     </div>
   </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('vendorProfileForm');
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelector('input[name="date_of_birth"]').max = today;
+
+  // File validation
+  const fileInputs = form.querySelectorAll('input[type="file"]');
+  fileInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      if (this.files[0]) {
+        const file = this.files[0];
+        const maxSize = 2 * 1024 * 1024; // 2MB
+        const validTypes = this.accept.split(', ').map(type => type.split('/').pop());
+        const fileType = file.type.split('/').pop();
+        
+        if (file.size > maxSize) {
+          this.setCustomValidity('File size exceeds 2MB limit');
+          this.classList.add('is-invalid');
+        } else if (!validTypes.includes(fileType) && !validTypes.includes(file.type)) {
+          this.setCustomValidity('Invalid file type');
+          this.classList.add('is-invalid');
+        } else {
+          this.setCustomValidity('');
+          this.classList.remove('is-invalid');
+        }
+      }
+    });
+  });
+
+  // Form submission handler
+  form.addEventListener('submit', function(event) {
+    if (!form.checkValidity()) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    form.classList.add('was-validated');
+  });
+
+  // Real-time validation
+  form.querySelectorAll('input, select').forEach(input => {
+    input.addEventListener('input', function() {
+      if (this.checkValidity()) {
+        this.classList.remove('is-invalid');
+      } else {
+        this.classList.add('is-invalid');
+      }
+    });
+  });
+});
+</script>
+
+<style>
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid,
+.form-control.is-invalid,
+.form-select.is-invalid {
+  border-color: #dc3545;
+}
+.invalid-feedback {
+  display: none;
+  color: #dc3545;
+  font-size: 0.875em;
+}
+.was-validated .form-control:invalid ~ .invalid-feedback,
+.was-validated .form-select:invalid ~ .invalid-feedback,
+.form-control.is-invalid ~ .invalid-feedback,
+.form-select.is-invalid ~ .invalid-feedback {
+  display: block;
+}
+</style>
+  
+
+{% comment %}contact{% endcomment %}
+<div class="modal modal-blur fade" id="modal-vendor-business" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Vendor Business Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="vendorBusinessForm" method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <h5 class="text-secondary">Business Information</h5>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Shop Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="shop_name" required 
+                     value="{{ vendor_bussiness_detail.shop_name }}"
+                     minlength="2" maxlength="100">
+              <div class="invalid-feedback">Please enter a valid shop name (2-100 characters)</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+              <input type="tel" class="form-control" name="Contact_number" required 
+                     value="{{ vendor_bussiness_detail.Contact_number }}"
+                     pattern="[0-9]{10}" title="10 digit mobile number">
+              <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Business Email <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" name="Busness_email" required 
+                     value="{{ vendor_bussiness_detail.Busness_email }}">
+              <div class="invalid-feedback">Please enter a valid email address</div>
+            </div>
+          </div>
+          
+          <hr />
+          <h5 class="text-secondary">Document Details</h5>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Gumasta Number</label>
+              <input type="text" class="form-control" name="Gumasta_number" 
+                     value="{{ vendor_bussiness_detail.Gumasta_number }}"
+                     pattern="[A-Za-z0-9]{8,20}" title="8-20 alphanumeric characters">
+              <div class="invalid-feedback">8-20 alphanumeric characters required</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Gumasta Certificate Image</label>
+              <input type="file" class="form-control" name="gumasta_image"
+                     accept="image/jpeg, image/png, application/pdf">
+              <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 2MB)</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">GST Number</label>
+              <input type="text" class="form-control" name="gst_number" 
+                     value="{{ vendor_bussiness_detail.gst_number }}"
+                     pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}" 
+                     title="Format: 22ABCDE1234F1Z5">
+              <div class="invalid-feedback">Please enter a valid GST number</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">GST Certificate Image</label>
+              <input type="file" class="form-control" name="gst_image"
+                     accept="image/jpeg, image/png, application/pdf">
+              <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 2MB)</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">PAN Number</label>
+              <input type="text" class="form-control" name="Bpan_number" 
+                     value="{{ vendor_bussiness_detail.Bpan_number }}"
+                     pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" title="Format: ABCDE1234F">
+              <div class="invalid-feedback">Please enter a valid PAN number</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">PAN Card Image</label>
+              <input type="file" class="form-control" name="Bpan_image"
+                     accept="image/jpeg, image/png, application/pdf">
+              <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 2MB)</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">MSME Number</label>
+              <input type="text" class="form-control" name="MSME_number" 
+                     value="{{ vendor_bussiness_detail.MSME_number }}"
+                     pattern="[A-Za-z0-9]{8,12}" title="8-12 alphanumeric characters">
+              <div class="invalid-feedback">8-12 alphanumeric characters required</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">MSME Certificate Image</label>
+              <input type="file" class="form-control" name="MSME_image"
+                     accept="image/jpeg, image/png, application/pdf">
+              <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 2MB)</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Business Photo (Outer View)</label>
+              <input type="file" class="form-control" name="Bphoto_outer"
+                     accept="image/jpeg, image/png">
+              <div class="invalid-feedback">Only JPEG or PNG images allowed (max 2MB)</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Business Photo (Inside View)</label>
+              <input type="file" class="form-control" name="Bphoto_inside"
+                     accept="image/jpeg, image/png">
+              <div class="invalid-feedback">Only JPEG or PNG images allowed (max 2MB)</div>
+            </div>
+          </div>
+          
+          <hr />
+          <h5 class="text-secondary">Verification Contact</h5>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Verifier Contact Name</label>
+              <input type="text" class="form-control" name="VCname" 
+                     value="{{ vendor_bussiness_detail.VCname }}"
+                     pattern="[A-Za-z ]{2,50}" title="Only letters and spaces">
+              <div class="invalid-feedback">Please enter a valid name (2-50 letters)</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Verifier Contact Mobile</label>
+              <input type="tel" class="form-control" name="VCmobile" 
+                     value="{{ vendor_bussiness_detail.VCmobile }}"
+                     pattern="[0-9]{10}" title="10 digit mobile number">
+              <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
+            </div>
+            <div class="col-md-12 mb-3">
+              <label class="form-label">Verifier Contact Address</label>
+              <input type="text" class="form-control" name="VCaddress" 
+                     value="{{ vendor_bussiness_detail.VCaddress }}"
+                     minlength="5" maxlength="200">
+              <div class="invalid-feedback">Address must be 5-200 characters</div>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" name="submit_vendor_bussiness_details" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('vendorBusinessForm');
+  
+  // File validation (2MB limit)
+  const fileInputs = form.querySelectorAll('input[type="file"]');
+  fileInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      if (this.files[0]) {
+        const file = this.files[0];
+        const maxSize = 2 * 1024 * 1024; // 2MB
+        const validTypes = this.accept.split(', ').map(type => type.split('/').pop());
+        const fileType = file.type.split('/').pop();
+        
+        if (file.size > maxSize) {
+          this.setCustomValidity('File size exceeds 2MB limit');
+          this.classList.add('is-invalid');
+        } else if (!validTypes.includes(fileType) && !validTypes.includes(file.type)) {
+          this.setCustomValidity('Invalid file type');
+          this.classList.add('is-invalid');
+        } else {
+          this.setCustomValidity('');
+          this.classList.remove('is-invalid');
+        }
+      }
+    });
+  });
+
+  // GST number validation
+  const gstInput = form.querySelector('input[name="gst_number"]');
+  if (gstInput) {
+    gstInput.addEventListener('input', function() {
+      if (this.value && !this.checkValidity()) {
+        this.classList.add('is-invalid');
+      } else {
+        this.classList.remove('is-invalid');
+      }
+    });
+  }
+
+  // Form submission handler
+  form.addEventListener('submit', function(event) {
+    if (!form.checkValidity()) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    form.classList.add('was-validated');
+  });
+
+  // Real-time validation
+  form.querySelectorAll('input, select').forEach(input => {
+    input.addEventListener('input', function() {
+      if (this.checkValidity()) {
+        this.classList.remove('is-invalid');
+      } else {
+        this.classList.add('is-invalid');
+      }
+    });
+  });
+});
+</script>
+  
+
+<div class="modal modal-blur fade" id="modal-bank" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bank Account Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="bankDetailsForm" method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <div class="row">
+            <!-- Account Holder Name -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Account Holder Name <span class="text-danger">*</span></label>
+              <input type="text" name="account_holder_name" class="form-control" 
+                     value="{{ vendor_bank_detail.account_holder_name }}"
+                     pattern="[A-Za-z ]{2,100}" 
+                     title="Only letters and spaces (2-100 characters)"
+                     required />
+              <div class="invalid-feedback">Please enter a valid account holder name (2-100 letters)</div>
+            </div>
+    
+            <!-- Bank Name -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+              <input type="text" name="bank_name" class="form-control" 
+                     value="{{ vendor_bank_detail.bank_name }}"
+                     pattern="[A-Za-z0-9 &.,-]{3,100}" 
+                     title="3-100 alphanumeric characters with spaces & special chars"
+                     required />
+              <div class="invalid-feedback">Please enter a valid bank name</div>
+            </div>
+    
+            <!-- Account Number -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Account Number <span class="text-danger">*</span></label>
+              <input type="text" name="account_number" class="form-control" 
+                     value="{{ vendor_bank_detail.account_number }}"
+                     pattern="[0-9]{9,18}" 
+                     title="9-18 digit account number"
+                     required />
+              <div class="invalid-feedback">Please enter a valid account number (9-18 digits)</div>
+            </div>
+    
+            <!-- Confirm Account Number -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Confirm Account Number <span class="text-danger">*</span></label>
+              <input type="text" name="confirm_account_number" class="form-control" 
+                     value="{{ vendor_bank_detail.account_number }}"
+                     pattern="[0-9]{9,18}"
+                     title="Must match account number"
+                     required />
+              <div class="invalid-feedback">Account numbers must match</div>
+            </div>
+    
+            <!-- IFSC Code -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">IFSC Code <span class="text-danger">*</span></label>
+              <input type="text" name="ifs_code" class="form-control" 
+                     value="{{ vendor_bank_detail.ifs_code }}"
+                     pattern="[A-Z]{4}0[A-Z0-9]{6}" 
+                     title="Format: ABCD0123456"
+                     required />
+              <div class="invalid-feedback">Please enter a valid IFSC code (Format: ABCD0123456)</div>
+            </div>
+    
+            <!-- Account Type -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Account Type <span class="text-danger">*</span></label>
+              <select name="account_type" class="form-select" required>
+                <option value="" disabled selected>Select Account Type</option>
+                <option value="Saving" {% if vendor_bank_detail.account_type == "Saving" %}selected{% endif %}>Saving</option>
+                <option value="Current" {% if vendor_bank_detail.account_type == "Current" %}selected{% endif %}>Current</option>
+              </select>
+              <div class="invalid-feedback">Please select an account type</div>
+            </div>
+    
+            <!-- MICR Code -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">MICR Code</label>
+              <input type="text" name="micr_code" class="form-control" 
+                     value="{{ vendor_bank_detail.micr_code }}"
+                     pattern="[0-9]{9}" 
+                     title="9 digit MICR code" />
+              <div class="invalid-feedback">Please enter a valid 9-digit MICR code</div>
+            </div>
+    
+            <!-- Bank Document -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Upload Bank Document</label>
+              <input type="file" name="bank_document" class="form-control"
+                     accept=".pdf,.jpg,.jpeg,.png" />
+              <div class="invalid-feedback">Only PDF, JPG, or PNG files allowed (max 2MB)</div>
+            </div>
+    
+            <!-- Preferred Date of Payment -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Preferred Date of Payment <span class="text-danger">*</span></label>
+              <select name="preffered_payout_date" class="form-select" required>
+                <option value="" disabled selected>Select Payment Date</option>
+                <option value="15" {% if vendor_bank_detail.preffered_payout_date == "15" %}selected{% endif %}>15th of month</option>
+                <option value="30" {% if vendor_bank_detail.preffered_payout_date == "30" %}selected{% endif %}>30th of month</option>
+              </select>
+              <div class="invalid-feedback">Please select a preferred payment date</div>
+            </div>
+          </div>
+    
+          <!-- Submit and Cancel Buttons -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" name="submit_vendor_bank_details" class="btn btn-primary">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('bankDetailsForm');
+  
+  // Account number matching validation
+  const accountNumber = form.querySelector('input[name="account_number"]');
+  const confirmAccountNumber = form.querySelector('input[name="confirm_account_number"]');
+  
+  function validateAccountMatch() {
+    if (accountNumber.value !== confirmAccountNumber.value) {
+      confirmAccountNumber.setCustomValidity('Account numbers must match');
+      confirmAccountNumber.classList.add('is-invalid');
+    } else {
+      confirmAccountNumber.setCustomValidity('');
+      confirmAccountNumber.classList.remove('is-invalid');
+    }
+  }
+  
+  accountNumber.addEventListener('input', validateAccountMatch);
+  confirmAccountNumber.addEventListener('input', validateAccountMatch);
+  
+  // File validation (2MB limit)
+  const fileInput = form.querySelector('input[name="bank_document"]');
+  if (fileInput) {
+    fileInput.addEventListener('change', function() {
+      if (this.files[0]) {
+        const file = this.files[0];
+        const maxSize = 2 * 1024 * 1024; // 2MB
+        const validTypes = ['pdf', 'jpg', 'jpeg', 'png'];
+        const fileType = file.type.split('/').pop();
+        
+        if (file.size > maxSize) {
+          this.setCustomValidity('File size exceeds 2MB limit');
+          this.classList.add('is-invalid');
+        } else if (!validTypes.includes(fileType.toLowerCase())) {
+          this.setCustomValidity('Invalid file type');
+          this.classList.add('is-invalid');
+        } else {
+          this.setCustomValidity('');
+          this.classList.remove('is-invalid');
+        }
+      }
+    });
+  }
+  
+  // IFSC code validation
+  const ifscInput = form.querySelector('input[name="ifs_code"]');
+  if (ifscInput) {
+    ifscInput.addEventListener('input', function() {
+      const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+      if (this.value && !ifscRegex.test(this.value)) {
+        this.classList.add('is-invalid');
+      } else {
+        this.classList.remove('is-invalid');
+      }
+    });
+  }
+  
+  // Form submission handler
+  form.addEventListener('submit', function(event) {
+    validateAccountMatch(); // Re-validate account match before submission
+    
+    if (!form.checkValidity()) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    form.classList.add('was-validated');
+  });
+  
+  // Real-time validation
+  form.querySelectorAll('input, select').forEach(input => {
+    input.addEventListener('input', function() {
+      if (this.checkValidity()) {
+        this.classList.remove('is-invalid');
+      } else {
+        this.classList.add('is-invalid');
+      }
+    });
+  });
+});
+</script>
+
+<style>
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid,
+.form-control.is-invalid,
+.form-select.is-invalid {
+  border-color: #dc3545;
+}
+.invalid-feedback {
+  display: none;
+  color: #dc3545;
+  font-size: 0.875em;
+}
+.was-validated .form-control:invalid ~ .invalid-feedback,
+.was-validated .form-select:invalid ~ .invalid-feedback,
+.form-control.is-invalid ~ .invalid-feedback,
+.form-select.is-invalid ~ .invalid-feedback {
+  display: block;
+}
+</style>
 
   <footer class="footer footer-transparent d-print-none">
     <div class="container-xl">

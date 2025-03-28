@@ -1,8 +1,6 @@
-{% extends "employee/base.html" %}
+{% extends 'employee/performance-base.html' %}
 
 {% block content %}
-
-
         <div class="page-body">
           <div class="container-xl">
             <div class="row row-cards">
@@ -16,374 +14,559 @@
             <div class="col-lg-12">
               <div class="row row-cards">
                 <div class="col-12">
-                  <form method="POST" enctype="multipart/form-data" class="card">
-                    {% csrf_token %}
-                    <div class="card-body">
-                     
-                      <div class="row row-cards">
-                        <div class="col-md-5">
-                          <div class="mb-3">
-                            <label class="form-label">Candidate Name</label>
-                            <input type="text" class="form-control" name="candidate_name"  placeholder="Candidate Name" required>
-                            <input type="hidden" class="form-control" name="submit_by"  value="{{user.username}}" required>
-                          </div>
+                    <form method="POST" enctype="multipart/form-data" class="card" id="candidateForm" novalidate>
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <div class="row row-cards">
+                                <!-- Candidate Name -->
+                                <div class="col-md-5">
+                                    <div class="mb-3">
+                                        <label class="form-label">Candidate Name</label>
+                                        <input type="text" class="form-control" name="candidate_name" 
+                                               placeholder="Candidate Name" 
+                                               pattern="[A-Za-z ]{3,}" 
+                                               title="Name should contain only letters and spaces (minimum 3 characters)" 
+                                               required>
+                                        <div class="invalid-feedback">Please provide a valid name (letters only, min 3 characters).</div>
+                                        <input type="hidden" class="form-control" name="submit_by" value="{{user.username}}" required>
+                                    </div>
+                                </div>
+                                
+                                <!-- Unique Code -->
+                                <div class="col-sm-6 col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Unique Code</label>
+                                        <input type="text" class="form-control" placeholder="Unique Code" 
+                                               name="unique_code" value="{{suggested_unique_code}}" readonly required>
+                                    </div>
+                                </div>
+                                
+                                <!-- Mobile Number -->
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Mobile Number</label>
+                                        <input type="tel" class="form-control" name="candidate_mobile_number" 
+                                               placeholder="Mobile Number" 
+                                               pattern="[0-9]{10}" 
+                                               title="Please enter a valid 10-digit mobile number"
+                                               required>
+                                        <div class="invalid-feedback">Please provide a valid 10-digit mobile number.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Alternate Mobile Number -->
+                                <div class="col-sm-4 col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Alternate Mobile Number</label>
+                                        <input type="tel" class="form-control" name="candidate_alternate_mobile_number" 
+                                               placeholder="Alternate Mobile Number"
+                                               pattern="[0-9]{10}"
+                                               title="Please enter a valid 10-digit mobile number">
+                                        <div class="invalid-feedback">Please provide a valid 10-digit mobile number.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Email Address -->
+                                <div class="col-sm-4 col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Email Address</label>
+                                        <input type="email" class="form-control" name="candidate_email_address" 
+                                               placeholder="Email Address"
+                                               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                               title="Please enter a valid email address">
+                                        <div class="invalid-feedback">Please provide a valid email address.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Gender -->
+                                <div class="col-sm-6 col-md-2">
+                                    <div class="mb-3">
+                                        <div class="form-label">Gender</div>
+                                        <select name="gender" class="form-select" required>
+                                            <option value="" disabled selected>Select Gender</option>
+                                            <option value="Male" {% if Candidate_registration.gender == "Male" %}selected{% endif %}>Male</option>
+                                            <option value="Female" {% if Candidate_registration.gender == "Female" %}selected{% endif %}>Female</option>
+                                        </select>
+                                        <div class="invalid-feedback">Please select a gender.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Lead Source -->
+                                <div class="col-sm-6 col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Lead Source</label>
+                                        <select name="lead_source" class="form-select" required>
+                                            <option value="" disabled selected>Select Lead Source</option>
+                                            <option value="EVMS" {% if Candidate_registration.lead_source == "EVMS" %}selected{% endif %}>EVMS</option>
+                                            <option value="Walk-In" {% if Candidate_registration.lead_source == "Walk-In" %}selected{% endif %}>Walk-In</option>
+                                            <option value="Job Hai" {% if Candidate_registration.lead_source == "Job Hai" %}selected{% endif %}>Job Hai</option>
+                                            <option value="Naukari" {% if Candidate_registration.lead_source == "Naukari" %}selected{% endif %}>Naukari</option>
+                                            <option value="Apna" {% if Candidate_registration.lead_source == "Apna" %}selected{% endif %}>Apna</option>
+                                            <option value="Expertia" {% if Candidate_registration.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
+                                            <option value="Instagram" {% if Candidate_registration.lead_source == "Instagram" %}selected{% endif %}>Instagram</option>
+                                            <option value="Website" {% if Candidate_registration.lead_source == "Website" %}selected{% endif %}>Website</option>
+                                            <option value="Indeed" {% if Candidate_registration.lead_source == "Indeed" %}selected{% endif %}>Indeed</option>
+                                            <option value="Facebook" {% if Candidate_registration.lead_source == "Facebook" %}selected{% endif %}>Facebook</option>
+                                            <option value="Linkedin" {% if Candidate_registration.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
+                                            <option value="Personal Refference" {% if Candidate_registration.lead_source == "Personal Refference" %}selected{% endif %}>Personal Refference</option>
+                                            <option value="Other" {% if Candidate_registration.lead_source == "Other" %}selected{% endif %}>Other</option>
+                                        </select>
+                                        <div class="invalid-feedback">Please select a lead source.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Preferred Location -->
+                                <div class="col-sm-6 col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Preferred Location</label>
+                                        <select type="text" class="form-select" placeholder="Select tags" 
+                                                id="select-prefered-location" name="preferred_location" multiple required>
+                                            {% for district in districts %}
+                                            <option value="{{ district }}" {% if Candidate_registration.preferred_location == district %}selected{% endif %}>
+                                                {{ district }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback">Please select at least one preferred location.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Origin Location -->
+                                <div class="col-sm-6 col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Origin Location</label>
+                                        <select type="text" class="form-select" name='origin_location' required>
+                                            <option value="" disabled selected>Select Origin location</option>
+                                            {% for district in districts %}
+                                            <option value="{{ district }}" {% if Candidate_registration.origin_location == district %}selected{% endif %}>
+                                                {{ district }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback">Please select an origin location.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Qualification -->
+                                <div class="col-sm-6 col-md-3">
+                                    <div class="mb-3">
+                                        <div class="form-label">Qualification</div>
+                                        <select class="form-select" name='qualification' required>
+                                            <option value="" disabled selected>Select highest qualification</option>
+                                            <option value="Secondary School" {% if Candidate_registration.qualification == "Secondary School" %}selected{% endif %}>Secondary School</option>
+                                            <option value="Higher Secondary School" {% if Candidate_registration.qualification == "Higher Secondary School" %}selected{% endif %}>Higher Secondary School</option>
+                                            <option value="Graduate" {% if Candidate_registration.qualification == "Graduate" %}selected{% endif %}>Graduate</option>
+                                            <option value="Post-Graduate" {% if Candidate_registration.qualification == "Post-Graduate" %}selected{% endif %}>Post-Graduate</option>
+                                            <option value="Ph.D." {% if Candidate_registration.qualification == "Ph.D." %}selected{% endif %}>Ph.D.</option>
+                                            <option value="Others" {% if Candidate_registration.qualification == "Others" %}selected{% endif %}>Others</option>
+                                        </select>
+                                        <div class="invalid-feedback">Please select a qualification.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Diploma -->
+                                <div class="col-sm-6 col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Diploma If Any</label>
+                                        <input type="text" class="form-control" name="diploma" placeholder="Diploma">
+                                    </div>
+                                </div>
+                                
+                                <!-- Sector -->
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Sector</label>
+                                        <select type="text" class="form-select" placeholder="Select tags" 
+                                                id="select-sector" name='sector' multiple required>
+                                            {% for job_sector in job_sectors %}
+                                            <option value="{{ job_sector }}" {% if Candidate_registration.sector == job_sector %}selected{% endif %}>
+                                                {{ job_sector }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback">Please select at least one sector.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Department -->
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Department</label>
+                                        <select type="text" class="form-select" placeholder="Select tags" 
+                                                id="select-department" name='department' multiple required>
+                                            {% for department in departments %}
+                                            <option value="{{ department }}" {% if Candidate_registration.department == department %}selected{% endif %}>
+                                                {{ department }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback">Please select at least one department.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Experience (Year) -->
+                                <div class="col-sm-6 col-md-2">
+                                    <div class="mb-3">
+                                        <label class="form-label">Experience (In Year)</label>
+                                        <input type="number" class="form-control" name="experience_year" 
+                                               placeholder="Experience (In Year)" min="0" max="50">
+                                        <div class="invalid-feedback">Please enter valid years (0-50).</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Experience (Month) -->
+                                <div class="col-sm-6 col-md-2">
+                                    <div class="mb-3">
+                                        <label class="form-label">Experience (In Month)</label>
+                                        <input type="number" name='experience_month' class="form-control" 
+                                               placeholder="Experience (In Month)" min="0" max="11">
+                                        <div class="invalid-feedback">Please enter valid months (0-11).</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Current Company -->
+                                <div class="col-sm-6 col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Current Company</label>
+                                        <input type="text" name='current_company' class="form-control" placeholder="Current Company">
+                                    </div>
+                                </div>
+                                
+                                <!-- Current Working Status -->
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Current Working Status</label>
+                                        <select class="form-control form-select" name='current_working_status' required>
+                                            <option value="" disabled selected>Select Status</option>
+                                            <option value="Employed" {% if Candidate_registration.current_working_status == "Employed" %}selected{% endif %}>Employed</option>
+                                            <option value="Un-Employed" {% if Candidate_registration.current_working_status == "Un-Employed" %}selected{% endif %}>Un-Employed</option>
+                                        </select>
+                                        <div class="invalid-feedback">Please select current working status.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Current Salary -->
+                                <div class="col-sm-6 col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Current Salary</label>
+                                        <input type="number" class="form-control" name="current_salary" 
+                                               placeholder="Current Salary" min="0" step="1000">
+                                        <div class="invalid-feedback">Please enter a valid salary.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Expected Salary -->
+                                <div class="col-sm-6 col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Expected Salary</label>
+                                        <input type="number" name='expected_salary' class="form-control" 
+                                               placeholder="Expected Salary" min="0" step="1000">
+                                        <div class="invalid-feedback">Please enter a valid expected salary.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Candidate Photo -->
+                                <div class="col-sm-6 col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Candidate Photo</label>
+                                        <input type="file" name='candidate_photo' class="form-control" 
+                                               accept="image/*" />
+                                        <small class="text-muted">Max size: 2MB, Formats: JPG, PNG</small>
+                                        <div class="invalid-feedback">Please upload a valid image file (JPG/PNG, max 2MB).</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Candidate Resume -->
+                                <div class="col-sm-6 col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Candidate Resume</label>
+                                        <input type="file" name='candidate_resume' class="form-control" 
+                                               accept=".pdf,.doc,.docx" />
+                                        <small class="text-muted">Max size: 5MB, Formats: PDF, DOC, DOCX</small>
+                                        <div class="invalid-feedback">Please upload a valid resume (PDF/DOC/DOCX, max 5MB).</div>
+                                    </div>
+                                </div>
+                                
+                                <hr>
+                                
+                                <!-- Call Connection -->
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Call Connection</label>
+                                        <select class="form-control form-select" name='call_connection' required>
+                                            <option value="" disabled selected>Select Status</option>
+                                            <option value="Yes" {% if Candidate_registration.call_connection == "Yes" %}selected{% endif %}>Yes</option>
+                                            <option value="No" {% if Candidate_registration.call_connection == "No" %}selected{% endif %}>No</option>
+                                        </select>
+                                        <div class="invalid-feedback">Please select call connection status.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Calling Remark -->
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Calling Remark</label>
+                                        <select class="form-control form-select" name='calling_remark'>
+                                            <option value="None" {% if Candidate_registration.calling_remark == "None" %}selected{% endif %}>None</option>
+                                            <option value="Lead Generate" {% if Candidate_registration.calling_remark == "Lead Generate" %}selected{% endif %}>Lead Generate</option>
+                                            <option value="Follow-Up" {% if Candidate_registration.calling_remark == "Follow-Up" %}selected{% endif %}>Follow-Up</option>
+                                            <option value="Shortlisted for Banking Counselling" {% if Candidate_registration.calling_remark == "Shortlisted for Banking Counselling" %}selected{% endif %}>Shortlisted for Banking Counselling</option>
+                                            <option value="RNR" {% if Candidate_registration.calling_remark == "RNR" %}selected{% endif %}>RNR</option>
+                                            <option value="Switch Off" {% if Candidate_registration.calling_remark == "Switch Off" %}selected{% endif %}>Switch Off</option>
+                                            <option value="Not Intrested" {% if Candidate_registration.calling_remark == "Not Intrested" %}selected{% endif %}>Not Intrested</option>
+                                            <option value="Sharing Resume" {% if Candidate_registration.calling_remark == "Sharing Resume" %}selected{% endif %}>Sharing Resume</option>
+                                            <option value="Hold" {% if Candidate_registration.calling_remark == "Hold" %}selected{% endif %}>Hold</option>
+                                            <option value="Not Eligeble" {% if Candidate_registration.calling_remark == "Not Eligeble" %}selected{% endif %}>Not Eligeble</option>
+                                            <option value="Call Back" {% if Candidate_registration.calling_remark == "Call Back" %}selected{% endif %}>Call Back</option>
+                                            <option value="Coming Tomorrow" {% if Candidate_registration.calling_remark == "Coming Tomorrow" %}selected{% endif %}>Coming Tomorrow</option>
+                                            <option value="Busy" {% if Candidate_registration.calling_remark == "Busy" %}selected{% endif %}>Busy</option>
+                                            <option value="Not Available" {% if Candidate_registration.calling_remark == "Not Available" %}selected{% endif %}>Not Available</option>
+                                            <option value="Got a Job" {% if Candidate_registration.calling_remark == "Got a Job" %}selected{% endif %}>Got a Job</option>
+                                            <option value="Call After Some Time" {% if Candidate_registration.calling_remark == "Call After Some Time" %}selected{% endif %}>Call After Some Time</option>
+                                            <option value="No Incoming" {% if Candidate_registration.calling_remark == "No Incoming" %}selected{% endif %}>No Incoming</option>
+                                            <option value="Temporary Not Available" {% if Candidate_registration.calling_remark == "Temporary Not Available" %}selected{% endif %}>Temporary Not Available</option>
+                                            <option value="Out Of Town" {% if Candidate_registration.calling_remark == "Out Of Town" %}selected{% endif %}>Out Of Town</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Lead Generate -->
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Lead Generate</label>
+                                        <select class="form-control form-select" name='lead_generate' required>
+                                            <option value="" disabled selected>Select Status</option>
+                                            <option value="No" {% if Candidate_registration.lead_generate == "No" %}selected{% endif %}>No</option>
+                                            <option value="Yes" {% if Candidate_registration.lead_generate == "Yes" %}selected{% endif %}>Yes</option>
+                                        </select>
+                                        <div class="invalid-feedback">Please select lead generate status.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Send For Interview -->
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Send For Interview</label>
+                                        <select class="form-control form-select" name='send_for_interview' required>
+                                            <option value="" disabled selected>Select Status</option>
+                                            <option value="No" {% if Candidate_registration.send_for_interview == "No" %}selected{% endif %}>No</option>
+                                            <option value="Yes" {% if Candidate_registration.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
+                                        </select>
+                                        <div class="invalid-feedback">Please select interview status.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Next Follow-Up Date -->
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Next Follow-Up Date</label>
+                                        <input type="date" name='next_follow_up_date' class="form-control" 
+                                               min="{{ today|date:'Y-m-d' }}">
+                                        <div class="invalid-feedback">Please select a valid future date.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Remark -->
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Remark</label>
+                                        <textarea name='remark' class="form-control" placeholder="Remark" maxlength="500"></textarea>
+                                        <small class="text-muted">Max 500 characters</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer text-end">
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                            </div>
                         </div>
-                        <div class="col-sm-6 col-md-3">
-                          <div class="mb-3">
-                            <label class="form-label">Unique Code</label>
-                            <input type="text" class="form-control" placeholder="Unique Code" name="unique_code" value="{{suggested_unique_code}}" readonly required>
-                          </div>
-                        </div>
-                        <div class="col-sm-6 col-md-4">
-                          <div class="mb-3">
-                            <label class="form-label">Mobile Number</label>
-                            <input type="tel" class="form-control" name="candidate_mobile_number" placeholder="Mobile Number" required>
-                          </div>
-                        </div>
-                        <div class="col-sm-4  col-md-3">
-                          <div class="mb-3">
-                            <label class="form-label">Alternate Mobile Number</label>
-                            <input type="tel" class="form-control" name="candidate_alternate_mobile_number" placeholder="Alternate Mobile Number" >
-                          </div>
-                        </div>
-                        <div class="col-sm-4 col-md-4">
-                          <div class="mb-3">
-                            <label class="form-label">Email Address</label>
-                            <input type="text" class="form-control" name="candidate_email_address" placeholder="Email Address">
-                          </div>
-                        </div>
-                        <div class="col-sm-6 col-md-2">
-                          <div class="mb-3">
-                            <div class="form-label">Gender</div>
-                            <select name="gender" class="form-select" required>
-                              <option value="Male" {% if Candidate_registration.gender == "Male" %}selected{% endif %}>Male</option>
-                              <option value="Female" {% if Candidate_registration.gender == "Female" %}selected{% endif %}>Female</option>
-                          </select>
-                          </div>
-                        </div>
-                        <div class="col-sm-6 col-md-3">
-                          <div class="mb-3">
-                            <label class="form-label">Lead Source</label>
-                            <select name="lead_source" class="form-select" required>
-                              <option value="EVMS" {% if Candidate_registration.lead_source == "EVMS" %}selected{% endif %}>EVMS</option>
-                              <option value="Walk-In" {% if Candidate_registration.lead_source == "Walk-In" %}selected{% endif %}>Walk-In</option>
-                              <option value="Job Hai" {% if Candidate_registration.lead_source == "Job Hai" %}selected{% endif %}>Job Hai</option>
-                              <option value="Naukari" {% if Candidate_registration.lead_source == "Naukari" %}selected{% endif %}>Naukari</option>
-                              <option value="Apna" {% if Candidate_registration.lead_source == "Apna" %}selected{% endif %}>Apna</option>
-                              <option value="Expertia" {% if Candidate_registration.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
-                              <option value="Instagram" {% if Candidate_registration.lead_source == "Instagram" %}selected{% endif %}>Instagram</option>
-                              <option value="Website" {% if Candidate_registration.lead_source == "Website" %}selected{% endif %}>Website</option>
-                              <option value="Indeed" {% if Candidate_registration.lead_source == "Indeed" %}selected{% endif %}>Indeed</option>
-                              <option value="Facebook" {% if Candidate_registration.lead_source == "Facebook" %}selected{% endif %}>Facebook</option>
-                              <option value="Linkedin" {% if Candidate_registration.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
-                              <option value="Personal Refference" {% if Candidate_registration.lead_source == "Personal Refference" %}selected{% endif %}>Personal Refference</option>
-                              <option value="Other" {% if Candidate_registration.lead_source == "Other" %}selected{% endif %}>Other</option>
-                          </select>
-                          </div>
-                        </div>
-                        <div class="col-sm-6 col-md-3">
-                          <div class="mb-3">
-                            <label class="form-label">Preffered Location</label>
-                            <select type="text" class="form-select" placeholder="Select tags" id="select-prefered-location" name="preferred_location" multiple>
-                              {% for district in districts %}
-                              <option value="{{ district }}" {% if Candidate_registration.preferred_location == district %}selected{% endif %}>
-                                  {{ district }}
-                              </option>
-                              {% endfor %}
-                          
-                            </select>
+                    </form>
+                    
+                    <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        const form = document.getElementById("candidateForm");
+                        
+                        // Form validation
+                        form.addEventListener("submit", function(event) {
+                            if (!form.checkValidity()) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
                             
-                          </div>
-                        </div>
+                            // Custom validation for multi-select fields
+                            const multiSelectFields = ['preferred_location', 'sector', 'department'];
+                            let isValid = true;
+                            
+                            multiSelectFields.forEach(fieldName => {
+                                const field = document.querySelector(`[name="${fieldName}"]`);
+                                if (field && field.required && field.selectedOptions.length === 0) {
+                                    field.classList.add('is-invalid');
+                                    isValid = false;
+                                }
+                            });
+                            
+                            // Validate experience months if years are provided
+                            const expYears = document.querySelector('[name="experience_year"]');
+                            const expMonths = document.querySelector('[name="experience_month"]');
+                            
+                            if (expYears.value && !expMonths.value) {
+                                expMonths.setCustomValidity("Please specify months if years are provided");
+                                expMonths.classList.add('is-invalid');
+                                isValid = false;
+                            } else {
+                                expMonths.setCustomValidity("");
+                            }
+                            
+                            // Validate expected salary is >= current salary if both provided
+                            const currentSalary = document.querySelector('[name="current_salary"]');
+                            const expectedSalary = document.querySelector('[name="expected_salary"]');
+                            
+                            if (currentSalary.value && expectedSalary.value && 
+                                parseInt(expectedSalary.value) < parseInt(currentSalary.value)) {
+                                expectedSalary.setCustomValidity("Expected salary should be greater than or equal to current salary");
+                                expectedSalary.classList.add('is-invalid');
+                                isValid = false;
+                            } else {
+                                expectedSalary.setCustomValidity("");
+                            }
+                            
+                            // Validate file sizes and types
+                            const photo = document.querySelector('[name="candidate_photo"]');
+                            if (photo.files.length > 0) {
+                                const file = photo.files[0];
+                                const validTypes = ['image/jpeg', 'image/png'];
+                                if (!validTypes.includes(file.type)) {
+                                    photo.setCustomValidity("Please upload an image in JPG or PNG format");
+                                    photo.classList.add('is-invalid');
+                                    isValid = false;
+                                } else if (file.size > 2 * 1024 * 1024) { // 2MB
+                                    photo.setCustomValidity("Photo size should be less than 2MB");
+                                    photo.classList.add('is-invalid');
+                                    isValid = false;
+                                } else {
+                                    photo.setCustomValidity("");
+                                }
+                            }
+                            
+                            const resume = document.querySelector('[name="candidate_resume"]');
+                            if (resume.files.length > 0) {
+                                const file = resume.files[0];
+                                const validTypes = ['application/pdf', 'application/msword', 
+                                                   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+                                if (!validTypes.includes(file.type)) {
+                                    resume.setCustomValidity("Please upload a resume in PDF, DOC or DOCX format");
+                                    resume.classList.add('is-invalid');
+                                    isValid = false;
+                                } else if (file.size > 5 * 1024 * 1024) { // 5MB
+                                    resume.setCustomValidity("Resume size should be less than 5MB");
+                                    resume.classList.add('is-invalid');
+                                    isValid = false;
+                                } else {
+                                    resume.setCustomValidity("");
+                                }
+                            }
+                            
+                            if (!isValid) {
+                                event.preventDefault();
+                            }
+                            
+                            form.classList.add('was-validated');
+                        });
                         
-                        <script>
-                          document.addEventListener("DOMContentLoaded", function () {
-                            var el;
-                            window.TomSelect && (new TomSelect(el = document.getElementById('select-prefered-location'), {
-                              copyClassesToDropdown: false,
-                              dropdownParent: 'body',
-                              controlInput: '<input>',
-                              render:{
-                                item: function(data,escape) {
-                                  if( data.customProperties ){
-                                    return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                                  }
-                                  return '<div>' + escape(data.text) + '</div>';
-                                },
-                                option: function(data,escape){
-                                  if( data.customProperties ){
-                                    return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                                  }
-                                  return '<div>' + escape(data.text) + '</div>';
-                                },
-                              },
-                            }));
-                          });
-                        </script>
-                        <div class="col-sm-6 col-md-3">
-                          <div class="mb-3">
-                            <label class="form-label">Origin Location</label>
-                            <select type="text" class="form-select"  name='origin_location'>
-                              <option disabled selected value="select Origin location" {% if Candidate_registration.origin_location == 'select Origin location' %}selected{% endif %}>select Origin location</option>
-                              {% for district in districts %}
-                              <option value="{{ district }}" {% if Candidate_registration.origin_location == '{{ district }}' %}selected{% endif %}>
-                                  {{ district }}
-                              </option>
-                              {% endfor %}
-                                                    
-                            </select>
-                          </div>
-                        </div>
+                        // Real-time validation for fields
+                        const fieldsToValidate = [
+                            'candidate_name', 'candidate_mobile_number', 'candidate_alternate_mobile_number',
+                            'candidate_email_address', 'experience_year', 'experience_month',
+                            'current_salary', 'expected_salary'
+                        ];
                         
-                        <script>
-                          document.addEventListener("DOMContentLoaded", function () {
-                            var el;
-                            window.TomSelect && (new TomSelect(el = document.getElementById('select-origin-location'), {
-                              copyClassesToDropdown: false,
-                              dropdownParent: 'body',
-                              controlInput: '<input>',
-                              render:{
-                                item: function(data,escape) {
-                                  if( data.customProperties ){
-                                    return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                                  }
-                                  return '<div>' + escape(data.text) + '</div>';
-                                },
-                                option: function(data,escape){
-                                  if( data.customProperties ){
-                                    return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                                  }
-                                  return '<div>' + escape(data.text) + '</div>';
-                                },
-                              },
-                            }));
-                          });
-                        </script>
-                        <div class="col-sm-6 col-md-3">
-                          <div class="mb-3">
-                            <div class="form-label">Qualification</div>
-                            <select class="form-select" name='qualification'>
-                              <option disabled selected value="select highest qualification" {% if Candidate_registration.qualification == "select highest qualification" %}selected{% endif %}>select highest qualification</option>
-                              <option value="Secondary School" {% if Candidate_registration.qualification == "Secondary School" %}selected{% endif %}>Secondary School</option>
-                              <option value="Higher Secondary School" {% if Candidate_registration.qualification == "Higher Secondary School" %}selected{% endif %}>Higher Secondary School</option>
-                              <option value="Graduate" {% if Candidate_registration.qualification == "Graduate" %}selected{% endif %}>Graduate</option>
-                              <option value="Post-Graduate" {% if Candidate_registration.qualification == "Post-Graduate" %}selected{% endif %}>Post-Graduate</option>
-                              <option value="Ph.D." {% if Candidate_registration.qualification == "Ph.D." %}selected{% endif %}>Ph.D.</option>
-                              <option value="Others" {% if Candidate_registration.qualification == "Others" %}selected{% endif %}>Others</option>
-
-                          
-                            </select>
-                          </div>
-                        </div>
-                        <div class="col-sm-6 col-md-3">
-                          <div class="mb-3">
-                            <label class="form-label">Diploma If Any</label>
-                            <input type="text" class="form-control" name="diploma"  placeholder="Diploma" >
-                          </div>
-                        </div>
-                        <div class="col-sm-6 col-md-4">
-                          <div class="mb-3">
-                            <label class="form-label">Sector</label>
-                            <select type="text" class="form-select" placeholder="Select tags" id="select-sector" name='sector' multiple>
-                             {% for job_sector in job_sectors %}
-                              <option value="{{ job_sector }}" {% if Candidate_registration.sector == '{{ job_sector }}' %}selected{% endif %}>
-                                  {{ job_sector }}
-                              </option>
-                              {% endfor %}
-                            </select>
-                          </div>
-                        </div>
+                        fieldsToValidate.forEach(fieldName => {
+                            const field = document.querySelector(`[name="${fieldName}"]`);
+                            if (field) {
+                                field.addEventListener('input', function() {
+                                    if (field.checkValidity()) {
+                                        field.classList.remove('is-invalid');
+                                        field.classList.add('is-valid');
+                                    } else {
+                                        field.classList.remove('is-valid');
+                                        field.classList.add('is-invalid');
+                                    }
+                                });
+                            }
+                        });
                         
-                        <script>
-                          document.addEventListener("DOMContentLoaded", function () {
-                            var el;
-                            window.TomSelect && (new TomSelect(el = document.getElementById('select-sector'), {
-                              copyClassesToDropdown: false,
-                              dropdownParent: 'body',
-                              controlInput: '<input>',
-                              render:{
-                                item: function(data,escape) {
-                                  if( data.customProperties ){
-                                    return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                                  }
-                                  return '<div>' + escape(data.text) + '</div>';
+                        // Initialize TomSelect for multi-select fields
+                        if (window.TomSelect) {
+                            new TomSelect(document.getElementById('select-prefered-location'), {
+                                copyClassesToDropdown: false,
+                                dropdownParent: 'body',
+                                controlInput: '<input>',
+                                render: {
+                                    item: function(data, escape) {
+                                        if (data.customProperties) {
+                                            return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
+                                        }
+                                        return '<div>' + escape(data.text) + '</div>';
+                                    },
+                                    option: function(data, escape) {
+                                        if (data.customProperties) {
+                                            return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
+                                        }
+                                        return '<div>' + escape(data.text) + '</div>';
+                                    },
                                 },
-                                option: function(data,escape){
-                                  if( data.customProperties ){
-                                    return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                                  }
-                                  return '<div>' + escape(data.text) + '</div>';
+                                onItemAdd: function() {
+                                    this.control_input.checkValidity();
+                                }
+                            });
+                            
+                            new TomSelect(document.getElementById('select-sector'), {
+                                copyClassesToDropdown: false,
+                                dropdownParent: 'body',
+                                controlInput: '<input>',
+                                render: {
+                                    item: function(data, escape) {
+                                        if (data.customProperties) {
+                                            return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
+                                        }
+                                        return '<div>' + escape(data.text) + '</div>';
+                                    },
+                                    option: function(data, escape) {
+                                        if (data.customProperties) {
+                                            return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
+                                        }
+                                        return '<div>' + escape(data.text) + '</div>';
+                                    },
                                 },
-                              },
-                            }));
-                          });
-                        </script>
-                        <div class="col-sm-6 col-md-4">
-                          <div class="mb-3">
-                            <label class="form-label">Department</label>
-                            <select type="text" class="form-select" placeholder="Select tags" id="select-departmnet"  name='department' multiple>
-                              {% for department in departments %}
-                              <option value="{{ department }}" {% if Candidate_registration.department == '{{ department }}' %}selected{% endif %}>
-                                  {{ department }}
-                              </option>
-                              {% endfor %}
-                            </select>
-                          </div>
-                        </div>
-                        
-                        <script>
-                          document.addEventListener("DOMContentLoaded", function () {
-                            var el;
-                            window.TomSelect && (new TomSelect(el = document.getElementById('select-departmnet'), {
-                              copyClassesToDropdown: false,
-                              dropdownParent: 'body',
-                              controlInput: '<input>',
-                              render:{
-                                item: function(data,escape) {
-                                  if( data.customProperties ){
-                                    return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                                  }
-                                  return '<div>' + escape(data.text) + '</div>';
+                                onItemAdd: function() {
+                                    this.control_input.checkValidity();
+                                }
+                            });
+                            
+                            new TomSelect(document.getElementById('select-department'), {
+                                copyClassesToDropdown: false,
+                                dropdownParent: 'body',
+                                controlInput: '<input>',
+                                render: {
+                                    item: function(data, escape) {
+                                        if (data.customProperties) {
+                                            return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
+                                        }
+                                        return '<div>' + escape(data.text) + '</div>';
+                                    },
+                                    option: function(data, escape) {
+                                        if (data.customProperties) {
+                                            return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
+                                        }
+                                        return '<div>' + escape(data.text) + '</div>';
+                                    },
                                 },
-                                option: function(data,escape){
-                                  if( data.customProperties ){
-                                    return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                                  }
-                                  return '<div>' + escape(data.text) + '</div>';
-                                },
-                              },
-                            }));
-                          });
-                        </script>
-                        <div class="col-sm-6 col-md-2">
-                          <div class="mb-3">
-                            <label class="form-label">Experience(In Year)</label>
-                            <input type="text" class="form-control" name="experience_year"  placeholder="Experience(In Year)" >
-                          </div>
-                        </div>
-                        <div class="col-sm-6 col-md-2">
-                          <div class="mb-3">
-                            <label class="form-label">Experience(In Month)</label>
-                            <input type="test" name='experience_month' class="form-control" placeholder="Experience(In Month)">
-                          </div>
-                        </div>
-                        <div class="col-sm-6 col-md-3">
-                          <div class="mb-3">
-                            <label class="form-label">Current Company</label>
-                            <input type="test" name='current_company' class="form-control" placeholder="Current Company">
-                          </div>
-                        </div>
-                        <div class="col-md-3">
-                          <div class="mb-3">
-                            <label class="form-label">Current Working Status</label>
-                            <select class="form-control form-select" name='current_working_status'>
-                              <option value="Employed" {% if Candidate_registration.current_working_status == "Employed" %}selected{% endif %}>Employed</option>
-                              <option value="Un-Employed" {% if Candidate_registration.current_working_status == "Un-Employed" %}selected{% endif %}>Un-Employed</option>
-                          
-                            </select>
-                          </div>
-                        </div>
-                        <div class="col-sm-6 col-md-3">
-                          <div class="mb-3">
-                            <label class="form-label">Current Salary</label>
-                            <input type="text" class="form-control" name="current_salary"  placeholder="Current Salary" >
-                          </div>
-                        </div>
-                        <div class="col-sm-6 col-md-3">
-                          <div class="mb-3">
-                            <label class="form-label">Expected Salary</label>
-                            <input type="text" name='expected_salary' class="form-control" placeholder="Expected Salary">
-                          </div>
-                        </div>
-                        <div class="col-sm-6 col-md-6">
-                          <div class="mb-3">
-                            <label class="form-label">Candidate Photo</label>
-                            <input type="file" name='candidate_photo' class="form-control" />
-                          </div>
-                        </div>
-                        <div class="col-sm-6 col-md-6">
-                          <div class="mb-3">
-                            <label class="form-label">Candidate Resume</label>
-                            <input type="file" name='candidate_resume' class="form-control" />
-                          </div>
-                        </div>
-                        <hr>
-                        <div class="col-md-4">
-                          <div class="mb-3">
-                            <label class="form-label">Call Connection</label>
-                            <select class="form-control form-select" name='call_connection' required>
-                              <option disabled selected >Select Status</option>
-                              <option value="Yes" {% if Candidate_registration.call_connection == "Yes" %}selected{% endif %}>Yes</option>
-                              <option value="No" {% if Candidate_registration.call_connection == "No" %}selected{% endif %}>No</option>
-                            </select>
-                          </div>
-                        </div>
-                        <div class="col-md-4">
-                          <div class="mb-3">
-                            <label class="form-label">Calling Remark</label>
-                            <select class="form-control form-select" name='calling_remark' required>
-                              <option disabled selected >Select Remark</option>
-                              <option value="None" {% if Candidate_registration.calling_remark == "None" %}selected{% endif %}>None</option>
-<option value="Lead Generate" {% if Candidate_registration.calling_remark == "Lead Generate" %}selected{% endif %}>Lead Generate</option>
-<option value="Follow-Up" {% if Candidate_registration.calling_remark == "Follow-Up" %}selected{% endif %}>Follow-Up</option>
-<option value="Shortlisted for Banking Counselling" {% if Candidate_registration.calling_remark == "Shortlisted for Banking Counselling" %}selected{% endif %}>Shortlisted for Banking Counselling</option>
-<option value="RNR" {% if Candidate_registration.calling_remark == "RNR" %}selected{% endif %}>RNR</option>
-<option value="Switch Off" {% if Candidate_registration.calling_remark == "Switch Off" %}selected{% endif %}>Switch Off</option>
-<option value="Not Intrested" {% if Candidate_registration.calling_remark == "Not Intrested" %}selected{% endif %}>Not Intrested</option>
-<option value="Sharing Resume" {% if Candidate_registration.calling_remark == "Sharing Resume" %}selected{% endif %}>Sharing Resume</option>
-<option value="Hold" {% if Candidate_registration.calling_remark == "Hold" %}selected{% endif %}>Hold</option>
-<option value="Not Eligeble" {% if Candidate_registration.calling_remark == "Not Eligeble" %}selected{% endif %}>Not Eligeble</option>
-<option value="Call Back" {% if Candidate_registration.calling_remark == "Call Back" %}selected{% endif %}>Call Back</option>
-<option value="Coming Tomorrow" {% if Candidate_registration.calling_remark == "Coming Tomorrow" %}selected{% endif %}>Coming Tomorrow</option>
-<option value="Busy" {% if Candidate_registration.calling_remark == "Busy" %}selected{% endif %}>Busy</option>
-<option value="Not Available" {% if Candidate_registration.calling_remark == "Not Available" %}selected{% endif %}>Not Available</option>
-<option value="Got a Job" {% if Candidate_registration.calling_remark == "Got a Job" %}selected{% endif %}>Got a Job</option>
-<option value="Call After Some Time" {% if Candidate_registration.calling_remark == "Call After Some Time" %}selected{% endif %}>Call After Some Time</option>
-<option value="No Incoming" {% if Candidate_registration.calling_remark == "No Incoming" %}selected{% endif %}>No Incoming</option>
-<option value="Temporary Not Available" {% if Candidate_registration.calling_remark == "Temporary Not Available" %}selected{% endif %}>Temporary Not Available</option>
-<option value="Out Of Town" {% if Candidate_registration.calling_remark == "Out Of Town" %}selected{% endif %}>Out Of Town</option>
-
-                            </select>
-                          </div>
-                        </div>
-                        <div class="col-md-4">
-                          <div class="mb-3">
-                            <label class="form-label">Lead Generate</label>
-                            <select class="form-control form-select" name='lead_generate' required>
-                              <option disabled selected >Select Status</option>
-                              <option value="No" {% if Candidate_registration.lead_generate == "No" %}selected{% endif %}>No</option>
-                              <option value="Yes" {% if Candidate_registration.lead_generate == "Yes" %}selected{% endif %}>Yes</option>
-                          
-                            </select>
-                          </div>
-                        </div>
-                        <div class="col-md-3">
-                          <div class="mb-3">
-                            <label class="form-label">Send For Interview</label>
-                            <select class="form-control form-select" name='send_for_interview'>
-                              <option value="No" {% if Candidate_registration.send_for_interview == "No" %}selected{% endif %}>No</option>
-                              <option value="Yes" {% if Candidate_registration.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
-                          
-                            </select>
-                          </div>
-                        </div>
-                        <div class="col-md-3">
-                          <div class="mb-3">
-                            <label class="form-label">Next Follow-Up Date</label>
-                            <input type="date" name='next_follow_up_date' class="form-control">
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                          <div class="mb-3">
-                            <label class="form-label">Remark</label>
-                            <input type="text" name='remark' class="form-control" placeholder="Remark">
-                          </div>
-                        </div>
-                    </div>
-                    <div class="card-footer text-end">
-                      <button type="submit" class="btn btn-primary">Submit</button>
-                    </div>
-                  </form>
+                                onItemAdd: function() {
+                                    this.control_input.checkValidity();
+                                }
+                            });
+                        }
+                    });
+                    </script>
                 </div>
               </div>
             </div>
