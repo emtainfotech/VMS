@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="shortcut icon" href="/static/m.png" type="image/x-icon">
+    <title>EMTA - HRMS</title>
+    <!-- CSS files -->
+    <link href="/static/dist/css/tabler.min.css?1692870487" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <link href="/static/dist/css/tabler-flags.min.css?1692870487" rel="stylesheet" />
+    <link href="/static/dist/css/tabler-payments.min.css?1692870487" rel="stylesheet" />
+    <link href="/static/dist/css/tabler-vendors.min.css?1692870487" rel="stylesheet" />
+    <link href="/static/dist/css/demo.min.css?1692870487" rel="stylesheet" />
+    <style>
+      @import url('https://rsms.me/inter/inter.css');
+      :root {
+        --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+      }
+      body {
+        font-feature-settings: 'cv03', 'cv04', 'cv11';
+      }
+    </style>
+  </head>
+  <body>
+    <script src="/static/dist/js/demo-theme.min.js?1692870487"></script>
+    <div class="page">
+      <!-- Navbar -->
+      <header class="navbar navbar-expand-md d-print-none">
+        <div class="container-xl">
+          {% comment %} <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button> {% endcomment %}
+          <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3"><a href="{% url "vendor_dashboard" %}"><img src="https://emta.co.in/f.png" width="110" height="32" alt="Tabler" class="navbar-brand-image" /></a></h1>
+          <div class="navbar-nav flex-row order-md-last">
+            <div class="nav-item d-none d-md-flex me-3">
+              
+            </div>
+            <div class="d-none d-md-flex">
+              <a href="?theme=dark" class="nav-link px-0 hide-theme-dark" title="Enable dark mode" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                <!-- Download SVG icon from http://tabler-icons.io/i/moon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                </svg>
+              </a>
+              <a href="?theme=light" class="nav-link px-0 hide-theme-light" title="Enable light mode" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                <!-- Download SVG icon from http://tabler-icons.io/i/sun -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                  <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
+                </svg>
+              </a>
+              <div class="nav-item dropdown d-none d-md-flex me-3">
+                <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show notifications">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" />
+                        <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+                    </svg>
+                    <span class="badge bg-red">{{ notifications.count }}</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Notifications</h3>
+                        </div>
+                        <div class="list-group list-group-flush list-group-hoverable">
+                            {% for notification in notifications %}
+                                <div class="list-group-item">
+                                    <div class="row align-items-center">
+                                        <div class="col text-truncate">
+                                            <a href="{% url 'mark_notifications_as_read' %}" class="text-body d-block">{{ notification.message }}</a>
+                                            <div class="d-block text-secondary text-truncate mt-n1">{{ notification.created_at }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="list-group-item">
+                                    <div class="row align-items-center">
+                                        <div class="col text-truncate">
+                                            <span class="text-body">No new notifications</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            </div>
+            <div class="nav-item dropdown">
+              <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
+                {% if vendor.vendor_profile_image %}
+                <img class="avatar avatar-sm" src="{{vendor.vendor_profile_image.url}}" alt="{{ user.first_name}}&nbsp; {{ user.last_name }}">
+                {% else %}
+                <p>No profile image uploaded.</p>
+                {% endif %}
+                <div class="d-none d-xl-block ps-2">
+                  <div>{{ user.first_name}}&nbsp; {{ user.last_name }}</div>
+                  <div class="mt-1 small text-secondary">{{user.username}}</div>
+                </div>
+              </a>
+              <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                {% comment %} <a href="{% url 'employee_details_view' employee.id %}"> {% endcomment %}
+                <a href="{% url 'vendor_profile' vendor.id  %}" class="dropdown-item">Profile</a>
+                <a href="{% url 'vendor_logout' %}" class="dropdown-item">Logout</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+  <style>
+    .card {
+      border: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+    .object-cover {
+      object-fit: cover;
+    }
+    .card-body h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .card-body .btn {
+      background-color: #6c63ff;
+      color: #fff;
+      font-weight: 500;
+    }
+    .card-body .btn:hover {
+      background-color: #574bce;
+    }
+    .edit-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      color: #6c63ff;
+    }
+  </style>
+  <div class="container py-4">
+    <div class="row g-4">
+        <!-- Personal Information Card -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Personal Information</h5>
+    
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-5 text-center">
+                            {% if candidate.candidate_photo %}
+                            <img src="{{ candidate.candidate_photo.url }}" class="img-thumbnail rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="Profile Picture">
+                            {% else %}
+                            <div class=" rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px;">
+                                <i class="bi bi-person fs-1 text-muted"></i>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-center gap-2 mb-3">
+                                {% if candidate.candidate_resume %}
+                                <a href="{{ candidate.candidate_resume.url }}" target="_blank" class="btn btn-sm btn-outline-dark">
+                                    <i class="bi bi-file-earmark-pdf"></i> View Resume
+                                </a>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">No Resume</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-7">
+                            <h4 class="mb-2">{{ candidate.candidate_name }}</h4>
+                            <p class="text-muted mb-3">
+                                <i class="bi bi-person-badge"></i> {{ candidate.refer_code }}-{{ candidate.unique_id }}
+                            </p>
+                            
+                            <div class="mb-3">
+                                <p class="mb-1">
+                                    <i class="bi bi-telephone me-2"></i> {{ candidate.candidate_mobile_number }}
+                                    {% if candidate.candidate_alternate_mobile_number %}
+                                    <br><span class="ms-4">{{ candidate.candidate_alternate_mobile_number }}</span>
+                                    {% endif %}
+                                </p>
+                                <p class="mb-1">
+                                    <i class="bi bi-envelope me-2"></i> {{ candidate.candidate_email_address|default:"Not provided" }}
+                                </p>
+                                <p class="mb-1">
+                                    <i class="bi bi-gender-ambiguous me-2"></i> {{ candidate.gender }}
+                                </p>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="mb-2">
+                                <h6 class="text-muted mb-2">Additional Details</h6>
+                                <p class="mb-1">
+                                    <strong>Registered:</strong> {{ candidate.register_time|date:"M d, Y H:i" }}
+                                </p>
+                                {% comment %} <p class="mb-1">
+                                    <strong>Follow-Up By:</strong> {{ candidate.employee_name }}
+                                </p> {% endcomment %}
+                                {% comment %} <p class="mb-1">
+                                    <strong>Source:</strong> {{ candidate.lead_source }}
+                                </p> {% endcomment %}
+                                <p class="mb-1">
+                                    <strong>Location:</strong> {{ candidate.origin_location }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Candidate Details Card -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Professional Details</h5>
+                    
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Education & Preferences</h6>
+                            <p class="mb-2">
+                                <strong>Qualification:</strong><br>
+                                {{ candidate.qualification|default:"Not specified" }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Diploma:</strong><br>
+                                {{ candidate.diploma|default:"None" }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Preferred Location:</strong><br>
+                                {{ candidate.preferred_location|default:"Not specified" }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Sector:</strong><br>
+                                {{ candidate.sector|default:"Not specified" }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Department:</strong><br>
+                                {{ candidate.department|default:"Not specified" }}
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Experience & Salary</h6>
+                            <p class="mb-2">
+                                <strong>Experience:</strong><br>
+                                {{ candidate.experience_year }} years {{ candidate.experience_month }} months
+                            </p>
+                            <p class="mb-2">
+                                <strong>Current Company:</strong><br>
+                                {{ candidate.current_company|default:"None" }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Employment Status:</strong><br>
+                                {{ candidate.current_working_status|default:"Not specified" }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Current Salary:</strong><br>
+                                ₹{{ candidate.current_salary|default:"Not specified" }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Expected Salary:</strong><br>
+                                ₹{{ candidate.expected_salary|default:"Not specified" }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calling Remarks Card -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Calling Remarks</h5>
+                    
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Call Status:</strong><br>
+                                <span class="badge bg-{% if candidate.call_connection == 'Connected' %}success{% else %}warning{% endif %} text-white">
+                                    {{ candidate.call_connection|default:"Not contacted" }}
+                                </span>
+                            </p>
+                            <p class="mb-2">
+                                <strong>Lead Status:</strong><br>
+                                <span class="badge 
+                                    {% if candidate.lead_generate == 'Hot Lead' %}bg-danger
+                                    {% elif candidate.lead_generate == 'Warm Lead' %}bg-warning 
+                                    {% elif candidate.lead_generate == 'Cold Lead' %}bg-secondary
+                                    {% else %}bg-success {% endif %} text-white">
+                                    {{ candidate.lead_generate|default:"Not evaluated" }}
+                                </span>
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Interview Status:</strong><br>
+                                {{ candidate.send_for_interview|default:"Not scheduled" }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Next Follow-Up:</strong><br>
+                                {% if candidate.next_follow_up_date %}
+                                <span class="badge bg-info text-dark">
+                                    {{ candidate.next_follow_up_date }}
+                                </span>
+                                {% else %}
+                                Not scheduled
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h6 class="text-muted">Remarks</h6>
+                        <div class="border rounded p-3 ">
+                            {{ candidate.calling_remark|default:"No remarks added"|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Vendor Data Card (Conditional) -->
+        {% if candidate.selection_status == "Selected" %}
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Vendor Data</h5>
+                   
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Vendor Commission:</strong><br>
+                                {% if candidate.vendor_commission %}
+                                ₹{{ candidate.vendor_commission }}
+                                {% else %}
+                                Not specified
+                                {% endif %}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Payout Date:</strong><br>
+                                {% if candidate.vendor_payout_date %}
+                                <span class="badge bg-info text-dark">
+                                    {{ candidate.vendor_payout_date }}
+                                </span>
+                                {% else %}
+                                Not scheduled
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                          <p class="mb-2">
+                            <strong>Generation Date:</strong><br>
+                            {% if candidate.commission_generation_date %}
+                            <span class="badge bg-info text-dark">
+                                {{ candidate.commission_generation_date }}
+                            </span>
+                            {% else %}
+                            Not generated
+                            {% endif %}
+                        </p>
+                            <p class="mb-2">
+                                <strong>Payment Status:</strong><br>
+                                <span class="badge 
+                                    {% if candidate.vendor_commission_status == 'Complete' %}bg-success
+                                    {% elif candidate.vendor_commission_status == 'Failed' %}bg-danger
+                                    {% elif candidate.vendor_commission_status == 'In Process' %}bg-primary
+                                    {% else %}bg-warning {% endif %} text-white">
+                                    {{ candidate.vendor_commission_status|default:"Pending" }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+  
+  <style>
+    .card {
+      border: none;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(0,0,0,.05);
+    }
+    
+    .info-item {
+      padding: 0.5rem 0;
+    }
+    
+    .vendor-contact i {
+      min-width: 20px;
+    }
+    
+    .object-cover {
+      object-fit: cover;
+    }
+    
+    .shadow-sm {
+      box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
+    }
+  </style>
+
+
+
+  <footer class="footer footer-transparent d-print-none">
+    <div class="container-xl">
+      <div class="row text-center align-items-center flex-row-reverse">
+        <div class="col-lg-auto ms-lg-auto">
+          <ul class="list-inline list-inline-dots mb-0">
+            
+            <li class="list-inline-item">
+              <a href="https://emtainfotech.com" target="_blank" class="link-secondary" rel="noopener">
+                <!-- Download SVG icon from http://tabler-icons.io/i/heart -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon text-pink icon-filled icon-inline" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" /></svg>
+                EMTA INFOTECH
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+          <ul class="list-inline list-inline-dots mb-0">
+            <li class="list-inline-item">
+              Copyright &copy; 2024
+              <a href="https://emta.co.in" class="link-secondary">EMTA</a>.
+              All rights reserved.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+    <!-- Libs JS -->
+    <script src="/static/dist/libs/apexcharts/dist/apexcharts.min.js?1692870487" defer></script>
+    <script src="/static/dist/libs/jsvectormap/dist/js/jsvectormap.min.js?1692870487" defer></script>
+    <script src="/static/dist/libs/jsvectormap/dist/maps/world.js?1692870487" defer></script>
+    <script src="/static/dist/libs/jsvectormap/dist/maps/world-merc.js?1692870487" defer></script>
+    <!-- Tabler Core -->
+    <script src="/static/dist/js/tabler.min.js?1692870487" defer></script>
+    <script src="/static/dist/js/demo.min.js?1692870487" defer></script>
+    <!-- Libs JS -->
+    <script src="/static/dist/libs/list.js/dist/list.min.js?1692870487" defer></script>
+</body>
+</html>

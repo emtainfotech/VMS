@@ -86,8 +86,8 @@ class Candidate(models.Model):
     sector = models.CharField(max_length=255, blank=True, null=True)
     job_type = models.CharField(max_length=255, blank=True, null=True)
     department = models.CharField(max_length=255, blank=True, null=True)
-    experience_year = models.IntegerField(blank=True, null=True)
-    experience_month = models.IntegerField(blank=True, null=True)
+    experience_year = models.CharField(max_length=255, blank=True, null=True)
+    experience_month = models.CharField(max_length=255, blank=True, null=True)
     current_company = models.CharField(max_length=255, blank=True, null=True)
     current_working_status = models.CharField(max_length=50)
     current_salary = models.CharField(max_length=10, blank=True, null=True)
@@ -104,13 +104,22 @@ class Candidate(models.Model):
     selection_status = models.CharField(max_length=10, blank=True, null=True)
     company_name = models.CharField(max_length=10, blank=True, null=True)
     offered_salary = models.CharField(max_length=255, blank=True, null=True)
-    selection_date = models.CharField(max_length=255, blank=True, null=True)
+    selection_date = models.DateField(blank=True, null=True)
     candidate_joining_date = models.CharField(max_length=255, blank=True, null=True)
     emta_commission = models.CharField(max_length=255, blank=True, null=True)
     payout_date = models.CharField(max_length=255, blank=True, null=True)
     unique_id = models.CharField(max_length=10, unique=True, blank=True, null=True)
-    employee_name = models.CharField(max_length=255, blank=True, null=True)
-
+    
+    vendor_commission = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        blank=True, 
+        null=True
+    )
+    vendor_payout_date = models.DateField(blank=True, null=True, default=None)
+    vendor_commission_status = models.CharField(max_length=255, blank=True, null=True)
+    commission_generation_date = models.DateField(blank=True, null=True, default=None)
+    
     def save(self, *args, **kwargs):
         if not self.unique_id:
             last_candidate = Candidate.objects.order_by('id').last()

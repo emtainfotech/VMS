@@ -108,7 +108,7 @@
               <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                 {% comment %} <a href="{% url 'employee_details_view' employee.id %}"> {% endcomment %}
                 <a href="{% url 'vendor_profile' vendor.id  %}" class="dropdown-item">Profile</a>
-                <a href="{% url 'employee_logout' %}" class="dropdown-item">Logout</a>
+                <a href="{% url 'vendor_logout' %}" class="dropdown-item">Logout</a>
               </div>
             </div>
           </div>
@@ -131,99 +131,434 @@
           <!-- Page body -->
           <div class="page-body">
             <div class="container-xl">
-              <div class="row row-deck row-cards">
+              <div class="row row-deck row-cards mb-4">
+                <!-- Total Shared Profile Card -->
                 <div class="col-sm-6 col-lg-3">
-                  <div class="card">
-                    <div class="card-body">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">Total Shared Profile</div>
-                      </div>
-                      <div class="h1 mb-3">{{num_candidates}}</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-sm-6 col-lg-3">
-                  <div class="card">
-                    <div class="card-body">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">Refer Link</div>
-                      </div>
-                      <div class="d-flex align-items-baseline">
-                        <div class="h3 mb-0 me-2"><a href="{{ referral_link }}"  id="referralLink" >{{ referral_link }} <a onclick="copyReferralLink()"  aria-label="RSS">
-                            <i class="fas fa-copy"></i></a>
-                            <br><br>
-                            <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
-                                    <a onclick="shareReferralLink()" class="btn btn-bitbucket w-1 btn-icon" aria-label="Bitbucket">
-                                        <i class="fas fa-share-alt" style="color: white;"></i></a>
-                              </div>
-                        </a>
-                    </div>
-                    {% comment %} <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
-                        <a href="#" class="btn btn-bitbucket w-100 btn-icon" aria-label="Bitbucket">
-                          <!-- Download SVG icon from http://tabler-icons.io/i/brand-bitbucket -->
-                          <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3.648 4a.64 .64 0 0 0 -.64 .744l3.14 14.528c.07 .417 .43 .724 .852 .728h10a.644 .644 0 0 0 .642 -.539l3.35 -14.71a.641 .641 0 0 0 -.64 -.744l-16.704 -.007z"></path><path d="M14 15h-4l-1 -6h6z"></path></svg>
-                        </a>
-                      </div> {% endcomment %}
-                    
-                      </div>
-                    </div>
-                    {% comment %} <div id="chart-revenue-bg" class="chart-sm"></div> {% endcomment %}
-                  </div>
-                </div>
-                <div class="col-sm-6 col-lg-3">
-                  <div class="card">
-                    <div class="card-body">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">Total Candidate Selected</div>
-                      </div>
-                      <div class="d-flex align-items-baseline">
-                        <div class="h1 mb-0 me-2">{% if qr_code_url %}
-                            <img src="{{ qr_code_url }}" alt="QR Code" id="qrCodeImage" style="width: 150px; height: 150px;" >
-                            <a onclick="shareQRCode()" class="btn btn-bitbucket w-1 btn-icon" aria-label="Bitbucket">
-                                <i class="fas fa-share-alt"style="color: white;"></i> </a>
-                                <a onclick="downloadQRCode()" class="btn btn-bitbucket w-1 btn-icon" aria-label="Bitbucket">
-                                    <i class="fas fa-download" style="color: white;"></i> </a>
-                            
-                            {% comment %} <button id="downloadBtn" class="btn btn-bitbucket w-50 btn-icon" >
-                                <i class="fas fa-download"></i> Download
-                            </button>
-                            <button class="btn btn-primary btn-sm" onclick="shareQRCode()">
-                                <i class="fas fa-share-alt"></i> Share QR
-                            </button> {% endcomment %}
-                        {% endif %}</div>
-                      </div>
-                    </div>
-                    {% comment %} <div id="chart-revenue-bg" class="chart-sm"></div> {% endcomment %}
-                  </div>
-                </div>
-                <div class="col-sm-6 col-lg-3">
-                  <div class="card">
-                    <div class="card-body">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">Total Revenue</div>
-                        <div class="ms-auto lh-1">
-                          <div class="dropdown">
-                            <a class="dropdown-toggle text-secondary" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Last 7 days</a>
-                            <div class="dropdown-menu dropdown-menu-end">
-                              <a class="dropdown-item active" href="#">Last 7 days</a>
-                              <a class="dropdown-item" href="#">Last 30 days</a>
-                              <a class="dropdown-item" href="#">Last 3 months</a>
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="subheader">Total Shared Profile</div>
+                                <div class="ms-auto lh-1">
+                                    <i class="bi bi-people-fill fs-3 text-blue"></i>
+                                </div>
                             </div>
-                          </div>
+                            <div class="d-flex align-items-baseline">
+                                <div class="h1 mb-0 me-2">{{ num_candidates }}</div>
+                                <div class="me-auto">
+                                    <span class="text-green d-inline-flex align-items-center lh-1">
+                                        <i class="bi bi-arrow-up"></i> {{ growth_percentage }}%
+                                    </span>
+                                </div>
+                            </div>
+                            <div id="chart-profiles" class="chart-sm mt-3"></div>
                         </div>
-                      </div>
-                      <div class="d-flex align-items-baseline">
-                        <div class="h1 mb-3 me-2">{{ total_commission }}</div>
-                        <div class="me-auto">
-                          <span class="text-yellow d-inline-flex align-items-center lh-1">
-                            1% 
-                          </span>
-                        </div>
-                      </div>
-                      <div id="chart-new-clients" class="chart-sm"></div>
                     </div>
-                  </div>
                 </div>
+            
+                <!-- Refer Link Card -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="subheader">Referral Link</div>
+                                <div class="ms-auto lh-1">
+                                    <i class="bi bi-link-45deg fs-3 text-purple"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control form-control-sm" id="referralLinkInput" 
+                                           value="{{ referral_link }}" readonly>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" id="copyReferralBtn">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-primary w-100" id="shareContentBtn">
+                                        <i class="bi bi-share me-1"></i> Share
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#qrModal">
+                                        <i class="bi bi-qr-code"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- QR Code Card -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body text-center">
+                            <div class="subheader mb-3">Your QR Code</div>
+                            {% if qr_code_url %}
+                            <div class="mb-3">
+                                <img src="{{ qr_code_url }}" alt="QR Code" class="img-fluid rounded border" style="max-width: 150px;" id="qrCodeImage">
+                            </div>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button class="btn btn-sm btn-primary" id="downloadQrBtn">
+                                    <i class="bi bi-download me-1"></i> Download
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary" id="shareQrBtn">
+                                    <i class="bi bi-share"></i>
+                                </button>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">QR Code not available</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- Revenue Card -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="subheader">Total Revenue</div>
+                                <div class="ms-auto lh-1">
+                                    <div class="dropdown">
+                                        <a class="dropdown-toggle text-muted" href="#" data-bs-toggle="dropdown" 
+                                           aria-haspopup="true" aria-expanded="false" id="timePeriodDropdown">
+                                            Last 7 days
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-end">
+                                            <a class="dropdown-item active" href="#" data-period="7">Last 7 days</a>
+                                            <a class="dropdown-item" href="#" data-period="30">Last 30 days</a>
+                                            <a class="dropdown-item" href="#" data-period="90">Last 3 months</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-baseline">
+                                <div class="h1 mb-0 me-2">₹<span id="totalCommission">{{ total_commission|default:"0" }}</span></div>
+                                <div class="me-auto">
+                                    <span class="text-green d-inline-flex align-items-center lh-1" id="growthPercentage">
+                                        <i class="bi bi-arrow-up"></i> {{ growth_percentage }}%
+                                    </span>
+                                </div>
+                            </div>
+                            <div id="chart-revenue" class="chart-sm mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- QR Code Modal -->
+            <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Share QR Code</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            {% if qr_code_url %}
+                            <img src="{{ qr_code_url }}" alt="QR Code" class="img-fluid mb-3">
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button class="btn btn-primary" id="downloadQrModalBtn">
+                                    <i class="bi bi-download me-1"></i> Download
+                                </button>
+                                <button class="btn btn-outline-primary" id="shareQrModalBtn">
+                                    <i class="bi bi-share me-1"></i> Share
+                                </button>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">QR Code not available</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Share Options Modal -->
+            <div class="modal fade" id="shareOptionsModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Share Options</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            {% if qr_code_url %}
+                            <img src="{{ qr_code_url }}" class="img-fluid mb-3" style="max-width: 200px;">
+                            {% endif %}
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" value="{{ referral_link }}" id="modalReferralLink" readonly>
+                                <button class="btn btn-outline-secondary" type="button" id="copyModalReferralBtn">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                                <button class="btn btn-primary share-platform-btn" data-platform="email">
+                                    <i class="bi bi-envelope me-1"></i> Email
+                                </button>
+                                <button class="btn btn-success share-platform-btn" data-platform="whatsapp">
+                                    <i class="bi bi-whatsapp me-1"></i> WhatsApp
+                                </button>
+                                <button class="btn btn-info text-white share-platform-btn" data-platform="twitter">
+                                    <i class="bi bi-twitter me-1"></i> Twitter
+                                </button>
+                                <button class="btn btn-facebook share-platform-btn" data-platform="facebook" style="background-color: #1877f2; color: white;">
+                                    <i class="bi bi-facebook me-1"></i> Facebook
+                                </button>
+                                <button class="btn btn-secondary share-platform-btn" data-platform="sms">
+                                    <i class="bi bi-chat-text me-1"></i> SMS
+                                </button>
+                                <button class="btn btn-dark share-platform-btn" data-platform="other">
+                                    <i class="bi bi-three-dots me-1"></i> Other Apps
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize tooltips
+                const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            
+                // Copy referral link function
+                function copyReferralLink() {
+                    const input = document.getElementById('referralLinkInput');
+                    input.select();
+                    document.execCommand('copy');
+                    
+                    // Show feedback
+                    const tooltip = new bootstrap.Tooltip(input, {
+                        title: 'Copied!',
+                        trigger: 'manual'
+                    });
+                    tooltip.show();
+                    setTimeout(() => tooltip.hide(), 1000);
+                }
+            
+                // Download QR code
+                async function downloadQRCode() {
+                    const qrCodeUrl = '{{ qr_code_url }}';
+                    if (!qrCodeUrl) {
+                        alert('QR code not available');
+                        return;
+                    }
+                    
+                    try {
+                        let blob;
+                        if (qrCodeUrl.startsWith('data:')) {
+                            // Handle data URL
+                            const response = await fetch(qrCodeUrl);
+                            blob = await response.blob();
+                        } else {
+                            // Handle regular URL
+                            const response = await fetch(qrCodeUrl);
+                            blob = await response.blob();
+                        }
+                        
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'referral-qr-code.png';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    } catch (error) {
+                        console.error('Error downloading QR code:', error);
+                        alert('Failed to download QR code');
+                    }
+                }
+            
+                // Share content function
+                async function shareContent() {
+                    const referralLink = document.getElementById('referralLinkInput').value;
+                    const qrCodeUrl = '{{ qr_code_url }}';
+                    const shareTitle = 'Join using my referral';
+                    const shareText = `Check out this opportunity using my referral link: ${referralLink}`;
+                    
+                    try {
+                        if (navigator.share) {
+                            // Web Share API is available (mobile devices)
+                            const shareData = {
+                                title: shareTitle,
+                                text: shareText,
+                                url: referralLink
+                            };
+                            
+                            // Try to include QR code if available
+                            if (qrCodeUrl && navigator.canShare && navigator.canShare({ files: true })) {
+                                const response = await fetch(qrCodeUrl);
+                                const blob = await response.blob();
+                                const file = new File([blob], 'referral-qr.png', { type: 'image/png' });
+                                shareData.files = [file];
+                            }
+                            
+                            await navigator.share(shareData);
+                        } else {
+                            // Fallback for desktop browsers
+                            const modal = new bootstrap.Modal(document.getElementById('shareOptionsModal'));
+                            modal.show();
+                        }
+                    } catch (error) {
+                        console.error('Error sharing:', error);
+                        
+                        // Fallback if Web Share API fails
+                        if (error.name !== 'AbortError') {
+                            const modal = new bootstrap.Modal(document.getElementById('shareOptionsModal'));
+                            modal.show();
+                        }
+                    }
+                }
+            
+                // Platform-specific sharing
+                function shareOnPlatform(platform) {
+                    const referralLink = document.getElementById('referralLinkInput').value;
+                    const shareText = `Join using my referral link: ${referralLink}`;
+                    
+                    switch(platform) {
+                        case 'email':
+                            window.open(`mailto:?subject=Referral Link&body=${encodeURIComponent(shareText)}`);
+                            break;
+                        case 'whatsapp':
+                            window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`);
+                            break;
+                        case 'twitter':
+                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`);
+                            break;
+                        case 'facebook':
+                            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`);
+                            break;
+                        case 'sms':
+                            window.open(`sms:?body=${encodeURIComponent(shareText)}`);
+                            break;
+                        case 'other':
+                            // Generic fallback
+                            window.open(`mailto:?subject=Referral Link&body=${encodeURIComponent(shareText)}`);
+                            break;
+                    }
+                }
+            
+                // Event listeners
+                document.getElementById('copyReferralBtn')?.addEventListener('click', copyReferralLink);
+                document.getElementById('copyModalReferralBtn')?.addEventListener('click', copyReferralLink);
+                document.getElementById('shareContentBtn')?.addEventListener('click', shareContent);
+                document.getElementById('shareQrBtn')?.addEventListener('click', shareContent);
+                document.getElementById('shareQrModalBtn')?.addEventListener('click', shareContent);
+                document.getElementById('downloadQrBtn')?.addEventListener('click', downloadQRCode);
+                document.getElementById('downloadQrModalBtn')?.addEventListener('click', downloadQRCode);
+            
+                // Platform share buttons
+                document.querySelectorAll('.share-platform-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const platform = this.getAttribute('data-platform');
+                        shareOnPlatform(platform);
+                    });
+                });
+            
+                
+            });
+            </script>
+            
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize charts
+                const profileChart = new ApexCharts(document.getElementById('chart-profiles'), {
+                    chart: { type: 'area', sparkline: { enabled: true }, height: 40 },
+                    series: [{ name: 'Profiles', data: [10, 30, 40, 20, 45, 50, 20] }],
+                    stroke: { curve: 'smooth', width: 2 },
+                    fill: { opacity: 0.2 },
+                    colors: [tabler.getColor('blue')],
+                    tooltip: { enabled: false }
+                });
+                profileChart.render();
+            
+                const revenueChart = new ApexCharts(document.getElementById('chart-revenue'), {
+                    chart: { type: 'line', sparkline: { enabled: true }, height: 40 },
+                    series: [{ name: 'Revenue', data: [] }],
+                    stroke: { curve: 'smooth', width: 2 },
+                    colors: [tabler.getColor('primary')],
+                    tooltip: {
+                        theme: 'dark',
+                        y: { formatter: (val) => '₹' + val }
+                    }
+                });
+                revenueChart.render();
+            
+                // Revenue data update function
+                function updateRevenueData(days) {
+                    fetch(`{% url "revenue_data" %}?days=${days}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('totalCommission').textContent = data.total_commission;
+                            document.getElementById('growthPercentage').innerHTML = 
+                                `<i class="bi bi-arrow-${data.growth_percentage >= 0 ? 'up' : 'down'}"></i> ${Math.abs(data.growth_percentage)}%`;
+                            
+                            revenueChart.updateSeries([{ name: 'Revenue', data: data.chart_data }]);
+                            document.getElementById('timePeriodDropdown').textContent = 
+                                days === 7 ? 'Last 7 days' : days === 30 ? 'Last 30 days' : 'Last 3 months';
+                        });
+                }
+            
+                // Set default and handle dropdown clicks
+                updateRevenueData(7);
+                document.querySelectorAll('[data-period]').forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const days = parseInt(this.getAttribute('data-period'));
+                        updateRevenueData(days);
+                        document.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+            
+                // Copy referral link function
+                window.copyReferralLink = function() {
+                    const input = document.getElementById('referralLinkInput');
+                    input.select();
+                    document.execCommand('copy');
+                    
+                    // Show tooltip feedback
+                    const tooltip = new bootstrap.Tooltip(input, {
+                        title: 'Copied!',
+                        trigger: 'manual'
+                    });
+                    tooltip.show();
+                    setTimeout(() => tooltip.hide(), 1000);
+                };
+            
+                // Share functions
+                window.shareReferralLink = function() {
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'Join using my referral link',
+                            text: 'Check out this opportunity using my referral link',
+                            url: '{{ referral_link }}'
+                        }).catch(console.error);
+                    } else {
+                        // Fallback for browsers without Web Share API
+                        window.open(`mailto:?subject=Referral Link&body=Here's my referral link: {{ referral_link }}`);
+                    }
+                };
+            
+                window.shareQRCode = function() {
+                    // Implement QR code sharing logic
+                    console.log('Sharing QR code');
+                };
+            
+                window.downloadQRCode = function() {
+                    if (!'{{ qr_code_url }}') return;
+                    
+                    const link = document.createElement('a');
+                    link.href = '{{ qr_code_url }}';
+                    link.download = 'referral-qr-code.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+            });
+            </script>
       
                 {% comment %} <div class="col-12">
                   <div class="row row-cards">
@@ -324,56 +659,122 @@
                       <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
                         <thead>
                           <tr>
-                            <th class="w-1">
-                              No. 
-                            </th>
+                            <th class="w-1">No.</th>
                             <th>Register At</th>
-                            <th>Name</th>
-                            <th>Mobile</th>
-                            <th>Email</th>
-                            {% comment %} <th>Commission</th> {% endcomment %}
-                            <th>Status</th>
-                            <th>Remark</th>
+                            <th>Candidate</th>
+                            <th>Contact</th>
+                            <th class="text-center">Status</th>
+                            <th>Last Remark</th>
+                            <th class="">Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {% for candidate in candidates %}
                           <tr>
+                            <td>{{ forloop.counter }}</td>
                             <td>
-                              {{forloop.counter}}
+                              <div class="d-flex flex-column">
+                                <span class="text-secondary">{{ candidate.register_time|date:"M d, Y" }}</span>
+                                <small class="text-muted">{{ candidate.register_time|date:"h:i A" }}</small>
+                              </div>
                             </td>
                             <td>
-                              <span class="text-secondary">{{candidate.register_time}}</span>
-                            </td>
-                            {% comment %} <td>
-                              {{candidate.Contact }}
-                            </td> {% endcomment %}
-                            <td>
-                                {{ candidate.candidate_name }}
-                            </td>
-                            <td>
-                              {{candidate.candidate_mobile_number }}
-                            </td>
-                            <td>
-                              {{ candidate.candidate_email_address }}
-                            </td>
-                            {% comment %} <td>
-                              {{candidate.commission }}
-                            </td> {% endcomment %}
-                                {% comment %} <td>
-                                  <span class="badge bg-success me-1"></span> Paid
-                                </td> {% endcomment %}
-                            <td >
-                                {{ candidate.selection_status }}
+                              <div class="d-flex align-items-center">
+                                {% if candidate.candidate_photo %}
+                                <img src="{{ candidate.candidate_photo.url }}" class="avatar avatar-sm me-3 rounded-circle" alt="{{ candidate.candidate_name }}">
+                                {% else %}
+                                <span class="avatar avatar-sm me-3 rounded-circle bg-blue-lt">
+                                  {{ candidate.candidate_name|slice:":1"|upper }}
+                                </span>
+                                {% endif %}
+                                <div>
+                                  <div class="font-weight-medium">{{ candidate.candidate_name }}</div>
+                                  <div class="text-muted small">{{ candidate.refer_code }}-{{ candidate.unique_id }}</div>
+                                </div>
+                              </div>
                             </td>
                             <td>
-                                <textarea readonly>{{ candidate.Remark }}</textarea>
+                              <div class="d-flex flex-column">
+                                <a href="tel:{{ candidate.candidate_mobile_number }}" class="text-reset">{{ candidate.candidate_mobile_number }}</a>
+                                <small class="text-muted">{{ candidate.candidate_email_address|truncatechars:20 }}</small>
+                              </div>
+                            </td>
+                            <td class="text-center">
+                              <span class="badge 
+                                {% if candidate.selection_status == 'Selected' %}bg-success
+                                {% elif candidate.selection_status == 'Rejected' %}bg-danger
+                                {% elif candidate.selection_status == 'Pending' %}bg-warning
+                                {% else %}bg-secondary{% endif %} text-white">
+                                {{ candidate.selection_status|default:"New" }}
+                              </span>
+                            </td>
+                            <td>
+                              <div class="text-wrap" style="max-width: 200px;">
+                                <small class="text-muted">{{ candidate.calling_remark|truncatechars:50|default:"No remarks" }}</small>
+                              </div>
+                            </td>
+                            <td class="text-end">
+                              <div class="btn-list flex-nowrap">
+                                <a href="{% url 'candidate_profile_details' candidate.id %}" class="btn btn-sm btn-icon" >
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"></path>
+                                  </svg>
+                                </a>
+                                <a href="mailto:{{ candidate.candidate_email_address }}" class="btn btn-sm btn-icon" title="Send Email">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z"></path>
+                                    <path d="M3 7l9 6l9 -6"></path>
+                                  </svg>
+                                </a>
+                                <a href="tel:{{ candidate.candidate_mobile_number }}" class="btn btn-sm btn-icon" title="Make Call">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"></path>
+                                  </svg>
+                                </a>
+                              </div>
                             </td>
                           </tr>
                           {% endfor %}
                         </tbody>
                       </table>
                     </div>
+                    
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                      // Initialize DataTable
+                      $('#searchableTable').DataTable({
+                        responsive: true,
+                        dom: '<"top"<"table-search"f><"table-actions"B>>rt<"bottom"<"table-info"i><"table-pagination"p>>',
+                        buttons: [
+                          {
+                            extend: 'excel',
+                            text: '<i class="ti ti-file-spreadsheet me-1"></i> Export',
+                            className: 'btn btn-sm btn-secondary'
+                          },
+                          {
+                            extend: 'print',
+                            text: '<i class="ti ti-printer me-1"></i> Print',
+                            className: 'btn btn-sm btn-secondary'
+                          }
+                        ],
+                        language: {
+                          search: '',
+                          searchPlaceholder: 'Search candidates...',
+                          lengthMenu: '_MENU_ candidates per page',
+                        },
+                        columnDefs: [
+                          { orderable: false, targets: [6] } // Disable sorting for actions column
+                        ],
+                        initComplete: function() {
+                          $('.dataTables_filter input').addClass('form-control form-control-sm');
+                        }
+                      });
+                    });
+                    </script>
                     <div class="card-footer d-flex align-items-center">
                       <p class="m-0 text-secondary">
                         Showing <span>1</span> to <span>8</span> of <span>16</span> entries

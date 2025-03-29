@@ -1336,7 +1336,6 @@ def pay_list_view(request):
         return render(request, '404.html', status=404)
 
 
-
     
 @login_required
 def update_salary_status(request, salary_id):

@@ -113,6 +113,10 @@ def vendor_logout(request):
     logout(request)
     return redirect('vendor_login')
 
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+from django.core.files.base import ContentFile
+
 @login_required
 def vendor_dashboard(request):
     if request.user.is_authenticated:
@@ -121,22 +125,61 @@ def vendor_dashboard(request):
             referral_link = request.build_absolute_uri('/candidateform/?ref={}'.format(vendor.refer_code))
             candidates = Candidate.objects.filter(refer_code=vendor.refer_code).order_by('-id')
             num_candidates = candidates.count()
-            # total_commission = candidates.aggregate(total_commission=Sum('commission'))['total_commission']
 
-            # Generate QR code
+            # Generate Paytm-style QR code with logo
             qr = qrcode.QRCode(
                 version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                error_correction=qrcode.constants.ERROR_CORRECT_H,  # Higher error correction
                 box_size=10,
                 border=4,
             )
             qr.add_data(referral_link)
             qr.make(fit=True)
+            
+            # Create QR code image with custom colors
+            qr_img = qr.make_image(fill_color="#1A4D8F", back_color="white").convert('RGB')
+            
+            # Add Paytm logo to the center (you'll need to have a logo file)
+            try:
+                logo_path = os.path.join(settings.STATIC_ROOT, 'logo.png')  # Adjust path
+                logo = Image.open(logo_path)
+                
+                # Calculate logo size and position
+                qr_size = qr_img.size[0]
+                logo_size = qr_size // 4
+                logo = logo.resize((logo_size, logo_size))
+                
+                # Calculate position to center the logo
+                pos = ((qr_size - logo_size) // 2, (qr_size - logo_size) // 2)
+                
+                # Paste logo on QR code
+                qr_img.paste(logo, pos)
+            except:
+                pass  # Skip logo if not available
 
-            img = qr.make_image(fill='black', back_color='white')
+            # Create a printable image with branding
+            printable_img = Image.new('RGB', (800, 1000), color='white')
+            draw = ImageDraw.Draw(printable_img)
+            
+            # Add header text
+            font_path = os.path.join(settings.STATIC_ROOT, 'fonts/arial.ttf')  # Adjust path
+            font_large = ImageFont.truetype(font_path, 36)
+            font_medium = ImageFont.truetype(font_path, 24)
+            
+            draw.text((400, 50), "Scan to Register", fill="#1A4D8F", font=font_large, anchor='mm')
+            draw.text((400, 100), f"Referral Code: {vendor.refer_code}", fill="black", font=font_medium, anchor='mm')
+            
+            # Paste QR code in the center
+            qr_img = qr_img.resize((500, 500))
+            printable_img.paste(qr_img, (150, 200))
+            
+            # Add footer text
+            draw.text((400, 750), "Powered by YourCompany", fill="#1A4D8F", font=font_medium, anchor='mm')
+            
+            # Save to buffer
             buffer = BytesIO()
-            img.save(buffer, format='PNG')
-            qr_code_file = ContentFile(buffer.getvalue(), name=f'{vendor.user.username}_qr.png')
+            printable_img.save(buffer, format='PNG')
+            qr_code_file = ContentFile(buffer.getvalue(), name=f'{vendor.user.username}_paytm_qr.png')
 
             # Save QR code to vendor
             vendor.qr_code.save(qr_code_file.name, qr_code_file)
@@ -153,7 +196,6 @@ def vendor_dashboard(request):
                 'last_name': request.user.last_name,
                 'candidates': candidates,
                 'num_candidates': num_candidates,
-                # 'total_commission': total_commission,
                 'referral_link': referral_link,
                 'qr_code_url': vendor.qr_code.url if vendor.qr_code else None,
             }
@@ -449,7 +491,6 @@ def bulk_upload_candidates(request):
 
 
 
-
 def download_sample_excel(request):
     refer_code = request.GET.get("refer_code", "YOUR_REF_CODE")
 
@@ -473,3 +514,77 @@ def download_sample_excel(request):
         df.to_excel(writer, index=False)
 
     return response
+
+
+
+from django.http import JsonResponse
+from django.utils import timezone
+from datetime import timedelta
+from .models import Candidate
+from django.db.models import Sum
+
+def revenue_data(request):
+    # Get filter parameter
+    days = int(request.GET.get('days', 7))
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=days)
+    
+    # Filter candidates by selection date range
+    candidates = Candidate.objects.filter(
+        commission_generation_date__isnull=False,
+        vendor_commission__isnull=False,
+        commission_generation_date__gte=start_date,
+        commission_generation_date__lte=end_date
+    )
+    
+    # Calculate total commission
+    total_commission = candidates.aggregate(
+        total=Sum('vendor_commission')
+    )['total'] or 0
+    
+    # Calculate growth percentage (simplified example)
+    prev_period_total = Candidate.objects.filter(
+        commission_generation_date__gte=start_date - timedelta(days=days),
+        commission_generation_date__lt=start_date,
+        vendor_commission__isnull=False
+    ).aggregate(
+        total=Sum('vendor_commission')
+    )['total'] or 0
+    
+    growth_percentage = 0
+    if prev_period_total > 0:
+        growth_percentage = round(((total_commission - prev_period_total) / prev_period_total) * 100, 1)
+    
+    # Prepare chart data (group by day)
+    chart_data = []
+    current_date = start_date
+    while current_date <= end_date:
+        daily_total = Candidate.objects.filter(
+            commission_generation_date=current_date,
+            vendor_commission__isnull=False
+        ).aggregate(
+            total=Sum('vendor_commission')
+        )['total'] or 0
+        
+        chart_data.append({
+            'x': current_date.isoformat(),
+            'y': float(daily_total)
+        })
+        current_date += timedelta(days=1)
+    
+    return JsonResponse({
+        'total_commission': total_commission,
+        'growth_percentage': growth_percentage,
+        'chart_data': chart_data
+    })
+    
+    
+
+def candidate_profile_details(request, id) :
+    vendor = Vendor.objects.get(user=request.user)
+    candidate = get_object_or_404(Candidate, id=id)
+    context = {
+        'candidate': candidate,
+        'vendor': vendor,
+    }
+    return render(request, 'evms/candidate-profile-details.html', context)

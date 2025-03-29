@@ -1496,8 +1496,22 @@ def employee_evms_candidate_profile(request,id) :
             candidate.emta_commission = emta_commission
             candidate.payout_date = payout_date
             candidate.save()
+            
+        elif 'submit_vendor_related_data' in request.POST:
+            # Handle form submission for bank details
+            vendor_commission = request.POST.get('vendor_commission')
+            vendor_payout_date = request.POST.get('vendor_payout_date')
+            commission_generation_date = request.POST.get('commission_generation_date')
+            vendor_commission_status = request.POST.get('vendor_commission_status')
 
-            messages.success(request, 'Secection details updated successfully!')
+            # Update or create bank details for the employee
+            candidate.vendor_commission = vendor_commission
+            candidate.vendor_payout_date = vendor_payout_date
+            candidate.commission_generation_date = commission_generation_date
+            candidate.vendor_commission_status = vendor_commission_status
+            candidate.save()
+
+            messages.success(request, 'Vendor releted details updated successfully!')
             
             
 
