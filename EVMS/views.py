@@ -126,60 +126,62 @@ def vendor_dashboard(request):
             candidates = Candidate.objects.filter(refer_code=vendor.refer_code).order_by('-id')
             num_candidates = candidates.count()
 
-            # Generate Paytm-style QR code with logo
+            # Generate QR code
             qr = qrcode.QRCode(
                 version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_H,  # Higher error correction
+                error_correction=qrcode.constants.ERROR_CORRECT_H,
                 box_size=10,
                 border=4,
             )
             qr.add_data(referral_link)
             qr.make(fit=True)
             
-            # Create QR code image with custom colors
+            # Create QR code image
             qr_img = qr.make_image(fill_color="#1A4D8F", back_color="white").convert('RGB')
             
-            # Add Paytm logo to the center (you'll need to have a logo file)
+            # Add logo if available
             try:
-                logo_path = os.path.join(settings.STATIC_ROOT, 'logo.png')  # Adjust path
-                logo = Image.open(logo_path)
-                
-                # Calculate logo size and position
-                qr_size = qr_img.size[0]
-                logo_size = qr_size // 4
-                logo = logo.resize((logo_size, logo_size))
-                
-                # Calculate position to center the logo
-                pos = ((qr_size - logo_size) // 2, (qr_size - logo_size) // 2)
-                
-                # Paste logo on QR code
-                qr_img.paste(logo, pos)
-            except:
-                pass  # Skip logo if not available
+                logo_path = os.path.join(settings.STATIC_ROOT, 'images/logo.png')
+                if os.path.exists(logo_path):
+                    logo = Image.open(logo_path)
+                    qr_size = qr_img.size[0]
+                    logo_size = qr_size // 4
+                    logo = logo.resize((logo_size, logo_size))
+                    pos = ((qr_size - logo_size) // 2, (qr_size - logo_size) // 2)
+                    qr_img.paste(logo, pos)
+            except Exception as e:
+                print(f"Logo addition skipped: {e}")
 
-            # Create a printable image with branding
+            # Create printable image
             printable_img = Image.new('RGB', (800, 1000), color='white')
             draw = ImageDraw.Draw(printable_img)
             
-            # Add header text
-            font_path = os.path.join(settings.STATIC_ROOT, 'fonts/arial.ttf')  # Adjust path
-            font_large = ImageFont.truetype(font_path, 36)
-            font_medium = ImageFont.truetype(font_path, 24)
+            # Font handling with fallback
+            try:
+                font_path = os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Regular.ttf')
+                font_large = ImageFont.truetype(font_path, 36)
+                font_medium = ImageFont.truetype(font_path, 24)
+            except:
+                # Fallback to default font if Roboto not available
+                font_large = ImageFont.load_default()
+                font_medium = ImageFont.load_default()
+                print("Using default font - Roboto not found")
             
+            # Add text
             draw.text((400, 50), "Scan to Register", fill="#1A4D8F", font=font_large, anchor='mm')
             draw.text((400, 100), f"Referral Code: {vendor.refer_code}", fill="black", font=font_medium, anchor='mm')
             
-            # Paste QR code in the center
+            # Add QR code
             qr_img = qr_img.resize((500, 500))
             printable_img.paste(qr_img, (150, 200))
             
-            # Add footer text
-            draw.text((400, 750), "Powered by YourCompany", fill="#1A4D8F", font=font_medium, anchor='mm')
+            # Add footer
+            draw.text((400, 750), "Powered by EMTA", fill="#1A4D8F", font=font_medium, anchor='mm')
             
             # Save to buffer
             buffer = BytesIO()
             printable_img.save(buffer, format='PNG')
-            qr_code_file = ContentFile(buffer.getvalue(), name=f'{vendor.user.username}_paytm_qr.png')
+            qr_code_file = ContentFile(buffer.getvalue(), name=f'{vendor.user.username}_qr.png')
 
             # Save QR code to vendor
             vendor.qr_code.save(qr_code_file.name, qr_code_file)
@@ -206,7 +208,6 @@ def vendor_dashboard(request):
             return render(request, 'usernotfound.html', {'error': 'Vendor details not found'})
     else:
         return render(request, 'usernotfound.html', {'error': 'User not authenticated'})
-
 def vendor_profile(request, id):
     vendor = get_object_or_404(Vendor, id=id)
     vendor_profile_detail, _ = Vendor_profile_details.objects.get_or_create(vendor=vendor)
