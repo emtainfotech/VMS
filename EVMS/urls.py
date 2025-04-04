@@ -19,7 +19,8 @@ urlpatterns = [
     path('thankyou/', thankyou, name='thankyou'),
     path('api/revenue-data/', revenue_data, name='revenue_data'),
     path('candidate-profile/<int:id>/', candidate_profile_details, name='candidate_profile_details'),
-
+    path('selected-candidates/', vendor_selected_candidate, name='vendor_selected_candidate'),
+    path('transaction-history/', vendor_transaction_history, name = 'vendor_transaction_history'),
     
     path('admin/', admin.site.urls),
 ]

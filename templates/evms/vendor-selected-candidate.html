@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="shortcut icon" href="/static/m.png" type="image/x-icon">
+    <title>EMTA - HRMS</title>
+    <!-- CSS files -->
+    <link href="/static/dist/css/tabler.min.css?1692870487" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <link href="/static/dist/css/tabler-flags.min.css?1692870487" rel="stylesheet" />
+    <link href="/static/dist/css/tabler-payments.min.css?1692870487" rel="stylesheet" />
+    <link href="/static/dist/css/tabler-vendors.min.css?1692870487" rel="stylesheet" />
+    <link href="/static/dist/css/demo.min.css?1692870487" rel="stylesheet" />
+    <style>
+      @import url('https://rsms.me/inter/inter.css');
+      :root {
+        --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+      }
+      body {
+        font-feature-settings: 'cv03', 'cv04', 'cv11';
+      }
+    </style>
+  </head>
+  <body>
+    <script src="/static/dist/js/demo-theme.min.js?1692870487"></script>
+    <div class="page">
+      <!-- Navbar -->
+      <header class="navbar navbar-expand-md d-print-none">
+        <div class="container-xl">
+          {% comment %} <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button> {% endcomment %}
+          <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3"><a href="{% url 'vendor_dashboard' %}"><img src="https://emta.co.in/f.png" width="110" height="32" alt="Tabler" class="navbar-brand-image" /></a></h1>
+          <div class="navbar-nav flex-row order-md-last">
+            <div class="nav-item d-none d-md-flex me-3">
+              
+            </div>
+            <div class="d-none d-md-flex">
+              <a href="?theme=dark" class="nav-link px-0 hide-theme-dark" title="Enable dark mode" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                <!-- Download SVG icon from http://tabler-icons.io/i/moon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                </svg>
+              </a>
+              <a href="?theme=light" class="nav-link px-0 hide-theme-light" title="Enable light mode" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                <!-- Download SVG icon from http://tabler-icons.io/i/sun -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                  <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
+                </svg>
+              </a>
+              <div class="nav-item dropdown d-none d-md-flex me-3">
+                <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show notifications">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" />
+                        <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+                    </svg>
+                    <span class="badge bg-red">{{ notifications.count }}</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Notifications</h3>
+                        </div>
+                        <div class="list-group list-group-flush list-group-hoverable">
+                            {% for notification in notifications %}
+                                <div class="list-group-item">
+                                    <div class="row align-items-center">
+                                        <div class="col text-truncate">
+                                            <a href="{% url 'mark_notifications_as_read' %}" class="text-body d-block">{{ notification.message }}</a>
+                                            <div class="d-block text-secondary text-truncate mt-n1">{{ notification.created_at }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="list-group-item">
+                                    <div class="row align-items-center">
+                                        <div class="col text-truncate">
+                                            <span class="text-body">No new notifications</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            </div>
+            <div class="nav-item dropdown">
+              <span class="badge bg-orange badge-notification badge-blink"></span>
+              <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
+                {% if vendor.vendor_profile_image %}
+                <img class="avatar avatar-sm" src="{{vendor.vendor_profile_image.url}}" alt="{{ user.first_name}}&nbsp; {{ user.last_name }}">
+                {% else %}
+                <p>No profile image uploaded.</p>
+                {% endif %}
+                <div class="d-none d-xl-block ps-2">
+                  <div>{{ user.first_name}}&nbsp; {{ user.last_name }}</div>
+                  <div class="mt-1 small text-secondary">{{user.username}}</div>
+                </div>
+              </a>
+              <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                {% comment %} <a href="{% url 'employee_details_view' employee.id %}"> {% endcomment %}
+                <a href="{% url 'vendor_profile' vendor.id  %}" class="dropdown-item">Profile</a>
+                <a href="{% url 'vendor_selected_candidate' %}" class="dropdown-item">Selected Candidate</a>
+                <a href="{% url 'vendor_transaction_history' %}" class="dropdown-item">Transaction History</a>
+                <a href="{% url 'vendor_logout' %}" class="dropdown-item">Logout</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+        <div class="page-wrapper">
+          <!-- Page header -->
+          <div class="page-header d-print-none">
+            <div class="container-xl">
+              <div class="row g-2 align-items-center">
+                <div class="col">
+                  <!-- Page pre-title -->
+                  <div class="page-pretitle">Overview</div>
+                  <h2 class="page-title">Dashboard</h2>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+          <!-- Page body -->
+          <div class="page-body">
+            <div class="container-xl">
+              <div class="row row-deck row-cards mb-4">
+                <!-- Total Shared Profile Card -->
+                <div class="col-sm-6 col-lg-3" >
+                    <div class="card card-sm">
+                        <div class="card-body" >
+                            <div class="d-flex align-items-center">
+                                <div class="subheader">Total Shared Profile</div>
+                                <div class="ms-auto lh-1">
+                                    <i class="bi bi-people-fill fs-3 text-blue"></i>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-baseline">
+                                <div class="h1 mb-0 me-2">{{ num_selected_candidate }}</div>
+                                <div class="me-auto">
+                                    <span class="text-green d-inline-flex align-items-center lh-1">
+                                        <i class="bi bi-arrow-up"></i> {{ growth_percentage }}%
+                                    </span>
+                                </div>
+                            </div>
+                            <div id="chart-profiles" class="chart-sm mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+            
+                
+                <!-- Revenue Card -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="subheader">Total Revenue</div>
+                                <div class="ms-auto lh-1">
+                                    <div class="dropdown">
+                                        <a class="dropdown-toggle text-muted" href="#" data-bs-toggle="dropdown" 
+                                           aria-haspopup="true" aria-expanded="false" id="timePeriodDropdown">
+                                            Last 7 days
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-end">
+                                            <a class="dropdown-item active" href="#" data-period="7">Last 7 days</a>
+                                            <a class="dropdown-item" href="#" data-period="30">Last 30 days</a>
+                                            <a class="dropdown-item" href="#" data-period="90">Last 3 months</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-baseline">
+                                <div class="h1 mb-0 me-2">₹<span id="totalCommission">{{ total_commission|default:"0" }}</span></div>
+                                <div class="me-auto">
+                                    <span class="text-green d-inline-flex align-items-center lh-1" id="growthPercentage">
+                                        <i class="bi bi-arrow-up"></i> {{ growth_percentage }}%
+                                    </span>
+                                </div>
+                            </div>
+                            <div id="chart-revenue" class="chart-sm mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+           
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize tooltips
+                const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            
+                // Copy referral link function
+                function copyReferralLink() {
+                    const input = document.getElementById('referralLinkInput');
+                    input.select();
+                    document.execCommand('copy');
+                    
+                    // Show feedback
+                    const tooltip = new bootstrap.Tooltip(input, {
+                        title: 'Copied!',
+                        trigger: 'manual'
+                    });
+                    tooltip.show();
+                    setTimeout(() => tooltip.hide(), 1000);
+                }
+            
+                // Download QR code
+                async function downloadQRCode() {
+                    const qrCodeUrl = '{{ qr_code_url }}';
+                    if (!qrCodeUrl) {
+                        alert('QR code not available');
+                        return;
+                    }
+                    
+                    try {
+                        let blob;
+                        if (qrCodeUrl.startsWith('data:')) {
+                            // Handle data URL
+                            const response = await fetch(qrCodeUrl);
+                            blob = await response.blob();
+                        } else {
+                            // Handle regular URL
+                            const response = await fetch(qrCodeUrl);
+                            blob = await response.blob();
+                        }
+                        
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'referral-qr-code.png';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    } catch (error) {
+                        console.error('Error downloading QR code:', error);
+                        alert('Failed to download QR code');
+                    }
+                }
+            
+                // Share content function
+                async function shareContent() {
+                    const referralLink = document.getElementById('referralLinkInput').value;
+                    const qrCodeUrl = '{{ qr_code_url }}';
+                    const shareTitle = 'Join using my referral';
+                    const shareText = `Check out this opportunity using my referral link: ${referralLink}`;
+                    
+                    try {
+                        if (navigator.share) {
+                            // Web Share API is available (mobile devices)
+                            const shareData = {
+                                title: shareTitle,
+                                text: shareText,
+                                url: referralLink
+                            };
+                            
+                            // Try to include QR code if available
+                            if (qrCodeUrl && navigator.canShare && navigator.canShare({ files: true })) {
+                                const response = await fetch(qrCodeUrl);
+                                const blob = await response.blob();
+                                const file = new File([blob], 'referral-qr.png', { type: 'image/png' });
+                                shareData.files = [file];
+                            }
+                            
+                            await navigator.share(shareData);
+                        } else {
+                            // Fallback for desktop browsers
+                            const modal = new bootstrap.Modal(document.getElementById('shareOptionsModal'));
+                            modal.show();
+                        }
+                    } catch (error) {
+                        console.error('Error sharing:', error);
+                        
+                        // Fallback if Web Share API fails
+                        if (error.name !== 'AbortError') {
+                            const modal = new bootstrap.Modal(document.getElementById('shareOptionsModal'));
+                            modal.show();
+                        }
+                    }
+                }
+            
+                // Platform-specific sharing
+                function shareOnPlatform(platform) {
+                    const referralLink = document.getElementById('referralLinkInput').value;
+                    const shareText = `Join using my referral link: ${referralLink}`;
+                    
+                    switch(platform) {
+                        case 'email':
+                            window.open(`mailto:?subject=Referral Link&body=${encodeURIComponent(shareText)}`);
+                            break;
+                        case 'whatsapp':
+                            window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`);
+                            break;
+                        case 'twitter':
+                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`);
+                            break;
+                        case 'facebook':
+                            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`);
+                            break;
+                        case 'sms':
+                            window.open(`sms:?body=${encodeURIComponent(shareText)}`);
+                            break;
+                        case 'other':
+                            // Generic fallback
+                            window.open(`mailto:?subject=Referral Link&body=${encodeURIComponent(shareText)}`);
+                            break;
+                    }
+                }
+            
+                // Event listeners
+                document.getElementById('copyReferralBtn')?.addEventListener('click', copyReferralLink);
+                document.getElementById('copyModalReferralBtn')?.addEventListener('click', copyReferralLink);
+                document.getElementById('shareContentBtn')?.addEventListener('click', shareContent);
+                document.getElementById('shareQrBtn')?.addEventListener('click', shareContent);
+                document.getElementById('shareQrModalBtn')?.addEventListener('click', shareContent);
+                document.getElementById('downloadQrBtn')?.addEventListener('click', downloadQRCode);
+                document.getElementById('downloadQrModalBtn')?.addEventListener('click', downloadQRCode);
+            
+                // Platform share buttons
+                document.querySelectorAll('.share-platform-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const platform = this.getAttribute('data-platform');
+                        shareOnPlatform(platform);
+                    });
+                });
+            
+                
+            });
+            </script>
+            
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize charts
+                const profileChart = new ApexCharts(document.getElementById('chart-profiles'), {
+                    chart: { type: 'area', sparkline: { enabled: true }, height: 40 },
+                    series: [{ name: 'Profiles', data: [10, 30, 40, 20, 45, 50, 20] }],
+                    stroke: { curve: 'smooth', width: 2 },
+                    fill: { opacity: 0.2 },
+                    colors: [tabler.getColor('blue')],
+                    tooltip: { enabled: false }
+                });
+                profileChart.render();
+            
+                const revenueChart = new ApexCharts(document.getElementById('chart-revenue'), {
+                    chart: { type: 'line', sparkline: { enabled: true }, height: 40 },
+                    series: [{ name: 'Revenue', data: [] }],
+                    stroke: { curve: 'smooth', width: 2 },
+                    colors: [tabler.getColor('primary')],
+                    tooltip: {
+                        theme: 'dark',
+                        y: { formatter: (val) => '₹' + val }
+                    }
+                });
+                revenueChart.render();
+            
+                // Revenue data update function
+                function updateRevenueData(days) {
+                    fetch(`{% url "revenue_data" %}?days=${days}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('totalCommission').textContent = data.total_commission;
+                            document.getElementById('growthPercentage').innerHTML = 
+                                `<i class="bi bi-arrow-${data.growth_percentage >= 0 ? 'up' : 'down'}"></i> ${Math.abs(data.growth_percentage)}%`;
+                            
+                            revenueChart.updateSeries([{ name: 'Revenue', data: data.chart_data }]);
+                            document.getElementById('timePeriodDropdown').textContent = 
+                                days === 7 ? 'Last 7 days' : days === 30 ? 'Last 30 days' : 'Last 3 months';
+                        });
+                }
+            
+                // Set default and handle dropdown clicks
+                updateRevenueData(7);
+                document.querySelectorAll('[data-period]').forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const days = parseInt(this.getAttribute('data-period'));
+                        updateRevenueData(days);
+                        document.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+            
+                // Copy referral link function
+                window.copyReferralLink = function() {
+                    const input = document.getElementById('referralLinkInput');
+                    input.select();
+                    document.execCommand('copy');
+                    
+                    // Show tooltip feedback
+                    const tooltip = new bootstrap.Tooltip(input, {
+                        title: 'Copied!',
+                        trigger: 'manual'
+                    });
+                    tooltip.show();
+                    setTimeout(() => tooltip.hide(), 1000);
+                };
+            
+                // Share functions
+                window.shareReferralLink = function() {
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'Join using my referral link',
+                            text: 'Check out this opportunity using my referral link',
+                            url: '{{ referral_link }}'
+                        }).catch(console.error);
+                    } else {
+                        // Fallback for browsers without Web Share API
+                        window.open(`mailto:?subject=Referral Link&body=Here's my referral link: {{ referral_link }}`);
+                    }
+                };
+            
+                window.shareQRCode = function() {
+                    // Implement QR code sharing logic
+                    console.log('Sharing QR code');
+                };
+            
+                window.downloadQRCode = function() {
+                    if (!'{{ qr_code_url }}') return;
+                    
+                    const link = document.createElement('a');
+                    link.href = '{{ qr_code_url }}';
+                    link.download = 'referral-qr-code.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+            });
+            </script>
+            
+            <div class="alert alert-warning alert-dismissible fade show mb-3 py-2" role="alert" style="border-left: 4px solid #FFC107;">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-megaphone-fill me-2 text-warning"></i>
+                <marquee behavior="scroll" direction="left" scrollamount="5" onmouseover="this.stop();" onmouseout="this.start();">
+                  <strong>Important:</strong> Unsattled payment will be Automatically moved to Grievance and Redressal column after 150 days.
+                </marquee>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            </div>
+                <div class="col-12">
+                  
+                  <div class="card">
+                    
+                    <!-- Marquee Banner -->
+                    <div class="card-header">
+                      <div class="card-body border-bottom py-1">
+                        <div class="d-flex">
+                          <h3 class="card-title">Selected Candidates</h3>
+                          <div class="ms-auto text-secondary">
+                            {% comment %} <a href="{% url 'bulk_upload_candidates' %}" class="btn btn-primary btn-pill w-10">
+                              Bulk Upload
+                            </a> {% endcomment %}
+                            <a href="{% url 'bulk_upload_candidates' %}" class="btn btn-success btn-pill btn-sm remove-task">Bulk Upload</a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="card-body border-bottom py-3">
+                      <div class="d-flex">
+                        <div class="text-secondary">
+                          Show<div class="mx-2 d-inline-block">
+                            <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
+                          </div>entries
+                        </div>
+                        
+                        <div class="ms-auto text-secondary">
+                          Search:<div class="ms-2 d-inline-block">
+                            <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="table-responsive" >
+                      <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
+                        <thead>
+                          <tr>
+                            <th class="w-1">No.</th>
+                            <th>Register At</th>
+                            <th>Candidate</th>
+                            <th>Contact</th>
+                            <th class="text-center">Status</th>
+                            <th>Revenue</th>
+                            <th>Payout Date (Expected)</th>
+                            <th>Last Remark</th>
+                            <th class="">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for candidate in candidates %}
+                          <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                              <div class="d-flex flex-column">
+                                <span class="text-secondary">{{ candidate.register_time|date:"M d, Y" }}</span>
+                                <small class="text-muted">{{ candidate.register_time|date:"h:i A" }}</small>
+                              </div>
+                            </td>
+                            <td>
+                              <div class="d-flex align-items-center">
+                                {% if candidate.candidate_photo %}
+                                <img src="{{ candidate.candidate_photo.url }}" class="avatar avatar-sm me-3 rounded-circle" alt="{{ candidate.candidate_name }}">
+                                {% else %}
+                                <span class="avatar avatar-sm me-3 rounded-circle bg-blue-lt">
+                                  {{ candidate.candidate_name|slice:":1"|upper }}
+                                </span>
+                                {% endif %}
+                                <div>
+                                  <div class="font-weight-medium">{{ candidate.candidate_name }}</div>
+                                  <div class="text-muted small">{{ candidate.refer_code }}-{{ candidate.unique_id }}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <div class="d-flex flex-column">
+                                <a href="tel:{{ candidate.candidate_mobile_number }}" class="text-reset">{{ candidate.candidate_mobile_number }}</a>
+                                <small class="text-muted">{{ candidate.candidate_email_address|truncatechars:20 }}</small>
+                              </div>
+                            </td>
+                            <td class="text-center">
+                              <span class="badge 
+                                {% if candidate.selection_status == 'Selected' %}bg-success
+                                {% elif candidate.selection_status == 'Rejected' %}bg-danger
+                                {% elif candidate.selection_status == 'Pending' %}bg-warning
+                                {% else %}bg-secondary{% endif %} text-white">
+                                {{ candidate.selection_status|default:"New" }}
+                              </span>
+                            </td>
+                            <td>
+                              <div class="text-wrap" style="max-width: 200px;">
+                                <small class="text-muted">{{ candidate.vendor_commission|default:"No Revenue" }}</small>
+                              </div>
+                            </td>
+                            <td>
+                                <div class="text-wrap" style="max-width: 200px;">
+                                  <small class="text-muted">{{ candidate.vendor_payout_date|default:"Not Decided" }}</small>
+                                </div>
+                              </td>
+                            <td>
+                              <div class="text-wrap" style="max-width: 200px;">
+                                <small class="text-muted">{{ candidate.calling_remark|truncatechars:50|default:"No remarks" }}</small>
+                              </div>
+                            </td>
+                            <td class="text-end">
+                              <div class="btn-list flex-nowrap">
+                                <a href="{% url 'candidate_profile_details' candidate.id %}" class="btn btn-sm btn-icon" >
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"></path>
+                                  </svg>
+                                </a>
+                                <a href="mailto:{{ candidate.candidate_email_address }}" class="btn btn-sm btn-icon" title="Send Email">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z"></path>
+                                    <path d="M3 7l9 6l9 -6"></path>
+                                  </svg>
+                                </a>
+                                <a href="tel:{{ candidate.candidate_mobile_number }}" class="btn btn-sm btn-icon" title="Make Call">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"></path>
+                                  </svg>
+                                </a>
+                              </div>
+                            </td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                      // Initialize DataTable
+                      $('#searchableTable').DataTable({
+                        responsive: true,
+                        dom: '<"top"<"table-search"f><"table-actions"B>>rt<"bottom"<"table-info"i><"table-pagination"p>>',
+                        buttons: [
+                          {
+                            extend: 'excel',
+                            text: '<i class="ti ti-file-spreadsheet me-1"></i> Export',
+                            className: 'btn btn-sm btn-secondary'
+                          },
+                          {
+                            extend: 'print',
+                            text: '<i class="ti ti-printer me-1"></i> Print',
+                            className: 'btn btn-sm btn-secondary'
+                          }
+                        ],
+                        language: {
+                          search: '',
+                          searchPlaceholder: 'Search candidates...',
+                          lengthMenu: '_MENU_ candidates per page',
+                        },
+                        columnDefs: [
+                          { orderable: false, targets: [6] } // Disable sorting for actions column
+                        ],
+                        initComplete: function() {
+                          $('.dataTables_filter input').addClass('form-control form-control-sm');
+                        }
+                      });
+                    });
+                    </script>
+                    <div class="card-footer d-flex align-items-center">
+                      <p class="m-0 text-secondary">
+                        Showing <span>1</span> to <span>8</span> of <span>16</span> entries
+                      </p>
+                      <ul class="pagination m-0 ms-auto">
+                        <li class="page-item disabled">
+                          <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                              <path d="M15 6l-6 6l6 6" />
+                            </svg>prev
+                          </a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">1</a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">2</a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">3</a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">4</a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">5</a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">
+                            next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                              <path d="M9 6l6 6l-6 6" />
+                            </svg>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+        <div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">New report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label">Name</label>
+                  <input type="text" class="form-control" name="example-text-input" placeholder="Your report name" />
+                </div>
+                <label class="form-label">Report type</label>
+                <div class="form-selectgroup-boxes row mb-3">
+                  <div class="col-lg-6">
+                    <label class="form-selectgroup-item">
+                      <input type="radio" name="report-type" value="1" class="form-selectgroup-input" checked />
+                      <span class="form-selectgroup-label d-flex align-items-center p-3">
+                        <span class="me-3"><span class="form-selectgroup-check"></span></span>
+                        <span class="form-selectgroup-label-content">
+                          <span class="form-selectgroup-title strong mb-1">Simple</span>
+                          <span class="d-block text-secondary">Provide only basic data needed for the report</span>
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="form-selectgroup-item">
+                      <input type="radio" name="report-type" value="1" class="form-selectgroup-input" />
+                      <span class="form-selectgroup-label d-flex align-items-center p-3">
+                        <span class="me-3"><span class="form-selectgroup-check"></span></span>
+                        <span class="form-selectgroup-label-content">
+                          <span class="form-selectgroup-title strong mb-1">Advanced</span>
+                          <span class="d-block text-secondary">Insert charts and additional advanced analyses to be inserted in the report</span>
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-8">
+                    l<div class="mb-3">
+                      <label class="form-label">Report url</label>
+                      <div class="input-group input-group-flat">
+                        <span class="input-group-text">https://tabler.io/reports/</span>
+                        <input type="text" class="form-control ps-0" value="report-01" autocomplete="off" />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-4">
+                    <div class="mb-3">
+                      <label class="form-label">Visibility</label>
+                      <select class="form-select">
+                        <option value="1" selected>Private</option>
+                        <option value="2">Public</option>
+                        <option value="3">Hidden</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-lg-6">
+                    <div class="mb-3">
+                      <label class="form-label">Client name</label>
+                      <input type="text" class="form-control" />
+                    </div>
+                  </div>
+                  <div class="col-lg-6">
+                    <div class="mb-3">
+                      <label class="form-label">Reporting period</label>
+                      <input type="date" class="form-control" />
+                    </div>
+                  </div>
+                  <div class="col-lg-12">
+                    <div>
+                      <label class="form-label">Additional information</label>
+                      <textarea class="form-control" rows="3"></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</a>
+                <a href="#" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                  <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M12 5l0 14" />
+                    <path d="M5 12l14 0" />
+                  </svg>Create new report
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+    <div>
+    <footer class="footer footer-transparent d-print-none">
+        <div class="container-xl">
+          <div class="row text-center align-items-center flex-row-reverse">
+            <div class="col-lg-auto ms-lg-auto">
+              <ul class="list-inline list-inline-dots mb-0">
+                
+                <li class="list-inline-item">
+                  <a href="https://emtainfotech.com" target="_blank" class="link-secondary" rel="noopener">
+                    <!-- Download SVG icon from http://tabler-icons.io/i/heart -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon text-pink icon-filled icon-inline" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" /></svg>
+                    EMTA INFOTECH
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+              <ul class="list-inline list-inline-dots mb-0">
+                <li class="list-inline-item">
+                  Copyright &copy; 2024
+                  <a href="https://emta.co.in" class="link-secondary">EMTA</a>.
+                  All rights reserved.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+        function shareQRCode() {
+            const qrCodeImage = document.getElementById('qrCodeImage');
+            if (qrCodeImage) {
+                fetch(qrCodeImage.src)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const file = new File([blob], "qr-code.png", { type: blob.type });
+                        const shareData = {
+                            files: [file],
+                            title: 'Share QR Code',
+                            text: 'Check out this QR code!'
+                        };
+
+                        if (navigator.canShare && navigator.canShare(shareData)) {
+                            navigator.share(shareData)
+                                .then(() => console.log('Successfully shared QR code'))
+                                .catch((error) => console.error('Something went wrong sharing the QR code', error));
+                        } else {
+                            alert('Your browser does not support sharing files.');
+                        }
+                    })
+                    .catch(error => console.error('Error fetching the QR code image', error));
+            }
+        }
+
+        function shareReferralLink() {
+            const referralLink = document.getElementById('referralLink') ? document.getElementById('referralLink').href : '';
+            const shareText = `Check out this referral link: ${referralLink}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Share Referral Link',
+                    text: shareText,
+                    url: referralLink
+                }).then(() => {
+                    console.log('Successfully shared referral link');
+                }).catch((error) => {
+                    console.error('Something went wrong sharing the referral link', error);
+                });
+            } else {
+                // Fallback to manual copy
+                copyToClipboard(shareText);
+                alert('Share this referral link: ' + shareText);
+            }
+        }
+
+        function copyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+        }
+
+        function downloadQRCode() {
+            const qrCodeUrl = document.getElementById('qrCodeImage').src;
+            const link = document.createElement('a');
+            link.href = qrCodeUrl;
+            link.download = 'qr-code.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function copyReferralLink() {
+            const referralLink = document.getElementById('referralLink').href;
+            copyToClipboard(referralLink);
+            alert('Referral link copied to clipboard');
+        }
+
+    </script>
+    <!-- Libs JS -->
+    <script src="/static/dist/libs/apexcharts/dist/apexcharts.min.js?1692870487" defer></script>
+    <script src="/static/dist/libs/jsvectormap/dist/js/jsvectormap.min.js?1692870487" defer></script>
+    <script src="/static/dist/libs/jsvectormap/dist/maps/world.js?1692870487" defer></script>
+    <script src="/static/dist/libs/jsvectormap/dist/maps/world-merc.js?1692870487" defer></script>
+    <!-- Tabler Core -->
+    <script src="/static/dist/js/tabler.min.js?1692870487" defer></script>
+    <script src="/static/dist/js/demo.min.js?1692870487" defer></script>
+    <!-- Libs JS -->
+    <script src="/static/dist/libs/list.js/dist/list.min.js?1692870487" defer></script>
+    
+    
+    <script>
+      // @formatter:off
+      document.addEventListener('DOMContentLoaded', function () {
+        window.ApexCharts &&
+          new ApexCharts(document.getElementById('chart-revenue-bg'), {
+            chart: {
+              type: 'area',
+              fontFamily: 'inherit',
+              height: 40.0,
+              sparkline: {
+                enabled: true
+              },
+              animations: {
+                enabled: false
+              }
+            },
+            dataLabels: {
+              enabled: false
+            },
+            fill: {
+              opacity: 0.16,
+              type: 'solid'
+            },
+            stroke: {
+              width: 2,
+              lineCap: 'round',
+              curve: 'smooth'
+            },
+            series: [
+              {
+                name: 'Profits',
+                data: [37, 35, 44, 28, 36, 24, 65, 31, 37, 39, 62, 51, 35, 41, 35, 27, 93, 53, 61, 27, 54, 43, 19, 46, 39, 62, 51, 35, 41, 67]
+              }
+            ],
+            tooltip: {
+              theme: 'dark'
+            },
+            grid: {
+              strokeDashArray: 4
+            },
+            xaxis: {
+              labels: {
+                padding: 0
+              },
+              tooltip: {
+                enabled: false
+              },
+              axisBorder: {
+                show: false
+              },
+              type: 'datetime'
+            },
+            yaxis: {
+              labels: {
+                padding: 4
+              }
+            },
+            labels: ['2020-06-20', '2020-06-21', '2020-06-22', '2020-06-23', '2020-06-24', '2020-06-25', '2020-06-26', '2020-06-27', '2020-06-28', '2020-06-29', '2020-06-30', '2020-07-01', '2020-07-02', '2020-07-03', '2020-07-04', '2020-07-05', '2020-07-06', '2020-07-07', '2020-07-08', '2020-07-09', '2020-07-10', '2020-07-11', '2020-07-12', '2020-07-13', '2020-07-14', '2020-07-15', '2020-07-16', '2020-07-17', '2020-07-18', '2020-07-19'],
+            colors: [tabler.getColor('primary')],
+            legend: {
+              show: false
+            }
+          }).render()
+      })
+      // @formatter:on
+    </script>
+    <script>
+      // @formatter:off
+      document.addEventListener('DOMContentLoaded', function () {
+        window.ApexCharts &&
+          new ApexCharts(document.getElementById('chart-new-clients'), {
+            chart: {
+              type: 'line',
+              fontFamily: 'inherit',
+              height: 40.0,
+              sparkline: {
+                enabled: true
+              },
+              animations: {
+                enabled: false
+              }
+            },
+            fill: {
+              opacity: 1
+            },
+            stroke: {
+              width: [2, 1],
+              dashArray: [0, 3],
+              lineCap: 'round',
+              curve: 'smooth'
+            },
+            series: [
+              {
+                name: 'May',
+                data: [37, 35, 44, 28, 36, 24, 65, 31, 37, 39, 62, 51, 35, 41, 35, 27, 93, 53, 61, 27, 54, 43, 4, 46, 39, 62, 51, 35, 41, 67]
+              },
+              {
+                name: 'April',
+                data: [93, 54, 51, 24, 35, 35, 31, 67, 19, 43, 28, 36, 62, 61, 27, 39, 35, 41, 27, 35, 51, 46, 62, 37, 44, 53, 41, 65, 39, 37]
+              }
+            ],
+            tooltip: {
+              theme: 'dark'
+            },
+            grid: {
+              strokeDashArray: 4
+            },
+            xaxis: {
+              labels: {
+                padding: 0
+              },
+              tooltip: {
+                enabled: false
+              },
+              type: 'datetime'
+            },
+            yaxis: {
+              labels: {
+                padding: 4
+              }
+            },
+            labels: ['2020-06-20', '2020-06-21', '2020-06-22', '2020-06-23', '2020-06-24', '2020-06-25', '2020-06-26', '2020-06-27', '2020-06-28', '2020-06-29', '2020-06-30', '2020-07-01', '2020-07-02', '2020-07-03', '2020-07-04', '2020-07-05', '2020-07-06', '2020-07-07', '2020-07-08', '2020-07-09', '2020-07-10', '2020-07-11', '2020-07-12', '2020-07-13', '2020-07-14', '2020-07-15', '2020-07-16', '2020-07-17', '2020-07-18', '2020-07-19'],
+            colors: [tabler.getColor('primary'), tabler.getColor('gray-600')],
+            legend: {
+              show: false
+            }
+          }).render()
+      })
+      // @formatter:on
+    </script>
+    <script>
+      // @formatter:off
+      document.addEventListener('DOMContentLoaded', function () {
+        window.ApexCharts &&
+          new ApexCharts(document.getElementById('chart-active-users'), {
+            chart: {
+              type: 'bar',
+              fontFamily: 'inherit',
+              height: 40.0,
+              sparkline: {
+                enabled: true
+              },
+              animations: {
+                enabled: false
+              }
+            },
+            plotOptions: {
+              bar: {
+                columnWidth: '50%'
+              }
+            },
+            dataLabels: {
+              enabled: false
+            },
+            fill: {
+              opacity: 1
+            },
+            series: [
+              {
+                name: 'Profits',
+                data: [37, 35, 44, 28, 36, 24, 65, 31, 37, 39, 62, 51, 35, 41, 35, 27, 93, 53, 61, 27, 54, 43, 19, 46, 39, 62, 51, 35, 41, 67]
+              }
+            ],
+            tooltip: {
+              theme: 'dark'
+            },
+            grid: {
+              strokeDashArray: 4
+            },
+            xaxis: {
+              labels: {
+                padding: 0
+              },
+              tooltip: {
+                enabled: false
+              },
+              axisBorder: {
+                show: false
+              },
+              type: 'datetime'
+            },
+            yaxis: {
+              labels: {
+                padding: 4
+              }
+            },
+            labels: ['2020-06-20', '2020-06-21', '2020-06-22', '2020-06-23', '2020-06-24', '2020-06-25', '2020-06-26', '2020-06-27', '2020-06-28', '2020-06-29', '2020-06-30', '2020-07-01', '2020-07-02', '2020-07-03', '2020-07-04', '2020-07-05', '2020-07-06', '2020-07-07', '2020-07-08', '2020-07-09', '2020-07-10', '2020-07-11', '2020-07-12', '2020-07-13', '2020-07-14', '2020-07-15', '2020-07-16', '2020-07-17', '2020-07-18', '2020-07-19'],
+            colors: [tabler.getColor('primary')],
+            legend: {
+              show: false
+            }
+          }).render()
+      })
+      // @formatter:on
+    </script>
+    <script>
+      // @formatter:off
+      document.addEventListener('DOMContentLoaded', function () {
+        window.ApexCharts &&
+          new ApexCharts(document.getElementById('chart-mentions'), {
+            chart: {
+              type: 'bar',
+              fontFamily: 'inherit',
+              height: 240,
+              parentHeightOffset: 0,
+              toolbar: {
+                show: false
+              },
+              animations: {
+                enabled: false
+              },
+              stacked: true
+            },
+            plotOptions: {
+              bar: {
+                columnWidth: '50%'
+              }
+            },
+            dataLabels: {
+              enabled: false
+            },
+            fill: {
+              opacity: 1
+            },
+            series: [
+              {
+                name: 'Web',
+                data: [1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 2, 12, 5, 8, 22, 6, 8, 6, 4, 1, 8, 24, 29, 51, 40, 47, 23, 26, 50, 26, 41, 22, 46, 47, 81, 46, 6]
+              },
+              {
+                name: 'Social',
+                data: [2, 5, 4, 3, 3, 1, 4, 7, 5, 1, 2, 5, 3, 2, 6, 7, 7, 1, 5, 5, 2, 12, 4, 6, 18, 3, 5, 2, 13, 15, 20, 47, 18, 15, 11, 10, 0]
+              },
+              {
+                name: 'Other',
+                data: [2, 9, 1, 7, 8, 3, 6, 5, 5, 4, 6, 4, 1, 9, 3, 6, 7, 5, 2, 8, 4, 9, 1, 2, 6, 7, 5, 1, 8, 3, 2, 3, 4, 9, 7, 1, 6]
+              }
+            ],
+            tooltip: {
+              theme: 'dark'
+            },
+            grid: {
+              padding: {
+                top: -20,
+                right: 0,
+                left: -4,
+                bottom: -4
+              },
+              strokeDashArray: 4,
+              xaxis: {
+                lines: {
+                  show: true
+                }
+              }
+            },
+            xaxis: {
+              labels: {
+                padding: 0
+              },
+              tooltip: {
+                enabled: false
+              },
+              axisBorder: {
+                show: false
+              },
+              type: 'datetime'
+            },
+            yaxis: {
+              labels: {
+                padding: 4
+              }
+            },
+            labels: ['2020-06-20', '2020-06-21', '2020-06-22', '2020-06-23', '2020-06-24', '2020-06-25', '2020-06-26', '2020-06-27', '2020-06-28', '2020-06-29', '2020-06-30', '2020-07-01', '2020-07-02', '2020-07-03', '2020-07-04', '2020-07-05', '2020-07-06', '2020-07-07', '2020-07-08', '2020-07-09', '2020-07-10', '2020-07-11', '2020-07-12', '2020-07-13', '2020-07-14', '2020-07-15', '2020-07-16', '2020-07-17', '2020-07-18', '2020-07-19', '2020-07-20', '2020-07-21', '2020-07-22', '2020-07-23', '2020-07-24', '2020-07-25', '2020-07-26'],
+            colors: [tabler.getColor('primary'), tabler.getColor('primary', 0.8), tabler.getColor('green', 0.8)],
+            legend: {
+              show: false
+            }
+          }).render()
+      })
+      // @formatter:on
+    </script>
+    <script>
+      // @formatter:on
+      document.addEventListener('DOMContentLoaded', function () {
+        const map = new jsVectorMap({
+          selector: '#map-world',
+          map: 'world',
+          backgroundColor: 'transparent',
+          regionStyle: {
+            initial: {
+              fill: tabler.getColor('body-bg'),
+              stroke: tabler.getColor('border-color'),
+              strokeWidth: 2
+            }
+          },
+          zoomOnScroll: false,
+          zoomButtons: false,
+          // -------- Series --------
+          visualizeData: {
+            scale: [tabler.getColor('bg-surface'), tabler.getColor('primary')],
+            values: { AF: 16, AL: 11, DZ: 158, AO: 85, AG: 1, AR: 351, AM: 8, AU: 1219, AT: 366, AZ: 52, BS: 7, BH: 21, BD: 105, BB: 3, BY: 52, BE: 461, BZ: 1, BJ: 6, BT: 1, BO: 19, BA: 16, BW: 12, BR: 2023, BN: 11, BG: 44, BF: 8, BI: 1, KH: 11, CM: 21, CA: 1563, CV: 1, CF: 2, TD: 7, CL: 199, CN: 5745, CO: 283, KM: 0, CD: 12, CG: 11, CR: 35, CI: 22, HR: 59, CY: 22, CZ: 195, DK: 304, DJ: 1, DM: 0, DO: 50, EC: 61, EG: 216, SV: 21, GQ: 14, ER: 2, EE: 19, ET: 30, FJ: 3, FI: 231, FR: 2555, GA: 12, GM: 1, GE: 11, DE: 3305, GH: 18, GR: 305, GD: 0, GT: 40, GN: 4, GW: 0, GY: 2, HT: 6, HN: 15, HK: 226, HU: 132, IS: 12, IN: 1430, ID: 695, IR: 337, IQ: 84, IE: 204, IL: 201, IT: 2036, JM: 13, JP: 5390, JO: 27, KZ: 129, KE: 32, KI: 0, KR: 986, KW: 117, KG: 4, LA: 6, LV: 23, LB: 39, LS: 1, LR: 0, LY: 77, LT: 35, LU: 52, MK: 9, MG: 8, MW: 5, MY: 218, MV: 1, ML: 9, MT: 7, MR: 3, MU: 9, MX: 1004, MD: 5, MN: 5, ME: 3, MA: 91, MZ: 10, MM: 35, NA: 11, NP: 15, NL: 770, NZ: 138, NI: 6, NE: 5, NG: 206, NO: 413, OM: 53, PK: 174, PA: 27, PG: 8, PY: 17, PE: 153, PH: 189, PL: 438, PT: 223, QA: 126, RO: 158, RU: 1476, RW: 5, WS: 0, ST: 0, SA: 434, SN: 12, RS: 38, SC: 0, SL: 1, SG: 217, SK: 86, SI: 46, SB: 0, ZA: 354, ES: 1374, LK: 48, KN: 0, LC: 1, VC: 0, SD: 65, SR: 3, SZ: 3, SE: 444, CH: 522, SY: 59, TW: 426, TJ: 5, TZ: 22, TH: 312, TL: 0, TG: 3, TO: 0, TT: 21, TN: 43, TR: 729, TM: 0, UG: 17, UA: 136, AE: 239, GB: 2258, US: 4624, UY: 40, UZ: 37, VU: 0, VE: 285, VN: 101, YE: 30, ZM: 15, ZW: 5 }
+          }
+        })
+        window.addEventListener('resize', () => {
+          map.updateSize()
+        })
+      })
+      // @formatter:off
+    </script>
+    <script>
+      // @formatter:off
+      document.addEventListener('DOMContentLoaded', function () {
+        window.ApexCharts &&
+          new ApexCharts(document.getElementById('sparkline-activity'), {
+            chart: {
+              type: 'radialBar',
+              fontFamily: 'inherit',
+              height: 40,
+              width: 40,
+              animations: {
+                enabled: false
+              },
+              sparkline: {
+                enabled: true
+              }
+            },
+            tooltip: {
+              enabled: false
+            },
+            plotOptions: {
+              radialBar: {
+                hollow: {
+                  margin: 0,
+                  size: '75%'
+                },
+                track: {
+                  margin: 0
+                },
+                dataLabels: {
+                  show: false
+                }
+              }
+            },
+            colors: [tabler.getColor('blue')],
+            series: [35]
+          }).render()
+      })
+      // @formatter:on
+    </script>
+    <script>
+      // @formatter:off
+      document.addEventListener('DOMContentLoaded', function () {
+        window.ApexCharts &&
+          new ApexCharts(document.getElementById('chart-development-activity'), {
+            chart: {
+              type: 'area',
+              fontFamily: 'inherit',
+              height: 192,
+              sparkline: {
+                enabled: true
+              },
+              animations: {
+                enabled: false
+              }
+            },
+            dataLabels: {
+              enabled: false
+            },
+            fill: {
+              opacity: 0.16,
+              type: 'solid'
+            },
+            stroke: {
+              width: 2,
+              lineCap: 'round',
+              curve: 'smooth'
+            },
+            series: [
+              {
+                name: 'Purchases',
+                data: [3, 5, 4, 6, 7, 5, 6, 8, 24, 7, 12, 5, 6, 3, 8, 4, 14, 30, 17, 19, 15, 14, 25, 32, 40, 55, 60, 48, 52, 70]
+              }
+            ],
+            tooltip: {
+              theme: 'dark'
+            },
+            grid: {
+              strokeDashArray: 4
+            },
+            xaxis: {
+              labels: {
+                padding: 0
+              },
+              tooltip: {
+                enabled: false
+              },
+              axisBorder: {
+                show: false
+              },
+              type: 'datetime'
+            },
+            yaxis: {
+              labels: {
+                padding: 4
+              }
+            },
+            labels: ['2020-06-20', '2020-06-21', '2020-06-22', '2020-06-23', '2020-06-24', '2020-06-25', '2020-06-26', '2020-06-27', '2020-06-28', '2020-06-29', '2020-06-30', '2020-07-01', '2020-07-02', '2020-07-03', '2020-07-04', '2020-07-05', '2020-07-06', '2020-07-07', '2020-07-08', '2020-07-09', '2020-07-10', '2020-07-11', '2020-07-12', '2020-07-13', '2020-07-14', '2020-07-15', '2020-07-16', '2020-07-17', '2020-07-18', '2020-07-19'],
+            colors: [tabler.getColor('primary')],
+            legend: {
+              show: false
+            },
+            point: {
+              show: false
+            }
+          }).render()
+      })
+      // @formatter:on
+    </script>
+    <script>
+      // @formatter:off
+      document.addEventListener('DOMContentLoaded', function () {
+        window.ApexCharts &&
+          new ApexCharts(document.getElementById('sparkline-bounce-rate-1'), {
+            chart: {
+              type: 'line',
+              fontFamily: 'inherit',
+              height: 24,
+              animations: {
+                enabled: false
+              },
+              sparkline: {
+                enabled: true
+              }
+            },
+            tooltip: {
+              enabled: false
+            },
+            stroke: {
+              width: 2,
+              lineCap: 'round'
+            },
+            series: [
+              {
+                color: tabler.getColor('primary'),
+                data: [17, 24, 20, 10, 5, 1, 4, 18, 13]
+              }
+            ]
+          }).render()
+      })
+      // @formatter:on
+    </script>
+    <script>
+      // @formatter:off
+      document.addEventListener('DOMContentLoaded', function () {
+        window.ApexCharts &&
+          new ApexCharts(document.getElementById('sparkline-bounce-rate-2'), {
+            chart: {
+              type: 'line',
+              fontFamily: 'inherit',
+              height: 24,
+              animations: {
+                enabled: false
+              },
+              sparkline: {
+                enabled: true
+              }
+            },
+            tooltip: {
+              enabled: false
+            },
+            stroke: {
+              width: 2,
+              lineCap: 'round'
+            },
+            series: [
+              {
+                color: tabler.getColor('primary'),
+                data: [13, 11, 19, 22, 12, 7, 14, 3, 21]
+              }
+            ]
+          }).render()
+      })
+      // @formatter:on
+    </script>
+    <script>
+      // @formatter:off
+      document.addEventListener('DOMContentLoaded', function () {
+        window.ApexCharts &&
+          new ApexCharts(document.getElementById('sparkline-bounce-rate-3'), {
+            chart: {
+              type: 'line',
+              fontFamily: 'inherit',
+              height: 24,
+              animations: {
+                enabled: false
+              },
+              sparkline: {
+                enabled: true
+              }
+            },
+            tooltip: {
+              enabled: false
+            },
+            stroke: {
+              width: 2,
+              lineCap: 'round'
+            },
+            series: [
+              {
+                color: tabler.getColor('primary'),
+                data: [10, 13, 10, 4, 17, 3, 23, 22, 19]
+              }
+            ]
+          }).render()
+      })
+      // @formatter:on
+    </script>
+    <script>
+      // @formatter:off
+      document.addEventListener('DOMContentLoaded', function () {
+        window.ApexCharts &&
+          new ApexCharts(document.getElementById('sparkline-bounce-rate-4'), {
+            chart: {
+              type: 'line',
+              fontFamily: 'inherit',
+              height: 24,
+              animations: {
+                enabled: false
+              },
+              sparkline: {
+                enabled: true
+              }
+            },
+            tooltip: {
+              enabled: false
+            },
+            stroke: {
+              width: 2,
+              lineCap: 'round'
+            },
+            series: [
+              {
+                color: tabler.getColor('primary'),
+                data: [6, 15, 13, 13, 5, 7, 17, 20, 19]
+              }
+            ]
+          }).render()
+      })
+      // @formatter:on
+    </script>
+    <script>
+      // @formatter:off
+      document.addEventListener('DOMContentLoaded', function () {
+        window.ApexCharts &&
+          new ApexCharts(document.getElementById('sparkline-bounce-rate-5'), {
+            chart: {
+              type: 'line',
+              fontFamily: 'inherit',
+              height: 24,
+              animations: {
+                enabled: false
+              },
+              sparkline: {
+                enabled: true
+              }
+            },
+            tooltip: {
+              enabled: false
+            },
+            stroke: {
+              width: 2,
+              lineCap: 'round'
+            },
+            series: [
+              {
+                color: tabler.getColor('primary'),
+                data: [2, 11, 15, 14, 21, 20, 8, 23, 18, 14]
+              }
+            ]
+          }).render()
+      })
+      // @formatter:on
+    </script>
+    <script>
+      // @formatter:off
+      document.addEventListener('DOMContentLoaded', function () {
+        window.ApexCharts &&
+          new ApexCharts(document.getElementById('sparkline-bounce-rate-6'), {
+            chart: {
+              type: 'line',
+              fontFamily: 'inherit',
+              height: 24,
+              animations: {
+                enabled: false
+              },
+              sparkline: {
+                enabled: true
+              }
+            },
+            tooltip: {
+              enabled: false
+            },
+            stroke: {
+              width: 2,
+              lineCap: 'round'
+            },
+            series: [
+              {
+                color: tabler.getColor('primary'),
+                data: [22, 12, 7, 14, 3, 21, 8, 23, 18, 14]
+              }
+            ]
+          }).render()
+      })
+      // @formatter:on
+    </script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+          const entriesInput = document.querySelector("input[aria-label='Invoices count']"); // The "Show Entries" input
+          const tableRows = document.querySelectorAll(".datatable tbody tr"); // Table rows
+          const entriesInfo = document.querySelector(".card-footer p span"); // "Showing X to Y of Z entries"
+        
+          // Function to update table rows display
+          const updateTableRows = () => {
+            const entriesCount = parseInt(entriesInput.value, 10) || 0; // Number of rows to show
+            let totalRows = tableRows.length; // Total rows
+            let start = 1;
+            let end = entriesCount < totalRows ? entriesCount : totalRows;
+        
+            // Show or hide rows based on the "Show Entries" value
+            tableRows.forEach((row, index) => {
+              row.style.display = index < entriesCount ? "" : "none";
+            });
+        
+            // Update the footer "Showing X to Y of Z entries"
+            entriesInfo.innerHTML = `${start} to ${end} of ${totalRows}`;
+          };
+        
+          // Add event listener to "Show Entries" input
+          entriesInput.addEventListener("input", updateTableRows);
+        
+          // Initial update on page load
+          updateTableRows();
+        });
+  
+        document.addEventListener("DOMContentLoaded", function () {
+          const paginationLinks = document.querySelectorAll(".pagination .page-item"); // All pagination buttons
+          const tableRows = document.querySelectorAll(".datatable tbody tr"); // Table rows
+          const rowsPerPage = parseInt(document.querySelector("input[aria-label='Invoices count']").value, 10) || 8; // Rows per page
+          const entriesInfo = document.querySelector(".card-footer p span"); // "Showing X to Y of Z entries"
+        
+          let currentPage = 1;
+        
+          // Function to update rows based on the current page
+          const updatePagination = () => {
+            const totalRows = tableRows.length;
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = currentPage * rowsPerPage;
+        
+            tableRows.forEach((row, index) => {
+              row.style.display = index >= start && index < end ? "" : "none";
+            });
+        
+            // Update "Showing X to Y of Z entries"
+            entriesInfo.innerHTML = `${start + 1} to ${end < totalRows ? end : totalRows} of ${totalRows}`;
+          };
+        
+          // Add click event listeners to pagination buttons
+          paginationLinks.forEach((pageItem, index) => {
+            const link = pageItem.querySelector("a");
+            if (!link) return; // Skip if there is no <a> tag
+        
+            // Handle "prev" button
+            if (link.textContent.trim().toLowerCase() === "prev") {
+              pageItem.addEventListener("click", (event) => {
+                event.preventDefault();
+                if (currentPage > 1) {
+                  currentPage--;
+                  updatePagination();
+                }
+              });
+            }
+        
+            // Handle "next" button
+            else if (link.textContent.trim().toLowerCase() === "next") {
+              pageItem.addEventListener("click", (event) => {
+                event.preventDefault();
+                const totalPages = Math.ceil(tableRows.length / rowsPerPage);
+                if (currentPage < totalPages) {
+                  currentPage++;
+                  updatePagination();
+                }
+              });
+            }
+        
+            // Handle page number buttons
+            else {
+              pageItem.addEventListener("click", (event) => {
+                event.preventDefault();
+                currentPage = parseInt(link.textContent.trim(), 10);
+                updatePagination();
+              });
+            }
+          });
+        
+          // Initial update on page load
+          updatePagination();
+        });
+        
+    </script>
+
+    <script>
+      // JavaScript to search across all columns in the table
+document.getElementById("searchInput").addEventListener("keyup", function() {
+  var input = document.getElementById("searchInput").value.toLowerCase();
+  var table = document.getElementById("searchableTable");
+  var rows = table.getElementsByTagName("tr");
+
+  // Loop through all table rows (skipping the header row)
+  for (var i = 1; i < rows.length; i++) {
+    var cells = rows[i].getElementsByTagName("td");
+    var rowText = "";
+    
+    // Loop through each cell in the row and concatenate the text
+    for (var j = 0; j < cells.length; j++) {
+      rowText += cells[j].textContent.toLowerCase();
+    }
+
+    // If the text in any cell matches the search input, show the row, otherwise hide it
+    if (rowText.indexOf(input) > -1) {
+      rows[i].style.display = "";
+    } else {
+      rows[i].style.display = "none";
+    }
+  }
+});
+
+    </script>
+  </body>
+</html>

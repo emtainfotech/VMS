@@ -178,13 +178,30 @@ def vendor_dashboard(request):
             # Add footer
             draw.text((400, 750), "Powered by EMTA", fill="#1A4D8F", font=font_medium, anchor='mm')
             
-            # Save to buffer
-            buffer = BytesIO()
-            printable_img.save(buffer, format='PNG')
-            qr_code_file = ContentFile(buffer.getvalue(), name=f'{vendor.user.username}_qr.png')
+            # Generate plain QR code
+            qr_plain = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr_plain.add_data(referral_link)
+            qr_plain.make(fit=True)
+            qr_img_plain = qr_plain.make_image(fill_color="black", back_color="white").convert('RGB')
+            
+            # Save QR with design
+            buffer_with_design = BytesIO()
+            printable_img.save(buffer_with_design, format='PNG')
+            qr_code_file_with_design = ContentFile(buffer_with_design.getvalue(), name=f'{vendor.user.username}_qr_design.png')
+            vendor.qr_code.save(qr_code_file_with_design.name, qr_code_file_with_design)
+            
+            # Save plain QR
+            buffer_plain = BytesIO()
+            qr_img_plain.save(buffer_plain, format='PNG')
+            qr_code_file_plain = ContentFile(buffer_plain.getvalue(), name=f'{vendor.user.username}_qr_plain.png')
+            vendor.qr_code_plain.save(qr_code_file_plain.name, qr_code_file_plain)
 
-            # Save QR code to vendor
-            vendor.qr_code.save(qr_code_file.name, qr_code_file)
+            # Save vendor details
             vendor.save()
 
             if request.method == 'POST' and request.FILES.get('profile_picture'):
@@ -200,6 +217,7 @@ def vendor_dashboard(request):
                 'num_candidates': num_candidates,
                 'referral_link': referral_link,
                 'qr_code_url': vendor.qr_code.url if vendor.qr_code else None,
+                'qr_code_plain_url': vendor.qr_code_plain.url if vendor.qr_code_plain else None,
             }
 
             return render(request, 'evms/vendor-dashboard.html', context)
@@ -208,6 +226,7 @@ def vendor_dashboard(request):
             return render(request, 'usernotfound.html', {'error': 'Vendor details not found'})
     else:
         return render(request, 'usernotfound.html', {'error': 'User not authenticated'})
+    
 def vendor_profile(request, id):
     vendor = get_object_or_404(Vendor, id=id)
     vendor_profile_detail, _ = Vendor_profile_details.objects.get_or_create(vendor=vendor)
@@ -215,128 +234,76 @@ def vendor_profile(request, id):
     vendor_bank_detail, _ = Vendor_bank_details.objects.get_or_create(vendor=vendor)
 
     if request.method == 'POST':
-        if 'submit_vendor_profile_details' in request.POST:
-            # Handle Employee fields
-            first_name = request.POST.get('first_name')
-            last_name = request.POST.get('last_name')
-            mobile_number = request.POST.get('mobile_number')
-            email = request.POST.get('email')
-            vendor_profile_image = request.FILES.get('vendor_profile_image')
-            date_of_birth = request.POST.get('date_of_birth')
+        if 'submit_all_details' in request.POST:
+            # Handle all three forms at once
+            # Profile Details
+            vendor.user.first_name = request.POST.get('first_name')
+            vendor.user.last_name = request.POST.get('last_name')
+            vendor.user.save()
+            vendor.mobile_number = request.POST.get('mobile_number')
+            vendor.email = request.POST.get('email')
+            vendor.date_of_birth = request.POST.get('date_of_birth')
             
-            vendor.first_name = first_name
-            vendor.last_name = last_name
-            vendor.mobile_number = mobile_number
-            vendor.email = email
-            vendor.date_of_birth = date_of_birth
-            
-            if vendor_profile_image:
-                vendor.vendor_profile_image = vendor_profile_image
+            if 'vendor_profile_image' in request.FILES:
+                vendor.vendor_profile_image = request.FILES['vendor_profile_image']
             vendor.save()
-            gender = request.POST.get('gender')
-            address = request.POST.get('address')
-            adhar_card_number = request.POST.get('adhar_card_number')
-            adhar_card_image = request.FILES.get('adhar_card_image')
-            pan_card_number = request.POST.get('pan_card_number')
-            pan_card_image = request.FILES.get('pan_card_image')
-            location = request.POST.get('location')
-            vendor_profile_detail.gender = gender
-            vendor_profile_detail.address = address
-            vendor_profile_detail.adhar_card_number = adhar_card_number
-            vendor_profile_detail.pan_card_number = pan_card_number
-            vendor_profile_detail.location = location
-            if adhar_card_image:
-                vendor_profile_detail.adhar_card_image = adhar_card_image
-            if pan_card_image:
-                vendor_profile_detail.pan_card_image = pan_card_image    
+            
+            vendor_profile_detail.gender = request.POST.get('gender')
+            vendor_profile_detail.address = request.POST.get('address')
+            vendor_profile_detail.adhar_card_number = request.POST.get('adhar_card_number')
+            vendor_profile_detail.pan_card_number = request.POST.get('pan_card_number')
+            vendor_profile_detail.location = request.POST.get('location')
+            
+            if 'adhar_card_image' in request.FILES:
+                vendor_profile_detail.adhar_card_image = request.FILES['adhar_card_image']
+            if 'pan_card_image' in request.FILES:
+                vendor_profile_detail.pan_card_image = request.FILES['pan_card_image']
             vendor_profile_detail.save()
 
-            messages.success(request, 'Profile details updated successfully!')
-
-        elif 'submit_vendor_bussiness_details' in request.POST:
-            # Handle Emergency Contact fields
-            shop_name = request.POST.get('shop_name')
-            Contact_number = request.POST.get('Contact_number')
-            Busness_email = request.POST.get('Busness_email')
-            Gumasta_number = request.POST.get('Gumasta_number')
-            gumasta_image = request.FILES.get('gumasta_image')
-            gst_number = request.POST.get('gst_number')
-            gst_image = request.FILES.get('gst_image')
-
-            Bpan_number = request.POST.get('Bpan_number')
-            Bpan_image = request.FILES.get('Bpan_image')
-            MSME_number = request.POST.get('MSME_number')
-            MSME_image = request.FILES.get('MSME_image')
-            Bphoto_outer = request.FILES.get('Bphoto_outer')
+            # Business Details
+            vendor_bussiness_detail.shop_name = request.POST.get('shop_name')
+            vendor_bussiness_detail.busness_type = request.POST.get('busness_type')
+            vendor_bussiness_detail.shop_address = request.POST.get('shop_address')
+            vendor_bussiness_detail.Contact_number = request.POST.get('Contact_number')
+            vendor_bussiness_detail.Busness_email = request.POST.get('Busness_email')
+            vendor_bussiness_detail.Gumasta_number = request.POST.get('Gumasta_number')
+            vendor_bussiness_detail.gst_number = request.POST.get('gst_number')
+            vendor_bussiness_detail.Bpan_number = request.POST.get('Bpan_number')
+            vendor_bussiness_detail.MSME_number = request.POST.get('MSME_number')
+            vendor_bussiness_detail.VCname = request.POST.get('VCname')
+            vendor_bussiness_detail.VCmobile = request.POST.get('VCmobile')
+            vendor_bussiness_detail.VCaddress = request.POST.get('VCaddress')
             
-            Bphoto_inside = request.FILES.get('Bphoto_inside')
-            VCname = request.POST.get('VCname')
-            VCmobile = request.POST.get('VCmobile')
-            VCaddress = request.POST.get('VCaddress')
-
-            # Update EmergencyContact fields
-            vendor_bussiness_detail.shop_name = shop_name
-            vendor_bussiness_detail.Contact_number = Contact_number
-            vendor_bussiness_detail.Busness_email = Busness_email
-            vendor_bussiness_detail.Gumasta_number = Gumasta_number
-            vendor_bussiness_detail.gst_number = gst_number
-            vendor_bussiness_detail.Bpan_number = Bpan_number
-            vendor_bussiness_detail.MSME_number = MSME_number
-            vendor_bussiness_detail.VCname = VCname
-            vendor_bussiness_detail.VCmobile = VCmobile
-            vendor_bussiness_detail.VCaddress = VCaddress
-            
-            if gst_image:
-                vendor_bussiness_detail.gst_image = gst_image
-            if gumasta_image:
-                vendor_bussiness_detail.gumasta_image = gumasta_image    
-            if Bpan_image:
-                vendor_bussiness_detail.Bpan_image = Bpan_image
-            if MSME_image:
-                vendor_bussiness_detail.MSME_image = MSME_image    
-            if Bphoto_outer:
-                vendor_bussiness_detail.Bphoto_outer = Bphoto_outer
-            if Bphoto_inside:
-                vendor_bussiness_detail.Bphoto_inside = Bphoto_inside    
+            if 'gumasta_image' in request.FILES:
+                vendor_bussiness_detail.gumasta_image = request.FILES['gumasta_image']
+            if 'gst_image' in request.FILES:
+                vendor_bussiness_detail.gst_image = request.FILES['gst_image']
+            if 'Bpan_image' in request.FILES:
+                vendor_bussiness_detail.Bpan_image = request.FILES['Bpan_image']
+            if 'MSME_image' in request.FILES:
+                vendor_bussiness_detail.MSME_image = request.FILES['MSME_image']
+            if 'Bphoto_outer' in request.FILES:
+                vendor_bussiness_detail.Bphoto_outer = request.FILES['Bphoto_outer']
+            if 'Bphoto_inside' in request.FILES:
+                vendor_bussiness_detail.Bphoto_inside = request.FILES['Bphoto_inside']
             vendor_bussiness_detail.save()
 
-            messages.success(request, 'Bussiness details updated successfully!')
+            # Bank Details
+            vendor_bank_detail.account_holder_name = request.POST.get('account_holder_name')
+            vendor_bank_detail.bank_name = request.POST.get('bank_name')
+            vendor_bank_detail.account_number = request.POST.get('account_number')
+            vendor_bank_detail.ifs_code = request.POST.get('ifs_code')
+            vendor_bank_detail.micr_code = request.POST.get('micr_code')
+            vendor_bank_detail.account_type = request.POST.get('account_type')
+            vendor_bank_detail.preffered_payout_date = request.POST.get('preffered_payout_date')
             
-        elif 'submit_vendor_bank_details' in request.POST:
-            # Handle form submission for bank details
-            account_holder_name = request.POST.get('account_holder_name')
-            bank_name = request.POST.get('bank_name')
-            account_number = request.POST.get('account_number')
-            confirm_account_number = request.POST.get('confirm_account_number')
-            ifs_code = request.POST.get('ifs_code')
-            account_type = request.POST.get('account_type')
-            micr_code = request.POST.get('micr_code')
-            bank_document = request.FILES.get('bank_document')
-            preffered_payout_date = request.POST.get('preffered_payout_date')
-
-            # Ensure account number and confirm account number match
-            if account_number != confirm_account_number:
-                messages.error(request, "Account numbers do not match!")
-                return redirect('employee-bank-details', id=employee.id)  # Redirect back to the same page
-
-            # Update or create bank details for the employee
-            vendor_bank_detail.account_holder_name = account_holder_name
-            vendor_bank_detail.bank_name = bank_name
-            vendor_bank_detail.account_number = account_number
-            vendor_bank_detail.confirm_account_number = confirm_account_number
-            vendor_bank_detail.ifs_code = ifs_code
-            vendor_bank_detail.micr_code = micr_code
-            vendor_bank_detail.account_type = account_type
-            vendor_bank_detail.preffered_payout_date = preffered_payout_date
-            if bank_document:
-                vendor_bank_detail.bank_document = bank_document  
+            if 'bank_document' in request.FILES:
+                vendor_bank_detail.bank_document = request.FILES['bank_document']
             vendor_bank_detail.save()
 
-            messages.success(request, 'Bank details updated successfully!')
-            
-            
+            messages.success(request, 'All details updated successfully!')
+            return redirect('vendor_profile', id=vendor.id)
 
-        return redirect('vendor_profile', id=vendor.id)  # Adjust 'employee-details' to your URL name
     districts = [
         "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
         "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
@@ -351,10 +318,10 @@ def vendor_profile(request, id):
         'vendor_profile_detail': vendor_profile_detail,
         'vendor_bussiness_detail': vendor_bussiness_detail,
         'vendor_bank_detail': vendor_bank_detail,
-        'districts' : districts
+        'districts': districts,
+        # 'today': datetime.date.today().strftime('%Y-%m-%d')
     }
     return render(request, 'evms/vendor-profile.html', context)
-
 
 def candidate_form(request):
     if request.method == 'POST':
@@ -371,14 +338,18 @@ def candidate_form(request):
         sector_str = ', '.join(sector)
         preferred_location_str = ', '.join(preferred_location)
         
-        # Check if a candidate with the same mobile number or candidate_email_address already exists
-        existing_candidate = Candidate.objects.filter(
+        # Check if candidate already exists
+        candidate = Candidate.objects.filter(
             candidate_mobile_number=candidate_mobile_number
-        ).exists() or Candidate.objects.filter(candidate_email_address=candidate_email_address).exists()
+        ).first()
 
-        if existing_candidate:
-            # Add a message to display on the frontend
-            messages.error(request, "A profile with this mobile number or email already exists.")
+        if candidate:
+            # If existing candidate has no refer_code, update it
+            if not candidate.refer_code and refer_code:
+                candidate.refer_code = refer_code
+                candidate.save()
+            
+            messages.error(request, "A profile with this mobile number already exists.")
             return render(request, 'evms/candidate-apply-form.html', {'initial_data': {'refer_code': refer_code}})
         else:
             # If no existing candidate, proceed to create a new one
@@ -428,13 +399,21 @@ def term_and_conditions(request) :
 def thankyou(request) :
     return render (request,'evms/thankyou.html')
 
+import os
+import pandas as pd
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.core.files.storage import default_storage
+from .models import Candidate, Vendor
 
 def bulk_upload_candidates(request):
     vendor = Vendor.objects.get(user=request.user)
+    duplicate_candidates = []  # Store duplicate candidate data
+
     if request.method == "POST" and request.FILES.get("excel_file"):
         if 'submit_vendor_profile_details' in request.POST:
             excel_file = request.FILES["excel_file"]
-        
+
         # Save the file temporarily
         file_path = default_storage.save("temp/" + excel_file.name, excel_file)
         full_path = os.path.join(default_storage.location, file_path)
@@ -447,7 +426,7 @@ def bulk_upload_candidates(request):
                 "qualification", "sector", "job_type", "preferred_location",
                 "refer_code"
             ]
-            
+
             # Validate required columns
             if not all(col in df.columns for col in required_columns):
                 messages.error(request, "Invalid Excel format. Please use the sample template.")
@@ -461,8 +440,23 @@ def bulk_upload_candidates(request):
                 email_address = str(row["candidate_email_address"]).strip()
 
                 # Check for duplicates
-                if Candidate.objects.filter(candidate_mobile_number=mobile_number).exists() or \
-                   Candidate.objects.filter(candidate_email_address=email_address).exists():
+                existing_candidate = Candidate.objects.filter(
+                    candidate_mobile_number=mobile_number
+                ).first() or Candidate.objects.filter(
+                    candidate_email_address=email_address
+                ).first()
+
+                if existing_candidate:
+                    duplicate_candidates.append({
+                        "candidate_name": row["candidate_name"],
+                        "candidate_mobile_number": mobile_number,
+                        "candidate_email_address": email_address,
+                        "qualification": row["qualification"],
+                        "sector": row["sector"],
+                        "job_type": row["job_type"],
+                        "preferred_location": row["preferred_location"],
+                        "refer_code": row.get("refer_code", ""),
+                    })
                     duplicate_count += 1
                     continue
 
@@ -479,17 +473,20 @@ def bulk_upload_candidates(request):
                 )
                 created_count += 1
 
+            # Success Message
             messages.success(request, f"Successfully added {created_count} candidates. {duplicate_count} duplicates skipped.")
 
         except Exception as e:
             messages.error(request, f"Error processing file: {str(e)}")
-        
+
         finally:
             # Clean up the temporary file
             os.remove(full_path)
 
-    return render(request, "evms/candidate-bulk-upload.html",{'vendor':vendor})
-
+    return render(request, "evms/candidate-bulk-upload.html", {
+        'vendor': vendor,
+        'duplicate_candidates': duplicate_candidates  # Pass duplicates to template
+    })
 
 
 def download_sample_excel(request):
@@ -525,6 +522,7 @@ from .models import Candidate
 from django.db.models import Sum
 
 def revenue_data(request):
+    vendor = Vendor.objects.get(user=request.user)
     # Get filter parameter
     days = int(request.GET.get('days', 7))
     end_date = timezone.now().date()
@@ -535,7 +533,8 @@ def revenue_data(request):
         commission_generation_date__isnull=False,
         vendor_commission__isnull=False,
         commission_generation_date__gte=start_date,
-        commission_generation_date__lte=end_date
+        commission_generation_date__lte=end_date,
+        refer_code = vendor.refer_code
     )
     
     # Calculate total commission
@@ -547,7 +546,7 @@ def revenue_data(request):
     prev_period_total = Candidate.objects.filter(
         commission_generation_date__gte=start_date - timedelta(days=days),
         commission_generation_date__lt=start_date,
-        vendor_commission__isnull=False
+        vendor_commission__isnull=False,
     ).aggregate(
         total=Sum('vendor_commission')
     )['total'] or 0
@@ -562,7 +561,8 @@ def revenue_data(request):
     while current_date <= end_date:
         daily_total = Candidate.objects.filter(
             commission_generation_date=current_date,
-            vendor_commission__isnull=False
+            vendor_commission__isnull=False,
+            refer_code = vendor.refer_code
         ).aggregate(
             total=Sum('vendor_commission')
         )['total'] or 0
@@ -589,3 +589,29 @@ def candidate_profile_details(request, id) :
         'vendor': vendor,
     }
     return render(request, 'evms/candidate-profile-details.html', context)
+
+def vendor_selected_candidate(request) :
+    vendor = Vendor.objects.get(user=request.user)
+    candidates = Candidate.objects.filter(vendor_commission__isnull=False,refer_code=vendor.refer_code).order_by('-id')
+    num_selected_candidate = candidates.count()
+    
+    context = {
+        'candidates': candidates,
+        'vendor': vendor,
+        'num_selected_candidate' : num_selected_candidate
+    }
+    return render(request, 'evms/vendor-selected-candidate.html', context)
+
+def vendor_transaction_history(request) :
+    vendor = Vendor.objects.get(user=request.user)
+    candidates = Candidate.objects.filter(
+        vendor_commission__isnull=False,
+        refer_code=vendor.refer_code,
+        vendor_commission_status__in=['Success', 'Complete', 'Pending', 'Failed']
+    ).order_by('-id')
+    
+    context = {
+        'vendor' : vendor,
+        'candidates' : candidates
+    }
+    return render (request, 'evms/transaction-history.html', context)

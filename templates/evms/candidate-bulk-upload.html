@@ -33,7 +33,7 @@
       <header class="navbar navbar-expand-md d-print-none">
         <div class="container-xl">
           {% comment %} <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button> {% endcomment %}
-          <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3"><a href="{% url "vendor_dashboard" %}"><img src="https://emta.co.in/f.png" width="110" height="32" alt="Tabler" class="navbar-brand-image" /></a></h1>
+          <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3"><a href="{% url 'vendor_dashboard' %}"><img src="https://emta.co.in/f.png" width="110" height="32" alt="Tabler" class="navbar-brand-image" /></a></h1>
           <div class="navbar-nav flex-row order-md-last">
             <div class="nav-item d-none d-md-flex me-3">
               
@@ -108,6 +108,8 @@
               <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                 {% comment %} <a href="{% url 'employee_details_view' employee.id %}"> {% endcomment %}
                 <a href="{% url 'vendor_profile' vendor.id  %}" class="dropdown-item">Profile</a>
+                <a href="{% url 'vendor_selected_candidate' %}" class="dropdown-item">Selected Candidate</a>
+                <a href="{% url 'vendor_transaction_history' %}" class="dropdown-item">Transaction History</a>
                 <a href="{% url 'vendor_logout' %}" class="dropdown-item">Logout</a>
               </div>
             </div>
@@ -122,22 +124,41 @@
                 <div class="col">
                   <!-- Page pre-title -->
                   <div class="page-pretitle">Bulk Upload</div>
-                   <h2 class="page-title">{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-success alert-dismissible" role="alert">
-          <div class="d-flex">
-            <div>
-              <!-- Download SVG icon from http://tabler-icons.io/i/check -->
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 12l5 5l10 -10"></path></svg>
-            </div>
-            <div>
-              {{ message }}
-            </div>
-          </div>
-          <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-        </div>
-    {% endfor %}
-{% endif %}</h2> 
+                  {% if duplicate_candidates %}
+  <div class="alert alert-danger">
+    <h4>Duplicate Candidates Found</h4>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Mobile Number</th>
+          <th>Email</th>
+          <th>Qualification</th>
+          <th>Sector</th>
+          <th>Job Type</th>
+          <th>Preferred Location</th>
+          <th>Refer Code</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for candidate in duplicate_candidates %}
+        <tr>
+          <td>{{ candidate.candidate_name }}</td>
+          <td>{{ candidate.candidate_mobile_number }}</td>
+          <td>{{ candidate.candidate_email_address }}</td>
+          <td>{{ candidate.qualification }}</td>
+          <td>{{ candidate.sector }}</td>
+          <td>{{ candidate.job_type }}</td>
+          <td>{{ candidate.preferred_location }}</td>
+          <td>{{ candidate.refer_code }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% comment %} <a href="{% url 'download_duplicate_candidates' %}" class="btn btn-danger">Download CSV</a> {% endcomment %}
+  </div>
+{% endif %}
+</h2> 
                 </div>
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">

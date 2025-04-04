@@ -16,185 +16,248 @@
     <link href="/static/dist/css/tabler-vendors.min.css?1692870487" rel="stylesheet" />
     <link href="/static/dist/css/demo.min.css?1692870487" rel="stylesheet" />
 </head>
-<body>
+<body class="d-flex flex-column">
   <div class="page page-center">
     <script src="/static/dist/js/demo-theme.min.js?1692870487"></script>
-    <div class="container container-tight py-4">
+    <div class="container py-4">
       <div class="text-center mb-4">
         <a href="#" class="navbar-brand navbar-brand-autodark">
           <img src="/static/logo.png" width="110" height="32" alt="EMTA" class="navbar-brand-image">
         </a>
       </div>
+      
+      <!-- Messages/Alerts -->
       {% if messages %}
-  {% for message in messages %}
-    <div class="alert alert-danger alert-dismissible" role="alert">
-      <div class="d-flex">
-        <div>
-          <!-- SVG Icon -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-            <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
-            <path d="M12 8v4"></path>
-            <path d="M12 16h.01"></path>
-          </svg>
-        </div>
-        <div>{{ message }}</div>
-      </div>
-      <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-    </div>
-  {% endfor %}
-{% endif %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="d-flex">
+              <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
+                  <path d="M12 8v4"></path>
+                  <path d="M12 16h.01"></path>
+                </svg>
+              </div>
+              <div>{{ message }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
 
-      <form class="card card-md" enctype="multipart/form-data" method="POST" autocomplete="off" >
+      <!-- Application Form -->
+      <form class="card card-md needs-validation" enctype="multipart/form-data" method="POST" autocomplete="off" novalidate>
         {% csrf_token %}
         <div class="card-body">
-          <h2 class="card-title text-center mb-4">Candidate Form</h2>
+          <h2 class="card-title text-center mb-4">Candidate Application Form</h2>
           
-          <!-- Name -->
-          <div class="mb-3">
-            <label class="form-label">Full Name</label>
-            <input type="text" name="candidate_name" class="form-control" placeholder="Enter Full name" required oninput="capitalizeFirstLetter(this)">
-          </div>
+          <!-- Personal Information Section -->
+          <div class="mb-4">
+            <h4 class="mb-3">Personal Information</h4>
+            
+            <!-- Name and Mobile in one row -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label required">Full Name</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                      <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+                      <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                    </svg>
+                  </span>
+                  <input type="text" name="candidate_name" class="form-control" placeholder="Enter Full name" required minlength="3" maxlength="50" oninput="capitalizeFirstLetter(this)">
+                </div>
+                <div class="invalid-feedback">Please enter your full name (3-50 characters)</div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label required">Mobile Number</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                      <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2" />
+                    </svg>
+                  </span>
+                  <input type="tel" name="candidate_mobile_number" class="form-control" placeholder="Enter 10-digit number" required pattern="[0-9]{10}" maxlength="10">
+                </div>
+                <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
+              </div>
+            </div>
 
             <input type="hidden" name="refer_code" id="refer_code" value="{{ initial_data.refer_code }}">
 
-
-          <!-- Email -->
-          <div class="mb-3">
-            <label class="form-label">Mobile Number</label>
-            <input type="tel" name="candidate_mobile_number" class="form-control" placeholder="Enter mobile number" required required pattern="[0-9]{10}">
-          </div>
-          
-          <!-- Email -->
-          <div class="mb-3">
-            <label class="form-label">Email Address</label>
-            <input type="email" name="candidate_email_address" class="form-control" placeholder="Enter email address" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$">
-          </div>
-          
-          <div class="mb-3">
-            <div class="form-label">Qualification</div>
-            <select name="qualification" class="form-control" required>
-                <option value="" disabled selected>Select your highest qualification</option>
-                <option value="Secondary School">Secondary School</option>
-                <option value="Higher Secondary School">Higher Secondary School</option>
-                <option value="Graduate">Graduate</option>
-                <option value="Post-Graduate">Post-Graduate</option>
-                <option value="Ph.D.">Ph.D.</option>
-                <option value="Others">Other's</option>
-              </select>
-          </div>
-
-          <div class="mb-3">
-            <div class="form-label">Job Type</div>
-            <select name="job_type" class="form-control" required>
-                <option value="" disabled selected>Select Job Type</option>
-                <option value="Full-Time">Full-Time</option>
-                <option value="Part-Time">Part-Time</option>
-                <option value="Work From Home (WFH)">Work From Home (WFH)</option>
-                <option value="Internship">Internship</option>
-                <option value="Others">Other's</option>
-              </select>
-          </div>
-
-          
-              <div class="mb-3">
-              <label class="form-label">Preffered Sector</label>
-              <select type="text" class="form-select" placeholder="Select tags" id="select-sector" name="sector" multiple>
-               {% for job_sector in job_sectors %}
-                <option value="{{ job_sector }}">
-                    {{ job_sector }}
-                </option>
-                {% endfor %}
-              </select>
+            <!-- Email -->
+            <div class="mb-3">
+              <label class="form-label ">Email Address</label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z" />
+                    <path d="M3 7l9 6l9 -6" />
+                  </svg>
+                </span>
+                <input type="email" name="candidate_email_address" class="form-control" placeholder="Enter email address" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$">
+              </div>
+              <div class="invalid-feedback">Please enter a valid email address</div>
             </div>
-          
-          <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                var el;
-                window.TomSelect && (new TomSelect(el = document.getElementById('select-sector'), {
-                copyClassesToDropdown: false,
-                dropdownParent: 'body',
-                controlInput: '<input>',
-                render:{
-                    item: function(data,escape) {
-                    if( data.customProperties ){
-                      return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                    }
-                    return '<div>' + escape(data.text) + '</div>';
-                },
-                option: function(data,escape){
-                    if( data.customProperties ){
-                        return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                    }
-                    return '<div>' + escape(data.text) + '</div>';
-                },
-                            },
-                        }));
-                    });
-                </script>
-                <div class="mb-3">
-                    <label class="form-label">Preffered Location</label>
-                    <select type="text" class="form-select" placeholder="Select tags" id="select-prefered-location" name="preferred_location" multiple>
-                    {% for district in districts %}
-                    <option value="{{ district }}" >
-                        {{ district }}
-                    </option>
-                    {% endfor %}
-                    </select>
-                </div>
-
-                <script>
-                document.addEventListener("DOMContentLoaded", function () {
-                    var el;
-                    window.TomSelect && (new TomSelect(el = document.getElementById('select-prefered-location'), {
-                    copyClassesToDropdown: false,
-                    dropdownParent: 'body',
-                    controlInput: '<input>',
-                    render:{
-                        item: function(data,escape) {
-                        if( data.customProperties ){
-                            return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                        }
-                        return '<div>' + escape(data.text) + '</div>';
-                        },
-                        option: function(data,escape){
-                        if( data.customProperties ){
-                            return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                        }
-                        return '<div>' + escape(data.text) + '</div>';
-                        },
-                    },
-                    }));
-                });
-                </script>
-          
-          <div class="mb-3">
-            <label class="form-label">Upload Image</label>
-            <input type="file" name="candidate_photo" class="form-control" accept=".pdf,.docx,.jpg,.jpeg,.png,.img">
           </div>
           
-          <div class="mb-3">
-            <label class="form-label">Upload Resume</label>
-            <input type="file" name="candidate_resume" class="form-control"  required accept=".pdf,.docx,.jpg,.jpeg,.png,.img">
+          <!-- Education & Employment Section -->
+          <div class="mb-4">
+            <h4 class="mb-3">Education & Employment</h4>
+            
+            <!-- Qualification and Job Type in one row -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <div class="form-label required">Highest Qualification</div>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                      <path d="M8 9l3 3l-3 3m5 0h3" />
+                      <path d="M8 4h8a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2z" />
+                    </svg>
+                  </span>
+                  <select name="qualification" class="form-select" required>
+                    <option value="" disabled selected>Select qualification</option>
+                    <option value="Secondary School">Secondary School</option>
+                    <option value="Higher Secondary School">Higher Secondary School</option>
+                    <option value="Graduate">Graduate</option>
+                    <option value="Post-Graduate">Post-Graduate</option>
+                    <option value="Ph.D.">Ph.D.</option>
+                    <option value="Others">Other's</option>
+                  </select>
+                </div>
+                <div class="invalid-feedback">Please select your qualification</div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <div class="form-label required">Job Type</div>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                      <path d="M3 7m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" />
+                      <path d="M8 7v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2" />
+                      <path d="M12 12l0 .01" />
+                      <path d="M3 13a20 20 0 0 0 18 0" />
+                    </svg>
+                  </span>
+                  <select name="job_type" class="form-select" required>
+                    <option value="" disabled selected>Select Job Type</option>
+                    <option value="Full-Time">Full-Time</option>
+                    <option value="Part-Time">Part-Time</option>
+                    <option value="Work From Home (WFH)">Work From Home (WFH)</option>
+                    <option value="Internship">Internship</option>
+                    <option value="Others">Other's</option>
+                  </select>
+                </div>
+                <div class="invalid-feedback">Please select a job type</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Preferences Section -->
+          <div class="mb-4">
+            <h4 class="mb-3">Job Preferences</h4>
+            
+            <!-- Preferred Sector and Location in one row -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label required">Preferred Sector(s)</label>
+                <select class="form-select" id="select-sector" name="sector" multiple required>
+                  {% for job_sector in job_sectors %}
+                    <option value="{{ job_sector }}">{{ job_sector }}</option>
+                  {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select at least one sector</div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label required">Preferred Location(s)</label>
+                <select class="form-select" id="select-prefered-location" name="preferred_location" multiple required>
+                  {% for district in districts %}
+                    <option value="{{ district }}">{{ district }}</option>
+                  {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select at least one location</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Documents Section -->
+          <div class="mb-4">
+            <h4 class="mb-3">Documents</h4>
+            
+            <!-- Photo and Resume in one row -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Profile Photo (Optional)</label>
+                <input type="file" name="candidate_photo" class="form-control" accept="image/*" onchange="validateFileType(this, 'image')">
+                <div class="invalid-feedback">Please upload a valid image file (JPEG, PNG, JPG)</div>
+                <small class="text-muted">Max size: 2MB | Formats: JPEG, PNG, JPG</small>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label required">Resume</label>
+                <input type="file" name="candidate_resume" class="form-control" required accept=".pdf,.doc,.docx" onchange="validateFileType(this, 'resume')">
+                <div class="invalid-feedback">Please upload your resume (PDF or DOC/DOCX)</div>
+                <small class="text-muted">Max size: 5MB | Formats: PDF, DOC, DOCX</small>
+              </div>
+            </div>
           </div>
           
           <!-- Terms and Conditions -->
           <div class="mb-3">
-            <label class="form-check">
-              <input type="checkbox" class="form-check-input" required >
-              <span class="form-check-label">Agree to the <a href="{% url "term_and_conditions" %}" tabindex="-1">terms and policy</a>.</span>
-            </label>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="termsCheck" required>
+              <label class="form-check-label" for="termsCheck">
+                I agree to the <a href="{% url 'term_and_conditions' %}" target="_blank">terms and conditions</a> and privacy policy
+              </label>
+              <div class="invalid-feedback">You must agree to the terms and conditions</div>
+            </div>
           </div>
           
           <!-- Submit Button -->
           <div class="form-footer">
-            <button type="submit" class="btn btn-primary w-100">Register Now</button>
+            <button type="submit" class="btn btn-primary w-100 py-2">
+              <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+              Submit Application
+            </button>
           </div>
         </div>
       </form>
     </div>
   </div>
-       
+  
+  <!-- Confirmation Modal -->
+  <div class="modal modal-blur fade" id="confirmationModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="modal-title text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-green icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+              <path d="M5 12l5 5l10 -10" />
+            </svg>
+            <h3>Application Submitted!</h3>
+          </div>
+          <div class="text-center text-muted mb-3">
+            Thank you for your application. Our team will review your details and contact you soon.
+          </div>
+          <div class="text-center">
+            <a href="/" class="btn btn-primary w-100">Return to Homepage</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Libs JS -->
   <script src="/static/dist/libs/nouislider/dist/nouislider.min.js?1692870487" defer></script>
   <script src="/static/dist/libs/litepicker/dist/litepicker.js?1692870487" defer></script>
@@ -203,5 +266,110 @@
   <script src="/static/dist/js/tabler.min.js?1692870487" defer></script>
   <script src="/static/dist/js/demo.min.js?1692870487" defer></script>
   
+  <script>
+  // Initialize form validation and enhanced controls
+  document.addEventListener("DOMContentLoaded", function() {
+      // Form validation
+      const forms = document.querySelectorAll('.needs-validation');
+      
+      Array.from(forms).forEach(form => {
+          form.addEventListener('submit', function(event) {
+              if (!form.checkValidity()) {
+                  event.preventDefault();
+                  event.stopPropagation();
+              } else {
+                  // Show loading spinner on submit button
+                  const submitBtn = form.querySelector('button[type="submit"]');
+                  const spinner = submitBtn.querySelector('.spinner-border');
+                  spinner.classList.remove('d-none');
+                  submitBtn.disabled = true;
+                  
+                  // In a real app, you would submit the form here
+                  // For demo, we'll show the modal after a short delay
+                  event.preventDefault();
+                  setTimeout(() => {
+                      $('#confirmationModal').modal('show');
+                      spinner.classList.add('d-none');
+                      submitBtn.disabled = false;
+                  }, 1500);
+              }
+              
+              form.classList.add('was-validated');
+          }, false);
+      });
+      
+      // Initialize TomSelect for multi-selects
+      if (window.TomSelect) {
+          new TomSelect(document.getElementById('select-sector'), {
+              plugins: ['remove_button'],
+              maxItems: 5,
+              placeholder: 'Select sectors...',
+              copyClassesToDropdown: false,
+              dropdownParent: 'body',
+              controlInput: '<input>'
+          });
+          
+          new TomSelect(document.getElementById('select-prefered-location'), {
+              plugins: ['remove_button'],
+              maxItems: 3,
+              placeholder: 'Select locations...',
+              copyClassesToDropdown: false,
+              dropdownParent: 'body',
+              controlInput: '<input>'
+          });
+      }
+      
+      // Add required indicators to labels
+      document.querySelectorAll('.required').forEach(label => {
+          label.innerHTML += ' <span class="text-danger">*</span>';
+      });
+  });
+  
+  // Function to capitalize first letter of each word
+  function capitalizeFirstLetter(input) {
+      const words = input.value.split(' ');
+      for (let i = 0; i < words.length; i++) {
+          if (words[i].length > 0) {
+              words[i] = words[i][0].toUpperCase() + words[i].substring(1).toLowerCase();
+          }
+      }
+      input.value = words.join(' ');
+  }
+  
+  // File type validation
+  function validateFileType(input, type) {
+      const file = input.files[0];
+      if (!file) return;
+      
+      const validImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      const validDocTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      
+      let isValid = false;
+      let errorMsg = '';
+      
+      if (type === 'image') {
+          isValid = validImageTypes.includes(file.type);
+          errorMsg = 'Please upload a valid image file (JPEG, PNG, JPG)';
+      } else if (type === 'resume') {
+          isValid = validDocTypes.includes(file.type);
+          errorMsg = 'Please upload a valid document (PDF or DOC/DOCX)';
+      }
+      
+      // Check file size (2MB for images, 5MB for resumes)
+      const maxSize = type === 'image' ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+          isValid = false;
+          errorMsg = `File size exceeds ${type === 'image' ? '2MB' : '5MB'} limit`;
+      }
+      
+      if (!isValid) {
+          input.setCustomValidity(errorMsg);
+          input.reportValidity();
+          input.value = '';
+      } else {
+          input.setCustomValidity('');
+      }
+  }
+  </script>
 </body>
 </html>

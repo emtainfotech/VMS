@@ -59,72 +59,97 @@
                       </div>
                     </div>
                     <div class="table-responsive">
-                      <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
-                        <thead>
-                          <tr>
-                            <th class="w-1">No.</th>
-                            <th>Photo</th>
-                            <th>Candidate Name</th>
-                            <th>Unique Code</th>
-                            <th>Mobile No.</th>
-                            <th>Register At</th>
-                            <th>Resume</th>
-                            <th>Profile</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% for candidate in candidates %}
-                            <tr>
-                              <td>
-                                <span class="text-secondary">{{ forloop.counter }}</span>
-                              </td>
-                              <td>
-                                {% if candidate.candidate_photo %}
-                                  <img src="{{ candidate.candidate_photo.url }}" class="avatar me-3" alt="" />
-                                {% else %}
-                                  No Photo
-                                {% endif %}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                <a href="{% url 'employee_candidate_profile' candidate.id %}">{{ candidate.candidate_name }}</a>
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.unique_code }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.candidate_mobile_number }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.register_time }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {% if candidate.candidate_resume %}
-                                  <a href="{{ candidate.candidate_resume.url }}" target="_blank">View Resume</a>
-                                {% else %}
-                                  No Resume
-                                {% endif %}
-                              </td>
-                              <td>
-                                <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
-                                  <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-bitbucket w-100 btn-icon">
-                                    <!-- Download SVG icon from http://tabler-icons.io/i/brand-github -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                      <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path>
-                                    </svg>
-                                  </a>
-                                </div>
-                              </td>
-                            </tr>
-                          {% endfor %}
-                        </tbody>
+                      <table class="table card-table table-vcenter datatable" id="searchableTable">
+                          <thead>
+                              <tr>
+                                  <th class="w-1">No.</th>
+                                  <th class="w-1">Photo</th>
+                                  <th>Candidate Name</th>
+                                  <th>Unique Code</th>
+                                  <th>Mobile No.</th>
+                                  <th>Registered</th>
+                                  <th>Resume</th>
+                                  <th class="text-center">Actions</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {% for candidate in candidates %}
+                              <tr>
+                                  <td>{{ forloop.counter }}</td>
+                                  <td>
+                                      <div class="avatar-container">
+                                          {% if candidate.candidate_photo %}
+                                          <img src="{{ candidate.candidate_photo.url }}" class="avatar rounded" alt="{{ candidate.candidate_name }}" />
+                                          {% else %}
+                                          <div class="avatar avatar-sm rounded bg-secondary text-white">
+                                              {{ candidate.candidate_name|first|upper }}
+                                          </div>
+                                          {% endif %}
+                                      </div>
+                                  </td>
+                                  <td>
+                                      <a href="{% url 'employee_candidate_profile' candidate.id %}" class="text-reset text-decoration-none">
+                                          {{ candidate.candidate_name }}
+                                      </a>
+                                  </td>
+                                  <td>
+                                      <code>{{ candidate.unique_code }}</code>
+                                  </td>
+                                  <td>
+                                      <a href="tel:{{ candidate.candidate_mobile_number }}" class="text-reset">
+                                          {{ candidate.candidate_mobile_number }}
+                                      </a>
+                                  </td>
+                                  <td>
+                                      <span class="text-muted" title="{{ candidate.register_time }}">
+                                          {{ candidate.register_time|date:"M d, Y" }}
+                                      </span>
+                                  </td>
+                                  <td>
+                                      {% if candidate.candidate_resume %}
+                                      <a href="{{ candidate.candidate_resume.url }}" target="_blank" class="btn btn-sm btn-ghost-primary">
+                                          <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                              <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+                                              <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
+                                              <path d="M9 9l1 0"></path>
+                                              <path d="M9 13l6 0"></path>
+                                              <path d="M9 17l6 0"></path>
+                                          </svg>
+                                          View
+                                      </a>
+                                      {% else %}
+                                      <span class="text-muted">None</span>
+                                      {% endif %}
+                                  </td>
+                                  <td class="text-center">
+                                      <div class="btn-list flex-nowrap">
+                                          <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-sm btn-primary" title="View Profile">
+                                              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user-circle" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                  <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path>
+                                                  <path d="M12 10m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path>
+                                                  <path d="M6.168 18.849a4 4 0 0 1 3.832 -2.849h4a4 4 0 0 1 3.834 2.855"></path>
+                                              </svg>
+                                              Profile
+                                          </a>
+                                          {% if candidate.candidate_resume %}
+                                          <a href="{{ candidate.candidate_resume.url }}" download class="btn btn-sm btn-secondary" title="Download Resume">
+                                              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                  <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+                                                  <path d="M7 11l5 5l5 -5"></path>
+                                                  <path d="M12 4l0 12"></path>
+                                              </svg>
+                                          </a>
+                                          {% endif %}
+                                      </div>
+                                  </td>
+                              </tr>
+                              {% endfor %}
+                          </tbody>
                       </table>
-                    </div>
+                  </div>
                     <div class="card-footer d-flex align-items-center">
                       <p class="m-0 text-secondary">
                         Showing <span>1</span> to <span>8</span> of <span>16</span> entries

@@ -94,6 +94,7 @@
             
             </div>
             <div class="nav-item dropdown">
+              <span class="badge bg-orange badge-notification badge-blink"></span>
               <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
                 {% if vendor.vendor_profile_image %}
                 <img class="avatar avatar-sm" src="{{vendor.vendor_profile_image.url}}" alt="{{ user.first_name}}&nbsp; {{ user.last_name }}">
@@ -108,6 +109,8 @@
               <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                 {% comment %} <a href="{% url 'employee_details_view' employee.id %}"> {% endcomment %}
                 <a href="{% url 'vendor_profile' vendor.id  %}" class="dropdown-item">Profile</a>
+                <a href="{% url 'vendor_selected_candidate' %}" class="dropdown-item">Selected Candidate</a>
+                <a href="{% url 'vendor_transaction_history' %}" class="dropdown-item">Transaction History</a>
                 <a href="{% url 'vendor_logout' %}" class="dropdown-item">Logout</a>
               </div>
             </div>
@@ -133,7 +136,7 @@
             <div class="container-xl">
               <div class="row row-deck row-cards mb-4">
                 <!-- Total Shared Profile Card -->
-                <div class="col-sm-6 col-lg-3">
+                <div class="col-sm-6 col-lg-3" >
                     <div class="card card-sm">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
@@ -154,66 +157,14 @@
                         </div>
                     </div>
                 </div>
+
+                
             
-                <!-- Refer Link Card -->
-                <div class="col-sm-6 col-lg-3">
-                    <div class="card card-sm">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="subheader">Referral Link</div>
-                                <div class="ms-auto lh-1">
-                                    <i class="bi bi-link-45deg fs-3 text-purple"></i>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <div class="input-group mb-2">
-                                    <input type="text" class="form-control form-control-sm" id="referralLinkInput" 
-                                           value="{{ referral_link }}" readonly>
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" id="copyReferralBtn">
-                                        <i class="bi bi-clipboard"></i>
-                                    </button>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-primary w-100" id="shareContentBtn">
-                                        <i class="bi bi-share me-1"></i> Share
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#qrModal">
-                                        <i class="bi bi-qr-code"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            
-                <!-- QR Code Card -->
-                <div class="col-sm-6 col-lg-3">
-                    <div class="card card-sm">
-                        <div class="card-body text-center">
-                            <div class="subheader mb-3">Your QR Code</div>
-                            {% if qr_code_url %}
-                            <div class="mb-3">
-                                <img src="{{ qr_code_url }}" alt="QR Code" class="img-fluid rounded border" style="max-width: 150px;" id="qrCodeImage">
-                            </div>
-                            <div class="d-flex gap-2 justify-content-center">
-                                <button class="btn btn-sm btn-primary" id="downloadQrBtn">
-                                    <i class="bi bi-download me-1"></i> Download
-                                </button>
-                                <button class="btn btn-sm btn-outline-primary" id="shareQrBtn">
-                                    <i class="bi bi-share"></i>
-                                </button>
-                            </div>
-                            {% else %}
-                            <div class="alert alert-warning">QR Code not available</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            
+                
                 <!-- Revenue Card -->
                 <div class="col-sm-6 col-lg-3">
                     <div class="card card-sm">
-                        <div class="card-body">
+                        <div class="card-body" >
                             <div class="d-flex align-items-center">
                                 <div class="subheader">Total Revenue</div>
                                 <div class="ms-auto lh-1">
@@ -242,6 +193,63 @@
                         </div>
                     </div>
                 </div>
+                
+
+              <!-- Combined Referral Link & QR Code Card -->
+<div class="col-sm-6 col-lg-4">
+  <div class="card">
+    <div class="card-body p-3">
+      <div class="row g-3">
+        <!-- Referral Link Section -->
+        <div class="col-md-7" style="border-right: 1px solid #eee;">
+          <div class="d-flex align-items-center mb-2">
+            <div class="subheader">Referral Link</div>
+            <div class="ms-auto lh-1">
+              <i class="bi bi-link-45deg fs-4 text-purple"></i>
+            </div>
+          </div>
+          <div class="input-group input-group-sm mb-2">
+            <input type="text" class="form-control form-control-sm" id="referralLinkInput" 
+                   value="{{ referral_link }}" readonly>
+            <button class="btn btn-sm btn-outline-secondary" type="button" id="copyReferralBtn">
+              <i class="bi bi-clipboard"></i>
+            </button>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-primary flex-grow-1" id="shareContentBtn">
+              <i class="bi bi-share me-1"></i> Share
+            </button>
+          </div>
+        </div>
+        
+        <!-- QR Code Section -->
+        <div class="col-md-5">
+          <div class="text-center">
+            <div class="subheader mb-2">QR Code</div>
+            {% if qr_code_plain_url %}
+            <div class="mb-2">
+              <img src="{{ qr_code_plain_url }}" alt="QR Code" class="img-fluid rounded border" style="max-width: 100px;" id="qrCodeImage">
+            </div>
+            <div class="d-flex gap-2 justify-content-center">
+              <button class="btn btn-sm btn-outline-primary p-1" id="downloadQrBtn" title="Download">
+                <i class="bi bi-download"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-primary p-1" id="shareQrBtn" title="Share">
+                <i class="bi bi-share"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-primary p-1" data-bs-toggle="modal" data-bs-target="#qrModal" title="Enlarge">
+                <i class="bi bi-zoom-in"></i>
+              </button>
+            </div>
+            {% else %}
+            <div class="alert alert-warning py-1 my-2">QR not available</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
             </div>
             
             <!-- QR Code Modal -->
@@ -630,11 +638,12 @@
                     <div class="card-header">
                       <div class="card-body border-bottom py-1">
                         <div class="d-flex">
-                          <h3 class="card-title">Today Applicant's</h3>
+                          <h3 class="card-title">Applicant's</h3>
                           <div class="ms-auto text-secondary">
-                            <a href="{% url 'bulk_upload_candidates' %}" class="btn btn-primary btn-pill w-10">
+                            {% comment %} <a href="{% url 'bulk_upload_candidates' %}" class="btn btn-primary btn-pill w-10">
                               Bulk Upload
-                            </a>
+                            </a> {% endcomment %}
+                            <a href="{% url 'bulk_upload_candidates' %}" class="btn btn-success btn-pill btn-sm remove-task">Bulk Upload</a>
                           </div>
                         </div>
                       </div>
@@ -655,7 +664,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="table-responsive">
+                    <div class="table-responsive" >
                       <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
                         <thead>
                           <tr>
@@ -664,6 +673,7 @@
                             <th>Candidate</th>
                             <th>Contact</th>
                             <th class="text-center">Status</th>
+                            <th>Revenue</th>
                             <th>Last Remark</th>
                             <th class="">Actions</th>
                           </tr>
@@ -707,6 +717,11 @@
                                 {% else %}bg-secondary{% endif %} text-white">
                                 {{ candidate.selection_status|default:"New" }}
                               </span>
+                            </td>
+                            <td>
+                              <div class="text-wrap" style="max-width: 200px;">
+                                <small class="text-muted">{{ candidate.vendor_commission|default:"No Revenue" }}</small>
+                              </div>
                             </td>
                             <td>
                               <div class="text-wrap" style="max-width: 200px;">

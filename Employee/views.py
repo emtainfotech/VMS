@@ -1247,128 +1247,76 @@ def employee_vendor_candidate_list(request, id):
     vendor_bank_detail, _ = Vendor_bank_details.objects.get_or_create(vendor=vendor)
 
     if request.method == 'POST':
-        if 'submit_vendor_profile_details' in request.POST:
-            # Handle Employee fields
-            first_name = request.POST.get('first_name')
-            last_name = request.POST.get('last_name')
-            mobile_number = request.POST.get('mobile_number')
-            email = request.POST.get('email')
-            vendor_profile_image = request.FILES.get('vendor_profile_image')
-            date_of_birth = request.POST.get('date_of_birth')
+        if 'submit_all_details' in request.POST:
+            # Handle all three forms at once
+            # Profile Details
+            vendor.user.first_name = request.POST.get('first_name')
+            vendor.user.last_name = request.POST.get('last_name')
+            vendor.user.save()
+            vendor.mobile_number = request.POST.get('mobile_number')
+            vendor.email = request.POST.get('email')
+            vendor.date_of_birth = request.POST.get('date_of_birth')
             
-            vendor.first_name = first_name
-            vendor.last_name = last_name
-            vendor.mobile_number = mobile_number
-            vendor.email = email
-            vendor.date_of_birth = date_of_birth
-            
-            if vendor_profile_image:
-                vendor.vendor_profile_image = vendor_profile_image
+            if 'vendor_profile_image' in request.FILES:
+                vendor.vendor_profile_image = request.FILES['vendor_profile_image']
             vendor.save()
-            gender = request.POST.get('gender')
-            address = request.POST.get('address')
-            adhar_card_number = request.POST.get('adhar_card_number')
-            adhar_card_image = request.FILES.get('adhar_card_image')
-            pan_card_number = request.POST.get('pan_card_number')
-            pan_card_image = request.FILES.get('pan_card_image')
-            location = request.POST.get('location')
-            vendor_profile_detail.gender = gender
-            vendor_profile_detail.address = address
-            vendor_profile_detail.adhar_card_number = adhar_card_number
-            vendor_profile_detail.pan_card_number = pan_card_number
-            vendor_profile_detail.location = location
-            if adhar_card_image:
-                vendor_profile_detail.adhar_card_image = adhar_card_image
-            if pan_card_image:
-                vendor_profile_detail.pan_card_image = pan_card_image    
+            
+            vendor_profile_detail.gender = request.POST.get('gender')
+            vendor_profile_detail.address = request.POST.get('address')
+            vendor_profile_detail.adhar_card_number = request.POST.get('adhar_card_number')
+            vendor_profile_detail.pan_card_number = request.POST.get('pan_card_number')
+            vendor_profile_detail.location = request.POST.get('location')
+            
+            if 'adhar_card_image' in request.FILES:
+                vendor_profile_detail.adhar_card_image = request.FILES['adhar_card_image']
+            if 'pan_card_image' in request.FILES:
+                vendor_profile_detail.pan_card_image = request.FILES['pan_card_image']
             vendor_profile_detail.save()
 
-            messages.success(request, 'Profile details updated successfully!')
-
-        elif 'submit_vendor_bussiness_details' in request.POST:
-            # Handle Emergency Contact fields
-            shop_name = request.POST.get('shop_name')
-            Contact_number = request.POST.get('Contact_number')
-            Busness_email = request.POST.get('Busness_email')
-            Gumasta_number = request.POST.get('Gumasta_number')
-            gumasta_image = request.FILES.get('gumasta_image')
-            gst_number = request.POST.get('gst_number')
-            gst_image = request.FILES.get('gst_image')
-
-            Bpan_number = request.POST.get('Bpan_number')
-            Bpan_image = request.FILES.get('Bpan_image')
-            MSME_number = request.POST.get('MSME_number')
-            MSME_image = request.FILES.get('MSME_image')
-            Bphoto_outer = request.FILES.get('Bphoto_outer')
+            # Business Details
+            vendor_bussiness_detail.shop_name = request.POST.get('shop_name')
+            vendor_bussiness_detail.busness_type = request.POST.get('busness_type')
+            vendor_bussiness_detail.shop_address = request.POST.get('shop_address')
+            vendor_bussiness_detail.Contact_number = request.POST.get('Contact_number')
+            vendor_bussiness_detail.Busness_email = request.POST.get('Busness_email')
+            vendor_bussiness_detail.Gumasta_number = request.POST.get('Gumasta_number')
+            vendor_bussiness_detail.gst_number = request.POST.get('gst_number')
+            vendor_bussiness_detail.Bpan_number = request.POST.get('Bpan_number')
+            vendor_bussiness_detail.MSME_number = request.POST.get('MSME_number')
+            vendor_bussiness_detail.VCname = request.POST.get('VCname')
+            vendor_bussiness_detail.VCmobile = request.POST.get('VCmobile')
+            vendor_bussiness_detail.VCaddress = request.POST.get('VCaddress')
             
-            Bphoto_inside = request.FILES.get('Bphoto_inside')
-            VCname = request.POST.get('VCname')
-            VCmobile = request.POST.get('VCmobile')
-            VCaddress = request.POST.get('VCaddress')
-
-            # Update EmergencyContact fields
-            vendor_bussiness_detail.shop_name = shop_name
-            vendor_bussiness_detail.Contact_number = Contact_number
-            vendor_bussiness_detail.Busness_email = Busness_email
-            vendor_bussiness_detail.Gumasta_number = Gumasta_number
-            vendor_bussiness_detail.gst_number = gst_number
-            vendor_bussiness_detail.Bpan_number = Bpan_number
-            vendor_bussiness_detail.MSME_number = MSME_number
-            vendor_bussiness_detail.VCname = VCname
-            vendor_bussiness_detail.VCmobile = VCmobile
-            vendor_bussiness_detail.VCaddress = VCaddress
-            
-            if gst_image:
-                vendor_bussiness_detail.gst_image = gst_image
-            if gumasta_image:
-                vendor_bussiness_detail.gumasta_image = gumasta_image    
-            if Bpan_image:
-                vendor_bussiness_detail.Bpan_image = Bpan_image
-            if MSME_image:
-                vendor_bussiness_detail.MSME_image = MSME_image    
-            if Bphoto_outer:
-                vendor_bussiness_detail.Bphoto_outer = Bphoto_outer
-            if Bphoto_inside:
-                vendor_bussiness_detail.Bphoto_inside = Bphoto_inside    
+            if 'gumasta_image' in request.FILES:
+                vendor_bussiness_detail.gumasta_image = request.FILES['gumasta_image']
+            if 'gst_image' in request.FILES:
+                vendor_bussiness_detail.gst_image = request.FILES['gst_image']
+            if 'Bpan_image' in request.FILES:
+                vendor_bussiness_detail.Bpan_image = request.FILES['Bpan_image']
+            if 'MSME_image' in request.FILES:
+                vendor_bussiness_detail.MSME_image = request.FILES['MSME_image']
+            if 'Bphoto_outer' in request.FILES:
+                vendor_bussiness_detail.Bphoto_outer = request.FILES['Bphoto_outer']
+            if 'Bphoto_inside' in request.FILES:
+                vendor_bussiness_detail.Bphoto_inside = request.FILES['Bphoto_inside']
             vendor_bussiness_detail.save()
 
-            messages.success(request, 'Bussiness details updated successfully!')
+            # Bank Details
+            vendor_bank_detail.account_holder_name = request.POST.get('account_holder_name')
+            vendor_bank_detail.bank_name = request.POST.get('bank_name')
+            vendor_bank_detail.account_number = request.POST.get('account_number')
+            vendor_bank_detail.ifs_code = request.POST.get('ifs_code')
+            vendor_bank_detail.micr_code = request.POST.get('micr_code')
+            vendor_bank_detail.account_type = request.POST.get('account_type')
+            vendor_bank_detail.preffered_payout_date = request.POST.get('preffered_payout_date')
             
-        elif 'submit_vendor_bank_details' in request.POST:
-            # Handle form submission for bank details
-            account_holder_name = request.POST.get('account_holder_name')
-            bank_name = request.POST.get('bank_name')
-            account_number = request.POST.get('account_number')
-            confirm_account_number = request.POST.get('confirm_account_number')
-            ifs_code = request.POST.get('ifs_code')
-            account_type = request.POST.get('account_type')
-            micr_code = request.POST.get('micr_code')
-            bank_document = request.FILES.get('bank_document')
-            preffered_payout_date = request.POST.get('preffered_payout_date')
-
-            # Ensure account number and confirm account number match
-            if account_number != confirm_account_number:
-                messages.error(request, "Account numbers do not match!")
-                return redirect('employee-bank-details', id=vendor.id)  # Redirect back to the same page
-
-            # Update or create bank details for the employee
-            vendor_bank_detail.account_holder_name = account_holder_name
-            vendor_bank_detail.bank_name = bank_name
-            vendor_bank_detail.account_number = account_number
-            vendor_bank_detail.confirm_account_number = confirm_account_number
-            vendor_bank_detail.ifs_code = ifs_code
-            vendor_bank_detail.micr_code = micr_code
-            vendor_bank_detail.account_type = account_type
-            vendor_bank_detail.preffered_payout_date = preffered_payout_date
-            if bank_document:
-                vendor_bank_detail.bank_document = bank_document  
+            if 'bank_document' in request.FILES:
+                vendor_bank_detail.bank_document = request.FILES['bank_document']
             vendor_bank_detail.save()
 
-            messages.success(request, 'Bank details updated successfully!')
-            
-            
+            messages.success(request, 'All details updated successfully!')
+            return redirect('employee_vendor_candidate_list', id=vendor.id)
 
-        return redirect('employee_vendor_candidate_list', id=vendor.id)  # Adjust 'employee-details' to your URL name
     districts = [
         "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
         "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
@@ -1503,12 +1451,14 @@ def employee_evms_candidate_profile(request,id) :
             vendor_payout_date = request.POST.get('vendor_payout_date')
             commission_generation_date = request.POST.get('commission_generation_date')
             vendor_commission_status = request.POST.get('vendor_commission_status')
+            vendor_payment_remark = request.POST.get('vendor_payment_remark')
 
             # Update or create bank details for the employee
             candidate.vendor_commission = vendor_commission
             candidate.vendor_payout_date = vendor_payout_date
             candidate.commission_generation_date = commission_generation_date
             candidate.vendor_commission_status = vendor_commission_status
+            candidate.vendor_payment_remark = vendor_payment_remark
             candidate.save()
 
             messages.success(request, 'Vendor releted details updated successfully!')

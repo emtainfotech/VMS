@@ -21,25 +21,58 @@
       }
     </style>
   </head>
-  <body  class=" d-flex flex-column">
+  <body class="d-flex flex-column">
     <script src="/static/dist/js/demo-theme.min.js?1692870487"></script>
     <div class="page page-center">
       <div class="container container-slim py-4">
         <div class="text-center">
-          <div class="mb-3">
-            <a href="https://emta.co.in" class="navbar-brand navbar-brand-autodark"><img src="/static/logo.png" height="36" alt=""></a>
+          <div class="mb-4">
+            <a href="https://emta.co.in" class="navbar-brand navbar-brand-autodark">
+              <img src="/static/logo.png" height="48" alt="Company Logo">
+            </a>
           </div>
-          <div class="text-secondary mb-3">Thankyou for Apply</div>
-          <div class="progress progress-sm">
-            <div class="progress-bar progress-bar-indeterminate"></div>
+          
+          <!-- Success Icon -->
+          <div class="mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4eab08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
           </div>
-          <div class="text-secondary mt-3">Our Team Connect you Soon</div>
+          
+          <h2 class="mb-3">Application Submitted Successfully!</h2>
+          
+          <div class="card card-body mb-4 text-start">
+            <p class="mb-2">✓ We've received your application</p>
+            <p class="mb-2">✓ Your application is now under review</p>
+            <p class="mb-0">✓ We'll contact you within 3-5 business days</p>
+          </div>
+          
+          <div class="progress progress-sm mb-3">
+            <div class="progress-bar progress-bar-indeterminate bg-success"></div>
+          </div>
+          
+          <p class="text-muted mb-4">Our recruitment team is reviewing your application. Please keep an eye on your email for updates.</p>
+          
+          <div class="alert alert-info">
+            <h4>What's Next?</h4>
+            <ul class="text-start">
+              <li>Initial screening of your application</li>
+              <li>Possible assessment test (if required)</li>
+              <li>Interview scheduling</li>
+            </ul>
+          </div>
+          
+          <div class="mt-4">
+            <a href="https://emta.co.in" class="btn btn-primary">Return to Homepage</a>
+          </div>
         </div>
       </div>
     </div>
+    
     <!-- Libs JS -->
     <!-- Tabler Core -->
     <script src="/static/dist/js/tabler.min.js?1692870487" defer></script>
     <script src="/static/dist/js/demo.min.js?1692870487" defer></script>
-  </body>
+</body>
 </html>

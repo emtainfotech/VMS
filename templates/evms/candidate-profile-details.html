@@ -146,7 +146,7 @@
   <div class="container py-4">
     <div class="row g-4">
         <!-- Personal Information Card -->
-        <div class="col-lg-6">
+        <div class="col-lg-6" >
             <div class="card shadow-sm h-100">
                 <div class="card-header  d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Personal Information</h5>
@@ -202,9 +202,9 @@
                                 <p class="mb-1">
                                     <strong>Registered:</strong> {{ candidate.register_time|date:"M d, Y H:i" }}
                                 </p>
-                                {% comment %} <p class="mb-1">
+                                <p class="mb-1">
                                     <strong>Follow-Up By:</strong> {{ candidate.employee_name }}
-                                </p> {% endcomment %}
+                                </p>
                                 {% comment %} <p class="mb-1">
                                     <strong>Source:</strong> {{ candidate.lead_source }}
                                 </p> {% endcomment %}
@@ -225,7 +225,7 @@
                     <h5 class="card-title mb-0">Professional Details</h5>
                     
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="background-color:rgba(233, 201, 153, 0.54);">
                     <div class="row">
                         <div class="col-md-6">
                             <h6 class="text-muted mb-3">Education & Preferences</h6>
@@ -286,7 +286,7 @@
                     <h5 class="card-title mb-0">Calling Remarks</h5>
                     
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="background-color:rgba(227, 180, 233, 0.32);">
                     <div class="row">
                         <div class="col-md-6">
                             <p class="mb-2">
@@ -305,6 +305,10 @@
                                     {{ candidate.lead_generate|default:"Not evaluated" }}
                                 </span>
                             </p>
+                            <p class="mb-2">
+                              <strong>Employee Name:</strong><br>
+                              {{ candidate.employee_name|default:"Not Connected" }}
+                          </p>
                         </div>
                         
                         <div class="col-md-6">
@@ -339,12 +343,12 @@
         <!-- Vendor Data Card (Conditional) -->
         {% if candidate.selection_status == "Selected" %}
         <div class="col-lg-6">
-            <div class="card shadow-sm h-100">
+            <div class="card shadow-sm h-100" >
                 <div class="card-header  d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Vendor Data</h5>
                    
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="background-color: #E0FFFF;">
                     <div class="row">
                         <div class="col-md-6">
                             <p class="mb-2">
@@ -365,11 +369,15 @@
                                 Not scheduled
                                 {% endif %}
                             </p>
+                            <p class="mb-2">
+                              <strong>Vendor Remark:</strong><br>
+                                {{ candidate.vendor_payment_remark|default:"No remarks added"|linebreaks }}
+                          </p>
                         </div>
                         
                         <div class="col-md-6">
                           <p class="mb-2">
-                            <strong>Generation Date:</strong><br>
+                            <strong>Candidate Joining Date:</strong><br>
                             {% if candidate.commission_generation_date %}
                             <span class="badge bg-info text-dark">
                                 {{ candidate.commission_generation_date }}
@@ -388,6 +396,7 @@
                                     {{ candidate.vendor_commission_status|default:"Pending" }}
                                 </span>
                             </p>
+                            
                         </div>
                     </div>
                 </div>
