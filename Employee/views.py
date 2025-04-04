@@ -96,7 +96,7 @@ def employee_dashboard(request):
 
         meetings = Meeting.objects.filter(date=today).order_by('-id')
         office_expenses = OfficeExpense.objects.filter(employee_name=logged_in_employee, purchase_date=today).order_by('-id')
-        notifications = Notification.objects.filter(user=request.user).order_by('-id')
+        # notifications = Notification.objects.filter(user=request.user).order_by('-id')
         selected_candidates = Candidate_registration.objects.filter(
             selection_status__in=['Selected', 'Pending', 'Rejected'],
             register_time__date=today1,
@@ -129,7 +129,7 @@ def employee_dashboard(request):
             'meetings': meetings,
             'additional_info' : additional_info,
             'office_expenses': office_expenses,
-            'notifications': notifications,
+            # 'notifications': notifications,
             'logged_in_employee': logged_in_employee,
             'tasks': tasks,
             'selected_candidates': selected_candidates,

@@ -21,6 +21,10 @@ urlpatterns = [
     path('candidate-profile/<int:id>/', candidate_profile_details, name='candidate_profile_details'),
     path('selected-candidates/', vendor_selected_candidate, name='vendor_selected_candidate'),
     path('transaction-history/', vendor_transaction_history, name = 'vendor_transaction_history'),
+    path('resend-otp/', resend_otp, name='resend_otp'),
+    path('vendor/invoice/<int:candidate_id>/', generate_vendor_invoice, name='vendor_invoice'),
+    path('notifications/mark-read/<int:pk>/', mark_notification_read, name='mark_notification_read'),
+    path('notifications/mark-all-read/', mark_all_notifications_read, name='mark_all_notifications_read'),
     
     path('admin/', admin.site.urls),
 ]

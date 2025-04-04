@@ -1,78 +1,560 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
-    <title>Thankyou - EVMS</title>
-    <!-- CSS files -->
-    <link href="/static/dist/css/tabler.min.css?1692870487" rel="stylesheet"/>
-    <link href="/static/dist/css/tabler-flags.min.css?1692870487" rel="stylesheet"/>
-    <link href="/static/dist/css/tabler-payments.min.css?1692870487" rel="stylesheet"/>
-    <link href="/static/dist/css/tabler-vendors.min.css?1692870487" rel="stylesheet"/>
-    <link href="/static/dist/css/demo.min.css?1692870487" rel="stylesheet"/>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Submitted Successfully | EMTA VMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-      @import url('https://rsms.me/inter/inter.css');
-      :root {
-      	--tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
-      }
-      body {
-      	font-feature-settings: "cv03", "cv04", "cv11";
-      }
+        :root {
+            --primary: #4eab08;
+            --primary-dark: #3a8006;
+            --primary-light: #e8f5e9;
+            --secondary: #2c3e50;
+            --accent: #ff6b35;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --success: #28a745;
+            --info: #17a2b8;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .success-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 3rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        {% comment %} .success-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--accent));
+        } {% endcomment %}
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .logo-container img {
+            height: 70px;
+            transition: transform 0.3s ease;
+        }
+        
+        .logo-container img:hover {
+            transform: scale(1.05);
+        }
+        
+        .success-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        
+        .success-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(78, 171, 8, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(78, 171, 8, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(78, 171, 8, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(78, 171, 8, 0); }
+        }
+        
+        .success-icon i {
+            color: white;
+            font-size: 3rem;
+        }
+        
+        h1, h2, h3, h4 {
+            color: var(--secondary);
+            font-weight: 700;
+            margin-top: 0;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--gray);
+            margin-bottom: 2rem;
+        }
+        
+        .application-summary {
+            background: var(--primary-light);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .application-summary::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234eab08" opacity="0.1"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>') no-repeat;
+            background-size: contain;
+        }
+        
+        .summary-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .summary-item i {
+            color: var(--primary);
+            margin-right: 1rem;
+            font-size: 1.2rem;
+            margin-top: 3px;
+        }
+        
+        .process-section {
+            margin-bottom: 3rem;
+        }
+        
+        .process-timeline {
+            position: relative;
+            padding-left: 30px;
+            margin-top: 2rem;
+        }
+        
+        {% comment %} .process-timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--primary), var(--accent));
+        }
+         {% endcomment %}
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 2rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 5px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 0 2px white;
+        }
+        
+        .timeline-date {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .timeline-content {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .preparation-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .prep-card {
+            display: flex;
+            align-items: center;
+            background: var(--light);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .prep-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+        
+        .prep-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .contact-section {
+            {% comment %} background: linear-gradient(135deg, var(--secondary), #1a252f); {% endcomment %}
+            color: black;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .contact-item i {
+            margin-right: 1rem;
+            color: var(--primary);
+            font-size: 1.2rem;
+            width: 30px;
+            text-align: center;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            color: white;
+            box-shadow: 0 5px 15px rgba(78, 171, 8, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(78, 171, 8, 0.4);
+        }
+        
+        .btn-outline {
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            background: white;
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary-light);
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .progress-container {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin: 2rem 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            animation: progress 1.5s ease-out forwards;
+        }
+        
+        @keyframes progress {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.3rem 1rem;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .success-container {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+                border-radius: 12px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .prep-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .prep-icon {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+        }
     </style>
-  </head>
-  <body class="d-flex flex-column">
-    <script src="/static/dist/js/demo-theme.min.js?1692870487"></script>
-    <div class="page page-center">
-      <div class="container container-slim py-4">
-        <div class="text-center">
-          <div class="mb-4">
-            <a href="https://emta.co.in" class="navbar-brand navbar-brand-autodark">
-              <img src="/static/logo.png" height="48" alt="Company Logo">
+</head>
+<body>
+    <div class="success-container">
+        <div class="logo-container">
+            <a href="https://emta.co.in">
+                <img src="/static/logo.png" alt="EMTA VMS Logo">
             </a>
-          </div>
-          
-          <!-- Success Icon -->
-          <div class="mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4eab08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-          </div>
-          
-          <h2 class="mb-3">Application Submitted Successfully!</h2>
-          
-          <div class="card card-body mb-4 text-start">
-            <p class="mb-2">✓ We've received your application</p>
-            <p class="mb-2">✓ Your application is now under review</p>
-            <p class="mb-0">✓ We'll contact you within 3-5 business days</p>
-          </div>
-          
-          <div class="progress progress-sm mb-3">
-            <div class="progress-bar progress-bar-indeterminate bg-success"></div>
-          </div>
-          
-          <p class="text-muted mb-4">Our recruitment team is reviewing your application. Please keep an eye on your email for updates.</p>
-          
-          <div class="alert alert-info">
-            <h4>What's Next?</h4>
-            <ul class="text-start">
-              <li>Initial screening of your application</li>
-              <li>Possible assessment test (if required)</li>
-              <li>Interview scheduling</li>
-            </ul>
-          </div>
-          
-          <div class="mt-4">
-            <a href="https://emta.co.in" class="btn btn-primary">Return to Homepage</a>
-          </div>
         </div>
-      </div>
+        
+        <div class="success-header">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h1>Application Submitted Successfully!</h1>
+            <p class="subtitle">Your journey with EMTA begins here. We're excited to review your application.</p>
+            
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
+        </div>
+        
+        <div class="application-summary">
+            <h3><i class="fas fa-file-alt"></i> Application Summary</h3>
+            <div class="summary-item">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <strong>Complete Application Received</strong>
+                    <p>We've received all required documents including your resume and photo.</p>
+                </div>
+            </div>
+            <div class="summary-item">
+                <i class="fas fa-envelope"></i>
+                <div>
+                    <strong>Confirmation Sent</strong>
+                    <p>A detailed confirmation has been sent to your registered email address.</p>
+                </div>
+            </div>
+            <div class="summary-item">
+                <i class="fas fa-barcode"></i>
+                <div>
+                    <strong>Reference Number</strong>
+                    <p>EMTA2023-<span id="refNumber">XXXXXX</span> <span class="status-badge">Active</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="process-section">
+            <h2><i class="fas fa-list-ol"></i> Our Review Process</h2>
+            <p>Here's what happens next with your application:</p>
+            
+            <div class="process-timeline">
+                <div class="timeline-item">
+                    <span class="timeline-date">1-2 Business Days</span>
+                    <div class="timeline-content">
+                        <h4>Initial Screening</h4>
+                        <p>Our recruitment team will review your qualifications and experience to ensure they match our requirements. This includes verification of your documents and work history.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <span class="timeline-date">3-5 Business Days</span>
+                    <div class="timeline-content">
+                        <h4>Assessment Phase</h4>
+                        <p>Depending on the position, you may receive skills assessment tests via email. These help us better understand your capabilities.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <span class="timeline-date">Within 1 Week</span>
+                    <div class="timeline-content">
+                        <h4>Interview Scheduling</h4>
+                        <p>If selected, our coordinator will contact you to schedule an interview at your convenience. Interviews may be conducted in-person or via video call.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <span class="timeline-date">7-10 Business Days</span>
+                    <div class="timeline-content">
+                        <h4>Final Decision</h4>
+                        <p>You'll receive notification of our hiring decision. Successful candidates will get an offer package with all joining details.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="preparation-section">
+            <h2><i class="fas fa-lightbulb"></i> How to Prepare</h2>
+            <p>While we review your application, here's how you can prepare for the next steps:</p>
+            
+            <div class="prep-card">
+                <div class="prep-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <div>
+                    <h4>Stay Accessible</h4>
+                    <p>Keep your phone and email active. We may contact you for additional information or to schedule interviews.</p>
+                </div>
+            </div>
+            
+            <div class="prep-card">
+                <div class="prep-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div>
+                    <h4>Review Job Requirements</h4>
+                    <p>Revisit the job description and think of examples that demonstrate how your skills match the requirements.</p>
+                </div>
+            </div>
+            
+            <div class="prep-card">
+                <div class="prep-icon">
+                    <i class="fas fa-laptop"></i>
+                </div>
+                <div>
+                    <h4>Prepare for Virtual Meetings</h4>
+                    <p>Ensure you have a quiet space and reliable internet connection for potential video interviews.</p>
+                </div>
+            </div>
+            
+            <div class="prep-card">
+                <div class="prep-icon">
+                    <i class="fas fa-file-signature"></i>
+                </div>
+                <div>
+                    <h4>Gather Documents</h4>
+                    <p>Have digital copies of your certificates, ID proofs, and other relevant documents ready.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="contact-section">
+            <h2 class="text-white"><i class="fas fa-headset"></i> Need Assistance?</h2>
+            <p>Our recruitment team is happy to help with any questions about your application:</p>
+            
+            <div class="contact-item">
+                <i class="fas fa-envelope"></i>
+                <div>
+                    <strong>Email Support:</strong>
+                    <a href="mailto:recruitment@emtavms.com" style="color: white;">recruitment@emtavms.com</a>
+                </div>
+            </div>
+            
+            <div class="contact-item">
+                <i class="fas fa-phone-alt"></i>
+                <div>
+                    <strong>Phone Support:</strong>
+                    +91 98765 43210 (Mon-Fri, 9AM-6PM IST)
+                </div>
+            </div>
+            
+            <div class="contact-item">
+                <i class="fas fa-comments"></i>
+                <div>
+                    <strong>Live Chat:</strong>
+                    Available on our website during business hours
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="https://emta.co.in" class="btn btn-primary">
+                <i class="fas fa-home"></i> Return to Homepage
+            </a>
+            <a href="https://emtavms.com/candidate-portal" class="btn btn-outline">
+                <i class="fas fa-user-circle"></i> Go to Candidate Portal
+            </a>
+        </div>
     </div>
     
-    <!-- Libs JS -->
-    <!-- Tabler Core -->
-    <script src="/static/dist/js/tabler.min.js?1692870487" defer></script>
-    <script src="/static/dist/js/demo.min.js?1692870487" defer></script>
+    <script>
+        // Generate a random reference number for demo purposes
+        document.addEventListener('DOMContentLoaded', function() {
+            const refNumber = Math.floor(100000 + Math.random() * 900000);
+            document.getElementById('refNumber').textContent = refNumber;
+            
+            // Animation for prep cards
+            const prepCards = document.querySelectorAll('.prep-card');
+            prepCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transitionDelay = `${index * 0.1}s`;
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 500);
+            });
+        });
+    </script>
 </body>
-</html>
+</html> 

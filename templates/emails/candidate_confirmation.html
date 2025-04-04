@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Application Received - EMTA VMS</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .footer { margin-top: 20px; padding: 10px; text-align: center; font-size: 0.8em; color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Application Received</h1>
+            <p>EMTA Vendor Management System</p>
+        </div>
+        
+        <div class="content">
+            <p>Dear {{ candidate_name }},</p>
+            
+            <p>Thank you for submitting your application through EMTA VMS. We have received your details and our team will review your application shortly.</p>
+            
+            <h3>Your Application Details:</h3>
+            <ul>
+                <li><strong>Name:</strong> {{ candidate_name }}</li>
+                <li><strong>Qualification:</strong> {{ qualification }}</li>
+                <li><strong>Sector:</strong> {{ sector }}</li>
+                <li><strong>Job Type:</strong> {{ job_type }}</li>
+                <li><strong>Preferred Location:</strong> {{ preferred_location }}</li>
+                {% if refer_code %}<li><strong>Referral Code:</strong> {{ refer_code }}</li>{% endif %}
+            </ul>
+            
+            <p>We will contact you if your profile matches our current requirements. Please keep your phone and email active for communication.</p>
+            
+            <p>For any queries, please contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
+            
+            <p>Best regards,<br>
+            The {{ company_name }} Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; {% now "Y" %} {{ company_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

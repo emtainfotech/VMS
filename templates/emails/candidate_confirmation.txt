@@ -1,0 +1,23 @@
+Application Received - EMTA VMS
+
+Dear {{ candidate_name }},
+
+Thank you for submitting your application through EMTA VMS. We have received your details and our team will review your application shortly.
+
+Your Application Details:
+- Name: {{ candidate_name }}
+- Qualification: {{ qualification }}
+- Sector: {{ sector }}
+- Job Type: {{ job_type }}
+- Preferred Location: {{ preferred_location }}
+{% if refer_code %}- Referral Code: {{ refer_code }}{% endif %}
+
+We will contact you if your profile matches our current requirements. Please keep your phone and email active for communication.
+
+For any queries, please contact us at {{ support_email }}.
+
+Best regards,
+The {{ company_name }} Team
+
+---
+© {% now "Y" %} {{ company_name }}. All rights reserved.

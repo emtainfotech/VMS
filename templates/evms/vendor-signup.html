@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vendor Signup - EVMS</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,500,600,700,800&display=swap"
-        rel="stylesheet">
-        <link rel="shortcut icon" href="/static/m.png" type="image/x-icon">
-
+    <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,500,600,700,800&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="/static/m.png" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
@@ -16,18 +14,16 @@
             overflow: hidden; 
             height: 100vh; 
             background: url('/static/bg.jpg');
-            background-size: cover; /* Cover the entire viewport */
-            background-position: center; /* Center the image */
+            background-size: cover;
+            background-position: center; 
             background-repeat: no-repeat;
-            
             display: flex; 
             align-items: center; 
             justify-content: center; 
             position: relative;
-            font-family: 'Poppins', sans-serif; /* Ensure text uses the specified font */
+            font-family: 'Poppins', sans-serif;
         }
 
-        /* Background Layer */
         #particles-js { 
             position: absolute; 
             width: 100%; 
@@ -37,7 +33,6 @@
             z-index: -1; 
         }
 
-        /* Fade-in effect for the form container */
         .fade-in {
             opacity: 0;
             transform: translateY(20px);
@@ -45,32 +40,8 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Slide-in effect for input fields */
-        .slide-in {
-            opacity: 0;
-            transform: translateX(-20px);
-            animation: slideIn 0.5s forwards;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .error-text {
@@ -95,251 +66,468 @@
         .password-container {
             position: relative;
         }
+
+        .otp-input {
+            width: 40px;
+            height: 50px;
+            text-align: center;
+            font-size: 1.2rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            margin: 0 5px;
+        }
+
+        .otp-input:focus {
+            outline: none;
+            border-color: #4c51bf;
+            box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.2);
+        }
+
+        .resend-otp {
+            cursor: pointer;
+            color: #4c51bf;
+            font-weight: 600;
+        }
+
+        .resend-otp:hover {
+            text-decoration: underline;
+        }
+
+        .otp-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .timer {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body class="bg-info-100">
     <div id="particles-js"></div>
     <div class="min-h-screen flex items-center justify-center fade-in">
-        <div class="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
-          <div class="flex justify-center mb-6">
-            <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3"><a href="."><img src="https://emta.co.in/f.png" width="110" height="32" alt="Tabler" class="navbar-brand-image" /></a></h1>
-          
-        </div>
+        <!-- Main Signup Form -->
+        <div id="signupForm" class="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full mx-4">
+            <div class="flex justify-center mb-6">
+                <a href=".">
+                    <img src="https://emta.co.in/f.png" width="110" height="32" alt="EMTA Logo">
+                </a>
+            </div>
             <header class="text-center">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4">EVMS - Vendor Signup</h2>
-                <p class="text-lg mb-6">Refer and Earn - Integrated Vendor Management System for Manpower Consultants.</p>
-                <span class="text-gray-500">Have an account? <a href="{% url 'vendor_login' %}" class="text-blue-500">Login</a></span>
+                <p class="text-gray-600 mb-6">Refer and Earn - Integrated Vendor Management System</p>
+                <span class="text-gray-500">Have an account? <a href="{% url 'vendor_login' %}" class="text-blue-500 hover:text-blue-600">Login</a></span>
             </header>
 
-            {% if messages %}
-            <ul class="mb-4">
-                {% for message in messages %}
-                <li class="text-red-500">{{ message }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
+            <div id="errorMessages" class="mb-4 hidden">
+                <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p id="errorText" class="text-sm text-red-700"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <form method="POST" id="register" enctype="multipart/form-data" onsubmit="return validateForm()">
+            <form method="POST" id="register" enctype="multipart/form-data">
                 {% csrf_token %}
+                <input type="hidden" name="form_type" value="signup">
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
-                               name="first_name" placeholder="Firstname" oninput="capitalizeFirstLetter(this)" required>
+                        <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                               name="first_name" placeholder="First Name" oninput="capitalizeFirstLetter(this)" required>
                     </div>
                     <div>
-                        <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
-                               name="last_name" placeholder="Lastname" oninput="capitalizeFirstLetter(this)">
+                        <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                               name="last_name" placeholder="Last Name" oninput="capitalizeFirstLetter(this)">
                     </div>
                 </div>
 
                 <div class="mb-4">
-                    <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
-                           name="username" placeholder="Enter a Username (ex.EMTA0001)" autocomplete="off" 
-                           pattern="[EMTA]{4}[0-9]{4}" title="Username must contain 'EMTA' and numbers, e.g., EMTA0001" 
+                    <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                           name="username" placeholder="Username (ex. EMTA0001)" autocomplete="off" 
+                           pattern="[EMTA]{4}[0-9]{4}" title="Username must contain 'EMTA' followed by 4 numbers" 
                            value="{{ suggested_username }}" required readonly>
                 </div>
-                
 
                 <div class="mb-4">
-                    <input type="tel" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    <input type="tel" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
                            name="mobile_number" placeholder="Mobile Number" pattern="[0-9]{10}" title="Enter a valid 10-digit mobile number" required>
                 </div>
 
                 <div class="mb-4">
-                    <input type="email" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
-                           name="email" placeholder="Email" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" required>
+                    <input type="email" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                           name="email" placeholder="Email Address" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" required>
                 </div>
 
                 <div class="mb-4 password-container">
-                    <input type="password" id="password1" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    <input type="password" id="password1" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
                            name="password1" placeholder="Create Password (Ex@123)" 
                            pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*[@$!%*?&])(?!^[0-9]*$).{5,}$" 
-                           title="Password must be at least 5 characters long, contain upper and lower case letters, and a special character" required>
+                           title="Password must be at least 5 characters with uppercase, lowercase and special character" required>
                     <button type="button" class="show-password-btn" id="togglePassword1">
                         <i class="bx bx-show"></i>
                     </button>
                 </div>
 
                 <div class="mb-4 password-container">
-                    <input type="password" id="password2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    <input type="password" id="password2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
                            name="password2" placeholder="Confirm Password" required>
                     <button type="button" class="show-password-btn" id="togglePassword2">
                         <i class="bx bx-show"></i>
                     </button>
-                    <p class="text-red-500 text-sm error-text" id="passwordError">Passwords do not match.</p>
+                    <p class="text-red-500 text-sm mt-1 hidden" id="passwordError">Passwords do not match.</p>
                 </div>
 
                 <div class="mb-6">
-                    <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">Register</button>
+                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-200">
+                        Register
+                    </button>
                 </div>
-                <div class="mt-6 text-center text-sm text-gray-600">
-                    Have an account?  <a href="{% url 'vendor_login' %}" class="text-indigo-600 hover:text-indigo-500">Login In</a>
+            </form>
+        </div>
+
+        <!-- OTP Verification Form (Initially Hidden) -->
+        <div id="otpForm" class="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full mx-4" style="display: none;">
+            <div class="flex justify-center mb-6">
+                <a href=".">
+                    <img src="https://emta.co.in/f.png" width="110" height="32" alt="EMTA Logo">
+                </a>
+            </div>
+            <header class="text-center">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-2">Verify Your Email</h2>
+                <p class="text-gray-600 mb-1">We've sent a 6-digit code to</p>
+                <p id="userEmail" class="font-medium text-blue-600 mb-6"></p>
+            </header>
+
+            <div id="otpError" class="mb-4 hidden">
+                <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p id="otpErrorText" class="text-sm text-red-700"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" id="otpVerificationForm">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="otp_verification">
+                <input type="hidden" id="storedEmail" name="email">
+
+                <div class="otp-container">
+                    <input type="text" maxlength="1" class="otp-input" name="otp1" required autofocus>
+                    <input type="text" maxlength="1" class="otp-input" name="otp2" required>
+                    <input type="text" maxlength="1" class="otp-input" name="otp3" required>
+                    <input type="text" maxlength="1" class="otp-input" name="otp4" required>
+                    <input type="text" maxlength="1" class="otp-input" name="otp5" required>
+                    <input type="text" maxlength="1" class="otp-input" name="otp6" required>
+                </div>
+
+                <div class="text-center mb-6">
+                    <p class="text-gray-600">Didn't receive the code? 
+                        <span id="resendOtpBtn" class="resend-otp">Resend OTP</span>
+                    </p>
+                    <p id="otpTimer" class="timer">You can resend OTP in <span id="countdown">60</span> seconds</p>
+                </div>
+
+                <div class="mb-6">
+                    <button type="submit" id="verifyBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-200">
+                        Verify & Complete Registration
+                    </button>
                 </div>
             </form>
         </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script>
+        // Initialize particles.js
         particlesJS('particles-js', {
-            "particles": {
-                "number": {
-                    "value": 100,
-                    "density": {
-                        "enable": true,
-                        "value_area": 800
-                    }
-                },
-                "color": {
-                    "value": "#ffffff"
-                },
-                "shape": {
-                    "type": "circle",
-                    "stroke": {
-                        "width": 0,
-                        "color": "#000000"
-                    },
-                    "polygon": {
-                        "nb_sides": 5
-                    }
-                },
-                "opacity": {
-                    "value": 0.5,
-                    "random": false,
-                    "anim": {
-                        "enable": false,
-                        "speed": 1,
-                        "opacity_min": 0.1,
-                        "sync": false
-                    }
-                },
-                "size": {
-                    "value": 3,
-                    "random": true,
-                    "anim": {
-                        "enable": false,
-                        "speed": 4,
-                        "size_min": 0.1,
-                        "sync": false
-                    }
-                },
-                "line_linked": {
-                    "enable": true,
-                    "distance": 150,
-                    "color": "#ffffff",
-                    "opacity": 0.4,
-                    "width": 1
-                },
-                "move": {
-                    "enable": true,
-                    "speed": 6,
-                    "direction": "none",
-                    "random": false,
-                    "straight": false,
-                    "out_mode": "out",
-                    "bounce": false,
-                    "attract": {
-                        "enable": false,
-                        "rotateX": 600,
-                        "rotateY": 1200
-                    }
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: "#ffffff" },
+                shape: { type: "circle" },
+                opacity: { value: 0.5 },
+                size: { value: 3, random: true },
+                line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.4, width: 1 },
+                move: { enable: true, speed: 6 }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "repulse" },
+                    onclick: { enable: true, mode: "push" },
+                    resize: true
                 }
             },
-            "interactivity": {
-                "detect_on": "canvas",
-                "events": {
-                    "onhover": {
-                        "enable": true,
-                        "mode": "repulse"
-                    },
-                    "onclick": {
-                        "enable": true,
-                        "mode": "push"
-                    },
-                    "resize": true
-                },
-                "modes": {
-                    "grab": {
-                        "distance": 400,
-                        "line_linked": {
-                            "opacity": 1
-                        }
-                    },
-                    "bubble": {
-                        "distance": 400,
-                        "size": 40,
-                        "duration": 2,
-                        "opacity": 0.8,
-                        "speed": 3
-                    },
-                    "repulse": {
-                        "distance": 200,
-                        "duration": 0.4
-                    },
-                    "push": {
-                        "particles_nb": 4
-                    },
-                    "remove": {
-                        "particles_nb": 2
-                    }
-                }
-            },
-            "retina_detect": true
+            retina_detect: true
         });
 
-        // Capitalize first letter of names
-        function capitalizeFirstLetter(input) {
-            input.value = input.value.charAt(0).toUpperCase() + input.value.slice(1);
-        }
-
         // Form validation
-        function validateForm() {
+        document.getElementById('register').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
             const password1 = document.getElementById('password1');
             const password2 = document.getElementById('password2');
             const passwordError = document.getElementById('passwordError');
-
-            // Check if passwords match
+            
+            // Clear previous errors
+            document.getElementById('errorMessages').classList.add('hidden');
+            passwordError.classList.add('hidden');
+            password1.classList.remove('error-border');
+            password2.classList.remove('error-border');
+            
+            // Validate passwords match
             if (password1.value !== password2.value) {
-                passwordError.style.display = 'block';
+                passwordError.classList.remove('hidden');
                 password1.classList.add('error-border');
                 password2.classList.add('error-border');
-                return false;
-            } else {
-                passwordError.style.display = 'none';
-                password1.classList.remove('error-border');
-                password2.classList.remove('error-border');
-                return true;
+                return;
             }
+            
+            // Submit form via AJAX
+            const formData = new FormData(this);
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Sending OTP...';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    // Show OTP form
+                    document.getElementById('signupForm').style.display = 'none';
+                    document.getElementById('otpForm').style.display = 'block';
+                    
+                    // Set the email in OTP form
+                    const email = formData.get('email');
+                    document.getElementById('userEmail').textContent = email;
+                    document.getElementById('storedEmail').value = email;
+                    
+                    // Start OTP timer
+                    startOTPTimer();
+                } else {
+                    showError(data.message || 'Error submitting form');
+                }
+            })
+            .catch(error => {
+                if (error.messages) {
+                    showError(error.messages.join('\n'));
+                } else {
+                    showError('An error occurred. Please try again.');
+                }
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Register';
+            });
+        });
+
+        // OTP form submission
+        document.getElementById('otpVerificationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const verifyBtn = document.getElementById('verifyBtn');
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = 'Verifying...';
+            
+            // Hide previous errors
+            document.getElementById('otpError').classList.add('hidden');
+            
+            // Collect OTP digits
+            const otpDigits = Array.from(document.querySelectorAll('.otp-input'))
+                .map(input => input.value)
+                .join('');
+            
+            // Add OTP to form data
+            const formData = new FormData(this);
+            formData.append('otp', otpDigits);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = data.redirect;
+                } else {
+                    showOTPError(data.message || 'Invalid OTP. Please try again.');
+                }
+            })
+            .catch(error => {
+                if (error.redirect) {
+                    window.location.href = error.redirect;
+                }
+                showOTPError(error.message || 'An error occurred during verification.');
+            })
+            .finally(() => {
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = 'Verify & Complete Registration';
+            });
+        });
+
+        // OTP input handling
+        const otpInputs = document.querySelectorAll('.otp-input');
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+                
+                // Auto-submit if last digit entered
+                if (index === otpInputs.length - 1 && e.target.value.length === 1) {
+                    document.getElementById('otpVerificationForm').dispatchEvent(new Event('submit'));
+                }
+            });
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && index > 0 && !e.target.value) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
+
+        // Resend OTP functionality
+        document.getElementById('resendOtpBtn').addEventListener('click', function() {
+            const email = document.getElementById('storedEmail').value;
+            const resendBtn = this;
+            
+            resendBtn.style.pointerEvents = 'none';
+            resendBtn.style.opacity = '0.7';
+            
+            fetch('{% url "resend_otp" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ email: email })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    // Restart timer
+                    startOTPTimer();
+                    alert('New OTP sent successfully!');
+                } else {
+                    showOTPError(data.message || 'Error resending OTP');
+                }
+            })
+            .catch(error => {
+                showOTPError(error.message || 'Failed to resend OTP');
+            })
+            .finally(() => {
+                resendBtn.style.pointerEvents = '';
+                resendBtn.style.opacity = '1';
+            });
+        });
+
+        // OTP Timer
+        function startOTPTimer() {
+            let timeLeft = 60;
+            const timerElement = document.getElementById('countdown');
+            const resendBtn = document.getElementById('resendOtpBtn');
+            const timerContainer = document.getElementById('otpTimer');
+            
+            resendBtn.style.pointerEvents = 'none';
+            resendBtn.style.opacity = '0.5';
+            timerContainer.classList.remove('hidden');
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    resendBtn.style.pointerEvents = '';
+                    resendBtn.style.opacity = '1';
+                    timerContainer.classList.add('hidden');
+                }
+            }, 1000);
+        }
+
+        // Helper functions
+        function showError(message) {
+            const errorContainer = document.getElementById('errorMessages');
+            document.getElementById('errorText').textContent = message;
+            errorContainer.classList.remove('hidden');
+        }
+
+        function showOTPError(message) {
+            const errorContainer = document.getElementById('otpError');
+            document.getElementById('otpErrorText').textContent = message;
+            errorContainer.classList.remove('hidden');
+        }
+
+        function capitalizeFirstLetter(input) {
+            if (input.value.length === 0) return;
+            input.value = input.value.charAt(0).toUpperCase() + input.value.slice(1);
         }
 
         // Toggle password visibility
-        document.getElementById('togglePassword1').addEventListener('click', function () {
+        document.getElementById('togglePassword1').addEventListener('click', function() {
             const passwordField = document.getElementById('password1');
-            const passwordIcon = this.querySelector('i');
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                passwordIcon.classList.remove('bx-show');
-                passwordIcon.classList.add('bx-hide');
-            } else {
-                passwordField.type = 'password';
-                passwordIcon.classList.remove('bx-hide');
-                passwordIcon.classList.add('bx-show');
-            }
+            const icon = this.querySelector('i');
+            togglePasswordVisibility(passwordField, icon);
         });
 
-        document.getElementById('togglePassword2').addEventListener('click', function () {
+        document.getElementById('togglePassword2').addEventListener('click', function() {
             const passwordField = document.getElementById('password2');
-            const passwordIcon = this.querySelector('i');
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                passwordIcon.classList.remove('bx-show');
-                passwordIcon.classList.add('bx-hide');
-            } else {
-                passwordField.type = 'password';
-                passwordIcon.classList.remove('bx-hide');
-                passwordIcon.classList.add('bx-show');
-            }
+            const icon = this.querySelector('i');
+            togglePasswordVisibility(passwordField, icon);
         });
+
+        function togglePasswordVisibility(field, icon) {
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('bx-show');
+                icon.classList.add('bx-hide');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('bx-hide');
+                icon.classList.add('bx-show');
+            }
+        }
     </script>
 </body>
 </html>

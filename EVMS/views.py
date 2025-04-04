@@ -33,46 +33,248 @@ import re
 import os
 
 
+from django.core.mail import send_mail
+from django.conf import settings
+from django.template.loader import render_to_string
+import random
+import time
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.conf import settings
+from django.http import JsonResponse
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.template.loader import render_to_string
+from .models import Vendor
+
+# def get_next_username():
+#     last_vendor = Vendor.objects.order_by('-id').first()
+#     if last_vendor:
+#         last_num = int(last_vendor.refer_code[4:])
+#         return f"EMTA{str(last_num + 1).zfill(4)}"
+#     return "EMTA0001"
+
 def vendor_signup(request):
     if request.method == 'POST':
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        mobile_number = request.POST.get('mobile_number')
-        email = request.POST.get('email')
-        username = request.POST.get('username')
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
-        refer_code = username
-
-        if not username:
-            messages.error(request, 'Username must be set')
-            return render(request, 'vendor-signup.html')
-
-        if password1 != password2:
-            messages.error(request, 'Passwords do not match')
-            return render(request, 'evms/vendor-signup.html')
-
-        if User.objects.filter(username=username).exists():
-            messages.error(request, 'Username is already taken')
-            return render(request, 'evms/vendor-signup.html')
-
-        if User.objects.filter(email=email).exists():
-            messages.error(request, 'Email is already taken')
-            return render(request, 'evms/vendor-signup.html')
-
-        user = User.objects.create_user(username=username, email=email, password=password1)
-        user.first_name = first_name
-        user.last_name = last_name
-        user.save()
-
-        vendor = Vendor.objects.create(user=user, mobile_number=mobile_number, refer_code=refer_code)
-
-        return redirect('vendor_login')
-
-    # Suggest next username in the format EMTA0001
+        form_type = request.POST.get('form_type')
+        
+        # Initial signup form submission
+        if form_type == 'signup':
+            # Validate form data
+            first_name = request.POST.get('first_name')
+            last_name = request.POST.get('last_name')
+            mobile_number = request.POST.get('mobile_number')
+            email = request.POST.get('email')
+            username = request.POST.get('username')
+            password1 = request.POST.get('password1')
+            password2 = request.POST.get('password2')
+            
+            # Basic validation
+            errors = []
+            if not username:
+                errors.append('Username must be set')
+            if password1 != password2:
+                errors.append('Passwords do not match')
+            if User.objects.filter(username=username).exists():
+                errors.append('Username is already taken')
+            if User.objects.filter(email=email).exists():
+                errors.append('Email is already taken')
+            
+            if errors:
+                return JsonResponse({
+                    'status': 'error',
+                    'messages': errors
+                }, status=400)
+            
+            # Store data in session for OTP verification
+            request.session['signup_data'] = {
+                'first_name': first_name,
+                'last_name': last_name,
+                'mobile_number': mobile_number,
+                'email': email,
+                'username': username,
+                'password1': password1,
+                'refer_code': username
+            }
+            
+            # Generate and store OTP (6 digits)
+            otp = str(random.randint(100000, 999999))
+            request.session['signup_otp'] = otp
+            request.session['otp_email'] = email
+            request.session['otp_attempts'] = 0  # Track OTP attempts
+            request.session['otp_created_at'] = time.time()  # Current timestamp
+            
+            # Send OTP email
+            try:
+                send_otp_email(email, otp)
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'OTP sent to your email'
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Failed to send OTP. Please try again.'
+                }, status=500)
+        
+        # OTP verification submission
+        elif form_type == 'otp_verification':
+            # Verify OTP from session
+            stored_otp = request.session.get('signup_otp')
+            user_otp = ''.join([
+                request.POST.get('otp1', ''),
+                request.POST.get('otp2', ''),
+                request.POST.get('otp3', ''),
+                request.POST.get('otp4', ''),
+                request.POST.get('otp5', ''),
+                request.POST.get('otp6', '')
+            ])
+            
+            # Check if OTP matches
+            if stored_otp and user_otp == stored_otp:
+                signup_data = request.session.get('signup_data')
+                
+                # Create user account
+                user = User.objects.create_user(
+                    username=signup_data['username'],
+                    email=signup_data['email'],
+                    password=signup_data['password1']
+                )
+                user.first_name = signup_data['first_name']
+                user.last_name = signup_data['last_name']
+                user.save()
+                
+                # Create vendor profile
+                vendor = Vendor.objects.create(
+                    user=user,
+                    mobile_number=signup_data['mobile_number'],
+                    refer_code=signup_data['refer_code']
+                )
+                
+                # Send welcome email
+                try:
+                    send_welcome_email(signup_data)
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"Failed to send welcome email: {str(e)}")
+                
+                # Clear session data
+                clear_signup_session(request)
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'redirect': reverse('vendor_login'),
+                    'message': 'Registration successful! Please login.'
+                })
+            else:
+                # Track failed attempts
+                request.session['otp_attempts'] = request.session.get('otp_attempts', 0) + 1
+                
+                # Prevent brute force (max 5 attempts)
+                if request.session['otp_attempts'] >= 5:
+                    clear_signup_session(request)
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Too many failed attempts. Please restart registration.',
+                        'redirect': reverse('vendor_signup')
+                    }, status=400)
+                
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid OTP. Please try again.'
+                }, status=400)
+    
+    # GET request - show initial form
     suggested_username = get_next_username()
+    return render(request, 'evms/vendor-signup.html', {
+        'suggested_username': suggested_username
+    })
 
-    return render(request, 'evms/vendor-signup.html', {'suggested_username': suggested_username})
+@csrf_exempt
+def resend_otp(request):
+    if request.method == 'POST':
+        email = request.session.get('otp_email')
+        
+        if email:
+            # Generate new OTP
+            otp = str(random.randint(100000, 999999))
+            request.session['signup_otp'] = otp
+            request.session['otp_created_at'] = time.time()
+            
+            # Resend email
+            try:
+                send_otp_email(email, otp)
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'New OTP sent successfully'
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Failed to resend OTP. Please try again.'
+                }, status=500)
+    
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Unable to resend OTP. Please restart registration.'
+    }, status=400)
+
+# Helper Functions
+
+def send_otp_email(email, otp):
+    subject = 'Your EMTA VMS Verification Code'
+    message = f"""
+    Your OTP for EMTA VMS registration is: {otp}
+    
+    This code will expire in 10 minutes.
+    
+    If you didn't request this, please ignore this email.
+    """
+    send_mail(
+        subject,
+        message.strip(),
+        settings.DEFAULT_FROM_EMAIL,
+        [email],
+        fail_silently=False,
+    )
+
+def send_welcome_email(vendor_data):
+    subject = 'Welcome to EMTA Vendor Management System'
+    
+    context = {
+        'first_name': vendor_data['first_name'],
+        'last_name': vendor_data['last_name'],
+        'username': vendor_data['username'],
+        'email': vendor_data['email'],
+        'mobile_number': vendor_data['mobile_number'],
+        'refer_code': vendor_data['refer_code'],
+        'company_name': 'EMTA VMS',
+        'company_info': 'EMTA Vendor Management System provides comprehensive solutions for vendor onboarding and management.',
+        'support_email': 'emtainfotech@gmail.com',
+        'website': 'www.emtavms.com',
+    }
+
+    html_message = render_to_string('emails/vendor_welcome.html', context)
+    plain_message = render_to_string('emails/vendor_welcome.txt', context)
+
+    send_mail(
+        subject,
+        plain_message,
+        settings.DEFAULT_FROM_EMAIL,
+        [vendor_data['email']],
+        html_message=html_message,
+        fail_silently=False,
+    )
+
+def clear_signup_session(request):
+    """Clear all signup-related session data"""
+    keys = ['signup_data', 'signup_otp', 'otp_email', 'otp_attempts', 'otp_created_at']
+    for key in keys:
+        if key in request.session:
+            del request.session[key]
 
 def get_next_username():
     # Get all usernames that start with 'EMTA' and end with 4 digits
@@ -227,6 +429,7 @@ def vendor_dashboard(request):
     else:
         return render(request, 'usernotfound.html', {'error': 'User not authenticated'})
     
+    
 def vendor_profile(request, id):
     vendor = get_object_or_404(Vendor, id=id)
     vendor_profile_detail, _ = Vendor_profile_details.objects.get_or_create(vendor=vendor)
@@ -365,10 +568,41 @@ def candidate_form(request):
                 job_type=job_type,
                 candidate_photo=candidate_photo,
             )
+        
+            # Send confirmation email to candidate
+            try:
+                subject = 'Application Received - EMTA VMS'
+                
+                context = {
+                    'candidate_name': candidate_name,
+                    'qualification': qualification,
+                    'sector': sector_str,
+                    'job_type': job_type,
+                    'preferred_location': preferred_location_str,
+                    'refer_code': refer_code,
+                    'support_email': 'emtainfotech@gmail.com',
+                    'company_name': 'EMTA VMS',
+                }
 
-            # return redirect(CandidateSuccess, candidate_id=candidate.id)
-            return redirect ('thankyou')
+                html_message = render_to_string('emails/candidate_confirmation.html', context)
+                plain_message = render_to_string('emails/candidate_confirmation.txt', context)
 
+                send_mail(
+                    subject,
+                    plain_message,
+                    'emtainfotech@gmail.com',
+                    [candidate_email_address],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+            except Exception as e:
+                # Log error but don't break the flow
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to send candidate confirmation email: {str(e)}")
+
+            return redirect('thankyou')
+        
     else:
         refer_code = request.GET.get('ref', '')
         initial_data = {'refer_code': refer_code}
@@ -615,3 +849,149 @@ def vendor_transaction_history(request) :
         'candidates' : candidates
     }
     return render (request, 'evms/transaction-history.html', context)
+
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from datetime import datetime
+from xhtml2pdf import pisa
+from io import BytesIO
+
+def generate_vendor_invoice(request, candidate_id):
+    # Get candidate and related vendor details
+    candidate = Candidate.objects.get(pk=candidate_id)
+    vendor = Vendor.objects.get(refer_code=candidate.refer_code)
+    
+    # Get all related vendor details
+    try:
+        profile_details = Vendor_profile_details.objects.get(vendor=vendor)
+    except Vendor_profile_details.DoesNotExist:
+        profile_details = None
+    
+    try:
+        business_details = Vendor_bussiness_details.objects.get(vendor=vendor)
+    except Vendor_bussiness_details.DoesNotExist:
+        business_details = None
+    
+    try:
+        bank_details = Vendor_bank_details.objects.get(vendor=vendor)
+    except Vendor_bank_details.DoesNotExist:
+        bank_details = None
+    
+    # Prepare context data
+    context = {
+        # Invoice metadata
+        'invoice_number': f"INV-{datetime.now().strftime('%Y%m%d')}-{candidate.unique_id}",
+        'invoice_date': datetime.now().strftime('%d %b %Y'),
+        'due_date': candidate.vendor_payout_date.strftime('%d %b %Y') if candidate.vendor_payout_date else '',
+        
+        # Vendor details
+        'vendor': {
+            'name': vendor.user.get_full_name(),
+            'code': vendor.refer_code,
+            'mobile': vendor.mobile_number,
+            'email': vendor.user.email,
+            'total_commission': vendor.total_commission_received,
+        },
+        
+        # Vendor profile details
+        'vendor_profile': {
+            'address': profile_details.address if profile_details else '',
+            'gender': profile_details.gender if profile_details else '',
+            'aadhar': profile_details.adhar_card_number if profile_details else '',
+            'pan': profile_details.pan_card_number if profile_details else '',
+        } if profile_details else None,
+        
+        # Business details
+        'business': {
+            'name': business_details.shop_name if business_details else '',
+            'address': business_details.shop_address if business_details else '',
+            'type': business_details.busness_type if business_details else '',
+            'gst': business_details.gst_number if business_details else '',
+            'contact': business_details.Contact_number if business_details else '',
+            'email': business_details.Busness_email if business_details else '',
+        } if business_details else None,
+        
+        # Bank details
+        'bank': {
+            'account_holder': bank_details.account_holder_name if bank_details else '',
+            'account_number': bank_details.account_number if bank_details else '',
+            'bank_name': bank_details.bank_name if bank_details else '',
+            'ifsc': bank_details.ifs_code if bank_details else '',
+            'preferred_payout': bank_details.preffered_payout_date if bank_details else '',
+        } if bank_details else None,
+        
+        # Candidate details
+        'candidate': {
+            'name': candidate.candidate_name,
+            'code': candidate.unique_id,
+            'mobile': candidate.candidate_mobile_number,
+            'email': candidate.candidate_email_address,
+            'position': candidate.job_type,
+            'department': candidate.department,
+            'company': candidate.company_name,
+            'selection_date': candidate.selection_date.strftime('%d %b %Y') if candidate.selection_date else '',
+            'joining_date': candidate.candidate_joining_date if candidate.candidate_joining_date else '',
+            'offered_salary': candidate.offered_salary,
+            'experience': f"{candidate.experience_year} years {candidate.experience_month} months",
+        },
+        
+        # Commission details
+        'commission': {
+            'amount': candidate.vendor_commission,
+            'status': candidate.vendor_commission_status,
+            'generation_date': candidate.commission_generation_date.strftime('%d %b %Y') if candidate.commission_generation_date else '',
+            'payout_date': candidate.vendor_payout_date.strftime('%d %b %Y') if candidate.vendor_payout_date else '',
+            'remark': candidate.vendor_payment_remark,
+            'emta_commission': candidate.emta_commission,
+        },
+        
+        # Selection status
+        'selection': {
+            'status': candidate.selection_status,
+            'company': candidate.company_name,
+            'call_remark': candidate.calling_remark,
+            'lead_source': candidate.lead_source,
+            'submitted_by': candidate.submit_by,
+        },
+        
+        # Additional fields
+        'current_date': datetime.now().strftime('%d %b %Y'),
+    }
+    
+    # Render HTML template
+    html_string = render_to_string('evms/vendor_invoice.html', context)
+    
+    # Create PDF using xhtml2pdf
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html_string.encode("UTF-8")), result)
+    
+    if not pdf.err:
+        response = HttpResponse(result.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="Vendor_Invoice_{candidate.unique_id}.pdf"'
+        return response
+    
+    return HttpResponse("Error generating PDF", status=500)
+
+def notifications(request):
+    if request.user.is_authenticated and hasattr(request.user, 'vendor'):
+        return {
+            'notifications': request.user.vendor.notifications.filter(is_read=False)[:10],
+            'unread_count': request.user.vendor.notifications.filter(is_read=False).count()
+        }
+    return {'notifications': [], 'unread_count': 0}
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Notification
+
+@login_required
+def mark_notification_read(request, pk):
+    notification = get_object_or_404(Notification, pk=pk, vendor=request.user.vendor)
+    notification.is_read = True
+    notification.save()
+    return redirect(notification.url if notification.url else 'dashboard')
+
+@login_required
+def mark_all_notifications_read(request):
+    request.user.vendor.notifications.filter(is_read=False).update(is_read=True)
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard'))

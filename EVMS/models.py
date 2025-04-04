@@ -167,4 +167,15 @@ class Candidate(models.Model):
         super().save(*args, **kwargs)
         
         
+class Notification(models.Model):
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, null=True, blank=True)
+    url = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        
         

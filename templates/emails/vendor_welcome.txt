@@ -1,0 +1,26 @@
+Welcome to {{ company_name }} Vendor Network
+
+Dear {{ first_name }} {{ last_name }},
+
+Thank you for registering as a vendor with {{ company_name }}. We're excited to have you on board!
+
+Your Account Details:
+- Name: {{ first_name }} {{ last_name }}
+- Username: {{ username }}
+- Email: {{ email }}
+- Mobile Number: {{ mobile_number }}
+- Referral Code: {{ refer_code }}
+
+About {{ company_name }}:
+{{ company_info }}
+
+You can now log in to your vendor dashboard using your credentials.
+
+If you have any questions or need assistance, please contact our support team at {{ support_email }}.
+
+Best regards,
+The {{ company_name }} Team
+
+---
+© {% now "Y" %} {{ company_name }}. All rights reserved.
+Visit us at: {{ website }}
