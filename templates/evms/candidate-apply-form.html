@@ -200,14 +200,14 @@
                 <label class="form-label">Profile Photo (Optional)</label>
                 <input type="file" name="candidate_photo" class="form-control" accept="image/*" onchange="validateFileType(this, 'image')">
                 <div class="invalid-feedback">Please upload a valid image file (JPEG, PNG, JPG)</div>
-                <small class="text-muted">Max size: 2MB | Formats: JPEG, PNG, JPG</small>
+                <small class="text-muted">Max size: 10MB | Formats: JPEG, PNG, JPG</small>
               </div>
 
               <div class="col-md-6 mb-3">
                 <label class="form-label required">Resume</label>
                 <input type="file" name="candidate_resume" class="form-control" required accept=".pdf,.doc,.docx" onchange="validateFileType(this, 'resume')">
                 <div class="invalid-feedback">Please upload your resume (PDF or DOC/DOCX)</div>
-                <small class="text-muted">Max size: 5MB | Formats: PDF, DOC, DOCX</small>
+                <small class="text-muted">Max size: 10MB | Formats: PDF, DOC, DOCX</small>
               </div>
             </div>
           </div>
@@ -341,7 +341,7 @@
       const file = input.files[0];
       if (!file) return;
       
-      const validImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      const validImageTypes = ['image/*'];
       const validDocTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
       
       let isValid = false;
@@ -356,10 +356,10 @@
       }
       
       // Check file size (2MB for images, 5MB for resumes)
-      const maxSize = type === 'image' ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
+      const maxSize = type === 'image' ? 10 * 1024 * 1024 : 10 * 1024 * 1024;
       if (file.size > maxSize) {
           isValid = false;
-          errorMsg = `File size exceeds ${type === 'image' ? '2MB' : '5MB'} limit`;
+          errorMsg = `File size exceeds ${type === 'image' ? '10MB' : '10MB'} limit`;
       }
       
       if (!isValid) {
