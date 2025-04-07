@@ -1452,6 +1452,10 @@ def employee_evms_candidate_profile(request,id) :
             commission_generation_date = request.POST.get('commission_generation_date')
             vendor_commission_status = request.POST.get('vendor_commission_status')
             vendor_payment_remark = request.POST.get('vendor_payment_remark')
+            payment_done_by = request.POST.get('payment_done_by')
+            payment_done_by_date = request.POST.get('payment_done_by_date')
+            submit_recipt = request.FILES.get('submit_recipt')
+
 
             # Update or create bank details for the employee
             candidate.vendor_commission = vendor_commission
@@ -1459,6 +1463,9 @@ def employee_evms_candidate_profile(request,id) :
             candidate.commission_generation_date = commission_generation_date
             candidate.vendor_commission_status = vendor_commission_status
             candidate.vendor_payment_remark = vendor_payment_remark
+            candidate.payment_done_by = payment_done_by
+            candidate.payment_done_by_date = payment_done_by_date
+            candidate.submit_recipt = submit_recipt
             candidate.save()
 
             messages.success(request, 'Vendor releted details updated successfully!')
@@ -2159,3 +2166,36 @@ def employee_generated_leads(request):
     }
     return render(request,'employee/employee-lead-generate.html',context)
 
+
+def evms_vendor_paylist(request):
+    # Get current month and year
+    now = timezone.now()
+    current_month = now.month
+    current_year = now.year
+    
+    # Filter candidates with refer_code, pending commission, and payout date in current month
+    remaining_pays = Candidate.objects.filter(
+        vendor_commission_status='Pending',
+        selection_status='Selected',
+        refer_code__isnull=False,
+        vendor_payout_date__month=current_month,
+        vendor_payout_date__year=current_year
+    ).order_by('-id')
+    
+    # Prepare data for template
+    candidates = []
+    for candidate in remaining_pays:
+        try:
+            vendor = Vendor.objects.get(refer_code=candidate.refer_code)
+            vendor_name = f"{vendor.user.first_name} {vendor.user.last_name}"
+        except Vendor.DoesNotExist:
+            vendor_name = "Unknown Vendor"
+        
+        # Add vendor name to candidate object (we'll use this in template)
+        candidate.vendor_name = vendor_name
+        candidates.append(candidate)
+    
+    context = {
+        'candidates': candidates
+    }
+    return render(request, 'employee/evms-vendor-paylist.html', context)

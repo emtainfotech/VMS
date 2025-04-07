@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 from django.urls import path
 
 urlpatterns = [
-    path('',vendor_signup,name = 'vendor_signup'),
+    path('',home_view,name = 'home_view'),
     path('vendor-signup/',vendor_signup,name = 'vendor_signup'),
     path('vendor-login/',vendor_login,name = 'vendor_login'),
     path('vendor-logout/', vendor_logout, name='vendor_logout'),
@@ -25,6 +25,11 @@ urlpatterns = [
     path('vendor/invoice/<int:candidate_id>/', generate_vendor_invoice, name='vendor_invoice'),
     path('notifications/mark-read/<int:pk>/', mark_notification_read, name='mark_notification_read'),
     path('notifications/mark-all-read/', mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('forgot-password/', forgot_password, name='forgot_password'),
+    path('reset-password-otp/', reset_password_otp, name='reset_password_otp'),
+    path('reset-password/', reset_password_form, name='reset_password_form'),
+    path('resend-reset-otp/', resend_reset_otp, name='resend_reset_otp'),
+    
     
     path('admin/', admin.site.urls),
 ]

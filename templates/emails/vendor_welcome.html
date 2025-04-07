@@ -8,6 +8,8 @@
         .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
         .content { padding: 20px; }
         .footer { margin-top: 20px; padding: 10px; text-align: center; font-size: 0.8em; color: #6c757d; }
+        .qr-code { display: block; margin: 15px auto; max-width: 150px; }
+        .referral-link { word-break: break-all; background: #f0f8ff; padding: 8px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -29,7 +31,11 @@
                 <li><strong>Email:</strong> {{ email }}</li>
                 <li><strong>Mobile Number:</strong> {{ mobile_number }}</li>
                 <li><strong>Referral Code:</strong> {{ refer_code }}</li>
+                {% comment %} <li><strong>Referral Link:</strong> 
+                    <div class="referral-link">{{ referral_link }}</div>
+                </li> {% endcomment %}
             </ul>
+            
             
             <h3>About {{ company_name }}</h3>
             <p>{{ company_info }}</p>
@@ -44,7 +50,7 @@
         
         <div class="footer">
             <p>&copy; {% now "Y" %} {{ company_name }}. All rights reserved.</p>
-            <p>Visit us at: <a href="http://{{ website }}">{{ website }}</a></p>
+            <p>Visit us at: <a href="https://{{ website }}">{{ website }}</a></p>
         </div>
     </div>
 </body>

@@ -49,12 +49,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 from .models import Vendor
 
-# def get_next_username():
-#     last_vendor = Vendor.objects.order_by('-id').first()
-#     if last_vendor:
-#         last_num = int(last_vendor.refer_code[4:])
-#         return f"EMTA{str(last_num + 1).zfill(4)}"
-#     return "EMTA0001"
+def home_view(request):
+    return render(request, 'evms/home.html', {})
 
 def vendor_signup(request):
     if request.method == 'POST':
@@ -251,6 +247,7 @@ def send_welcome_email(vendor_data):
         'email': vendor_data['email'],
         'mobile_number': vendor_data['mobile_number'],
         'refer_code': vendor_data['refer_code'],
+        'refer_code': vendor_data['refer_code'],
         'company_name': 'EMTA VMS',
         'company_info': 'EMTA Vendor Management System provides comprehensive solutions for vendor onboarding and management.',
         'support_email': 'emtainfotech@gmail.com',
@@ -311,6 +308,244 @@ def vendor_login(request):
     else:
         return render(request, 'evms/vendor-login.html')
 
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.conf import settings
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+import random
+import time
+from .models import Vendor  # Assuming you have a Vendor model
+
+def forgot_password(request):
+    if request.method == 'POST':
+        try:
+            email_or_mobile = request.POST.get('email_or_mobile', '').strip()
+            
+            if not email_or_mobile:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Email or mobile number is required'
+                }, status=400)
+            
+            # Check if input is email or mobile
+            if '@' in email_or_mobile:  # Email
+                try:
+                    user = User.objects.get(email=email_or_mobile)
+                    email = user.email
+                except User.DoesNotExist:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'No account found with this email'
+                    }, status=400)
+            else:  # Mobile
+                try:
+                    vendor = Vendor.objects.get(mobile_number=email_or_mobile)
+                    email = vendor.user.email
+                    user = vendor.user
+                except Vendor.DoesNotExist:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'No account found with this mobile number'
+                    }, status=400)
+            
+            # Generate OTP
+            otp = str(random.randint(100000, 999999))
+            request.session['reset_otp'] = otp
+            request.session['reset_email'] = email
+            request.session['reset_user_id'] = user.id
+            request.session['otp_created_at'] = time.time()
+            request.session['otp_attempts'] = 0
+            
+            # Send email
+            subject = 'Password Reset OTP'
+            message = f'Your OTP for password reset is: {otp}\nThis OTP is valid for 10 minutes.'
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'OTP sent to your registered email'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=500)
+    
+    return render(request, 'evms/forgot_password.html')
+
+@csrf_exempt
+def reset_password_otp(request):
+    if request.method == 'POST':
+        try:
+            # Debugging - print session data
+            print("Session OTP:", request.session.get('reset_otp'))
+            print("Session User ID:", request.session.get('reset_user_id'))
+            
+            # Get OTP from request
+            otp_data = {
+                'otp1': request.POST.get('otp1', ''),
+                'otp2': request.POST.get('otp2', ''),
+                'otp3': request.POST.get('otp3', ''),
+                'otp4': request.POST.get('otp4', ''),
+                'otp5': request.POST.get('otp5', ''),
+                'otp6': request.POST.get('otp6', '')
+            }
+            print("Received OTP data:", otp_data)
+            
+            user_otp = ''.join([otp_data[f'otp{i}'] for i in range(1, 7)])
+            stored_otp = request.session.get('reset_otp')
+            user_id = request.session.get('reset_user_id')
+            
+            if not (stored_otp and user_id):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'OTP session expired. Please try again.'
+                }, status=400)
+            
+            # Check OTP expiration (10 minutes)
+            if time.time() - request.session.get('otp_created_at', 0) > 600:
+                clear_reset_session(request)
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'OTP expired. Please request a new one.'
+                }, status=400)
+            
+            if user_otp == stored_otp:
+                request.session['otp_verified'] = True
+                return JsonResponse({
+                    'status': 'success',
+                    'redirect': reverse('reset_password_form')
+                })
+            else:
+                request.session['otp_attempts'] = request.session.get('otp_attempts', 0) + 1
+                print(f"OTP mismatch. Stored: {stored_otp}, Received: {user_otp}")
+                
+                if request.session['otp_attempts'] >= 5:
+                    clear_reset_session(request)
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Too many failed attempts. Please start again.'
+                    }, status=400)
+                
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid OTP. Please try again.'
+                }, status=400)
+                
+        except Exception as e:
+            print("Error in OTP verification:", str(e))
+            return JsonResponse({
+                'status': 'error',
+                'message': 'An error occurred. Please try again.'
+            }, status=500)
+    
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request method'
+    }, status=400)
+
+def reset_password_form(request):
+    if not request.session.get('otp_verified'):
+        return redirect('forgot_password')
+    
+    if request.method == 'POST':
+        try:
+            password1 = request.POST.get('password1')
+            password2 = request.POST.get('password2')
+            user_id = request.session.get('reset_user_id')
+            
+            if password1 != password2:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Passwords do not match'
+                }, status=400)
+            
+            if len(password1) < 8:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Password must be at least 8 characters'
+                }, status=400)
+            
+            user = User.objects.get(id=user_id)
+            user.set_password(password1)
+            user.save()
+            
+            clear_reset_session(request)
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Password reset successfully!',
+                'redirect': reverse('vendor_login')
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=500)
+    
+    return render(request, 'evms/reset_password.html')
+
+@csrf_exempt
+def resend_reset_otp(request):
+    if request.method == 'POST':
+        try:
+            email = request.session.get('reset_email')
+            
+            if not email:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Session expired'
+                }, status=400)
+            
+            otp = str(random.randint(100000, 999999))
+            request.session['reset_otp'] = otp
+            request.session['otp_created_at'] = time.time()
+            
+            subject = 'Password Reset OTP'
+            message = f'Your new OTP is: {otp}\nThis OTP is valid for 10 minutes.'
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'New OTP sent successfully'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=500)
+    
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request'
+    }, status=400)
+
+def clear_reset_session(request):
+    keys = ['reset_otp', 'reset_email', 'reset_user_id', 
+            'otp_created_at', 'otp_attempts', 'otp_verified']
+    for key in keys:
+        if key in request.session:
+            del request.session[key]
+            
+            
 def vendor_logout(request):
     logout(request)
     return redirect('vendor_login')
@@ -405,6 +640,9 @@ def vendor_dashboard(request):
 
             # Save vendor details
             vendor.save()
+            
+            referal_poster = Referal_poster.objects.first() 
+            
 
             if request.method == 'POST' and request.FILES.get('profile_picture'):
                 profile_picture = request.FILES['profile_picture']
@@ -420,6 +658,7 @@ def vendor_dashboard(request):
                 'referral_link': referral_link,
                 'qr_code_url': vendor.qr_code.url if vendor.qr_code else None,
                 'qr_code_plain_url': vendor.qr_code_plain.url if vendor.qr_code_plain else None,
+                'referal_poster' : referal_poster,
             }
 
             return render(request, 'evms/vendor-dashboard.html', context)
@@ -995,3 +1234,29 @@ def mark_notification_read(request, pk):
 def mark_all_notifications_read(request):
     request.user.vendor.notifications.filter(is_read=False).update(is_read=True)
     return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
+
+
+def refer_poster_vendor_view(request):
+    poster = Referal_poster.objects.first()  # Only one poster should exist
+
+    if request.method == 'POST':
+        referal_image = request.FILES.get('referal_image')
+        if referal_image:
+            # Delete old image if exists
+            if poster:
+                # Delete file from storage
+                if poster.referal_image and os.path.isfile(poster.referal_image.path):
+                    os.remove(poster.referal_image.path)
+                # Delete the record
+                poster.delete()
+
+            # Create new poster
+            new_poster = Referal_poster.objects.create(referal_image=referal_image)
+            messages.success(request, 'Referral poster uploaded successfully')
+            return redirect('refer_poster_vendor_view')  # Redirect to prevent re-submission
+
+    # Get the current poster again in case it was updated
+    poster = Referal_poster.objects.first()
+    return render(request, 'evms/referal-poster.html', {'poster': poster})
+
+

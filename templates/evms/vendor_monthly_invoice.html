@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Invoice - {{ invoice_number }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 20px;
+        }
+        .logo {
+            max-width: 150px;
+        }
+        .invoice-info {
+            text-align: right;
+        }
+        .invoice-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4f46e5;
+            margin-bottom: 5px;
+        }
+        .invoice-number {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4f46e5;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .two-columns {
+            display: flex;
+            justify-content: space-between;
+        }
+        .column {
+            width: 48%;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .details-table th, .details-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .details-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #f5f5f5;
+        }
+        .signature-area {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 200px;
+            border-top: 1px solid #333;
+            padding-top: 5px;
+            text-align: center;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <div>
+                <img src="https://emta.co.in/f.png" alt="EMTA Logo" class="logo">
+                <h1>EMTA Vendor Management System</h1>
+                <p>123 Business Park, Sector 22<br>
+                Noida, Uttar Pradesh 201301<br>
+                GSTIN: 09AABCE1234F1Z5</p>
+            </div>
+            <div class="invoice-info">
+                <div class="invoice-title">INVOICE</div>
+                <div class="invoice-number">#{{ invoice_number }}</div>
+                <div><strong>Date:</strong> {{ invoice_date }}</div>
+                <div><strong>Due Date:</strong> {{ due_date }}</div>
+            </div>
+        </div>
+
+        <!-- Vendor and Business Details -->
+        <div class="two-columns section">
+            <div class="column">
+                <div class="section-title">Vendor Details</div>
+                <p><strong>Name:</strong> {{ vendor.name }}</p>
+                <p><strong>Vendor Code:</strong> {{ vendor.code }}</p>
+                <p><strong>Mobile:</strong> {{ vendor.mobile }}</p>
+                <p><strong>Email:</strong> {{ vendor.email }}</p>
+                {% if vendor_profile %}
+                <p><strong>Address:</strong> {{ vendor_profile.address }}</p>
+                <p><strong>PAN:</strong> {{ vendor_profile.pan }}</p>
+                <p><strong>Aadhar:</strong> {{ vendor_profile.aadhar }}</p>
+                {% endif %}
+            </div>
+            <div class="column">
+                <div class="section-title">Business Details</div>
+                {% if business %}
+                <p><strong>Business Name:</strong> {{ business.name }}</p>
+                <p><strong>Business Address:</strong> {{ business.address }}</p>
+                <p><strong>Business Type:</strong> {{ business.type }}</p>
+                <p><strong>GST Number:</strong> {{ business.gst }}</p>
+                <p><strong>Contact:</strong> {{ business.contact }}</p>
+                <p><strong>Email:</strong> {{ business.email }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Bank Details -->
+        <div class="section">
+            <div class="section-title">Bank Details</div>
+            {% if bank %}
+            <div class="two-columns">
+                <div class="column">
+                    <p><strong>Account Holder:</strong> {{ bank.account_holder }}</p>
+                    <p><strong>Account Number:</strong> {{ bank.account_number }}</p>
+                </div>
+                <div class="column">
+                    <p><strong>Bank Name:</strong> {{ bank.bank_name }}</p>
+                    <p><strong>IFSC Code:</strong> {{ bank.ifsc }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Candidate Details -->
+        <div class="section">
+            <div class="section-title">Candidate Placement Details</div>
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th>Candidate Name</th>
+                        <th>Position</th>
+                        <th>Company</th>
+                        <th>Joining Date</th>
+                        <th>Salary</th>
+                        <th>Commission</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ candidate.name }} ({{ candidate.code }})</td>
+                        <td>{{ candidate.position }}</td>
+                        <td>{{ candidate.company }}</td>
+                        <td>{{ candidate.joining_date }}</td>
+                        <td>₹{{ candidate.offered_salary }}</td>
+                        <td>₹{{ commission.amount }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Commission Details -->
+        <div class="section">
+            <div class="section-title">Commission Summary</div>
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Amount (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Placement Commission for {{ candidate.name }}</td>
+                        <td>{{ commission.amount }}</td>
+                    </tr>
+                    <tr>
+                        <td>EMTA Service Charges</td>
+                        <td>{{ commission.emta_commission }}</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td><strong>Total Payable</strong></td>
+                        <td><strong>{{ vendor.total_commission }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Payment Instructions -->
+        <div class="section">
+            <div class="section-title">Payment Instructions</div>
+            <p>Please make the payment via NEFT/RTGS to the bank account details mentioned above.</p>
+            <p><strong>Payment Status:</strong> {{ commission.status }}</p>
+            <p><strong>Scheduled Payout Date:</strong> {{ commission.payout_date }}</p>
+            {% if commission.remark %}
+            <p><strong>Remarks:</strong> {{ commission.remark }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Signature Area -->
+        <div class="signature-area">
+            <div class="signature-box">
+                <p>For EMTA VMS</p>
+                <p>Authorized Signatory</p>
+            </div>
+            <div class="signature-box">
+                <p>For {{ vendor.name }}</p>
+                <p>Vendor Signatory</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>This is a computer generated invoice and does not require a physical signature.</p>
+            <p>For any queries, please contact accounts@emta.com or call +91 120 1234567</p>
+        </div>
+    </div>
+</body>
+</html>

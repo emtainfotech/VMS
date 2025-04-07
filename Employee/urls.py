@@ -45,6 +45,7 @@ urlpatterns = [
     path('selected-candidate-list/', employee_selected_candidate, name='employee_selected_candidate'),
     path('follow-up-candidate',employee_follow_up_candidate, name = 'employee_follow_up_candidate'),
     path('leads/',employee_generated_leads, name = 'employee_generated_leads'),
+    path('vendor-pay-list/',evms_vendor_paylist, name = 'evms_vendor_paylist'),
     
     path('admin/', admin.site.urls),
 ]

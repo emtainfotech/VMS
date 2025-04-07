@@ -177,6 +177,7 @@
                 </select>
                 <div class="invalid-feedback">Please select at least one sector</div>
               </div>
+              
 
               <div class="col-md-6 mb-3">
                 <label class="form-label required">Preferred Location(s)</label>
@@ -188,26 +189,31 @@
                 <div class="invalid-feedback">Please select at least one location</div>
               </div>
             </div>
+
+            
           </div>
           
           <!-- Documents Section -->
           <div class="mb-4">
             <h4 class="mb-3">Documents</h4>
             
-            <!-- Photo and Resume in one row -->
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label class="form-label">Profile Photo (Optional)</label>
-                <input type="file" name="candidate_photo" class="form-control" accept="image/*" onchange="validateFileType(this, 'image')">
-                <div class="invalid-feedback">Please upload a valid image file (JPEG, PNG, JPG)</div>
-                <small class="text-muted">Max size: 10MB | Formats: JPEG, PNG, JPG</small>
+                <input type="file" name="candidate_photo" class="form-control" 
+                       accept="image/*,.heic,.heif,.webp,." 
+                       onchange="validateFileType(this, 'image')">
+                <div class="invalid-feedback">Please upload a valid image file (JPEG, PNG, JPG, WEBP, HEIC)</div>
+                <small class="text-muted">Max size: 10MB | Formats: JPEG, PNG, JPG, WEBP, HEIC</small>
               </div>
-
+    
               <div class="col-md-6 mb-3">
                 <label class="form-label required">Resume</label>
-                <input type="file" name="candidate_resume" class="form-control" required accept=".pdf,.doc,.docx" onchange="validateFileType(this, 'resume')">
-                <div class="invalid-feedback">Please upload your resume (PDF or DOC/DOCX)</div>
-                <small class="text-muted">Max size: 10MB | Formats: PDF, DOC, DOCX</small>
+                <input type="file" name="candidate_resume" class="form-control" required 
+                       accept=".pdf,.doc,.docx,.odt,.rtf,.txt" 
+                       onchange="validateFileType(this, 'resume')">
+                <div class="invalid-feedback">Please upload your resume (PDF, DOC, DOCX, ODT, RTF, TXT)</div>
+                <small class="text-muted">Max size: 10MB | Formats: PDF, DOC, DOCX, ODT, RTF, TXT</small>
               </div>
             </div>
           </div>
@@ -336,40 +342,80 @@
       input.value = words.join(' ');
   }
   
-  // File type validation
-  function validateFileType(input, type) {
-      const file = input.files[0];
-      if (!file) return;
-      
-      const validImageTypes = ['image/*'];
-      const validDocTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      
-      let isValid = false;
-      let errorMsg = '';
-      
-      if (type === 'image') {
-          isValid = validImageTypes.includes(file.type);
-          errorMsg = 'Please upload a valid image file (JPEG, PNG, JPG)';
-      } else if (type === 'resume') {
-          isValid = validDocTypes.includes(file.type);
-          errorMsg = 'Please upload a valid document (PDF or DOC/DOCX)';
-      }
-      
-      // Check file size (2MB for images, 5MB for resumes)
-      const maxSize = type === 'image' ? 10 * 1024 * 1024 : 10 * 1024 * 1024;
-      if (file.size > maxSize) {
-          isValid = false;
-          errorMsg = `File size exceeds ${type === 'image' ? '10MB' : '10MB'} limit`;
-      }
-      
-      if (!isValid) {
-          input.setCustomValidity(errorMsg);
-          input.reportValidity();
-          input.value = '';
-      } else {
-          input.setCustomValidity('');
-      }
-  }
+ 
   </script>
+
+  <script>
+    // [Previous initialization code remains the same]
+  
+    // Updated File type validation
+    function validateFileType(input, type) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        // Supported image types (including newer formats)
+        const validImageTypes = [
+            'image/jpeg', 
+            'image/png', 
+            'image/jpg',
+            'image/webp',
+            'image/heic',
+            'image/heif'
+        ];
+        
+        // Supported document types (expanded list)
+        const validDocTypes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.oasis.opendocument.text',
+            'text/rtf',
+            'text/plain'
+        ];
+        
+        // File extensions mapping for better validation
+        const fileExtensions = {
+            'image/jpeg': '.jpeg,.jpg',
+            'image/png': '.png',
+            'image/webp': '.webp',
+            'image/heic': '.heic',
+            'image/heif': '.heif',
+            'application/pdf': '.pdf',
+            'application/msword': '.doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+            'application/vnd.oasis.opendocument.text': '.odt',
+            'text/rtf': '.rtf',
+            'text/plain': '.txt'
+        };
+        
+        let isValid = false;
+        let errorMsg = '';
+        const maxSize = 10 * 1024 * 1024; // 10MB for both types now
+        
+        if (type === 'image') {
+            isValid = validImageTypes.includes(file.type) || 
+                     file.name.toLowerCase().match(/\.(jpeg|jpg|png|webp|heic|heif)$/);
+            errorMsg = 'Please upload a valid image file (JPEG, PNG, JPG, WEBP, HEIC)';
+        } else if (type === 'resume') {
+            isValid = validDocTypes.includes(file.type) || 
+                     file.name.toLowerCase().match(/\.(pdf|doc|docx|odt|rtf|txt)$/);
+            errorMsg = 'Please upload a valid document (PDF, DOC, DOCX, ODT, RTF, TXT)';
+        }
+        
+        // Check file size
+        if (file.size > maxSize) {
+            isValid = false;
+            errorMsg = 'File size exceeds 10MB limit';
+        }
+        
+        if (!isValid) {
+            input.setCustomValidity(errorMsg);
+            input.reportValidity();
+            input.value = '';
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+    </script>
 </body>
 </html>

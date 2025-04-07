@@ -125,6 +125,10 @@ class Candidate(models.Model):
     vendor_commission_status = models.CharField(max_length=255, blank=True, null=True)
     commission_generation_date = models.DateField(blank=True, null=True, default=None)
     vendor_payment_remark = models.CharField(max_length=255, blank=True, null=True)
+    admin_status = models.CharField(max_length=255, blank=True, null=True)
+    payment_done_by = models.CharField(max_length=255, blank=True, null=True)
+    payment_done_by_date = models.DateField(blank=True, null=True, default=None)
+    submit_recipt = models.FileField(upload_to='vendor-payout-recipt/', blank=True, null=True)
     
     def save(self, *args, **kwargs):
         # Check if candidate is older than 150 days
@@ -177,5 +181,8 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        
+class Referal_poster(models.Model) :
+    referal_image = models.FileField(upload_to='referal_poster/', null=True, blank=True)
         
         
