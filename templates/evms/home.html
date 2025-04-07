@@ -8,7 +8,7 @@
     <meta name="keywords" content="" />
 
     <!-- Favicons -->
-    <link href="/static/assets/img/favicon.png" rel="icon" />
+    <link href="/static/m.png" rel="icon" />
     <link href="/static/assets/img/apple-touch-icon.png" rel="apple-touch-icon" />
 
     <!-- Fonts -->
@@ -51,53 +51,13 @@
               <a href="#services">Services</a>
             </li>
             <li>
-              <a href="#pricing">Pricing</a>
-            </li>
-            <li class="dropdown">
-              <a href="#"><span>Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
-              <ul>
-                <li>
-                  <a href="#">Dropdown 1</a>
-                </li>
-                <li class="dropdown">
-                  <a href="#"><span>Deep Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
-                  <ul>
-                    <li>
-                      <a href="#">Deep Dropdown 1</a>
-                    </li>
-                    <li>
-                      <a href="#">Deep Dropdown 2</a>
-                    </li>
-                    <li>
-                      <a href="#">Deep Dropdown 3</a>
-                    </li>
-                    <li>
-                      <a href="#">Deep Dropdown 4</a>
-                    </li>
-                    <li>
-                      <a href="#">Deep Dropdown 5</a>
-                    </li>
-                  </ul>
-                </li>
-                <li>
-                  <a href="#">Dropdown 2</a>
-                </li>
-                <li>
-                  <a href="#">Dropdown 3</a>
-                </li>
-                <li>
-                  <a href="#">Dropdown 4</a>
-                </li>
-              </ul>
-            </li>
-            <li>
               <a href="#contact">Contact</a>
             </li>
           </ul>
           <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>
 
-        <a class="btn-getstarted" href="index.html#about">Get Started</a>
+        <a class="btn-getstarted" href="{% url 'vendor_signup' %}">Get Started</a>
       </div>
     </header>
 
@@ -122,7 +82,7 @@
                 <p class="mb-4 mb-md-5">Our Employee Vendor Management System simplifies candidate tracking, vendor commissions, and recruitment workflows. Manage your talent pipeline efficiently with our powerful platform.</p>
 
                 <div class="hero-buttons">
-                  <a href="#about" class="btn btn-primary me-0 me-sm-2 mx-1">Get Started</a>
+                  <a href="{% url 'vendor_signup' %}" class="btn btn-primary me-0 me-sm-2 mx-1">Get Started</a>
                   <a href="#" class="btn btn-outline-primary mt-2 mt-sm-0">
                     <i class="bi bi-calendar-check me-1"></i>
                     Request Demo
@@ -525,8 +485,8 @@
               <h2 class="display-4 mb-4">Ready to Take the Next Step in Your Career?</h2>
               <p class="mb-4">Join thousands of professionals who found their dream jobs through our platform. Whether you're seeking new opportunities or looking to hire top talent, we're here to help.</p>
               <div class="d-flex justify-content-center gap-3">
-                <a href="#" class="btn btn-primary btn-lg">Find Your Dream Job</a>
-                <a href="#" class="btn btn-outline-primary btn-lg">Hire Top Talent</a>
+                <a href="{% url 'candidate_form' %}" class="btn btn-primary btn-lg">Find Your Dream Job</a>
+                {% comment %} <a href="#" class="btn btn-outline-primary btn-lg">Hire Top Talent</a> {% endcomment %}
               </div>
             </div>
 
@@ -933,9 +893,9 @@
                   </div>
                   <div class="content">
                     <h4>Our Offices</h4>
-                    <p>123 Recruitment Plaza, Sector 44</p>
-                    <p>Gurugram, Haryana 122002</p>
-                    <p>And 5 other locations across India</p>
+                    <p>155(A), Mangal City Mall, </p>
+                    <p>Vijaynagar, Indore - 452010</p>
+                    {% comment %} <p>And 5 other locations across India</p> {% endcomment %}
                   </div>
                 </div>
 
@@ -945,9 +905,9 @@
                   </div>
                   <div class="content">
                     <h4>Contact Numbers</h4>
-                    <p>+91 11 4050 5050 (For Employers)</p>
-                    <p>+91 11 4050 6060 (For Job Seekers)</p>
-                    <p>Mon-Sat: 9:00 AM - 7:00 PM</p>
+                    <p>+91 9522257477</p>
+                    <p>+91 9589504277</p>
+                    <p>Mon-Sat: 10:00 AM - 7:00 PM</p>
                   </div>
                 </div>
 
@@ -957,8 +917,8 @@
                   </div>
                   <div class="content">
                     <h4>Email Addresses</h4>
-                    <p>hiring@yourconsultancy.com (Employers)</p>
-                    <p>careers@yourconsultancy.com (Candidates)</p>
+                    <p>info@emta.co.in</p>
+                    <p>hr@emta.co.in</p>
                     <p>Response within 24 business hours</p>
                   </div>
                 </div>
@@ -1027,13 +987,13 @@
           <div class="col-lg-4 col-md-6 footer-about">
             <a href="index.html" class="logo d-flex align-items-center"><span class="sitename">EMTA</span></a>
             <div class="footer-contact pt-3">
-              <p>A108 Adam Street</p>
-              <p>New York, NY 535022</p>
+                <p>155(A), Mangal City Mall, </p>
+                <p>Vijaynagar, Indore - 452010</p>
               <p class="mt-3">
-                <strong>Phone:</strong> <span>+1 5589 55488 55</span>
+                <strong>Phone:</strong> <span>+1 9522257477</span>
               </p>
               <p>
-                <strong>Email:</strong> <span>info@example.com</span>
+                <strong>Email:</strong> <span>hr@emta.co.in</span>
               </p>
             </div>
             <div class="social-links d-flex mt-4">
