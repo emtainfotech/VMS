@@ -1,0 +1,270 @@
+{% extends 'crm/base.html' %}
+
+{% block content %}
+
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col">
+            <!-- Page pre-title -->
+            <div class="page-pretitle">Overview</div>
+            <h2 class="page-title">Dashboard</h2>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+    <!-- Page body -->
+    <div class="page-body">
+      <div class="container-xl">
+        <div class="row row-deck row-cards mb-4">
+          
+      
+      <div class="alert alert-warning alert-dismissible fade show mb-3 py-2" role="alert" style="border-left: 4px solid #FFC107;">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-megaphone-fill me-2 text-warning"></i>
+          <marquee behavior="scroll" direction="left" scrollamount="5" onmouseover="this.stop();" onmouseout="this.start();">
+            <strong>Important:</strong> Unsattled payment will be Automatically moved to Grievance and Redressal column after 150 days.
+          </marquee>
+          <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      </div>
+          <div class="col-12">
+            
+            <div class="card">
+              
+              
+              <div class="card-body border-bottom py-3">
+                <div class="d-flex">
+                  <div class="text-secondary">
+                    Show<div class="mx-2 d-inline-block">
+                      <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
+                    </div>entries
+                  </div>
+                  
+                  <div class="ms-auto text-secondary">
+                    Search:<div class="ms-2 d-inline-block">
+                      <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="table-responsive" >
+                <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
+                  <thead>
+                    <tr>
+                      <th class="w-1">No.</th>
+                      <th>Register At</th>
+                      <th>Candidate</th>
+                      <th>Contact</th>
+                      <th class="text-center">Status</th>
+                      <th>Revenue</th>
+                      <th>Transfer Date</th>
+                      <th>Transfer By</th>
+                      <th>Last Remark</th>
+                      <th class="">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for candidate in candidates %}
+                    <tr>
+                      <td>{{ forloop.counter }}</td>
+                      <td>
+                        <div class="d-flex flex-column">
+                          <span class="text-secondary">{{ candidate.register_time|date:"M d, Y" }}</span>
+                          <small class="text-muted">{{ candidate.register_time|date:"h:i A" }}</small>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          {% if candidate.candidate_photo %}
+                          <img src="{{ candidate.candidate_photo.url }}" class="avatar avatar-sm me-3 rounded-circle" alt="{{ candidate.candidate_name }}">
+                          {% else %}
+                          <span class="avatar avatar-sm me-3 rounded-circle bg-blue-lt">
+                            {{ candidate.candidate_name|slice:":1"|upper }}
+                          </span>
+                          {% endif %}
+                          <div>
+                            <div class="font-weight-medium">{{ candidate.candidate_name }}</div>
+                            <div class="text-muted small">
+                              {{ candidate.refer_code }}-{{ candidate.unique_id }}
+                              <br>
+                              <small>Vendor: {{ candidate.vendor_name }}</small>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex flex-column">
+                          <a href="tel:{{ candidate.candidate_mobile_number }}" class="text-reset">{{ candidate.candidate_mobile_number }}</a>
+                          <small class="text-muted">{{ candidate.candidate_email_address|truncatechars:20 }}</small>
+                        </div>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge 
+                          {% if candidate.selection_status == 'Selected' %}bg-success
+                          {% elif candidate.selection_status == 'Rejected' %}bg-danger
+                          {% elif candidate.selection_status == 'Pending' %}bg-warning
+                          {% else %}bg-secondary{% endif %} text-white">
+                          {{ candidate.selection_status|default:"New" }}
+                        </span>
+                        <br>
+                        <small class="text-muted">{{ candidate.vendor_commission_status }}</small>
+                      </td>
+                      <td>
+                        <div class="text-wrap" style="max-width: 200px;">
+                          ₹{{ candidate.vendor_commission|default:"0" }}
+                        </div>
+                      </td>
+                      <td>
+                        <div class="text-wrap" style="max-width: 200px;">
+                          {% if candidate.payment_done_by_date %}
+                            <span class="text-secondary">{{ candidate.payment_done_by_date|date:"M d, Y" }}</span>
+                            <br>
+                            <small class="text-muted">
+                              {% if candidate.payment_done_by_date|date:"m Y" == now|date:"m Y" %}
+                                <span class="text-success">This Month</span>
+                              {% else %}
+                                {{ candidate.payment_done_by_date|date:"F Y" }}
+                              {% endif %}
+                            </small>
+                          {% else %}
+                            <small class="text-muted">Not Decided</small>
+                          {% endif %}
+                        </div>
+                      </td>
+                      <td>
+                        <div class="text-wrap" style="max-width: 200px;">
+                          <small class="text-muted">{{ candidate.payment_done_by|truncatechars:50|default:"Remaining" }}</small>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="text-wrap" style="max-width: 200px;">
+                          <small class="text-muted">{{ candidate.calling_remark|truncatechars:50|default:"No remarks" }}</small>
+                        </div>
+                      </td>
+                      <td class="text-end">
+                        <div class="btn-list flex-nowrap">
+                          <a href="{% url 'evms_candidate_profile' candidate.id %}" class="btn btn-sm btn-icon" >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                              <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                              <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"></path>
+                            </svg>
+                          </a>
+                          <a href="mailto:{{ candidate.candidate_email_address }}" class="btn btn-sm btn-icon" title="Send Email">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                              <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z"></path>
+                              <path d="M3 7l9 6l9 -6"></path>
+                            </svg>
+                          </a>
+                          <a href="tel:{{ candidate.candidate_mobile_number }}" class="btn btn-sm btn-icon" title="Make Call">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                              <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"></path>
+                            </svg>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                      <td colspan="9" class="text-center py-4">
+                        <div class="d-flex flex-column align-items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-off" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M3 3l18 18"></path>
+                            <path d="M7 3h7l5 5v7m0 4a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-14"></path>
+                          </svg>
+                          <span class="mt-2">No pending payouts for this month</span>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              
+              <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                // Initialize DataTable
+                $('#searchableTable').DataTable({
+                  responsive: true,
+                  dom: '<"top"<"table-search"f><"table-actions"B>>rt<"bottom"<"table-info"i><"table-pagination"p>>',
+                  buttons: [
+                    {
+                      extend: 'excel',
+                      text: '<i class="ti ti-file-spreadsheet me-1"></i> Export',
+                      className: 'btn btn-sm btn-secondary'
+                    },
+                    {
+                      extend: 'print',
+                      text: '<i class="ti ti-printer me-1"></i> Print',
+                      className: 'btn btn-sm btn-secondary'
+                    }
+                  ],
+                  language: {
+                    search: '',
+                    searchPlaceholder: 'Search candidates...',
+                    lengthMenu: '_MENU_ candidates per page',
+                  },
+                  columnDefs: [
+                    { orderable: false, targets: [6] } // Disable sorting for actions column
+                  ],
+                  initComplete: function() {
+                    $('.dataTables_filter input').addClass('form-control form-control-sm');
+                  }
+                });
+              });
+              </script>
+              <div class="card-footer d-flex align-items-center">
+                <p class="m-0 text-secondary">
+                  Showing <span>1</span> to <span>8</span> of <span>16</span> entries
+                </p>
+                <ul class="pagination m-0 ms-auto">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                      <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M15 6l-6 6l6 6" />
+                      </svg>prev
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">1</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">3</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">4</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">5</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">
+                      next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M9 6l6 6l-6 6" />
+                      </svg>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock content %}

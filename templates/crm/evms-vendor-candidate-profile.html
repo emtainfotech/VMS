@@ -1,499 +1,1561 @@
-{% extends "crm/base.html" %}
+{% extends 'employee/performance-base.html' %}
 
 {% block content %}
 
 <style>
+  .card {
+    border: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  .object-cover {
+    object-fit: cover;
+  }
+  .card-body h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  .card-body .btn {
+    background-color: #6c63ff;
+    color: #fff;
+    font-weight: 500;
+  }
+  .card-body .btn:hover {
+    background-color: #574bce;
+  }
+  .edit-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    color: #6c63ff;
+  }
+</style>
+
+<div class="container py-5">
+  <div class="row">
+    <div class="container py-4">
+      <!-- Main Row -->
+      <div class="row g-4">
+        <!-- Personal Information Card -->
+        <div class="col-lg-5">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Personal Information</h5>
+                <a href="#details-update" class="btn btn-sm btn-outline-primary" >
+                  <i class="bi bi-pencil me-1"></i> Edit
+                </a>
+              </div>
+            <div class="card-body">
+              <div class="row">
+                <!-- Profile Image and Basic Info -->
+                <div class="col-md-4 border-end ps-4">
+                  <div class="d-flex flex-column align-items-center text-center mb-4">
+                    {% if vendor.vendor_profile_image %}
+                    <img src="{{vendor.vendor_profile_image.url}}" class="rounded-circle object-cover mb-3" 
+                         style="width: 120px; height: 120px;" alt="Profile Picture">
+                    {% else %}
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mb-3" 
+                         style="width: 120px; height: 120px;">
+                      <i class="bi bi-person fs-1 text-muted"></i>
+                    </div>
+                    {% endif %}
+                    <h4 class="mb-1">{{ vendor.user.first_name }} {{ vendor.user.last_name }}</h4>
+                    <span class="badge bg-success text-white">{{ vendor.refer_code }}</span>
+                  </div>
+                  
+                </div>
+                
+                <!-- Detailed Personal Info -->
+                <div class="col-md-8 ps-4">
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-telephone me-2 text-muted"></i>
+                        <span>{{ vendor.mobile_number }}</span>
+                      </div>
+                    </div>
+  
+                    <div class="col-md-6">
+                      <div class="info-item">
+                        <small class="text-muted d-block">Email</small>
+                        <strong>{{ vendor.user.email |default:"Not provided" }}</strong>
+                      </div>
+                    </div>
+  
+                    <div class="col-md-6">
+                      <div class="info-item">
+                        <small class="text-muted d-block">Address</small>
+                        <strong>{{ vendor_profile_detail.address|default:"Not provided" }}</strong>
+                      </div>
+                    </div>
+  
+                    <div class="col-md-6">
+                      <div class="info-item">
+                        <small class="text-muted d-block">Date of Birth</small>
+                        <strong>{{ vendor.date_of_birth|default:"Not provided" }}</strong>
+                      </div>
+                    </div>
+                    
+                    
+                    <div class="col-md-6">
+                      <div class="info-item">
+                        <small class="text-muted d-block">Gender</small>
+                        <strong>{{ vendor_profile_detail.gender|default:"Not provided" }}</strong>
+                      </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                      <div class="info-item">
+                        <small class="text-muted d-block">Aadhar Number</small>
+                        <div class="d-flex align-items-center">
+                          <span>{{ vendor_profile_detail.adhar_card_number|default:"Not provided" }}</span>
+                          {% if vendor_profile_detail.adhar_card_image %}
+                          <a href="{{vendor_profile_detail.adhar_card_image.url}}" target="_blank" class="ms-2">
+                            <i class="bi bi-eye-fill text-primary"></i>
+                          </a>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                      <div class="info-item">
+                        <small class="text-muted d-block">PAN Number</small>
+                        <div class="d-flex align-items-center">
+                          <span>{{ vendor_profile_detail.pan_card_number|default:"Not provided" }}</span>
+                          {% if vendor_profile_detail.pan_card_image %}
+                          <a href="{{vendor_profile_detail.pan_card_image.url}}" target="_blank" class="ms-2">
+                            <i class="bi bi-eye-fill text-primary"></i>
+                          </a>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Business Details Card -->
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Business Details</h5>
+                <a href="#details-update" class="btn btn-sm btn-outline-primary" >
+                  <i class="bi bi-pencil me-1"></i> Edit
+                </a>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="info-item">
+                    <small class="text-muted d-block">Business Name</small>
+                    <strong>{{ vendor_bussiness_detail.shop_name|default:"Not provided" }}</strong>
+                  </div>
+  
+                  <div class="info-item mt-3">
+                    <small class="text-muted d-block">Business Type</small>
+                    <strong>{{ vendor_bussiness_detail.busness_type|default:"Not provided" }}</strong>
+                  </div>
+                  
+                  <div class="info-item mt-3">
+                    <small class="text-muted d-block">Contact Number</small>
+                    <strong>{{ vendor_bussiness_detail.Contact_number|default:"Not provided" }}</strong>
+                  </div>
+                  
+                  <div class="info-item mt-3">
+                    <small class="text-muted d-block">Business Email</small>
+                    <strong>{{ vendor_bussiness_detail.Busness_email|default:"Not provided" }}</strong>
+                  </div>
+  
+                  <div class="info-item mt-3">
+                    <small class="text-muted d-block">Business Address</small>
+                    <strong>{{ vendor_bussiness_detail.shop_address|default:"Not provided" }}</strong>
+                  </div>
+                  
+                  <div class="info-item mt-3">
+                    <small class="text-muted d-block">GST Number</small>
+                    <div class="d-flex align-items-center">
+                      <span>{{ vendor_bussiness_detail.gst_number|default:"Not provided" }}</span>
+                      {% if vendor_bussiness_detail.gst_image %}
+                      <a href="{{vendor_bussiness_detail.gst_image.url}}" target="_blank" class="ms-2">
+                        <i class="bi bi-eye-fill text-primary"></i>
+                      </a>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-md-6">
+                  <div class="info-item">
+                    <small class="text-muted d-block">Business PAN</small>
+                    <div class="d-flex align-items-center">
+                      <span>{{ vendor_bussiness_detail.Bpan_number|default:"Not provided" }}</span>
+                      {% if vendor_bussiness_detail.Bpan_image %}
+                      <a href="{{vendor_bussiness_detail.Bpan_image.url}}" target="_blank" class="ms-2">
+                        <i class="bi bi-eye-fill text-primary"></i>
+                      </a>
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <div class="info-item mt-3">
+                    <small class="text-muted d-block">Shop Photos</small>
+                    <div class="d-flex gap-2 mt-1">
+                      {% if vendor_bussiness_detail.Bphoto_outer %}
+                      <a href="{{vendor_bussiness_detail.Bphoto_outer.url}}" target="_blank" class="badge bg-light text-dark">
+                        <i class="bi bi-image me-1"></i> Outside
+                      </a>
+                      {% endif %}
+                      {% if vendor_bussiness_detail.Bphoto_inside %}
+                      <a href="{{vendor_bussiness_detail.Bphoto_inside.url}}" target="_blank" class="badge bg-light text-dark">
+                        <i class="bi bi-image me-1"></i> Inside
+                      </a>
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <div class="reference-check mt-4 pt-3 border-top">
+                    <h6 class="text-muted mb-3">Reference Check</h6>
+                    <div class="info-item">
+                      <small class="text-muted d-block">Contact Name</small>
+                      <strong>{{ vendor_bussiness_detail.VCname|default:"Not provided" }}</strong>
+                    </div>
+                    
+                    <div class="info-item mt-2">
+                      <small class="text-muted d-block">Mobile Number</small>
+                      <strong>{{ vendor_bussiness_detail.VCmobile|default:"Not provided" }}</strong>
+                    </div>
+                    
+                    <div class="info-item mt-2">
+                      <small class="text-muted d-block">Address</small>
+                      <strong>{{ vendor_bussiness_detail.VCaddress|default:"Not provided" }}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Bank Account Card -->
+        <div class="col-lg-3">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Personal Information</h5>
+                <a href="#details-update" class="btn btn-sm btn-outline-primary" >
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="info-item">
+                    <small class="text-muted d-block">Account Holder</small>
+                    <strong>{{ vendor_bank_detail.account_holder_name|default:"Not provided" }}</strong>
+                  </div>
+                  
+                  <div class="info-item mt-3">
+                    <small class="text-muted d-block">Account Number</small>
+                    <strong>{{ vendor_bank_detail.account_number|default:"Not provided" }}</strong>
+                  </div>
+                  
+                  <div class="info-item mt-3">
+                    <small class="text-muted d-block">IFSC Code</small>
+                    <strong>{{ vendor_bank_detail.ifs_code|default:"Not provided" }}</strong>
+                  </div>
+                </div>
+                
+                <div class="col-md-6">
+                  <div class="info-item">
+                    <small class="text-muted d-block">Bank Name</small>
+                    <strong>{{ vendor_bank_detail.bank_name|default:"Not provided" }}</strong>
+                  </div>
+                  
+                  <div class="info-item mt-3">
+                    <small class="text-muted d-block">Account Type</small>
+                    <strong>{{ vendor_bank_detail.account_type|default:"Not provided" }}</strong>
+                  </div>
+                  
+                  <div class="info-item mt-3">
+                    <small class="text-muted d-block">Preferred Payout</small>
+                    <strong>{{ vendor_bank_detail.preffered_payout_date|default:"Not provided" }} of month</strong>
+                  </div>
+                  
+                  {% if vendor_bank_detail.bank_document %}
+                  <div class="info-item mt-3">
+                    <small class="text-muted d-block">Bank Document</small>
+                    <a href="{{vendor_bank_detail.bank_document.url}}" target="_blank" class="text-primary">
+                      <i class="bi bi-file-earmark-text me-1"></i> View Document
+                    </a>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <hr>
+
+        <div class="col-lg-12 mt-3">
+          <div class="card shadow-sm">
+            <!-- Card Header with Search and Entries Control -->
+            <div class="card-header">
+              <div class="row align-items-center">
+                <div class="col-md-6">
+                  <h5 class="mb-0">Candidate Referrals</h5>
+                </div>
+                <div class="col-md-6">
+                  <div class="d-flex justify-content-end">
+                    <div class="input-group input-group-sm" style="max-width: 300px;">
+                      <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search candidates..." aria-label="Search candidates">
+                      <button class="btn btn-outline-secondary" type="button">
+                        <i class="bi bi-search"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        
+            <!-- Table -->
+            <div class="table-responsive">
+              <table class="table table-hover mb-0" id="searchableTable">
+                <thead class="table-light">
+                  <tr>
+                    <th width="5%">#</th>
+                    <th width="15%">Registered</th>
+                    <th width="15%">Unique Code</th>
+                    <th width="20%">Candidate</th>
+                    <th width="15%">Mobile</th>
+                    <th width="10%">Location</th>
+                    <th width="10%">Sector</th>
+                    <th width="10%">Job Type</th>
+                    <th width="10%">Status</th>
+                    <th width="5%">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for candidate in candidates %}
+                  <tr>
+                    <td class="text-muted">{{ forloop.counter }}</td>
+                    <td>
+                      <span class="d-block">{{ candidate.register_time|date:"d M Y" }}</span>
+                      <small class="text-muted">{{ candidate.register_time|date:"h:i A" }}</small>
+                    </td>
+                    <td>
+                      <span class="badge bg-light text-dark">{{ candidate.refer_code }}-{{ candidate.unique_id }}</span>
+                    </td>
+                    <td>
+                      <a href="{% url 'employee_evms_candidate_profile' candidate.id %}" class="text-primary fw-semibold">
+                        {{ candidate.candidate_name }}
+                      </a>
+                    </td>
+                    <td>
+                      <a href="tel:{{ candidate.candidate_mobile_number }}" class="text-dark">
+                        {{ candidate.candidate_mobile_number }}
+                      </a>
+                    </td>
+                    <td>{{ candidate.preferred_location|default:"-" }}</td>
+                    <td>{{ candidate.sector|default:"-" }}</td>
+                    <td>
+                      <span class="badge bg-light text-dark">{{ candidate.job_type|default:"-" }}</span>
+                    </td>
+                    <td>
+                      {% if candidate.selection_status == 'Selected' %}
+                        <span class="badge bg-success text-white">{{ candidate.selection_status }}</span>
+                      {% elif candidate.selection_status == 'Rejected' %}
+                        <span class="badge bg-danger text-white">{{ candidate.selection_status }}</span>
+                      {% else %}
+                        <span class="badge bg-warning text-white">{{ candidate.selection_status|default:"Pending" }}</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-center">
+                      <a href="{% url 'employee_evms_candidate_profile' candidate.id %}" class="btn btn-sm btn-outline-primary" title="View Profile">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="10" class="text-center py-4">
+                      <div class="d-flex flex-column align-items-center">
+                        <i class="bi bi-people fs-1 text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No candidates found</p>
+                        <a href="#" class="btn btn-sm btn-primary mt-2">
+                          <i class="bi bi-plus"></i> Add Candidate
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+        
+            <!-- Pagination -->
+            <div class="card-footer">
+              <div class="row align-items-center">
+                <div class="col-md-6">
+                  <div class="d-flex align-items-center">
+                    <span class="text-muted me-2">Show:</span>
+                    <select class="form-select form-select-sm w-auto">
+                      <option value="8" selected>8</option>
+                      <option value="15">15</option>
+                      <option value="30">30</option>
+                      <option value="50">50</option>
+                    </select>
+                    <span class="text-muted ms-2">entries</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <nav class="d-flex justify-content-end">
+                    <ul class="pagination pagination-sm mb-0">
+                      <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                          <i class="bi bi-chevron-left"></i>
+                        </a>
+                      </li>
+                      <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                      <li class="page-item"><a class="page-link" href="#">2</a></li>
+                      <li class="page-item"><a class="page-link" href="#">3</a></li>
+                      <li class="page-item">
+                        <a class="page-link" href="#">
+                          <i class="bi bi-chevron-right"></i>
+                        </a>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <style>
+          .table th {
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+          }
+          .table td {
+            vertical-align: middle;
+          }
+          .badge {
+            font-weight: 500;
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+          }
+          .card-header {
+            padding: 0.75rem 1.25rem;
+          }
+          .card-footer {
+            padding: 0.75rem 1.25rem;
+          }
+        </style>
+
+        <hr>
+  
+      <div class="col-12" id="details-update">
+        <div class="card" >
+          <div class="card-header">
+            <h3 class="card-title">Vendor Details Form</h3>
+          </div>
+          <div class="card-body">
+            <!-- Vertical Steps Progress -->
+            <div class="row">
+              <div class="col-md-3">
+                <ul class="steps steps-vertical">
+                  <li class="step-item" id="step1-indicator">
+                    <div class="h4 m-0">Profile Details</div>
+                    <div class="text-secondary">Personal information and documents</div>
+                  </li>
+                  <li class="step-item" id="step2-indicator">
+                    <div class="h4 m-0">Business Details</div>
+                    <div class="text-secondary">Shop information and business documents</div>
+                  </li>
+                  <li class="step-item" id="step3-indicator">
+                    <div class="h4 m-0">Bank Details</div>
+                    <div class="text-secondary">Account information and documents</div>
+                  </li>
+                </ul>
+              </div>
+              
+              <div class="col-md-9">
+                <!-- Multi-step Form -->
+                <form id="vendorMasterForm" method="POST" enctype="multipart/form-data" novalidate>
+                  {% csrf_token %}
+                  
+                  <!-- Step 1: Profile Details -->
+                  <div class="form-step" id="step1">
+                    <h4 class="mb-4">Profile Information</h4>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">First Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="first_name" value="{{ vendor.user.first_name }}" 
+                               pattern="[A-Za-z ]{2,50}" title="Only letters and spaces (2-50 characters)" required />
+                        <div class="invalid-feedback">Please enter a valid first name (2-50 letters)</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="last_name" value="{{ vendor.user.last_name }}" 
+                               pattern="[A-Za-z ]{2,50}" title="Only letters and spaces (2-50 characters)" required />
+                        <div class="invalid-feedback">Please enter a valid last name (2-50 letters)</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" name="mobile_number" value="{{ vendor.mobile_number }}" 
+                               pattern="[0-9]{10}" title="10 digit mobile number" required />
+                        <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" name="email" value="{{ user.email }}" required />
+                        <div class="invalid-feedback">Please enter a valid email address</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" name="date_of_birth" value="{{ vendor.date_of_birth }}" 
+                               max="{{ today|date:'Y-m-d' }}" />
+                        <div class="invalid-feedback">Date cannot be in the future</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Vendor Profile Image</label>
+                        <input type="file" class="form-control" name="vendor_profile_image" 
+                                />
+                        <div class="invalid-feedback">Only JPEG or PNG images allowed (max 7MB)</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Gender</label>
+                        <select class="form-select" name="gender" required>
+                          <option value="" disabled>Select Gender</option>
+                          <option value="Male" {% if vendor_profile_detail.gender == "Male" %}selected{% endif %}>Male</option>
+                          <option value="Female" {% if vendor_profile_detail.gender == "Female" %}selected{% endif %}>Female</option>
+                          <option value="Transgender" {% if vendor_profile_detail.gender == "Transgender" %}selected{% endif %}>Transgender</option>
+                          <option value="I'd prefer not to say" {% if vendor_profile_detail.gender == "I'd prefer not to say" %}selected{% endif %}>I'd prefer not to say</option>
+                        </select>
+                        <div class="invalid-feedback">Please select a gender</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Address</label>
+                        <input type="text" class="form-control" name="address" value="{{ vendor_profile_detail.address }}"
+                               minlength="5" maxlength="200" />
+                        <div class="invalid-feedback">Address must be 5-200 characters</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Location <span class="text-danger">*</span></label>
+                        <select class="form-select" name="location" required>
+                          <option value="">Select Location</option>
+                          {% for district in districts %}
+                          <option value="{{ district }}" {% if vendor_profile_detail.location == district %}selected{% endif %}>
+                            {{ district }}
+                          </option>
+                          {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">Please select a location</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Aadhar Card Number</label>
+                        <input type="text" class="form-control" name="adhar_card_number" 
+                               value="{{ vendor_profile_detail.adhar_card_number }}" 
+                               pattern="[0-9]{12}" title="12 digit Aadhar number" />
+                        <div class="invalid-feedback">Please enter 12-digit Aadhar number</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Aadhar Card Image</label>
+                        <input type="file" class="form-control" name="adhar_card_image" 
+                                />
+                        <div class="invalid-feedback">Only JPEG, PNG or PDF allowed (max 7MB)</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">PAN Card Number</label>
+                        <input type="text" class="form-control" name="pan_card_number" 
+                               value="{{ vendor_profile_detail.pan_card_number }}"
+                               id="panCardInput"
+                               pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" 
+                               title="Format: ABCDE1234F"
+                               oninput="validatePAN(this)" />
+                        <div class="invalid-feedback" id="panError">Please enter valid PAN (Format: ABCDE1234F)</div>
+                      </div>
+                      
+                      <script>
+                      function validatePAN(input) {
+                        const pan = input.value.toUpperCase();
+                        const errorElement = document.getElementById('panError');
+                        
+                        // Basic format check
+                        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
+                          errorElement.textContent = "Invalid format. Must be 5 letters + 4 digits + 1 letter";
+                          input.setCustomValidity("Invalid PAN format");
+                          return;
+                        }
+                      
+                        // Status character validation (4th character)
+                        const statusChars = ['P', 'C', 'H', 'A', 'B', 'G', 'J', 'L', 'F', 'T'];
+                        const statusChar = pan.charAt(3);
+                        if (!statusChars.includes(statusChar)) {
+                          errorElement.textContent = `Invalid 4th character. Must be one of: ${statusChars.join(', ')}`;
+                          input.setCustomValidity("Invalid PAN status character");
+                          return;
+                        }
+                      
+                        // For individuals (P), 5th character must match first letter of last name
+                        if (statusChar === 'P') {
+                          const surnameChar = pan.charAt(4);
+                          const lastNameInput = document.querySelector('input[name="last_name"]');
+                          const lastName = lastNameInput ? lastNameInput.value.trim().toUpperCase() : '';
+                          
+                          if (!/[A-Z]/.test(surnameChar)) {
+                            errorElement.textContent = "For individuals, 5th character must be a letter (surname initial)";
+                            input.setCustomValidity("Invalid surname initial");
+                            return;
+                          }
+                          
+                          // Check if 5th character matches first letter of last name
+                          if (lastName && lastName[0] !== surnameChar) {
+                            errorElement.textContent = `5th character (${surnameChar}) must match first letter of your last name (${lastName[0]})`;
+                            input.setCustomValidity("PAN surname initial mismatch");
+                            return;
+                          }
+                        }
+                      
+                        // Check digit validation
+                        const checkDigit = pan.charAt(9);
+                        if (!/[A-Z]/.test(checkDigit)) {
+                          errorElement.textContent = "Last character must be an alphabetic check digit";
+                          input.setCustomValidity("Invalid check digit");
+                          return;
+                        }
+                      
+                        // If all validations pass
+                        input.setCustomValidity("");
+                        errorElement.textContent = "Please enter valid PAN (Format: ABCDE1234F)";
+                      }
+                      
+                      // Add event listener to last name field to revalidate PAN when last name changes
+                      document.addEventListener('DOMContentLoaded', function() {
+                        const lastNameInput = document.querySelector('input[name="last_name"]');
+                        if (lastNameInput) {
+                          lastNameInput.addEventListener('input', function() {
+                            const panInput = document.getElementById('panCardInput');
+                            if (panInput && panInput.value) {
+                              validatePAN(panInput);
+                            }
+                          });
+                        }
+                      });
+                      </script>
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">PAN Card Image</label>
+                        <input type="file" class="form-control" name="pan_card_image" 
+                                />
+                        <div class="invalid-feedback">Only JPEG, PNG or PDF allowed (max 7MB)</div>
+                      </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                      <button type="button" class="btn btn-primary next-step" data-next="step2">Next: Business Details</button>
+                    </div>
+                  </div>
+  
+                  <!-- Step 2: Business Details -->
+                  <div class="form-step d-none" id="step2">
+                    <h4 class="mb-4">Business Information</h4>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Shop Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="shop_name" required 
+                               value="{{ vendor_bussiness_detail.shop_name }}"
+                               minlength="2" maxlength="100">
+                        <div class="invalid-feedback">Please enter a valid shop name (2-100 characters)</div>
+                      </div>
+                      
+                      
+  
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Business Type <span class="text-danger">*</span></label>
+                        <select name="busness_type" class="form-select" >
+                          <option value="" disabled selected>Select Account Type</option>
+                          <option value="Sole Proprietorship" {% if vendor_bank_detail.busness_type == "Sole Proprietorship" %}selected{% endif %}>Sole Proprietorship</option>
+                          <option value="Limited Liability Partnerships(LLP)" {% if vendor_bank_detail.busness_type == "Limited Liability Partnerships(LLP)" %}selected{% endif %}>Limited Liability Partnerships(LLP)</option>
+                          <option value="Private Limited Company(PLC)" {% if vendor_bank_detail.busness_type == "Private Limited Company(PLC)" %}selected{% endif %}>Private Limited Company(PLC)</option>
+                          <option value="One Person Company" {% if vendor_bank_detail.busness_type == "One Person Company" %}selected{% endif %}>One Person Company</option>
+                          <option value="Trust" {% if vendor_bank_detail.busness_type == "Trust" %}selected{% endif %}>Trust</option>
+                          <option value="Associations" {% if vendor_bank_detail.busness_type == "Associations" %}selected{% endif %}>Associations</option>
+                          <option value="Society" {% if vendor_bank_detail.busness_type == "Society" %}selected{% endif %}>Society</option>
+                          <option value="Club" {% if vendor_bank_detail.busness_type == "Club" %}selected{% endif %}>Club</option>
+                          <option value="Partnership" {% if vendor_bank_detail.busness_type == "Partnership" %}selected{% endif %}>Partnership</option>
+                          <option value="HUF" {% if vendor_bank_detail.busness_type == "HUF" %}selected{% endif %}>HUF</option>
+                          <option value="Others" {% if vendor_bank_detail.busness_type == "Others" %}selected{% endif %}>Others</option>
+                        </select>
+                        <div class="invalid-feedback">Please select an account type</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Business Contact Number <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" name="Contact_number" required 
+                               value="{{ vendor_bussiness_detail.Contact_number }}"
+                               pattern="[0-9]{10}" title="10 digit mobile number" id="businessContactNumber">
+                        
+                        <div class="form-check">
+                          <div class="d-flex align-items-center gap-2 p-2 rounded-3" style="background-color: #f8f9fa;">
+                            <div class="form-check form-switch m-0" >
+                              <input class="form-check-input" type="checkbox" id="sameAsContactCheckbox" style="border:1px solid blue;">
+                            </div>
+                            <label class="form-check-label d-flex align-items-center gap-2 m-0" for="sameAsContactCheckbox">
+                              <i class="bi bi-phone text-primary"></i>
+                              <span class="fw-medium">Use registered Contact number</span>
+                              <small class="text-muted">({{ vendor.mobile_number }})</small>
+                            </label>
+                          </div>
+                        </div>
+                        <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Business Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" name="Busness_email" required 
+                               value="{{ vendor_bussiness_detail.Busness_email }}" id="businessEmail">
+                        <div class="form-check">
+                          <div class="d-flex align-items-center gap-2 p-2 rounded-3" style="background-color: #f8f9fa;">
+                            <div class="form-check form-switch m-0">
+                              <input class="form-check-input" type="checkbox" id="sameAsEmailCheckbox" style="border:1px solid blue;">
+                            </div>
+                            <label class="form-check-label d-flex align-items-center gap-2 m-0" for="sameAsEmailCheckbox">
+                              <i class="bi bi-envelope text-primary"></i>
+                              <span class="fw-medium">Use registered email</span>
+                              <small class="text-muted">({{ request.user.email }})</small>
+                            </label>
+                          </div>
+                        </div>
+                        <div class="invalid-feedback">Please enter a valid email address</div>
+                      </div>
+                      
+                      <script>
+                      document.addEventListener('DOMContentLoaded', function() {
+                        // Get the registered contact values
+                        const registeredContact = document.querySelector('input[name="mobile_number"]').value;
+                        const registeredEmail = document.querySelector('input[name="email"]').value;
+                        
+                        // Same as registered contact number checkbox
+                        document.getElementById('sameAsContactCheckbox').addEventListener('change', function(e) {
+                          const businessContactInput = document.getElementById('businessContactNumber');
+                          if (e.target.checked) {
+                            businessContactInput.value = registeredContact;
+                          } else {
+                            businessContactInput.value = '';
+                          }
+                          businessContactInput.dispatchEvent(new Event('input')); // Trigger validation
+                        });
+                        
+                        // Same as registered email checkbox
+                        document.getElementById('sameAsEmailCheckbox').addEventListener('change', function(e) {
+                          const businessEmailInput = document.getElementById('businessEmail');
+                          if (e.target.checked) {
+                            businessEmailInput.value = registeredEmail;
+                          } else {
+                            businessEmailInput.value = '';
+                          }
+                          businessEmailInput.dispatchEvent(new Event('input')); // Trigger validation
+                        });
+                        
+                        // Auto-check checkboxes if values match registered ones
+                        if (document.getElementById('businessContactNumber').value === registeredContact) {
+                          document.getElementById('sameAsContactCheckbox').checked = true;
+                        }
+                        if (document.getElementById('businessEmail').value === registeredEmail) {
+                          document.getElementById('sameAsEmailCheckbox').checked = true;
+                        }
+                      });
+                      </script>
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Business Address</label>
+                        <input type="text" class="form-control" name="shop_address" 
+                               value="{{ vendor_bussiness_detail.shop_address }}"
+                               minlength="5" maxlength="200">
+                        <div class="invalid-feedback">Address must be 5-200 characters</div>
+                      </div>
+                    </div>
+                    
+                    <hr />
+                    <h5 class="text-secondary">Document Details</h5>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Gumasta Number</label>
+                        <input type="text" class="form-control" name="Gumasta_number" 
+                               value="{{ vendor_bussiness_detail.Gumasta_number }}"
+                               pattern="[A-Za-z0-9]{8,20}" title="8-20 alphanumeric characters">
+                        <div class="invalid-feedback">8-20 alphanumeric characters required</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Gumasta Certificate Image</label>
+                        <input type="file" class="form-control" name="gumasta_image"
+                               >
+                        <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 7MB)</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">GST Number</label>
+                        <input type="text" class="form-control" name="gst_number" 
+                               value="{{ vendor_bussiness_detail.gst_number }}"
+                               pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}" 
+                               title="Format: 22ABCDE1234F1Z5">
+                        <div class="invalid-feedback">Please enter a valid GST number</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">GST Certificate Image</label>
+                        <input type="file" class="form-control" name="gst_image"
+                               >
+                        <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 7MB)</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Business PAN Number</label>
+                        <input type="text" class="form-control" name="Bpan_number" 
+                               value="{{ vendor_bussiness_detail.Bpan_number }}"
+                               id="businessPanInput"
+                               pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" 
+                               title="Format: ABCDE1234F"
+                               oninput="validateBusinessPAN(this)" />
+                        <div class="invalid-feedback" id="businessPanError">Please enter valid PAN (Format: ABCDE1234F)</div>
+                      </div>
+                      
+                      <script>
+                      function validateBusinessPAN(input) {
+                        const pan = input.value.toUpperCase();
+                        const errorElement = document.getElementById('businessPanError');
+                        
+                        // Basic format check
+                        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
+                          errorElement.textContent = "Invalid format. Must be 5 letters + 4 digits + 1 letter";
+                          input.setCustomValidity("Invalid PAN format");
+                          return;
+                        }
+                      
+                        // Status character validation (4th character)
+                        const statusChars = ['C', 'H', 'A', 'B', 'G', 'J', 'L', 'F', 'T']; // Removed 'P' for individuals
+                        const statusChar = pan.charAt(3);
+                        if (!statusChars.includes(statusChar)) {
+                          errorElement.textContent = `Invalid 4th character for business. Must be one of: ${statusChars.join(', ')}`;
+                          input.setCustomValidity("Invalid business PAN status character");
+                          return;
+                        }
+                      
+                        // For businesses, 5th character must match first letter of business name
+                        const businessNameInput = document.querySelector('input[name="first_name"]');
+                        const businessName = businessNameInput ? businessNameInput.value.trim().toUpperCase() : '';
+                        const panFifthChar = pan.charAt(4);
+                        
+                        if (businessName && businessName[0] !== panFifthChar) {
+                          errorElement.textContent = `5th character (${panFifthChar}) must match first letter of your business name (${businessName[0]})`;
+                          input.setCustomValidity("Business PAN initial mismatch");
+                          return;
+                        }
+                      
+                        // Check digit validation
+                        const checkDigit = pan.charAt(9);
+                        if (!/[A-Z]/.test(checkDigit)) {
+                          errorElement.textContent = "Last character must be an alphabetic check digit";
+                          input.setCustomValidity("Invalid check digit");
+                          return;
+                        }
+                      
+                        // If all validations pass
+                        input.setCustomValidity("");
+                        errorElement.textContent = "Please enter valid PAN (Format: ABCDE1234F)";
+                      }
+                      
+                      // Add event listener to business name field to revalidate PAN when business name changes
+                      document.addEventListener('DOMContentLoaded', function() {
+                        const businessNameInput = document.querySelector('input[name="first_name"]');
+                        if (businessNameInput) {
+                          businessNameInput.addEventListener('input', function() {
+                            const panInput = document.getElementById('businessPanInput');
+                            if (panInput && panInput.value) {
+                              validateBusinessPAN(panInput);
+                            }
+                          });
+                        }
+                      });
+                      </script>
+  
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">PAN Card Image</label>
+                        <input type="file" class="form-control" name="Bpan_image"
+                               >
+                        <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 7MB)</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">MSME Number</label>
+                        <input type="text" class="form-control" name="MSME_number" 
+                               value="{{ vendor_bussiness_detail.MSME_number }}"
+                               pattern="[A-Za-z0-9]{8,12}" title="8-12 alphanumeric characters">
+                        <div class="invalid-feedback">8-12 alphanumeric characters required</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">MSME Certificate Image</label>
+                        <input type="file" class="form-control" name="MSME_image"
+                               >
+                        <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 7MB)</div>
+                      </div>
+                      
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Business Photo (Outer View)</label>
+                        <input type="file" class="form-control" name="Bphoto_outer"
+                               >
+                        <div class="invalid-feedback">Only JPEG or PNG images allowed (max 7MB)</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Business Photo (Inside View)</label>
+                        <input type="file" class="form-control" name="Bphoto_inside"
+                               >
+                        <div class="invalid-feedback">Only JPEG or PNG images allowed (max 7MB)</div>
+                      </div>
+                    </div>
+                    
+                    <hr />
+                    <h5 class="text-secondary">Verification Contact</h5>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Verifier Contact Name</label>
+                        <input type="text" class="form-control" name="VCname" 
+                               value="{{ vendor_bussiness_detail.VCname }}"
+                               pattern="[A-Za-z ]{2,50}" title="Only letters and spaces">
+                        <div class="invalid-feedback">Please enter a valid name (2-50 letters)</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Verifier Contact Mobile</label>
+                        <input type="tel" class="form-control" name="VCmobile" 
+                               value="{{ vendor_bussiness_detail.VCmobile }}"
+                               pattern="[0-9]{10}" title="10 digit mobile number">
+                        <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
+                      </div>
+                      <div class="col-md-12 mb-3">
+                        <label class="form-label">Verifier Contact Address</label>
+                        <input type="text" class="form-control" name="VCaddress" 
+                               value="{{ vendor_bussiness_detail.VCaddress }}"
+                               minlength="5" maxlength="200">
+                        <div class="invalid-feedback">Address must be 5-200 characters</div>
+                      </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                      <button type="button" class="btn btn-secondary prev-step" data-prev="step1">Previous</button>
+                      <button type="button" class="btn btn-primary next-step" data-next="step3">Next: Bank Details</button>
+                    </div>
+                  </div>
+  
+                  <!-- Step 3: Bank Details -->
+                  <div class="form-step d-none" id="step3">
+                    <h4 class="mb-4">Bank Account Information</h4>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Account Holder Name <span class="text-danger">*</span></label>
+                        <input type="text" name="account_holder_name" class="form-control" 
+                               value="{{ vendor_bank_detail.account_holder_name }}"
+                               pattern="[A-Za-z ]{2,100}" 
+                               title="Only letters and spaces (2-100 characters)"
+                                />
+                        <div class="invalid-feedback">Please enter a valid account holder name (2-100 letters)</div>
+                      </div>
+              
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+                        <input type="text" name="bank_name" class="form-control" 
+                               value="{{ vendor_bank_detail.bank_name }}"
+                               pattern="[A-Za-z0-9 &.,-]{3,100}" 
+                               title="3-100 alphanumeric characters with spaces & special chars"
+                                />
+                        <div class="invalid-feedback">Please enter a valid bank name</div>
+                      </div>
+              
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Account Number <span class="text-danger">*</span></label>
+                        <input type="text" name="account_number" class="form-control" 
+                               value="{{ vendor_bank_detail.account_number }}"
+                               pattern="[0-9]{9,18}" 
+                               title="9-18 digit account number"
+                                />
+                        <div class="invalid-feedback">Please enter a valid account number (9-18 digits)</div>
+                      </div>
+              
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Confirm Account Number <span class="text-danger">*</span></label>
+                        <input type="text" name="confirm_account_number" class="form-control" 
+                               value="{{ vendor_bank_detail.account_number }}"
+                               pattern="[0-9]{9,18}"
+                               title="Must match account number"
+                                />
+                        <div class="invalid-feedback">Account numbers must match</div>
+                      </div>
+              
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">IFSC Code <span class="text-danger">*</span></label>
+                        <input type="text" name="ifs_code" class="form-control" 
+                               value="{{ vendor_bank_detail.ifs_code }}"
+                               pattern="[A-Z]{4}0[A-Z0-9]{6}" 
+                               title="Format: ABCD0123456"
+                                />
+                        <div class="invalid-feedback">Please enter a valid IFSC code (Format: ABCD0123456)</div>
+                      </div>
+              
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Account Type <span class="text-danger">*</span></label>
+                        <select name="account_type" class="form-select" >
+                          <option value="" disabled selected>Select Account Type</option>
+                          <option value="Saving" {% if vendor_bank_detail.account_type == "Saving" %}selected{% endif %}>Saving</option>
+                          <option value="Current" {% if vendor_bank_detail.account_type == "Current" %}selected{% endif %}>Current</option>
+                        </select>
+                        <div class="invalid-feedback">Please select an account type</div>
+                      </div>
+              
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">MICR Code</label>
+                        <input type="text" name="micr_code" class="form-control" 
+                               value="{{ vendor_bank_detail.micr_code }}"
+                               pattern="[0-9]{9}" 
+                               title="9 digit MICR code" />
+                        <div class="invalid-feedback">Please enter a valid 9-digit MICR code</div>
+                      </div>
+              
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Upload Bank Document</label>
+                        <input type="file" name="bank_document" class="form-control"
+                                />
+                        <div class="invalid-feedback">Only PDF, JPG, or PNG files allowed (max 7MB)</div>
+                      </div>
+              
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Preferred Date of Payment <span class="text-danger">*</span></label>
+                        <select name="preffered_payout_date" class="form-select" >
+                          <option value="" disabled selected>Select Payment Date</option>
+                          <option value="15" {% if vendor_bank_detail.preffered_payout_date == "15" %}selected{% endif %}>15th of month</option>
+                          <option value="30" {% if vendor_bank_detail.preffered_payout_date == "30" %}selected{% endif %}>30th of month</option>
+                        </select>
+                        <div class="invalid-feedback">Please select a preferred payment date</div>
+                      </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                      <button type="button" class="btn btn-secondary prev-step" data-prev="step2">Previous</button>
+                      <button type="submit" class="btn btn-success" name="submit_all_details">Submit All Details</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+<style>
+  .form-step {
+    transition: all 0.3s ease;
+  }
+  
+  .steps-vertical {
+    position: relative;
+    padding-left: 1.5rem;
+  }
+  
+  .step-item {
+    position: relative;
+    padding-bottom: 1.5rem;
+    padding-left: 1.5rem;
+    {% comment %} border-left: 1px solid #dee2e6; {% endcomment %}
+  }
+  
+  .step-item:last-child {
+    border-left: 0;
+  }
+  
+  .step-item::before {
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: 0;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background-color: #dee2e6;
+    z-index: 1;
+  }
+  
+  .step-item.active::before {
+    background-color: #0d6efd;
+  }
+  
+  .step-item.completed::before {
+    background-color: #198754;
+  }
+  
+  .step-item.active .h4 {
+    color: #0d6efd;
+  }
+  
+  .step-item.completed .h4 {
+    color: #198754;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize date restrictions
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelector('input[name="date_of_birth"]').max = today;
+  
+  // Form navigation
+  const form = document.getElementById('vendorMasterForm');
+  const steps = document.querySelectorAll('.form-step');
+  const stepIndicators = document.querySelectorAll('.step-item');
+  
+  let currentStep = 0;
+  
+  // Show first step by default
+  showStep(0);
+  
+  // Next button click handler
+  document.querySelectorAll('.next-step').forEach(button => {
+    button.addEventListener('click', function() {
+      const nextStepId = this.getAttribute('data-next');
+      const currentStepId = this.closest('.form-step').id;
+      
+      // Validate current step before proceeding
+      const currentStepForm = document.getElementById(currentStepId);
+      const inputs = currentStepForm.querySelectorAll('input, select, textarea');
+      let isValid = true;
+      
+      inputs.forEach(input => {
+        if (!input.checkValidity()) {
+          input.classList.add('is-invalid');
+          isValid = false;
+        }
+      });
+      
+      if (isValid) {
+        const nextStepIndex = Array.from(steps).findIndex(step => step.id === nextStepId);
+        showStep(nextStepIndex);
+      } else {
+        currentStepForm.classList.add('was-validated');
+      }
+    });
+  });
+  
+  // Previous button click handler
+  document.querySelectorAll('.prev-step').forEach(button => {
+    button.addEventListener('click', function() {
+      const prevStepId = this.getAttribute('data-prev');
+      const prevStepIndex = Array.from(steps).findIndex(step => step.id === prevStepId);
+      showStep(prevStepIndex);
+    });
+  });
+  
+  // Show specific step and update indicators
+  function showStep(index) {
+    steps.forEach((step, i) => {
+      if (i === index) {
+        step.classList.remove('d-none');
+      } else {
+        step.classList.add('d-none');
+      }
+    });
+    
+    // Update step indicators
+    stepIndicators.forEach((indicator, i) => {
+      indicator.classList.remove('active', 'completed');
+      if (i < index) {
+        indicator.classList.add('completed');
+      } else if (i === index) {
+        indicator.classList.add('active');
+      }
+    });
+    
+    {% comment %} // Scroll to top of form
+    document.querySelector('.form-step:not(.d-none)').scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+     {% endcomment %}
+    currentStep = index;
+  }
+  
+  // File validation (7MB limit)
+  const fileInputs = form.querySelectorAll('input[type="file"]');
+  fileInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      if (this.files[0]) {
+        const file = this.files[0];
+        const maxSize = 7 * 1024 * 1024; // 7MB
+        const validTypes = this.accept.split(', ').map(type => type.split('/').pop());
+        const fileType = file.type.split('/').pop();
+        
+        if (file.size > maxSize) {
+          this.setCustomValidity('File size exceeds 7MB limit');
+          this.classList.add('is-invalid');
+        } else if (!validTypes.includes(fileType) && !validTypes.includes(file.type)) {
+          this.setCustomValidity('Invalid file type');
+          this.classList.add('is-invalid');
+        } else {
+          this.setCustomValidity('');
+          this.classList.remove('is-invalid');
+        }
+      }
+    });
+  });
+  
+  // Account number matching validation
+  const accountNumber = form.querySelector('input[name="account_number"]');
+  const confirmAccountNumber = form.querySelector('input[name="confirm_account_number"]');
+  
+  function validateAccountMatch() {
+    if (accountNumber.value !== confirmAccountNumber.value) {
+      confirmAccountNumber.setCustomValidity('Account numbers must match');
+      confirmAccountNumber.classList.add('is-invalid');
+    } else {
+      confirmAccountNumber.setCustomValidity('');
+      confirmAccountNumber.classList.remove('is-invalid');
+    }
+  }
+  
+  accountNumber.addEventListener('input', validateAccountMatch);
+  confirmAccountNumber.addEventListener('input', validateAccountMatch);
+  
+  // Real-time validation
+  form.querySelectorAll('input, select').forEach(input => {
+    input.addEventListener('input', function() {
+      if (this.checkValidity()) {
+        this.classList.remove('is-invalid');
+      } else {
+        this.classList.add('is-invalid');
+      }
+    });
+  });
+  
+  // Form submission handler
+  form.addEventListener('submit', function(event) {
+    // Validate all steps before submission
+    let allValid = true;
+    
+    steps.forEach(step => {
+      const inputs = step.querySelectorAll('input, select, textarea');
+      
+      inputs.forEach(input => {
+        if (!input.checkValidity()) {
+          input.classList.add('is-invalid');
+          allValid = false;
+        }
+      });
+    });
+    
+    if (!allValid) {
+      event.preventDefault();
+      event.stopPropagation();
+      showStep(0); // Go back to first step with errors
+    }
+    
+    form.classList.add('was-validated');
+  });
+});
+</script>
+
+
+    </div>
+  </div>
+  
+  <style>
     .card {
       border: none;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       border-radius: 10px;
+      overflow: hidden;
     }
+    
+    .card-header {
+      padding: 1rem 1.5rem;
+      {% comment %} border-bottom: 1px solid rgba(0,0,0,.05); {% endcomment %}
+    }
+    
+    .info-item {
+      padding: 0.5rem 0;
+    }
+    
+    .vendor-contact i {
+      min-width: 20px;
+    }
+    
     .object-cover {
       object-fit: cover;
     }
-    .card-body h3 {
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
-    .card-body .btn {
-      background-color: #6c63ff;
-      color: #fff;
-      font-weight: 500;
-    }
-    .card-body .btn:hover {
-      background-color: #574bce;
-    }
-    .edit-icon {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      cursor: pointer;
-      color: #6c63ff;
+    
+    .shadow-sm {
+      box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
     }
   </style>
 
-  <div class="container py-5">
-    <div class="row">
-      <div class="col-lg-6">
-        <div class="card p-4">
-          <div class="card-body">
-            <h5 class="card-title mb-4">Personal Information</h5>
-            <div class="row g-0">
-              <!-- Left Image Section -->
-              <div class="col-6">
-                {% if candidate.candidate_photo %}
-                <img src="{{candidate.candidate_photo.url}}" style="height: 125px;width: 125px;" class="object-cover card-img-start rounded-circle" alt="Profile Picture" />
-                {% else %}
-                <p>No profile image uploaded.</p>
-                {% endif %}
-                <div>
-                  <h3 class="card-title mb-1">{{ candidate.candidate_name }}</h3>
-                  <p class="text-muted mb-2">{{ candidate.refer_code }}-{{ candidate.unique_id }}</p>
-                  <p>{{ candidate.candidate_mobile_number }}</p>
-                  <p>
-                    <strong class="subheader">Follow-Up By:</strong> <br />{{candidate.employee_name}}
-                  </p>
-                  <p>
-                    <strong class="subheader">Address:</strong> <br />{{candidate.origin_location}}
-                  </p>
-                </div>
-              </div>
-              <!-- Right Content Section -->
-              <div class="col">
-                <div class="card-body">
-                    <p>
-                      <strong class="subheader">Email:</strong><br /> {{ candidate.candidate_email_address }}
-                    </p>
-                  <p>
-                    <strong class="subheader">Registration Time:</strong><br /> {{ candidate.register_time }}
-                  </p>
-                  <p>
-                    <strong class="subheader">Resume:</strong><br /> 
-                    {% if candidate.candidate_resume %}
-                    <a href="{{candidate.candidate_resume.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                    {% else %}
-                    <p>No Resume uploaded.</p>
-                    {% endif %}
-                    
-                  </p>
-                  <p>
-                    <strong class="subheader">Gender: </strong><br /> {{ candidate.gender }}
-                  </p>
-                  <p>
-                    <strong class="subheader">Source:</strong><br /> {{candidate.lead_source}}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-profile"><i class="bi bi-pencil"></i></a></span>
-        </div>
-      </div>
-      <div class="col-lg-6"> 
-        <div class="card p-4">
-          <div class="card-body">
-            <h5 class="card-title mb-4">candidate Details</h5>
-            <div class="row">
-              <!-- Primary Contact -->
-              <div class="col-md-6">
-                {% comment %} <h6 class="text-label">Primary Contact</h6> {% endcomment %}
-                <p>
-                  <strong class="subheader">Alternate Mobile Number:</strong><br /> {{candidate.candidate_alternate_mobile_number}}
-                </p>
-                <p>
-                  <strong class="subheader">Preffered Job Location:</strong><br /> {{candidate.preferred_location}}
-                </p>
-                <p>
-                  <strong class="subheader">Highest Qualification:</strong> <br />{{candidate.qualification}}
-                </p>
-                <p>
-                  <strong class="subheader">Diploma:</strong> <br />{{candidate.diploma}} 
-                </p>
-                <p>
-                  <strong class="subheader">Sector:</strong> <br />{{candidate.sector}} 
-                </p>
-                <p>
-                  <strong class="subheader">Department:</strong> <br />{{candidate.department}} 
-                </p>
-              </div>
-              <!-- Secondary Contact -->
-              <div class="col-md-6">
-                <p>
-                  <strong class="subheader">Experience :</strong><br /> {{candidate.experience_year}}.{{candidate.experience_month}}
-                </p>
-                <p>
-                  <strong class="subheader">Current Company :</strong> <br>{{candidate.current_company}}
-                </p>
-                <p>
-                  <strong class="subheader">Current Working Status :</strong>  <br>{{candidate.current_working_status}}
-                </p>
-                <p>
-                  <strong class="subheader">Current Salary :</strong><br />{{candidate.current_salary}} 
-                </p>
-                <p>
-                  <strong class="subheader">Expected Salary:</strong><br /> {{candidate.expected_salary}}
-                </p>
-              </div>
-            </div>
-            <!-- Edit Icon -->
-            <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-candidate-details"><i class="bi bi-pencil"></i></a></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-6 mt-3">
-        <div class="card p-4">
-          <h5 class="card-title mb-4">Calling Remarks</h5>
-          <div class="card-body">
-            <div class="row">
-              <!-- Primary Contact -->
-              <div class="col-md-6">
-                <p>
-                  <strong class="subheader">Call Connection:</strong><br>{{ candidate.call_connection }}
-                </p>
-                <p>
-                  <strong class="subheader">Calling Remark:</strong><br>{{ candidate.calling_remark }}
-                </p>
-                <p>
-                  <strong class="subheader">Lead Generate Status:</strong><br>{{ candidate.lead_generate }}
-                </p>
-                <p>
-                  <strong class="subheader">Send For Interview:</strong><br>{{ candidate.send_for_interview }}
-                </p>
-                <p>
-                    <strong class="subheader">Next Follow-Up Date:</strong><br>{{ candidate.next_follow_up_date }}
-                  </p>
-                  <p>
-                    <strong class="subheader">Remark:</strong><br>{{ candidate.remark }}
-                  </p>               
-              </div>
-              
-            </div>
-          </div>
-          <!-- Edit Icon -->
-          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-calling-remark"><i class="bi bi-pencil"></i></a></span>
-        </div>
-      </div>
-      <div class="col-lg-6 mt-3">
-        <div class="card p-4">
-          <h5 class="card-title mb-4">Selection Status</h5>
-          <div class="card-body">
-            <div class="row">
-              <!-- Primary Contact -->
-              <div class="col-md-6">
-                <p>
-                  <strong class="subheader">Status of Selection:</strong><br>{{ candidate.selection_status }}
-                </p>
-                <p>
-                  <strong class="subheader">Company Name:</strong><br>{{ candidate.company_name }}
-                </p>
-                <p>
-                  <strong class="subheader">Salary Offered:</strong><br>{{ candidate.offered_salary }}
-                </p>
-                <p>
-                  <strong class="subheader">Selection Date:</strong><br>{{ candidate.selection_date }}
-                </p>
-                <p>
-                  <strong class="subheader">Joining Date:</strong><br>{{ candidate.candidate_joining_date }}
-                </p>
-                <p>
-                  <strong class="subheader">Our Commission:</strong><br>{{ candidate.emta_commission }}
-                </p>
-                <p>
-                  <strong class="subheader">Payout Date:</strong><br>{{ candidate.payout_date }}
-                </p>               
-              </div>
-              
-            </div>
-          </div>
-          <!-- Edit Icon -->
-          <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-selection-record"><i class="bi bi-pencil"></i></a></span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {% comment %}profile details{% endcomment %}
-  <div class="modal modal-blur fade" id="modal-profile" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">candidate Profile</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="row">
-              <!-- candidate Fields -->
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Candidate Name </label>
-                <input type="text" class="form-control" name="candidate_name" value="{{ candidate.candidate_name }}"  />
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Candidate Mobile number </label>
-                <input type="text" class="form-control" name="candidate_mobile_number" value="{{ candidate.candidate_mobile_number }}"  />
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Candidate Email Address </label>
-                <input type="text" class="form-control" name="candidate_email_address" value="{{ candidate.candidate_email_address }}"  />
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Gender</label>
-                <select class="form-select" name="gender">
-                  <option value="Male" {% if candidate.gender == "Male" %}selected{% endif %}>Male</option>
-                  <option value="Female" {% if candidate.gender == "Female" %}selected{% endif %}>Female</option>
-                  <option value="Other" {% if candidate.gender == "Other" %}selected{% endif %}>Other</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Candidate Image</label>
-                <input type="file" class="form-control" name="candidate_photo"  />
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">candidate Resume</label>
-                <input type="file" class="form-control" name="candidate_resume" />
-              </div>
-              <div class="col-md-6 col-md-3">
-                <div class="mb-3">
-                  <label class="form-label">Lead Source</label>
-                  <input type="text" name="lead_source" class="form-control" value="{{ candidate.lead_source }}">
-                </div>
-              </div>
-              <div class="col-md-6 col-md-3">
-                <div class="mb-3">
-                  <label class="form-label">Follow-Up By</label>
-                  <select class="form-select" name="employee_name">
-                    {% for employee in employees %}
-                      <option value="{{ employee.first_name }} {{ employee.last_name }}"{% if candidate.employee_name == "{{ employee.first_name }} {{ employee.last_name }}" %}selected{% endif %}>{{ employee.first_name }} {{ employee.last_name }}</option>
-                    {% endfor %}
-                </select>                
-                </div>
-              </div>
-              <div class="col-md-6 mb-3">
-                {% comment %} <label class="form-label">submit by</label> {% endcomment %}
-                <input type="hidden" class="form-control" name="submit_by" value="{{user.username}}"/>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" name="candidate_personal_information" class="btn btn-primary">Save Changes</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
   
-
-  {% comment %}contact{% endcomment %}
-  <div class="modal modal-blur fade" id="modal-candidate-details" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">candidate  Details</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <h5 class="text-secondary">Candidate Information</h5>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Alternate Mobile Number </label>
-                <input type="text" class="form-control" name="candidate_alternate_mobile_number"  value='{{candidate.candidate_alternate_mobile_number}}'>
-              </div>
-              <input type="hidden" class="form-control" name="submit_by" value="{{user.username}}"/>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Preffered Location </label>
-                <input type="text" class="form-control" name="preferred_location"  value='{{candidate.preferred_location}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Origin Location </label>
-                <input type="text" class="form-control" name="origin_location"  value='{{candidate.origin_location}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Qualification</label>
-                <input type="text" class="form-control" name="qualification" value='{{candidate.qualification}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Diploma</label>
-                <input type="text" class="form-control" name="diploma" value='{{candidate.diploma}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Preffered Sector</label>
-                <input type="text" class="form-control" name="sector" value='{{candidate.sector}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Preffered Department</label>
-                <input type="text" class="form-control" name="department" value='{{candidate.department}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Experience(In Year)</label>
-                <input type="text" class="form-control" name="experience_year" value='{{candidate.experience_year}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Experience(In Month )</label>
-                <input type="text" class="form-control" name="experience_month" value='{{candidate.experience_month}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Current Company</label>
-                <input type="text" class="form-control" name="current_company" value='{{candidate.current_company}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Working Status</label>
-                <input type="text" class="form-control" name="current_working_status" value='{{candidate.current_working_status}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Current Salary</label>
-                <input type="text" class="form-control" name="current_salary" value='{{candidate.current_salary}}'>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Expected Salary</label>
-                <input type="text" class="form-control" name="expected_salary" value='{{candidate.expected_salary}}'>
-              </div>
-            </div>
-            
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" name="candidate_details" class="btn btn-primary">Save Changes</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
   
+  
+  <style>
+    .form-step {
+      transition: all 0.3s ease;
+    }
+    
+    .progress {
+      height: 10px;
+    }
+    
+    #form-progress {
+      transition: width 0.5s ease;
+    }
+    
+    .step-tab {
+      cursor: pointer;
+    }
+    
+    .step-tab.active {
+      font-weight: bold;
+      color: #0d6efd;
+    }
+  </style>
+  
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize date restrictions
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="date_of_birth"]').max = today;
+    
+    // Form navigation
+    const form = document.getElementById('vendorMasterForm');
+    const steps = document.querySelectorAll('.form-step');
+    const progressBar = document.getElementById('form-progress');
+    const stepTabs = document.querySelectorAll('[id$="-tab"]');
+    
+    let currentStep = 0;
+    
+    // Show first step by default
+    showStep(0);
+    
+    // Next button click handler
+    document.querySelectorAll('.next-step').forEach(button => {
+      button.addEventListener('click', function() {
+        const nextStepId = this.getAttribute('data-next');
+        const currentStepId = this.closest('.form-step').id;
+        
+        // Validate current step before proceeding
+        const currentStepForm = document.getElementById(currentStepId);
+        const inputs = currentStepForm.querySelectorAll('input, select, textarea');
+        let isValid = true;
+        
+        inputs.forEach(input => {
+          if (!input.checkValidity()) {
+            input.classList.add('is-invalid');
+            isValid = false;
+          }
+        });
+        
+        if (isValid) {
+          const nextStepIndex = Array.from(steps).findIndex(step => step.id === nextStepId);
+          showStep(nextStepIndex);
+        } else {
+          currentStepForm.classList.add('was-validated');
+        }
+      });
+    });
+    
+    // Previous button click handler
+    document.querySelectorAll('.prev-step').forEach(button => {
+      button.addEventListener('click', function() {
+        const prevStepId = this.getAttribute('data-prev');
+        const prevStepIndex = Array.from(steps).findIndex(step => step.id === prevStepId);
+        showStep(prevStepIndex);
+      });
+    });
+    
+    // Step tab click handler
+    stepTabs.forEach((tab, index) => {
+      tab.addEventListener('click', function() {
+        if (index < currentStep) {
+          showStep(index);
+        }
+      });
+    });
+    
+    // Show specific step
+    function showStep(index) {
+      steps.forEach((step, i) => {
+        if (i === index) {
+          step.classList.remove('d-none');
+          stepTabs[i].classList.add('active');
+        } else {
+          step.classList.add('d-none');
+          stepTabs[i].classList.remove('active');
+        }
+      });
+      
+      // Update progress bar
+      const progress = ((index + 1) / steps.length) * 100;
+      progressBar.style.width = `${progress}%`;
+      progressBar.setAttribute('aria-valuenow', progress);
+      
+      currentStep = index;
+    }
+    
+    // File validation (7MB limit)
+    const fileInputs = form.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+      input.addEventListener('change', function() {
+        if (this.files[0]) {
+          const file = this.files[0];
+          const maxSize = 7 * 1024 * 1024; // 7MB
+          const validTypes = this.accept.split(', ').map(type => type.split('/').pop());
+          const fileType = file.type.split('/').pop();
+          
+          if (file.size > maxSize) {
+            this.setCustomValidity('File size exceeds 7MB limit');
+            this.classList.add('is-invalid');
+          } else if (!validTypes.includes(fileType) && !validTypes.includes(file.type)) {
+            this.setCustomValidity('Invalid file type');
+            this.classList.add('is-invalid');
+          } else {
+            this.setCustomValidity('');
+            this.classList.remove('is-invalid');
+          }
+        }
+      });
+    });
+    
+    // Account number matching validation
+    const accountNumber = form.querySelector('input[name="account_number"]');
+    const confirmAccountNumber = form.querySelector('input[name="confirm_account_number"]');
+    
+    function validateAccountMatch() {
+      if (accountNumber.value !== confirmAccountNumber.value) {
+        confirmAccountNumber.setCustomValidity('Account numbers must match');
+        confirmAccountNumber.classList.add('is-invalid');
+      } else {
+        confirmAccountNumber.setCustomValidity('');
+        confirmAccountNumber.classList.remove('is-invalid');
+      }
+    }
+    
+    accountNumber.addEventListener('input', validateAccountMatch);
+    confirmAccountNumber.addEventListener('input', validateAccountMatch);
+    
+    // Real-time validation
+    form.querySelectorAll('input, select').forEach(input => {
+      input.addEventListener('input', function() {
+        if (this.checkValidity()) {
+          this.classList.remove('is-invalid');
+        } else {
+          this.classList.add('is-invalid');
+        }
+      });
+    });
+    
+    // Form submission handler
+    form.addEventListener('submit', function(event) {
+      // Validate all steps before submission
+      let allValid = true;
+      
+      steps.forEach(step => {
+        const inputs = step.querySelectorAll('input, select, textarea');
+        
+        inputs.forEach(input => {
+          if (!input.checkValidity()) {
+            input.classList.add('is-invalid');
+            allValid = false;
+          }
+        });
+      });
+      
+      if (!allValid) {
+        event.preventDefault();
+        event.stopPropagation();
+        showStep(0); // Go back to first step with errors
+      }
+      
+      form.classList.add('was-validated');
+    });
+  });
+  </script>
 
-  <div class="modal modal-blur fade" id="modal-calling-remark" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Calling Remark</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Add this modal at the bottom of your template, before the closing body tag -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body text-center p-4">
+        <div class="mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-circle">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
         </div>
-        <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="row">
-                <!-- Account Holder Name -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Call Connection Status</label>
-                    <input type="text" name="call_connection" class="form-control" value="{{ candidate.call_connection }}"  />
-                </div>
-        
-                <!-- Bank Name -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Calling Remark </label>
-                    <input type="text" name="calling_remark" class="form-control" value="{{ candidate.calling_remark }}"  />
-                </div>
-        
-                <!-- Account Number -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Lead Generate Status </label>
-                    <input type="text" name="lead_generate" class="form-control" value="{{ candidate.lead_generate }}"  />
-                </div>
-        
-                <!-- Confirm Account Number -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Send for Interview Status </label>
-                    <input type="text" name="send_for_interview" class="form-control" value="{{ candidate.send_for_interview }}"  />
-                </div>
-        
-                <!-- IFSC Code -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Next Follow-Up Date </label>
-                    <input type="date" name="next_follow_up_date" class="form-control" value="{{ candidate.next_follow_up_date }}"  />
-                </div>
-        
-                <!-- MICR Code -->
-                <div class="col-md-6 mb-3">
-                    {% comment %} <label class="form-label">MICR Code</label> {% endcomment %}
-                    <input type="hidden" name="submit_by" class="form-control" value="{{ user.username }}" />
-                </div>
-            </div>
-        
-            <!-- Submit and Cancel Buttons -->
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" name="submit_calling_remark" class="btn btn-primary">Submit</button>
-            </div>
-        </form>
-        </div>
+        <h4 class="mb-3">Success!</h4>
+        <p>Your details have been successfully updated.</p>
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal" id="continueBtn">Continue</button>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="modal modal-blur fade" id="modal-selection-record" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Selection Record</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="row">
-                <!-- Account Holder Name -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Call Connection Status</label>
-                    <select class="form-select" name="selection_status">
-                      <option disabled selected value="Select Candidate Selection Status" {% if candidate.selection_status == "Select Candidate Selection Status" %}selected{% endif %}>Select Candidate Selection Status</option>
-                      <option value="Selected" {% if candidate.selection_status == "Selected" %}selected{% endif %}>Selected</option>
-                      <option value="Rejected" {% if candidate.selection_status == "Rejected" %}selected{% endif %}>Rejected</option>
-                      <option value="Pending" {% if candidate.selection_status == "Pending" %}selected{% endif %}>Pending</option>
-                      <option value="Not Join" {% if candidate.selection_status == "Not Join" %}selected{% endif %}>Not Join</option>
-                    </select>
-                </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Check if form was successfully submitted
+  {% if messages %}
+    {% for message in messages %}
+      {% if message.tags == 'success' %}
+        // Show success modal
+        var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+        successModal.show();
         
-                <!-- Bank Name -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Company Name </label>
-                    <input type="text" name="company_name" class="form-control" value="{{ candidate.company_name }}"  />
-                </div>
+        // Redirect after modal is closed
+        document.getElementById('continueBtn').addEventListener('click', function() {
+          window.location.href = "{% url 'employee_vendor_candidate_list' id=vendor.id %}"; // Replace with your redirect URL
+        });
         
-                <!-- Account Number -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Offered Salary </label>
-                    <input type="text" name="offered_salary" class="form-control" value="{{ candidate.offered_salary }}"  />
-                </div>
-        
-                <!-- Confirm Account Number -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Selection Date </label>
-                    <input type="date" name="selection_date" class="form-control" value="{{ candidate.selection_date }}"  />
-                </div>
+        // Auto-redirect after 3 seconds if user doesn't click continue
+        setTimeout(function() {
+          window.location.href = "{% url 'employee_vendor_candidate_list' id=vendor.id %}"; // Replace with your redirect URL
+        }, 3000);
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  
+  // Form submission handler
+  const form = document.getElementById('vendorMasterForm');
+  if (form) {
+    form.addEventListener('submit', function(event) {
+      // Your existing validation code...
+      
+      // If form is valid, it will submit normally
+      // The success message handling above will take care of the redirect
+    });
+  }
+});
+</script>
 
-                <!-- IFSC Code -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Joining Date </label>
-                  <input type="date" name="candidate_joining_date" class="form-control" value="{{ candidate.candidate_joining_date }}"  />
-              </div>
-        
-                <!-- IFSC Code -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Our Commission </label>
-                    <input type="text" name="emta_commission" class="form-control" value="{{ candidate.emta_commission }}"  />
-                </div>
-        
-                <!-- MICR Code -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Payout Date</label>
-                    <input type="date" name="payout_date" class="form-control" value="{{ candidate.payout_date }}" />
-                </div>
-            </div>
-        
-            <!-- Submit and Cancel Buttons -->
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" name="submit_secection_record" class="btn btn-primary">Submit</button>
-            </div>
-        </form>
-        </div>
-      </div>
     </div>
   </div>
+</div>
+
+
 
 
 {% endblock content %}

@@ -1,4 +1,4 @@
-{% extends 'employee/performance-base.html' %}
+{% extends 'crm/performance-base.html' %}
 
 {% block content %}
 
@@ -321,7 +321,7 @@
                       <div class="col-md-6 mb-3">
                           <label class="form-label">Gender <span class="text-danger">*</span></label>
                           <select class="form-select" name="gender" required>
-                              <option value="">Select Gender</option>
+                              <option value="" disabled>Select Gender</option>
                               <option value="Male" {% if candidate.gender == "Male" %}selected{% endif %}>Male</option>
                               <option value="Female" {% if candidate.gender == "Female" %}selected{% endif %}>Female</option>
                               <option value="Other" {% if candidate.gender == "Other" %}selected{% endif %}>Other</option>
@@ -334,21 +334,21 @@
                       <div class="col-md-6 mb-3">
                           <label class="form-label">Profile Photo</label>
                           <input type="file" class="form-control" name="candidate_photo" 
-                                 accept="image/jpeg, image/png, image/jpg" />
+                                 accept="image/*" />
                           <div class="invalid-feedback">
                               Please upload a valid image (JPEG, PNG, JPG)
                           </div>
-                          <small class="text-muted">Max size: 2MB</small>
+                          <small class="text-muted">Max size: 10MB</small>
                       </div>
                       
                       <div class="col-md-6 mb-3">
                           <label class="form-label">Resume <span class="text-danger">*</span></label>
                           <input type="file" class="form-control" name="candidate_resume" 
-                                 accept=".pdf,.doc,.docx" required />
+                                 accept=".pdf,.doc,.docx"  />
                           <div class="invalid-feedback">
                               Please upload a valid resume (PDF, DOC, DOCX)
                           </div>
-                          <small class="text-muted">Max size: 5MB (PDF, DOC, DOCX)</small>
+                          <small class="text-muted">Max size: 10MB (PDF, DOC, DOCX)</small>
                       </div>
                       
                       <div class="col-md-6 mb-3">
@@ -408,8 +408,8 @@ document.addEventListener('DOMContentLoaded', function() {
       form.classList.add('was-validated');
       
       // Validate file sizes
-      validateFileSize(event, 'candidate_photo', 2);
-      validateFileSize(event, 'candidate_resume', 5);
+      validateFileSize(event, 'candidate_photo', 10);
+      validateFileSize(event, 'candidate_resume', 10);
   }, false);
   
   // File size validation
@@ -878,7 +878,7 @@ document.addEventListener('DOMContentLoaded', function() {
                       <div class="col-md-6 mb-3">
                           <label class="form-label">Our Commission (₹) <span class="text-danger selection-required">*</span></label>
                           <input type="number" name="emta_commission" class="form-control selection-dependent" 
-                                 value="{{ candidate.emta_commission }}" min="0" step="1000">
+                                 value="{{ candidate.emta_commission }}" min="0" step="1">
                           <div class="invalid-feedback">Please enter valid amount</div>
                       </div>
 

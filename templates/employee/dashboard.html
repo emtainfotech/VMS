@@ -9,11 +9,36 @@
         <div class="col">
           <!-- Page pre-title -->
           <div class="page-pretitle">Overview</div>
-          <h2 class="page-title" style="margin-bottom: 50px;">Dashboard</h2>
+          <h2 class="page-title d-flex justify-content-between" style="margin-bottom: 50px;">
+            Dashboard
+            <span id="datetime" style="font-size: 16px; font-weight: normal; margin-left: 20px;"></span>
+          </h2>
         </div>
       </div>
     </div>
   </div>
+  
+  <script>
+    // Function to format date and time
+    function getCurrentDateTime() {
+      const now = new Date();
+      const options = {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: true
+      };
+      return now.toLocaleString('en-US', options);
+    }
+  
+    // Insert date and time into the span
+    document.getElementById("datetime").innerText = getCurrentDateTime();
+  
+    // Optional: update every second
+    setInterval(() => {
+      document.getElementById("datetime").innerText = getCurrentDateTime();
+    }, 1000);
+  </script>
+  
   <!-- Page body -->
   <div class="page-body">
     <div class="container-xl">
@@ -1055,3 +1080,5 @@ document.getElementById('punchOutForm')?.addEventListener('submit', function(e) 
 
 
 {% endblock %}
+
+

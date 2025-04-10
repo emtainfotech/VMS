@@ -115,117 +115,92 @@
           <div class="navbar">
             <div class="container-xl">
               <ul class="navbar-nav">
-                <li class="nav-item  {% if request.path == '/Dashboard/' %}active  {% endif %}">
+                <li class="nav-item {% if request.path == '/employee/dashboard/' %}active{% endif %}">
                   <a class="nav-link" href="{% url 'employee_dashboard' %}">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <!-- Download SVG icon from http://tabler-icons.io/i/home -->
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
-                        <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
-                        <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M5 12l-2 0l9 -9l9 9l-2 0"/>
+                        <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/>
+                        <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/>
                       </svg>
                     </span>
                     <span class="nav-link-title">Dashboard</span>
                   </a>
+                  {% if request.path == '/employee/dashboard/' %}<div class="nav-active-indicator"></div>{% endif %}
                 </li>
-                <li class="nav-item  {% if request.path == '/employee-candidate-list/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'employee_candidate_list' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-user-hexagon">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z" />
-                        <path d="M6.201 18.744a4 4 0 0 1 3.799 -2.744h4a4 4 0 0 1 3.798 2.741" />
-                        <path d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
-                      </svg>
-                    </span>
-                    <span class="nav-link-title">Candidate's</span>
-                  </a>
-                </li>
-                <li class="nav-item  {% if request.path == '/employee-company-list/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'employee_company_list' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-user-hexagon">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z" />
-                        <path d="M6.201 18.744a4 4 0 0 1 3.799 -2.744h4a4 4 0 0 1 3.798 2.741" />
-                        <path d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
-                      </svg>
-                    </span>
-                    <span class="nav-link-title">Company's</span>
-                  </a>
-                </li>
+      
                 
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-coin-rupee"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M15 8h-6h1a3 3 0 0 1 0 6h-1l3 3" /><path d="M9 11h6" /></svg>
-                    </span>
-                    <span class="nav-link-title">EVMS</span>
-                  </a>
-                  <div class="dropdown-menu">
-                    <div class="dropdown-menu-columns">
-                      <div class="dropdown-menu-column">
-                        <a class="dropdown-item" href="{% url 'employee_vendor_list' %}">Vendor's</a>
-                        <a class="dropdown-item" href="{% url 'employee_evms_candidate_list' %}">Candidate's</a>
-                        <a class="dropdown-item" href="{% url 'pay_list_view' %}">Pay List</a>
-                        <a class="dropdown-item" href="{% url 'holiday_view' %}">Transaction History</a>       
-                      </div>
-                    </div>
-                  </div>
-                </li>
-                <li class="nav-item  {% if request.path == '/employee-attendence/' %}active{% endif %}">
+                <li class="nav-item {% if request.path == '/employee/employee-Leave-request/' %}active{% endif %}">
                   <a class="nav-link" href="{% url 'employee_leave_request_view' %}">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <i class="fas fa-calendar-day day-off"></i></span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-calendar-event">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M4 5m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/>
+                        <path d="M16 3l0 4"/>
+                        <path d="M8 3l0 4"/>
+                        <path d="M4 11l16 0"/>
+                        <path d="M8 15h2v2h-2z"/>
+                      </svg>
+                    </span>
                     <span class="nav-link-title">Leave Request</span>
                   </a>
+                  {% if request.path == '/employee/employee-Leave-request/' %}<div class="nav-active-indicator"></div>{% endif %}
                 </li>
-                <li class="nav-item  {% if request.path == '/leave-request/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'employee_dashboard' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <i class="fas fa-exclamation-circle late"></i>
-                    </span>
-                    <span class="nav-link-title">Selection</span>
-                  </a>
-                </li>
-                <li class="nav-item  {% if request.path == '/holiday/' %}active{% endif %}">
+      
+                
+      
+                <li class="nav-item {% if request.path == '/employee/employee-holiday/' %}active{% endif %}">
                   <a class="nav-link" href="{% url 'employee_holiday_view' %}">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <i class="fas fa-sun holiday"></i>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-beach">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M17.553 16.75a7.5 7.5 0 0 0 -10.606 0"/>
+                        <path d="M18 3.804a6 6 0 0 0 -8.196 2.196l10.392 6a6 6 0 0 0 -2.196 -8.196z"/>
+                        <path d="M16.732 10c1.658 -2.87 2.225 -5.644 1.268 -6.196c-.957 -.552 -3.075 1.326 -4.732 4.196"/>
+                        <path d="M15 9l-3 5.196"/>
+                        <path d="M3 19.25a2.4 2.4 0 0 1 1 -.25a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 1.135 -.858"/>
+                      </svg>
                     </span>
-                    <span class="nav-link-title">Holiday's</span>
+                    <span class="nav-link-title">Holidays</span>
                   </a>
+                  {% if request.path == '/employee/employee-holiday/' %}<div class="nav-active-indicator"></div>{% endif %}
                 </li>
-                <li class="nav-item  {% if request.path == '/projects/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'employee_holiday_view' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-database"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 6m-8 0a8 3 0 1 0 16 0a8 3 0 1 0 -16 0" /><path d="M4 6v6a8 3 0 0 0 16 0v-6" /><path d="M4 12v6a8 3 0 0 0 16 0v-6" /></svg>
-                    </span>
-                    <span class="nav-link-title">DSR</span>
-                  </a>
-                </li>
-                <li class="nav-item  {% if request.path == '/holiday/' %}active{% endif %}">
+      
+                <li class="nav-item {% if request.path == '/employee/office-employee-expense/' %}active{% endif %}">
                   <a class="nav-link" href="{% url 'office_employee_expense_view' %}">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <i class="fas fa-sun holiday"></i>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-receipt">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16l-3 -2l-2 2l-2 -2l-2 2l-2 -2l-3 2m4 -14h6m-6 4h6m-2 4h2"/>
+                      </svg>
                     </span>
                     <span class="nav-link-title">Expense</span>
                   </a>
+                  {% if request.path == '/employee/office-employee-expense/' %}<div class="nav-active-indicator"></div>{% endif %}
                 </li>
-                <li class="nav-item  {% if request.path == '/holiday/' %}active{% endif %}">
+      
+                <li class="nav-item {% if request.path == '/employee/employee/resignation/' %}active{% endif %}">
                   <a class="nav-link" href="{% url 'employee_resignation_view' %}">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <i class="fas fa-sun holiday"></i>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-logout">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"/>
+                        <path d="M9 12h12l-3 -3"/>
+                        <path d="M18 15l3 -3"/>
+                      </svg>
                     </span>
                     <span class="nav-link-title">Resignation</span>
                   </a>
+                  {% if request.path == '/employee/employee/resignation/' %}<div class="nav-active-indicator"></div>{% endif %}
                 </li>
               </ul>
             </div>
           </div>
         </div>
       </header>
+      
+      
     {% block content %}
     {% endblock %}
     <div>

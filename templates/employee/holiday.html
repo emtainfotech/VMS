@@ -1,126 +1,178 @@
 {% extends 'employee/base.html' %}
 
 {% block content %}
-  <div class="page-wrapper">
+<div class="page-wrapper">
     <!-- Page header -->
     <div class="page-header d-print-none">
-      <div class="container-xl">
-        <div class="row g-2 align-items-center">
-          <div class="col">
-            <!-- Page pre-title -->
-            {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
-            <h2 class="page-title" style="margin-bottom: 50px;">Holiday's</h2>
-          </div>
-          <!-- Page title actions -->
-          <div class="col-auto ms-auto d-print-none">
-            
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="page-header d-print-none">
-      <div class="container-xl">
-        <div class="row g-2 align-items-center">
-          <div class="col-12">
-            <div class="card">
-              {% comment %} <div class="card-header">
-                <h3 class="card-title">Designations</h3>
-              </div> {% endcomment %}
-              <div class="card-body border-bottom py-3">
-                <div class="d-flex">
-                  <div class="text-secondary">
-                    Show<div class="mx-2 d-inline-block">
-                      <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
-                    </div>entries
-                  </div>
-                  <div class="ms-auto text-secondary">
-                    Search:<div class="ms-2 d-inline-block">
-                      <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
-                    </div>
-                  </div>
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">Company Holidays</h2>
+                    <div class="text-muted mt-1">View all scheduled holidays</div>
                 </div>
-              </div>
-              <div class="table-responsive">
-                <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
-                  <thead>
-                    <tr>
-                      <th class="w-1">
-                        No. <!-- Download SVG icon from http://tabler-icons.io/i/chevron-up -->
-                      </th>
-                      <th>Reason</th>
-                      <th>Date</th>
-                      <th>Day</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for holiday in holidays %}
-                      <tr>
-                        <td>
-                          <span class="text-secondary">{{ forloop.counter }}</span>
-                        </td>
-                        <td>
-                          <span class="me-2"></span>
-                          {{ holiday.name }}
-                        </td>
-                        <td>
-                          <span class="me-2"></span>
-                          {{ holiday.date }}
-                        </td>
-                        <td>
-                          <span class="me-2"></span>
-                          {{ holiday.day }}
-                        </td>
-                        
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-              <div class="card-footer d-flex align-items-center">
-                <p class="m-0 text-secondary">
-                  Showing <span>1</span> to <span>8</span> of <span>16</span> entries
-                </p>
-                <ul class="pagination m-0 ms-auto">
-                  <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                      <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M15 6l-6 6l6 6" />
-                      </svg>prev
-                    </a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">1</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">2</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">3</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">4</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">5</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">
-                      next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M9 6l6 6l-6 6" />
-                      </svg>
-                    </a>
-                  </li>
-                </ul>
-              </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <a href="#" class="btn btn-primary" id="toggle-view">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-grid" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"></path>
+                                <path d="M14 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"></path>
+                                <path d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"></path>
+                                <path d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"></path>
+                            </svg>
+                            Switch to List View
+                        </a>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
-  
+
+    <!-- Page body -->
+    <div class="page-body">
+        <div class="container-xl">
+            <!-- Calendar View -->
+            <div class="card" id="calendar-view">
+                <div class="card-body">
+                    <div id="holiday-calendar"></div>
+                </div>
+            </div>
+
+            <!-- Table View (Hidden by default) -->
+            <div class="card d-none" id="table-view">
+                <div class="card-header">
+                    <h3 class="card-title">Holidays List</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-vcenter">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Holiday Name</th>
+                                    <th>Date</th>
+                                    <th>Day</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for holiday in holidays %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ holiday.name }}</td>
+                                    <td>{{ holiday.date|date:"F j, Y" }}</td>
+                                    <td>{{ holiday.day }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+
+<!-- Include FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize calendar
+    var calendarEl = document.getElementById('holiday-calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,dayGridYear'
+        },
+        events: [
+            {% for holiday in holidays %}
+            {
+                title: '{{ holiday.name }}',
+                start: '{{ holiday.date|date:"Y-m-d" }}',
+                allDay: true,
+                backgroundColor: '#4299e1',
+                borderColor: '#4299e1'
+            },
+            {% endfor %}
+        ],
+        eventDisplay: 'block',
+        eventTimeFormat: { // like '14:30:00'
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false
+        }
+    });
+    calendar.render();
+
+    // Toggle between calendar and table view
+    document.getElementById('toggle-view').addEventListener('click', function(e) {
+        e.preventDefault();
+        var calendarView = document.getElementById('calendar-view');
+        var tableView = document.getElementById('table-view');
+        var toggleBtn = document.getElementById('toggle-view');
+
+        if (calendarView.classList.contains('d-none')) {
+            calendarView.classList.remove('d-none');
+            tableView.classList.add('d-none');
+            toggleBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-grid" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"></path>
+                    <path d="M14 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"></path>
+                    <path d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"></path>
+                    <path d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"></path>
+                </svg>
+                Switch to List View
+            `;
+        } else {
+            calendarView.classList.add('d-none');
+            tableView.classList.remove('d-none');
+            toggleBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"></path>
+                    <path d="M16 3v4"></path>
+                    <path d="M8 3v4"></path>
+                    <path d="M4 11h16"></path>
+                    <path d="M11 15h1"></path>
+                    <path d="M12 15v3"></path>
+                </svg>
+                Switch to Calendar View
+            `;
+        }
+    });
+});
+</script>
+
+<style>
+/* Custom calendar styling */
+#holiday-calendar {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.fc-event {
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.85em;
+    padding: 2px 5px;
+}
+
+.fc-daygrid-event {
+    margin: 1px 2px 0;
+}
+
+.fc-toolbar-title {
+    font-size: 1.25em;
+}
+
+.fc-button {
+    padding: 0.3em 0.6em;
+}
+</style>
 {% endblock %}

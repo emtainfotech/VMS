@@ -221,6 +221,7 @@ class OfficeExpense(models.Model):
     purchase_date = models.DateField()
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     paid_status = models.CharField(max_length=20,  default='Unpaid')
+    description = models.CharField(max_length=255, blank=True)
     attech = models.FileField(upload_to='office_expense_attachments/', null=True)
 
     def __str__(self):

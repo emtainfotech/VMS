@@ -30,6 +30,7 @@ from django.http import HttpResponse
 from django.utils.timezone import localtime
 from datetime import datetime
 from django.db.models import Sum, Min, Max
+from django.core.paginator import Paginator
 
 
 IST = pytz.timezone('Asia/Kolkata')
@@ -1748,36 +1749,75 @@ def delete_termination(request, termination_id):
     termination.delete()
     return redirect('termination_view')
 
+from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required, user_passes_test
+
+@login_required
+@user_passes_test(lambda u: u.is_staff or u.is_superuser)
 def announcement_view(request):
-    if request.user.is_staff or request.user.is_superuser:
-        announcements = Announcement.objects.all()
-        if request.method == "POST":
+    announcements_list = Announcement.objects.all().order_by('-start_date')
+    paginator = Paginator(announcements_list, 10)
+    page_number = request.GET.get('page')
+    announcements = paginator.get_page(page_number)
+
+    if request.method == "POST":
+        action = request.POST.get('action')
+        
+        if action == 'add':
+            # Handle add new announcement
             title = request.POST.get('title')
             start_date = request.POST.get('start_date')
             end_date = request.POST.get('end_date')
             description = request.POST.get('description')
             announcements_image = request.FILES.get('announcements_image')
 
-            # Create a new Announcement record
+            if start_date > end_date:
+                messages.error(request, "End date must be after start date")
+                return redirect('announcement_view')
+
             Announcement.objects.create(
                 title=title,
                 start_date=start_date,
                 end_date=end_date,
                 description=description,
-                announcements_image = announcements_image
+                announcements_image=announcements_image,
+                created_by=request.user
             )
+            messages.success(request, "Announcement created successfully")
+            
+        elif action == 'edit':
+            # Handle edit announcement
+            announcement_id = request.POST.get('announcement_id')
+            try:
+                announcement = Announcement.objects.get(id=announcement_id)
+                announcement.title = request.POST.get('title')
+                announcement.start_date = request.POST.get('start_date')
+                announcement.end_date = request.POST.get('end_date')
+                announcement.description = request.POST.get('description')
+                
+                if 'announcements_image' in request.FILES:
+                    announcement.announcements_image = request.FILES['announcements_image']
+                
+                announcement.save()
+                messages.success(request, "Announcement updated successfully")
+            except Announcement.DoesNotExist:
+                messages.error(request, "Announcement not found")
+                
+        elif action == 'delete':
+            # Handle delete announcement
+            announcement_id = request.POST.get('announcement_id')
+            try:
+                announcement = Announcement.objects.get(id=announcement_id)
+                announcement.delete()
+                messages.success(request, "Announcement deleted successfully")
+            except Announcement.DoesNotExist:
+                messages.error(request, "Announcement not found")
 
-            return redirect('announcement_view')  
+        return redirect('announcement_view')
 
-        return render(request, 'hrms/Announcements.html',{'announcements': announcements})
-    else:
-        # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
-
-def delete_announcement(request, announcement_id):
-    announcement = get_object_or_404(Announcement, id=announcement_id)
-    announcement.delete()
-    return redirect('announcement_view')
+    return render(request, 'hrms/Announcements.html', {
+        'announcements': announcements
+    })
 
 def team_meeting_view(request) :
     if request.user.is_staff or request.user.is_superuser:
@@ -2777,12 +2817,19 @@ def download_attendance_excel(request, user_id):
     return response
 
 
-def assign_task(request) :
+
+@login_required
+def assign_task(request):
     employees = Employee.objects.all()
-    tasks = Task.objects.all().order_by('-id')
+    tasks_list = Task.objects.all().order_by('-id')
+    
+    # Pagination
+    paginator = Paginator(tasks_list, 10)  # Show 10 tasks per page
+    page_number = request.GET.get('page')
+    tasks = paginator.get_page(page_number)
+    
     if request.method == 'POST':
         # Extract data from the POST request
-        
         title = request.POST.get('title')
         description = request.POST.get('description')
         assigned_to_id = request.POST.get('assigned_to')
@@ -2790,27 +2837,95 @@ def assign_task(request) :
         priority = request.POST.get('priority')
 
         # Validate the data
-        if not title or not description or not assigned_to_id or not due_date or not priority:
-            return render(request, 'hrms/assign-task.html', {
-                'error': 'All fields are required!'
-            })
+        if not all([title, description, assigned_to_id, due_date, priority]):
+            messages.error(request, 'All fields are required!')
+            return redirect('assign_task')
 
-        # Save the task to the database
-        assigned_to = Employee.objects.get(id=assigned_to_id)
-        Task.objects.create(
-            title=title,
-            description=description,
-            assigned_to=assigned_to,
-            due_date=due_date,
-            priority=priority
-        )
-        Notification.objects.create(
-            user=assigned_to.user,
-            notification_type='Task',
-            message=f'{assigned_to} have been assigned a new task: {title}, Due Date: {due_date}',
+        try:
+            assigned_to = Employee.objects.get(id=assigned_to_id)
+            task = Task.objects.create(
+                title=title,
+                description=description,
+                assigned_to=assigned_to,
+                due_date=due_date,
+                priority=priority
             )
-        
+            
+            Notification.objects.create(
+                user=assigned_to.user,
+                notification_type='Task',
+                message=f'You have been assigned a new task: {title}, Due Date: {due_date}',
+            )
+            
+            messages.success(request, 'Task assigned successfully!')
+            return redirect('assign_task')
+            
+        except Exception as e:
+            messages.error(request, f'Error assigning task: {str(e)}')
+            return redirect('assign_task')
 
-        return redirect('assign_task')  # Redirect to the task list view
+    return render(request, 'hrms/assign-task.html', {
+        'employees': employees,
+        'tasks': tasks
+    })
 
-    return render(request, 'hrms/assign-task.html', {'employees': employees, 'tasks': tasks})
+@login_required
+def edit_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    employees = Employee.objects.all()
+    
+    if request.method == 'POST':
+        try:
+            task.title = request.POST.get('title')
+            task.description = request.POST.get('description')
+            assigned_to_id = request.POST.get('assigned_to')
+            task.assigned_to = Employee.objects.get(id=assigned_to_id)
+            task.due_date = request.POST.get('due_date')
+            task.priority = request.POST.get('priority')
+            task.save()
+            
+            messages.success(request, 'Task updated successfully!')
+            return redirect('assign_task')
+            
+        except Exception as e:
+            messages.error(request, f'Error updating task: {str(e)}')
+            return redirect('assign_task')
+    
+    return redirect('assign_task')
+
+@login_required
+def delete_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    
+    if request.method == 'POST':
+        try:
+            task.delete()
+            messages.success(request, 'Task deleted successfully!')
+        except Exception as e:
+            messages.error(request, f'Error deleting task: {str(e)}')
+    
+    return redirect('assign_task')
+
+@login_required
+def update_task_status(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    
+    if request.method == 'POST':
+        try:
+            new_status = request.POST.get('status')
+            task.status = new_status
+            task.save()
+            
+            # Send notification if task is completed
+            if new_status == 'Completed':
+                Notification.objects.create(
+                    user=request.user,
+                    notification_type='Task',
+                    message=f'Task "{task.title}" has been marked as completed',
+                )
+            
+            messages.success(request, 'Task status updated successfully!')
+        except Exception as e:
+            messages.error(request, f'Error updating task status: {str(e)}')
+    
+    return redirect('assign_task')

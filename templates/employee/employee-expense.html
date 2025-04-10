@@ -1,300 +1,642 @@
 {% extends 'employee/base.html' %}
 
 {% block content %}
-  <div class="page-wrapper">
+<div class="page-wrapper">
     <!-- Page header -->
     <div class="page-header d-print-none">
-      <div class="container-xl">
-        <div class="row g-2 align-items-center">
-          <div class="col">
-            <!-- Page pre-title -->
-            {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
-            <h2 class="page-title">Office Expense</h2>
-          </div>
-          <!-- Page title actions -->
-          <div class="col-auto ms-auto d-print-none">
-            <div class="btn-list">
-              <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
-                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M12 5l0 14" />
-                  <path d="M5 12l14 0" />
-                </svg>Create Office Expense
-              </a>
-              <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
-                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M12 5l0 14" />
-                  <path d="M5 12l14 0" />
-                </svg>
-              </a>
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">Office Expense Management</h2>
+                    <div class="text-muted mt-1">Track and manage all office expenses</div>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M12 5l0 14" />
+                                <path d="M5 12l14 0" />
+                            </svg>
+                            Add New Expense
+                        </a>
+                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Add new expense">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M12 5l0 14" />
+                                <path d="M5 12l14 0" />
+                            </svg>
+                        </a>
+              
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
+
     <!-- Page body -->
     <div class="page-body">
-      <div class="container-xl">
-        <div class="row row-deck row-cards">
-          <div class="col-sm-6 col-lg-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="subheader">Total Expense</div>
-                </div>
-                <div class="h1 mb-3">{{ total_expense_month }}</div>
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="subheader">Total Paid</div>
-                  {% comment %} <div class="ms-auto lh-1">
-                    <div class="dropdown">
-                      <a class="dropdown-toggle text-secondary" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Last 7 days</a>
-                      <div class="dropdown-menu dropdown-menu-end">
-                        <a class="dropdown-item active" href="#">Last 7 days</a>
-                        <a class="dropdown-item" href="#">Last 30 days</a>
-                        <a class="dropdown-item" href="#">Last 3 months</a>
-                      </div>
+        <div class="container-xl">
+            <!-- Summary Cards -->
+            <div class="row row-deck row-cards mb-4">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-primary text-white avatar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                            <path d="M16.7 8a3 3 0 0 0 -2.7 -2h-4a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6h-4a3 3 0 0 1 -2.7 -2"></path>
+                                            <path d="M12 3v3m0 12v3"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">Total Expense</div>
+                                    <div class="text-muted">This Month</div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="h3 mb-0">₹{{ total_expense_month }}</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                  </div> {% endcomment %}
                 </div>
-                <div class="d-flex align-items-baseline">
-                  <div class="h1 mb-0 me-2">{{ total_paid }}</div>
-                  {% comment %} <div class="me-auto">
-                    <span class="text-green d-inline-flex align-items-center lh-1">
-                      8% <!-- Download SVG icon from http://tabler-icons.io/i/trending-up -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon ms-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M3 17l6 -6l4 4l8 -8" />
-                        <path d="M14 7l7 0l0 7" />
-                      </svg>
-                    </span>
-                  </div> {% endcomment %}
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-green text-white avatar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                            <path d="M9 14l6 -6"></path>
+                                            <path d="M9 10l6 0"></path>
+                                            <path d="M9 12l6 0"></path>
+                                            <path d="M9 5l6 0l0 14l-6 0"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">Total Paid</div>
+                                    <div class="text-muted">All Time</div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="h3 mb-0">₹{{ total_paid }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-              {% comment %} <div id="chart-revenue-bg" class="chart-sm"></div> {% endcomment %}
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-red text-white avatar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path>
+                                            <path d="M9 12l6 0"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">Total Unpaid</div>
+                                    <div class="text-muted">Pending Payments</div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="h3 mb-0">₹{{ total_unpaid }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-yellow text-white avatar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path>
+                                            <path d="M12 8l0 4"></path>
+                                            <path d="M12 16l.01 0"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">Total Hold</div>
+                                    <div class="text-muted">Partially Paid</div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="h3 mb-0">₹{{ total_partially_paid }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="subheader">Total Unpaid</div>
-                </div>
-                <div class="d-flex align-items-baseline">
-                  <div class="h1 mb-0 me-2">{{ total_unpaid }}</div>
-                </div>
-              </div>
-              {% comment %} <div id="chart-revenue-bg" class="chart-sm"></div> {% endcomment %}
-            </div>
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="subheader">Total Hold</div>
-                </div>
-                <div class="d-flex align-items-baseline">
-                  <div class="h1 mb-0 me-2">{{ total_partially_paid }}</div>
-                </div>
-              </div>
-              {% comment %} <div id="chart-revenue-bg" class="chart-sm"></div> {% endcomment %}
-            </div>
-          </div>
 
-          <div class="page-header d-print-none">
-            <div class="container-xl">
-              <div class="row g-2 align-items-center">
-                <div class="col-12">
-                  <div class="card">
-                    {% comment %} <div class="card-header">
-                      <h3 class="card-title">Designations</h3>
-                    </div> {% endcomment %}
-                    <div class="card-body border-bottom py-3">
-                      <div class="d-flex">
-                        <div class="text-secondary">
-                          Show<div class="mx-2 d-inline-block">
-                            <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
-                          </div>entries
+            <!-- Expense Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Expense Records</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+                        <div class="mb-2 mb-md-0">
+                            <div class="input-icon">
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search expenses...">
+                                <span class="input-icon-addon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path>
+                                        <path d="M21 21l-6 -6"></path>
+                                    </svg>
+                                </span>
+                            </div>
                         </div>
-                        <div class="ms-auto text-secondary">
-                          Search:<div class="ms-2 d-inline-block">
-                            <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
-                          </div>
+                        <div class="d-flex">
+                            <div class="me-2">
+                                <select class="form-select" id="statusFilter">
+                                    <option value="">All Statuses</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Unpaid">Unpaid</option>
+                                    <option value="Partially Paid">Partially Paid</option>
+                                </select>
+                            </div>
+                            <div>
+                                <input type="month" class="form-control" id="monthFilter" value="{{ current_month }}">
+                            </div>
                         </div>
-                      </div>
                     </div>
+
                     <div class="table-responsive">
-                      <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
-                        <thead>
-                          <tr>
-                            <th class="w-1">
-                              No. <!-- Download SVG icon from http://tabler-icons.io/i/chevron-up -->
-                            </th>
-                            <th>Item Name</th>
-                            <th>Purchase By</th>
-                            <th>Parchase Date</th>
-                            <th>Ammount</th>
-                            <th>Attechment</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% for OfficeExpense in OfficeExpenses %}
-                          <tr>
-                            <td>
-                              <span class="text-secondary">{{ forloop.counter}}</span>
-                            </td>
-
-                            <td>
-                              <span class="me-2"></span>
-                              {{OfficeExpense.item_name}}
-                            </td>
-                            <td>
-                              <span class="me-2"></span>
-                              {{OfficeExpense.employee_name}}
-                            </td>
-                            <td>
-                              <span class="me-2"></span>
-                              {{OfficeExpense.purchase_date}}
-                            </td>
-                            <td>
-                              <span class="me-2"></span>
-                              {{OfficeExpense.amount}}
-                            </td>
-                            <td>
-                              <span class="me-2"></span>
-                              {% if OfficeExpense.attech %}
-                                <a href="{{ OfficeExpense.attech.url }}" target="_blank">View Attachment</a>
-                              {% else %}
-                                No Attachment
-                              {% endif %}
-                            </td>
-                            <td>
-                              
-                              <span class="me-2"></span>
-                              {{OfficeExpense.paid_status}}
-                          </td>
-                          
-                            
-                          </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
+                        <table class="table table-vcenter table-mobile-md card-table" id="expenseTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Item Name</th>
+                                    <th>Purchased By</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Attachment</th>
+                                    <th>Status</th>
+                                    <th class="w-1">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for expense in OfficeExpenses %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td data-label="Item Name">
+                                        <div class="d-flex py-1 align-items-center">
+                                            <div class="flex-fill">
+                                                <div class="font-weight-medium">{{ expense.item_name }}</div>
+                                                <div class="text-muted"><small>{{ expense.description|default:"No description" }}</small></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td data-label="Purchased By">{{ expense.employee_name }}</td>
+                                    <td data-label="Date">{{ expense.purchase_date|date:"d M Y" }}</td>
+                                    <td data-label="Amount">₹{{ expense.amount }}</td>
+                                    <td data-label="Attachment">
+                                        {% if expense.attech %}
+                                        <a href="{{ expense.attech.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                            View
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">None</span>
+                                        {% endif %}
+                                    </td>
+                                    <td data-label="Status">
+                                        <span class="badge 
+                                            {% if expense.paid_status == 'Paid' %}bg-green
+                                            {% elif expense.paid_status == 'Unpaid' %}bg-red
+                                            {% else %}bg-yellow{% endif %} text-white">
+                                            {{ expense.paid_status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-list flex-nowrap">
+                                            <a href="#" class="btn btn-sm btn-icon" title="Edit" data-bs-toggle="modal" data-bs-target="#edit-modal-{{ expense.id }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                    <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path>
+                                                    <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path>
+                                                    <path d="M16 5l3 3"></path>
+                                                </svg>
+                                            </a>
+                                            <a href="#" class="btn btn-sm btn-icon" title="Delete" data-bs-toggle="modal" data-bs-target="#delete-modal-{{ expense.id }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                    <path d="M4 7l16 0"></path>
+                                                    <path d="M10 11l0 6"></path>
+                                                    <path d="M14 11l0 6"></path>
+                                                    <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
+                                                    <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
+
                     <div class="card-footer d-flex align-items-center">
-                      <p class="m-0 text-secondary">
-                        Showing <span>1</span> to <span>8</span> of <span>16</span> entries
-                      </p>
-                      <ul class="pagination m-0 ms-auto">
-                        <li class="page-item disabled">
-                          <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                            <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                              <path d="M15 6l-6 6l6 6" />
-                            </svg>prev
-                          </a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">1</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">2</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">3</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">4</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">5</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">
-                            next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                              <path d="M9 6l6 6l-6 6" />
-                            </svg>
-                          </a>
-                        </li>
-                      </ul>
+                        <p class="m-0 text-secondary">Showing <span>{{ OfficeExpenses.start_index }}</span> to <span>{{ OfficeExpenses.end_index }}</span> of <span>{{ OfficeExpenses.paginator.count }}</span> entries</p>
+                        <ul class="pagination m-0 ms-auto">
+                            {% if OfficeExpenses.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1" tabindex="-1" aria-disabled="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M15 6l-6 6l6 6"></path>
+                                    </svg>
+                                    First
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ OfficeExpenses.previous_page_number }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M15 6l-6 6l6 6"></path>
+                                    </svg>
+                                    Prev
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M15 6l-6 6l6 6"></path>
+                                    </svg>
+                                    First
+                                </a>
+                            </li>
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M15 6l-6 6l6 6"></path>
+                                    </svg>
+                                    Prev
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in OfficeExpenses.paginator.page_range %}
+                                {% if OfficeExpenses.number == num %}
+                                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                                {% elif num > OfficeExpenses.number|add:'-3' and num < OfficeExpenses.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if OfficeExpenses.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ OfficeExpenses.next_page_number }}">
+                                    Next
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M9 6l6 6l-6 6"></path>
+                                    </svg>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ OfficeExpenses.paginator.num_pages }}">
+                                    Last
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M9 6l6 6l-6 6"></path>
+                                    </svg>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                    Next
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M9 6l6 6l-6 6"></path>
+                                    </svg>
+                                </a>
+                            </li>
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                    Last
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M9 6l6 6l-6 6"></path>
+                                    </svg>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
                     </div>
-                  </div>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>
 
-  <div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">
+<!-- Add Expense Modal -->
+<div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Create New Expense</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" >
-            {% csrf_token %}
-            <div class="row">
-              <!-- Employee Name -->
-              <div class="col-lg-12">
-                <div class="mb-3">
-                  <label class="form-label">Employee Name</label>
-                  <select class="form-select" name="employee_name">
-                    {% for employee in employees %}
-                      <option value="{{ employee.first_name }} {{ employee.last_name }}">{{ employee.first_name }} {{ employee.last_name }}</option>
-                    {% endfor %}
-                  </select>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Office Expense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label required">Employee Name</label>
+                                <input type="text" class="form-control" value="{{ employee.first_name }} {{ employee.last_name }}" readonly>
+                                {% comment %} <select class="form-select" name="employee_name" >
+                                    <option value="" selected disabled>Select Employee</option>
+                                    {% for employee in employees %}
+                                    <option value="{{ employee.first_name }} {{ employee.last_name }}">{{ employee.first_name }} {{ employee.last_name }}</option>
+                                    {% endfor %}
+                                </select> {% endcomment %}
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label required">Purchase Date</label>
+                                <input type="date" class="form-control" name="purchase_date" required value="{{ today|date:'Y-m-d' }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="mb-3">
+                                <label class="form-label required">Item Name</label>
+                                <input type="text" class="form-control" name="item_name" placeholder="Enter item name" required>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label required">Amount (₹)</label>
+                                <input type="number" class="form-control" name="amount" step="0.01" min="0" placeholder="0.00" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2" placeholder="Optional description"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label">Payment Status</label>
+                                <select class="form-select" name="paid_status">
+                                    <option value="Unpaid" selected>Unpaid</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Partially Paid">Partially Paid</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label">Attachment</label>
+                                <input type="file" class="form-control" name="attech" accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="text-muted">Max size: 5MB (PDF, JPG, PNG)</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-          
-              <!-- Item Name -->
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Item Name</label>
-                <input type="text" name="item_name" class="form-control" required />
-              </div>
-          
-              <!-- Purchase Date -->
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Purchase Date</label>
-                <input type="date" name="purchase_date" class="form-control" required />
-              </div>
-          
-              <!-- Amount -->
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Amount</label>
-                <input type="number" name="amount" class="form-control" step="0.01" required />
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Attechment</label>
-                <input type="file" name="attech"  class="form-control"   />
-              </div>
-            </div>
-          
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" class="btn btn-primary">Submit</button>
-            </div>
-          </form>
-          
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary ms-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M12 5l0 14"></path>
+                            <path d="M5 12l14 0"></path>
+                        </svg>
+                        Add Expense
+                    </button>
+                </div>
+            </form>
         </div>
-      </div>
     </div>
-  </div>
+</div>
+
+<!-- Edit Expense Modals (one for each expense) -->
+{% for expense in OfficeExpenses %}
+<div class="modal modal-blur fade" id="edit-modal-{{ expense.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Expense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+              <form method="POST" action="{% url 'office_employee_expense_view' %}" enctype="multipart/form-data">
+                <input type="hidden" name="expense_id" value="{{ expense.id }}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <!-- Similar form fields as add modal, but pre-filled with expense data -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label required">Employee Name</label>
+                                <input type="text" class="form-control" value="{{ expense.employee_name }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label required">Purchase Date</label>
+                                <input type="date" class="form-control" name="purchase_date" value="{{ expense.purchase_date|date:'Y-m-d' }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="mb-3">
+                                <label class="form-label required">Item Name</label>
+                                <input type="text" class="form-control" name="item_name" value="{{ expense.item_name }}" required>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label required">Amount (₹)</label>
+                                <input type="number" class="form-control" name="amount" value="{{ expense.amount }}" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2">{{ expense.description }}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label">Payment Status</label>
+                                <select class="form-select" name="paid_status">
+                                    <option value="Unpaid" {% if expense.paid_status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+                                    <option value="Paid" {% if expense.paid_status == 'Paid' %}selected{% endif %}>Paid</option>
+                                    <option value="Partially Paid" {% if expense.paid_status == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label">Attachment</label>
+                                {% if expense.attech %}
+                                <div class="mb-2">
+                                    <a href="{{ expense.attech.url }}" target="_blank" class="btn btn-sm btn-outline-primary">Current File</a>
+                                </div>
+                                {% endif %}
+                                <input type="file" class="form-control" name="attech" accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="text-muted">Leave blank to keep current file</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary ms-auto">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Expense Modals -->
+<div class="modal modal-blur fade" id="delete-modal-{{ expense.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="modal-title">Are you sure?</div>
+                <div>You are about to delete this expense record permanently.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Cancel</button>
+                  <form method="POST" action="{% url 'office_employee_expense_view' %}" enctype="multipart/form-data">
+                    <input type="hidden" name="delete_id" value="{{ expense.id }}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Yes, delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Export Modal -->
+<div class="modal modal-blur fade" id="export-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Export Expenses</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            {% comment %} <form method="POST" action="{% url 'export_office_expenses' %}"> {% endcomment %}
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Date Range</label>
+                        <select class="form-select" name="date_range">
+                            <option value="all">All Time</option>
+                            <option value="this_month">This Month</option>
+                            <option value="last_month">Last Month</option>
+                            <option value="this_year">This Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3" id="custom-date-range" style="display: none;">
+                        <div class="col">
+                            <label class="form-label">From</label>
+                            <input type="date" class="form-control" name="start_date">
+                        </div>
+                        <div class="col">
+                            <label class="form-label">To</label>
+                            <input type="date" class="form-control" name="end_date">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Format</label>
+                        <select class="form-select" name="export_format">
+                            <option value="excel">Excel (.xlsx)</option>
+                            <option value="csv">CSV (.csv)</option>
+                            <option value="pdf">PDF (.pdf)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Export</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Show/hide custom date range fields
+    const dateRangeSelect = document.querySelector('select[name="date_range"]');
+    const customDateRange = document.getElementById('custom-date-range');
+    
+    dateRangeSelect.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            customDateRange.style.display = 'flex';
+        } else {
+            customDateRange.style.display = 'none';
+        }
+    });
+    
+    // Table filtering
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const monthFilter = document.getElementById('monthFilter');
+    const expenseTable = document.getElementById('expenseTable');
+    
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const monthValue = monthFilter.value;
+        
+        Array.from(expenseTable.querySelectorAll('tbody tr')).forEach(row => {
+            const itemName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const employee = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            const date = row.querySelector('td:nth-child(4)').textContent;
+            const status = row.querySelector('td:nth-child(7)').textContent;
+            
+            // Check search term
+            const matchesSearch = itemName.includes(searchTerm) || employee.includes(searchTerm);
+            
+            // Check status filter
+            const matchesStatus = statusValue === '' || status === statusValue;
+            
+            // Check month filter
+            let matchesMonth = true;
+            if (monthValue) {
+                const rowDate = new Date(date);
+                const filterDate = new Date(monthValue);
+                matchesMonth = rowDate.getFullYear() === filterDate.getFullYear() && 
+                              rowDate.getMonth() === filterDate.getMonth();
+            }
+            
+            // Show/hide row based on filters
+            row.style.display = (matchesSearch && matchesStatus && matchesMonth) ? '' : 'none';
+        });
+    }
+    
+    // Add event listeners for filtering
+    searchInput.addEventListener('input', filterTable);
+    statusFilter.addEventListener('change', filterTable);
+    monthFilter.addEventListener('change', filterTable);
+});
+</script>
 
 {% endblock %}

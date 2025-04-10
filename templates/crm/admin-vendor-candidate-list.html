@@ -1,631 +1,191 @@
-{% extends "crm/base.html" %}
+{% extends 'employee/performance-base.html' %}
 
 {% block content %}
 
-<style>
-  .card {
-    border: none;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-  }
-  .object-cover {
-    object-fit: cover;
-  }
-  .card-body h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
-  .card-body .btn {
-    background-color: #6c63ff;
-    color: #fff;
-    font-weight: 500;
-  }
-  .card-body .btn:hover {
-    background-color: #574bce;
-  }
-  .edit-icon {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    cursor: pointer;
-    color: #6c63ff;
-  }
-</style>
-
-<div class="container py-5">
-  <div class="row">
-    <div class="col-lg-7">
-      <div class="card p-4">
-        <div class="card-body">
-          <h5 class="card-title mb-4">Personal Information</h5>
-          <div class="row g-0">
-            <!-- Left Image Section -->
-            <div class="col-7">
-              {% if vendor.vendor_profile_image %}
-              <img src="{{vendor.vendor_profile_image.url}}" style="height: 125px;width: 125px;" class="object-cover card-img-start rounded-circle" alt="Profile Picture" />
-              {% else %}
-              <p>No profile image uploaded.</p>
-              {% endif %}
-              <div>
-                <h3 class="card-title mb-1">{{ vendor.user.first_name}}&nbsp; {{ vendor.user.last_name }}</h3>
-                <p class="text-muted mb-2">{{ vendor.refer_code }}</p>
-                <p>{{ vendor.mobile_number }}</p>
-                <p>
-                  <strong class="subheader">Address:</strong> <br />{{vendor_profile_detail.address}}
-                </p>
-                <p>
-                  <strong class="subheader">Address:</strong> <br />{{vendor_profile_detail.location}}
-                </p>
-              </div>
-            </div>
-            <!-- Right Content Section -->
-            <div class="col">
-              <div class="card-body">
-                  <p>
-                    <strong class="subheader">Email:</strong><br /> {{ vendor.user.email }}
-                  </p>
-                <p>
-                  <strong class="subheader">DOB:</strong><br /> {{ vendor.date_of_birth }}
-                </p>
-                <p>
-                  <strong class="subheader">Adhar Number:</strong><br /> {{vendor_profile_detail.adhar_card_number}}
-                  {% if vendor_profile_detail.adhar_card_image %}
-                  <a href="{{vendor_profile_detail.adhar_card_image.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                  {% else %}
-                  <p>No profile image uploaded.</p>
-                  {% endif %}
-                  
-                </p>
-                <p>
-                  <strong class="subheader">Pan Number:</strong><br /> {{ vendor_profile_detail.pan_card_number }}
-                  {% if vendor_profile_detail.pan_card_image %}
-                  <a href="{{vendor_profile_detail.pan_card_image.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                  {% else %}
-                  <p>No profile image uploaded.</p>
-                  {% endif %}
-                  
-                </p>
-                <p>
-                  <strong class="subheader">Gender:</strong><br /> {{vendor_profile_detail.gender}}
-                </p>
-              </div>
-            </div>
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-2 align-items-center">
+          <div class="col">
+            <h2 class="page-title">EVMS Candidate</h2>
           </div>
-        </div>
-        <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-profile"><i class="bi bi-pencil"></i></a></span>
-      </div>
-    </div>
-    <div class="col-lg-5">
-      <div class="card p-4">
-        <div class="card-body">
-          <h5 class="card-title mb-4">Vendor Bussiness Details</h5>
-          <div class="row">
-            <!-- Primary Contact -->
-            <div class="col-md-6">
-              {% comment %} <h6 class="text-label">Primary Contact</h6> {% endcomment %}
-              <p>
-                <strong class="subheader">Shop Name:</strong><br /> {{vendor_bussiness_detail.shop_name}}
-              </p>
-              <p>
-                <strong class="subheader">Bussiness Contact Number:</strong><br /> {{vendor_bussiness_detail.Contact_number}}
-              </p>
-              <p>
-                <strong class="subheader">Bussiness Email Address:</strong> <br />{{vendor_bussiness_detail.Busness_email}}
-              </p>
-              <p>
-                <strong class="subheader">GST Number:</strong> <br />{{vendor_bussiness_detail.gst_number}}  {% if vendor_bussiness_detail.gst_image %}
-                  <a href="{{vendor_bussiness_detail.gst_image.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                  {% else %}
-                  <p>No GST image uploaded.</p>
-                  {% endif %}
-              </p>
-              <p>
-                <strong class="subheader">Gumasta Number:</strong> <br />{{vendor_bussiness_detail.Gumasta_number}}  {% if vendor_bussiness_detail.gumasta_image %}
-                  <a href="{{vendor_bussiness_detail.gumasta_image.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                  {% else %}
-                  <p>No Gumasta image uploaded.</p>
-                  {% endif %}
-              </p>
-              <p>
-                <strong class="subheader">MSME Number:</strong> <br />{{vendor_bussiness_detail.MSME_number}}  {% if vendor_bussiness_detail.MSME_image %}
-                  <a href="{{vendor_bussiness_detail.MSME_image.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                  {% else %}
-                  <p>No MSME image uploaded.</p>
-                  {% endif %}
-              </p>
-            </div>
-            <!-- Secondary Contact -->
-            <div class="col-md-6">
-              
-              <p>
-                <strong class="subheader">Bussiness Pan Number :</strong><br /> {{vendor_bussiness_detail.Bpan_number}}  {% if vendor_bussiness_detail.Bpan_image %}
-                  <a href="{{vendor_bussiness_detail.Bpan_image.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                  {% else %}
-                  <p>No Bussiness PAN image uploaded.</p>
-                  {% endif %}
-              </p>
-              <p>
-                <strong class="subheader">Shop Image(Outside) :</strong>  {% if vendor_bussiness_detail.Bphoto_outer %}
-                  <a href="{{vendor_bussiness_detail.Bphoto_outer.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                  {% else %}
-                  <p>No Outside image uploaded.</p>
-                  {% endif %}
-              </p>
-              <p>
-                <strong class="subheader">Shop Image(Inside) :</strong>   {% if vendor_bussiness_detail.Bphoto_inside %}
-                  <a href="{{vendor_bussiness_detail.Bphoto_inside.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                  {% else %}
-                  <p>No Inside image uploaded.</p>
-                  {% endif %}
-              </p>
-              <h4 class="text-label">Reference Check - </h4>
-              <p>
-                <strong class="subheader">Name :</strong><br />{{vendor_bussiness_detail.VCname}} 
-              </p>
-              <p>
-                <strong class="subheader">Mobile Number:</strong><br /> {{vendor_bussiness_detail.VCmobile}}
-              </p>
-              <p>
-                <strong class="subheader">Address :</strong><br /> {{vendor_bussiness_detail.VCaddress}}
-              </p>
-            </div>
+          <div class="col-auto ms-auto d-print-none">
           </div>
-          <!-- Edit Icon -->
-          <span class="edit-icon" style="margin-top: -22px;margin-right: -22px;"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-vendor-business"><i class="bi bi-pencil"></i></a></span>
         </div>
       </div>
     </div>
-
-    <div class="col-lg-6 mt-3">
-      <div class="card p-4">
-        <h5 class="card-title mb-4">Vendor Bank Account</h5>
-        <div class="card-body">
-          <div class="row">
-            <!-- Primary Contact -->
-            <div class="col-md-6">
-              <p>
-                <strong class="subheader">Account Holder Name:</strong><br>{{ vendor_bank_detail.account_holder_name }}
-              </p>
-              <p>
-                <strong class="subheader">Account Number:</strong><br>{{ vendor_bank_detail.account_number }}
-              </p>
-              <p>
-                <strong class="subheader">IFSC Code:</strong><br>{{ vendor_bank_detail.ifs_code }}
-              </p>
-              <p>
-                <strong class="subheader">MICR Code:</strong><br>{{ vendor_bank_detail.micr_code }}
-              </p>
-                             
-            </div>
-            <!-- Secondary Contact -->
-            <div class="col-md-6">
-              <p>
-                <strong class="subheader">Bank Name:</strong><br>{{ vendor_bank_detail.bank_name }}
-              </p>
-              <p>
-                <strong class="subheader">Account Type:</strong><br>{{ vendor_bank_detail.account_type }}
-              </p>
-              <p>
-                <strong class="subheader">Preffered Payout Date: </strong><br>{{ vendor_bank_detail.preffered_payout_date }}
-              </p>
-              <p>
-                <strong class="subheader">Bank Document: </strong><br>{% if vendor_bank_detail.bank_document %}
-                <a href="{{vendor_bank_detail.bank_document.url}}" target="_blank"><i class="fas fa-eye" style="color: black;"></i></a></a>
-                {% else %}
-                <p>No Bank Document uploaded.</p>
-                {% endif %}
-              </p>
-            </div>
-          </div>
-        </div>
-        <!-- Edit Icon -->
-        <span class="edit-icon"><a href="#" data-bs-toggle="modal" data-bs-target="#modal-bank"><i class="bi bi-pencil"></i></a></span>
-      </div>
-    </div>
-      <div class="col-lg-6 mt-3">
-        <div class="card">
-          <div class="card-body border-bottom py-3">
-            <div class="d-flex">
-              <div class="text-secondary">
-                Show<div class="mx-2 d-inline-block">
-                  <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
-                </div>entries
-              </div>
-              <div class="ms-auto text-secondary">
-                Search:<div class="ms-2 d-inline-block">
-                  <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
+    <!-- Page body -->
+    <div class="page-body">
+      <div class="container-xl">
+        <div class="row row-deck row-cards">
+          <div class="page-header d-print-none">
+            <div class="container-xl">
+              <div class="row g-2 align-items-center">
+                <div class="col-12">
+                  <div class="card">
+                    <div class="card-body border-bottom py-3">
+                      <div class="d-flex">
+                        <div class="text-secondary">
+                          Show<div class="mx-2 d-inline-block">
+                            <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
+                          </div>entries
+                        </div>
+                        <div class="ms-auto text-secondary">
+                          Search:<div class="ms-2 d-inline-block">
+                            <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="table-responsive">
+                      <table class="table table-vcenter card-table table-hover datatable" id="searchableTable">
+                        <thead>
+                          <tr>
+                            <th class="w-1">No.</th>
+                            <th>Registered</th>
+                            <th>Candidate ID</th>
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th>Location</th>
+                            <th>Sector</th>
+                            <th>Job Type</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for candidate in candidates %}
+                          <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td data-label="Registered">
+                              <div class="d-flex flex-column">
+                                <span class="text-secondary">{{ candidate.register_time|date:"M d, Y" }}</span>
+                                <small class="text-muted">{{ candidate.register_time|date:"h:i A" }}</small>
+                              </div>
+                            </td>
+                            <td data-label="Candidate ID">
+                              <span class="text-muted">{{ candidate.refer_code }}-{{ candidate.unique_id }}</span>
+                            </td>
+                            <td data-label="Name">
+                              <div class="d-flex align-items-center">
+                                {% if candidate.candidate_photo %}
+                                <img src="{{ candidate.candidate_photo.url }}" class="avatar avatar-sm me-3 rounded-circle" 
+                                     alt="{{ candidate.candidate_name }}">
+                                {% else %}
+                                <span class="avatar avatar-sm me-3 rounded-circle bg-blue-lt">
+                                  {{ candidate.candidate_name|slice:":1"|upper }}
+                                </span>
+                                {% endif %}
+                                <div>
+                                  <div class="font-weight-medium">
+                                    <a href="{% url 'employee_evms_candidate_profile' candidate.id %}">{{ candidate.candidate_name }}</a>
+                                  </div>
+                                  <div class="text-muted small">{{ candidate.candidate_email_address|default:"No email"|truncatechars:20 }}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td data-label="Contact">
+                              <div class="d-flex flex-column">
+                                <a href="tel:{{ candidate.candidate_mobile_number }}" class="text-reset">{{ candidate.candidate_mobile_number }}</a>
+                                <small class="text-muted">{{ candidate.candidate_alternate_mobile_number|default:"No alternate" }}</small>
+                              </div>
+                            </td>
+                            <td data-label="Location">{{ candidate.preferred_location|default:"-" }}</td>
+                            <td data-label="Sector">{{ candidate.sector|default:"-" }}</td>
+                            <td data-label="Job Type">{{ candidate.job_type|default:"-" }}</td>
+                            <td data-label="Status">
+                              <span class="badge 
+                                {% if candidate.selection_status == 'Selected' %}bg-success
+                                {% elif candidate.selection_status == 'Rejected' %}bg-danger
+                                {% elif candidate.selection_status == 'Pending' %}bg-warning
+                                {% else %}bg-secondary{% endif %} text-white">
+                                {{ candidate.selection_status|default:"New" }}
+                              </span>
+                            </td>
+                            <td class="text-center">
+                              <div class="btn-list flex-nowrap">
+                                <a href="{% url 'employee_evms_candidate_profile' candidate.id %}" class="btn btn-sm btn-icon" 
+                                   title="View Profile" data-bs-toggle="tooltip">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" 
+                                       stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"></path>
+                                  </svg>
+                                </a>
+                                <a href="mailto:{{ candidate.candidate_email_address }}" class="btn btn-sm btn-icon" 
+                                   title="Send Email" data-bs-toggle="tooltip">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" 
+                                       stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z"></path>
+                                    <path d="M3 7l9 6l9 -6"></path>
+                                  </svg>
+                                </a>
+                                <a href="tel:{{ candidate.candidate_mobile_number }}" class="btn btn-sm btn-icon" 
+                                   title="Make Call" data-bs-toggle="tooltip">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" 
+                                       stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"></path>
+                                  </svg>
+                                </a>
+                              </div>
+                            </td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="card-footer d-flex align-items-center">
+                      <p class="m-0 text-secondary">
+                        Showing <span>1</span> to <span>8</span> of <span>16</span> entries
+                      </p>
+                      <ul class="pagination m-0 ms-auto">
+                        <li class="page-item disabled">
+                          <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                              <path d="M15 6l-6 6l6 6" />
+                            </svg>prev
+                          </a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">1</a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">2</a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">3</a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">4</a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">5</a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">
+                            next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                              <path d="M9 6l6 6l-6 6" />
+                            </svg>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="table-responsive">
-            <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
-              <thead>
-                <tr>
-                  <th class="w-1">No.</th>
-                  <th>Register at</th>
-                  <th>Unique Code</th>
-                  <th>Candidate Name</th>
-                  <th>Mobile Number</th>
-                  <th>Location</th>
-                  <th>Sector</th>
-                  <th>Job Type</th>
-                  <th>Status</th>
-                  <th>Profile</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for candidate in candidates %}
-                            <tr>
-                              <td>
-                                <span class="text-secondary">{{ forloop.counter }}</span>
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.register_time }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.refer_code }}-{{ candidate.unique_id }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                <a href="{% url 'evms_candidate_profile' candidate.id %}">{{ candidate.candidate_name }}</a>
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.candidate_mobile_number }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.preferred_location }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.sector }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.job_type }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.selection_status }}
-                              </td>
-                              
-                              <td>
-                                <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
-                                  <a href="{% url 'evms_candidate_profile' candidate.id %}" class="btn btn-bitbucket w-100 btn-icon">
-                                    <!-- Download SVG icon from http://tabler-icons.io/i/brand-github -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                      <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path>
-                                    </svg>
-                                  </a>
-                                </div>
-                              </td>
-                              
-                            </tr>
-                          {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          <div class="card-footer d-flex align-items-center">
-            <p class="m-0 text-secondary">
-              Showing <span>1</span> to <span>8</span> of <span>16</span> entries
-            </p>
-            <ul class="pagination m-0 ms-auto">
-              <li class="page-item disabled">
-                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                  <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
-                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M15 6l-6 6l6 6" />
-                  </svg>prev
-                </a>
-              </li>
-              <li class="page-item">
-                <a class="page-link" href="#">1</a>
-              </li>
-              <li class="page-item">
-                <a class="page-link" href="#">2</a>
-              </li>
-              <li class="page-item">
-                <a class="page-link" href="#">3</a>
-              </li>
-              <li class="page-item">
-                <a class="page-link" href="#">4</a>
-              </li>
-              <li class="page-item">
-                <a class="page-link" href="#">5</a>
-              </li>
-              <li class="page-item">
-                <a class="page-link" href="#">
-                  next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
-                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M9 6l6 6l-6 6" />
-                  </svg>
-                </a>
-              </li>
-            </ul>
-          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
-
-{% comment %}profile details{% endcomment %}
-<div class="modal modal-blur fade" id="modal-profile" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Vendor Profile</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form method="POST" enctype="multipart/form-data">
-          {% csrf_token %}
-          <div class="row">
-            <!-- Vendor Fields -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">First Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="first_name" value="{{ vendor.user.first_name }}" required />
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Last Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="last_name" value="{{ vendor.user.last_name }}" required />
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="mobile_number" value="{{ vendor.mobile_number }}" required />
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Email <span class="text-danger">*</span></label>
-              <input type="email" class="form-control" name="email" value="{{ user.email }}" required />
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Date of Birth</label>
-              <input type="date" class="form-control" name="date_of_birth" value="{{ vendor.date_of_birth }}" />
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Vendor Profile Image</label>
-              <input type="file" class="form-control" name="vendor_profile_image" />
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Gender</label>
-              <select class="form-select" name="gender">
-                <option value="Male" {% if vendor_profile_detail.gender == "Male" %}selected{% endif %}>Male</option>
-                <option value="Female" {% if vendor_profile_detail.gender == "Female" %}selected{% endif %}>Female</option>
-                <option value="Other" {% if vendor_profile_detail.gender == "Other" %}selected{% endif %}>Other</option>
-              </select>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Address</label>
-              <input type="text" class="form-control" name="address" value="{{ vendor_profile_detail.address }}"/>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Location</label>
-              <select type="text" class="form-select"  name="location" required>
-                {% for district in districts %}
-                <option value="{{ district }}" {% if vendor_profile_detail.location == "{{ district }}" %}selected{% endif %}>
-                    {{ district }}
-                </option>
-                {% endfor %}
-              </select>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Aadhar Card Number</label>
-              <input type="text" class="form-control" name="adhar_card_number" value="{{ vendor_profile_detail.adhar_card_number }}" />
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Aadhar Card Image</label>
-              <input type="file" class="form-control" name="adhar_card_image"/>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">PAN Card Number</label>
-              <input type="text" class="form-control" name="pan_card_number" value="{{ vendor_profile_detail.pan_card_number }}" />
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">PAN Card Image</label>
-              <input type="file" class="form-control" name="pan_card_image" />
-            </div>
-            
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" name="submit_vendor_profile_details" class="btn btn-primary">Save Changes</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-{% comment %}contact{% endcomment %}
-<div class="modal modal-blur fade" id="modal-vendor-business" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Vendor Business Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form method="post" enctype="multipart/form-data">
-          {% csrf_token %}
-          <h5 class="text-secondary">Business Information</h5>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Shop Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="shop_name" required value='{{vendor_bussiness_detail.shop_name}}'>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="Contact_number" required value='{{vendor_bussiness_detail.Contact_number}}'>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Business Email <span class="text-danger">*</span></label>
-              <input type="email" class="form-control" name="Busness_email" required value='{{vendor_bussiness_detail.Busness_email}}'>
-            </div>
-          </div>
-          <hr />
-          <h5 class="text-secondary">Document Details</h5>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Gumasta Number</label>
-              <input type="text" class="form-control" name="Gumasta_number" value='{{vendor_bussiness_detail.Gumasta_number}}'>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Gumasta Certificate Image</label>
-              <input type="file" class="form-control" name="gumasta_image">
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">GST Number</label>
-              <input type="text" class="form-control" name="gst_number" value='{{vendor_bussiness_detail.gst_number}}'>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">GST Certificate Image</label>
-              <input type="file" class="form-control" name="gst_image">
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">PAN Number</label>
-              <input type="text" class="form-control" name="Bpan_number" value='{{vendor_bussiness_detail.Bpan_number}}'>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">PAN Card Image</label>
-              <input type="file" class="form-control" name="Bpan_image">
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">MSME Number</label>
-              <input type="text" class="form-control" name="MSME_number" value='{{vendor_bussiness_detail.MSME_number}}'>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">MSME Certificate Image</label>
-              <input type="file" class="form-control" name="MSME_image">
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Business Photo (Outer View)</label>
-              <input type="file" class="form-control" name="Bphoto_outer">
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Business Photo (Inside View)</label>
-              <input type="file" class="form-control" name="Bphoto_inside">
-            </div>
-          </div>
-          <hr />
-          <h5 class="text-secondary">Verification Contact</h5>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Verifier Contact Name</label>
-              <input type="text" class="form-control" name="VCname" value='{{vendor_bussiness_detail.VCname}}'>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Verifier Contact Mobile</label>
-              <input type="text" class="form-control" name="VCmobile" value='{{vendor_bussiness_detail.VCmobile}}'>
-            </div>
-            <div class="col-md-12 mb-3">
-              <label class="form-label">Verifier Contact Address</label>
-              <input type="text" class="form-control" name="VCaddress" value='{{vendor_bussiness_detail.VCaddress}}'>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" name="submit_vendor_bussiness_details" class="btn btn-primary">Save Changes</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<div class="modal modal-blur fade" id="modal-bank" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Bank Account Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form method="post" enctype="multipart/form-data">
-          {% csrf_token %}
-          <div class="row">
-              <!-- Account Holder Name -->
-              <div class="col-md-6 mb-3">
-                  <label class="form-label">Account Holder Name <span class="text-danger">*</span></label>
-                  <input type="text" name="account_holder_name" class="form-control" value="{{ vendor_bank_detail.account_holder_name }}" required />
-              </div>
-      
-              <!-- Bank Name -->
-              <div class="col-md-6 mb-3">
-                  <label class="form-label">Bank Name <span class="text-danger">*</span></label>
-                  <input type="text" name="bank_name" class="form-control" value="{{ vendor_bank_detail.bank_name }}" required />
-              </div>
-      
-              <!-- Account Number -->
-              <div class="col-md-6 mb-3">
-                  <label class="form-label">Account Number <span class="text-danger">*</span></label>
-                  <input type="text" name="account_number" class="form-control" value="{{ vendor_bank_detail.account_number }}" required />
-              </div>
-      
-              <!-- Confirm Account Number -->
-              <div class="col-md-6 mb-3">
-                  <label class="form-label">Confirm Account Number <span class="text-danger">*</span></label>
-                  <input type="text" name="confirm_account_number" class="form-control" value="{{ vendor_bank_detail.account_number }}" required />
-              </div>
-      
-              <!-- IFSC Code -->
-              <div class="col-md-6 mb-3">
-                  <label class="form-label">IFSC Code <span class="text-danger">*</span></label>
-                  <input type="text" name="ifs_code" class="form-control" value="{{ vendor_bank_detail.ifs_code }}" required />
-              </div>
-      
-              <!-- Account Type -->
-              <div class="col-md-6 mb-3">
-                  <label class="form-label">Account Type <span class="text-danger">*</span></label>
-                  <select name="account_type" class="form-select" required>
-                      <option value="Saving" {% if vendor_bank_detail.account_type == "Saving" %}selected{% endif %}>Saving</option>
-                      <option value="Current" {% if vendor_bank_detail.account_type == "Current" %}selected{% endif %}>Current</option>
-                  </select>
-              </div>
-      
-              <!-- MICR Code -->
-              <div class="col-md-6 mb-3">
-                  <label class="form-label">MICR Code</label>
-                  <input type="text" name="micr_code" class="form-control" value="{{ vendor_bank_detail.micr_code }}" />
-              </div>
-      
-              <!-- Bank Document -->
-              <div class="col-md-6 mb-3">
-                  <label class="form-label">Upload Bank Document</label>
-                  <input type="file" name="bank_document" class="form-control" value="{{ vendor_bank_detail.bank_document }}"/>
-              </div>
-      
-              <!-- Preferred Date of Payment -->
-              <div class="col-md-6 mb-3">
-                  <label class="form-label">Preferred Date of Payment <span class="text-danger">*</span></label>
-                  <select name="preffered_payout_date" class="form-select" required>
-                      <option value="15" {% if vendor_bank_detail.preffered_payout_date == "15" %}selected{% endif %}>15</option>
-                      <option value="30" {% if vendor_bank_detail.preffered_payout_date == "30" %}selected{% endif %}>30</option>
-                  </select>
-              </div>
-          </div>
-      
-          <!-- Submit and Cancel Buttons -->
-          <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" name="submit_vendor_bank_details" class="btn btn-primary">Submit</button>
-          </div>
-      </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-
 
 {% endblock content %}

@@ -1045,7 +1045,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <label class="form-label">Commission Generate Date <span class="text-danger">*</span></label>
               <input type="date" name="commission_generation_date" class="form-control" 
                      value="{{ candidate.commission_generation_date|date:'Y-m-d' }}" required
-                     min="{% now 'Y-m-d' %}">
+                     >
               <div class="invalid-feedback">
                 Please select a valid date
               </div>
@@ -1056,7 +1056,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <label class="form-label">Expected Vendor Payout Date <span class="text-danger">*</span></label>
               <input type="date" name="vendor_payout_date" class="form-control" 
                      value="{{ candidate.vendor_payout_date|date:'Y-m-d' }}" required
-                     min="{% now 'Y-m-d' %}">
+                     >
               <div class="invalid-feedback">
                 Please select a valid future date
               </div>
@@ -1137,15 +1137,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const form = document.getElementById('vendorDataForm');
           const today = new Date().toISOString().split('T')[0];
           
-          // Set min date for payout date (today)
-          const payoutDateInput = form.querySelector('input[name="vendor_payout_date"]');
-          if (!payoutDateInput.value) {
-            // Set default to 7 days from today if empty
-            const defaultDate = new Date();
-            defaultDate.setDate(defaultDate.getDate() + 7);
-            payoutDateInput.value = defaultDate.toISOString().split('T')[0];
-          }
-          payoutDateInput.min = today;
+          
           
           // Set max date for payment done date (today)
           const paymentDoneDateInput = form.querySelector('input[name="payment_done_by_date"]');

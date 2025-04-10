@@ -1,201 +1,352 @@
 {% extends 'hrms/base.html' %}
 
 {% block content %}
-  <div class="page-wrapper">
-    <!-- Page header -->
-    <div class="page-header d-print-none">
-      <div class="container-xl">
-        <div class="row g-2 align-items-center">
-          <div class="col">
-            <!-- Page pre-title -->
-            {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
-            <h2 class="page-title" style="margin-bottom: 50px;">Announcement's</h2>
-          </div>
-          <!-- Page title actions -->
-          <div class="col-auto ms-auto d-print-none">
-            <div class="btn-list">
-              {% comment %} <span class="d-none d-sm-inline"><a href="#" class="btn">New view</a></span> {% endcomment %}
-              <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
-                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M12 5l0 14" />
-                  <path d="M5 12l14 0" />
-                </svg>Add Announcement
-              </a>
-              <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
-                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M12 5l0 14" />
-                  <path d="M5 12l14 0" />
-                </svg>
-              </a>
-            </div>
-          </div>
+<div class="page-wrapper">
+  <!-- Page header -->
+  <div class="page-header d-print-none">
+    <div class="container-xl">
+      <div class="row g-2 align-items-center">
+        <div class="col">
+          <h2 class="page-title">Announcements</h2>
         </div>
-      </div>
-    </div>
-    <div class="page-header d-print-none">
-      <div class="container-xl">
-        <div class="row g-2 align-items-center">
-          <div class="col-12">
-            <div class="card">
-              {% comment %} <div class="card-header">
-                <h3 class="card-title">Designations</h3>
-              </div> {% endcomment %}
-              <div class="card-body border-bottom py-3">
-                <div class="d-flex">
-                  <div class="text-secondary">
-                    Show<div class="mx-2 d-inline-block">
-                      <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
-                    </div>entries
-                  </div>
-                  <div class="ms-auto text-secondary">
-                    Search:<div class="ms-2 d-inline-block">
-                      <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="table-responsive">
-                <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
-                  <thead>
-                    <tr>
-                      <th class="w-1">
-                        No. 
-                      </th>
-                      <th>Title</th>
-                      <th>Start Date</th>
-                      <th>End Date</th>
-                      <th>Description</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for announcement in announcements %}
-                      <tr>
-                        <td>
-                          <span class="text-secondary">{{ forloop.counter }}</span>
-                        </td>
-                        <td>
-                          <span class="me-2"></span>
-                          {{ announcement.title }}
-                        </td>
-                        <td>
-                          <span class="me-2"></span>
-                          {{ announcement.start_date }}
-                        </td>
-                        <td>
-                          <span class="me-2"></span>
-                          {{ announcement.end_date }}
-                        </td>
-                        <td>
-                          <span class="me-2"></span>
-                          {{ announcement.description }}
-                        </td>
-                        <td>
-                          <span class="me-2">
-                            <div class="d-flex justify-content-center">
-                              <button class="btn btn-light p-2" style="background-color: #FDECEA; border-radius: 10%; border: none;"><a href="{% url 'delete_announcement' announcement.id %}" style="color: #FF4C4C;"><i class="bi bi-trash"></i></a></button>
-                            </div>
-                          </span>
-                        </td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-              <div class="card-footer d-flex align-items-center">
-                <p class="m-0 text-secondary">
-                  Showing <span>1</span> to <span>8</span> of <span>16</span> entries
-                </p>
-                <ul class="pagination m-0 ms-auto">
-                  <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                      <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M15 6l-6 6l6 6" />
-                      </svg>prev
-                    </a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">1</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">2</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">3</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">4</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">5</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">
-                      next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M9 6l6 6l-6 6" />
-                      </svg>
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
+        <div class="col-auto ms-auto d-print-none">
+          <div class="btn-list">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-announcement-modal">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M12 5l0 14" />
+                <path d="M5 12l14 0" />
+              </svg>
+              Add Announcement
+            </button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">
+  <!-- Page body -->
+  <div class="page-body">
+    <div class="container-xl">
+      <div class="card">
+        <div class="card-body border-bottom py-3">
+          <div class="d-flex">
+            <div class="text-secondary">
+              Show
+              <select class="form-select form-select-sm d-inline-block w-auto" id="entries-select">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              entries
+            </div>
+            <div class="ms-auto text-secondary">
+              Search:
+              <div class="ms-2 d-inline-block">
+                <input type="text" class="form-control form-control-sm" id="search-input" placeholder="Search...">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table card-table table-vcenter text-nowrap datatable">
+            <thead>
+              <tr>
+                <th class="w-1">No.</th>
+                <th>Title</th>
+                <th>Poster</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for announcement in announcements %}
+              <tr>
+                <td><span class="text-secondary">{{ forloop.counter }}</span></td>
+                <td>
+                  <strong>{{ announcement.title }}</strong>
+                  <div class="text-muted text-truncate" style="max-width: 200px;">{{ announcement.description }}</div>
+                </td>
+                <td>
+                  {% if announcement.announcements_image %}
+                  <img src="{{ announcement.announcements_image.url }}" alt="Poster" class="rounded" width="50" height="50" style="object-fit: cover;">
+                  {% else %}
+                  <span class="text-muted">No image</span>
+                  {% endif %}
+                </td>
+                <td>{{ announcement.start_date|date:"d M Y" }}</td>
+                <td>{{ announcement.end_date|date:"d M Y" }}</td>
+                <td>
+                  <span class="badge {% if announcement.is_active %}bg-success{% else %}bg-secondary{% endif %} text-white">
+                    {% if announcement.is_active %}Active{% else %}Inactive{% endif %}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <div class="btn-list flex-nowrap">
+                    <button class="btn btn-sm btn-icon" title="Edit" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#edit-announcement-modal"
+                            data-id="{{ announcement.id }}"
+                            data-title="{{ announcement.title }}"
+                            data-start-date="{{ announcement.start_date|date:'Y-m-d' }}"
+                            data-end-date="{{ announcement.end_date|date:'Y-m-d' }}"
+                            data-description="{{ announcement.description }}">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path>
+                        <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path>
+                        <path d="M16 5l3 3"></path>
+                      </svg>
+                    </button>
+                    <button class="btn btn-sm btn-icon btn-danger" title="Delete"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#delete-announcement-modal"
+                            data-id="{{ announcement.id }}"
+                            data-title="{{ announcement.title }}">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M4 7l16 0"></path>
+                        <path d="M10 11l0 6"></path>
+                        <path d="M14 11l0 6"></path>
+                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
+                        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card-footer d-flex align-items-center">
+          <p class="m-0 text-secondary">
+            Showing <span>{{ announcements.start_index }}</span> to <span>{{ announcements.end_index }}</span> of <span>{{ announcements.paginator.count }}</span> entries
+          </p>
+          <ul class="pagination m-0 ms-auto">
+            {% if announcements.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ announcements.previous_page_number }}" tabindex="-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M15 6l-6 6l6 6" />
+                </svg>
+                prev
+              </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+              <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M15 6l-6 6l6 6" />
+                </svg>
+                prev
+              </a>
+            </li>
+            {% endif %}
+
+            {% for i in announcements.paginator.page_range %}
+            <li class="page-item {% if announcements.number == i %}active{% endif %}">
+              <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+            </li>
+            {% endfor %}
+
+            {% if announcements.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ announcements.next_page_number }}">
+                next
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M9 6l6 6l-6 6" />
+                </svg>
+              </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+              <a class="page-link" href="#" aria-disabled="true">
+                next
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M9 6l6 6l-6 6" />
+                </svg>
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Announcement Modal -->
+  <div class="modal modal-blur fade" id="add-announcement-modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Add Announcement</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
+        <form method="post" enctype="multipart/form-data" action="{% url 'announcement_view' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add">
+          <div class="modal-body">
             <div class="row">
               <div class="col-md-12 mb-3">
-                <label class="form-label">Title</label>
-                <input type="text" class="form-control" name="title" required />
+                <label class="form-label">Title <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="title" required>
               </div>
 
               <div class="col-md-6 mb-3">
-                <label class="form-label">Start Date</label>
-                <input type="date" class="form-control" name="start_date" required />
+                <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="start_date" required>
               </div>
 
               <div class="col-md-6 mb-3">
-                <label class="form-label">End Date</label>
-                <input type="date" class="form-control" name="end_date" required />
+                <label class="form-label">End Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="end_date" required>
               </div>
 
               <div class="col-md-12 mb-3">
-                <label class="form-label">Description</label>
-                <textarea class="form-control" name="description" required></textarea>
+                <label class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea class="form-control" name="description" rows="3" required></textarea>
               </div>
+
               <div class="col-md-12 mb-3">
                 <label class="form-label">Announcement Poster</label>
-                <input type="file" class="form-control" name="announcements_image" required />
+                <input type="file" class="form-control" name="announcements_image" accept="image/*">
+                <small class="text-muted">Recommended size: 800x400 pixels</small>
               </div>
             </div>
-
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" class="btn btn-primary">Submit</button>
-            </div>
-          </form>
-        </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add Announcement</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
+
+  <!-- Edit Announcement Modal -->
+  <div class="modal modal-blur fade" id="edit-announcement-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Announcement</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="post" enctype="multipart/form-data" action="{% url 'announcement_view' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="edit">
+          <input type="hidden" name="announcement_id" id="edit-announcement-id">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Title <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="title" id="edit-title" required>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="start_date" id="edit-start-date" required>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">End Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="end_date" id="edit-end-date" required>
+              </div>
+
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea class="form-control" name="description" id="edit-description" rows="3" required></textarea>
+              </div>
+
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Announcement Poster</label>
+                <input type="file" class="form-control" name="announcements_image" accept="image/*">
+                <small class="text-muted">Leave empty to keep current image</small>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update Announcement</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal modal-blur fade" id="delete-announcement-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Delete Announcement</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="post" action="{% url 'announcement_view' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="announcement_id" id="delete-announcement-id">
+          <div class="modal-body">
+            <p>Are you sure you want to delete <strong id="delete-announcement-title"></strong>?</p>
+            <p class="text-danger">This action cannot be undone.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-danger">Delete</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Initialize edit modal with data
+document.addEventListener('DOMContentLoaded', function() {
+  const editModal = document.getElementById('edit-announcement-modal');
+  if (editModal) {
+    editModal.addEventListener('show.bs.modal', function(event) {
+      const button = event.relatedTarget;
+      document.getElementById('edit-announcement-id').value = button.getAttribute('data-id');
+      document.getElementById('edit-title').value = button.getAttribute('data-title');
+      document.getElementById('edit-start-date').value = button.getAttribute('data-start-date');
+      document.getElementById('edit-end-date').value = button.getAttribute('data-end-date');
+      document.getElementById('edit-description').value = button.getAttribute('data-description');
+    });
+  }
+
+  // Initialize delete modal with data
+  const deleteModal = document.getElementById('delete-announcement-modal');
+  if (deleteModal) {
+    deleteModal.addEventListener('show.bs.modal', function(event) {
+      const button = event.relatedTarget;
+      document.getElementById('delete-announcement-id').value = button.getAttribute('data-id');
+      document.getElementById('delete-announcement-title').textContent = button.getAttribute('data-title');
+    });
+  }
+
+  // Form validation for dates
+  const forms = document.querySelectorAll('form');
+  forms.forEach(form => {
+    form.addEventListener('submit', function(e) {
+      const startDate = this.querySelector('input[name="start_date"]');
+      const endDate = this.querySelector('input[name="end_date"]');
+      
+      if (startDate && endDate && startDate.value > endDate.value) {
+        e.preventDefault();
+        alert('End date must be after start date');
+      }
+    });
+  });
+});
+</script>
 {% endblock %}

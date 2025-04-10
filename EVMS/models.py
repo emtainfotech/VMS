@@ -16,15 +16,7 @@ class Vendor(models.Model):
     vendor_profile_image = models.ImageField(upload_to='Vendor_profile_image/', null=True, blank=True,) 
     qr_code_plain = models.ImageField(upload_to='qr_codes_plain/', blank=True, null=True)  # Add this field
     
-    def get_or_create_profile_document(self):
-        profile_document, created = ProfileDocument.objects.get_or_create(vendor=self)
-        return profile_document
-    def get_or_create_BussinessDetails(self):
-        Bussiness_Details, created = BussinessDetails.objects.get_or_create(vendor=self)
-        return Bussiness_Details
-    def get_or_create_BankDetails(self):
-        bank_details, created = Bank.objects.get_or_create(vendor=self)
-        return bank_details
+
     
     
 class Vendor_profile_details(models.Model) :
@@ -127,7 +119,7 @@ class Candidate(models.Model):
     vendor_payment_remark = models.CharField(max_length=255, blank=True, null=True)
     admin_status = models.CharField(max_length=255, blank=True, null=True)
     payment_done_by = models.CharField(max_length=255, blank=True, null=True)
-    payment_done_by_date = models.DateField(blank=True, null=True, default=None)
+    payment_done_by_date = models.DateField(null=True, blank=True)
     submit_recipt = models.FileField(upload_to='vendor-payout-recipt/', blank=True, null=True)
     
     def save(self, *args, **kwargs):

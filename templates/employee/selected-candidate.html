@@ -1,174 +1,315 @@
-{% extends "employee/performance-base.html" %}
+{% extends 'employee/performance-base.html' %}
 
 {% block content %}
-  <div class="page-wrapper">
-    <!-- Page header -->
-    <div class="page-header d-print-none">
-      <div class="container-xl">
-        <div class="row g-2 align-items-center">
-          <div class="col">
-            <!-- Page pre-title -->
-            {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
-            <h2 class="page-title">Selected Candidate</h2>
-          </div>
-          <!-- Page title actions -->
-          <div class="col-auto ms-auto d-print-none">
-            <div class="btn-list">
-              <a href="{% url 'employee_candidate_registration' %}" class="btn btn-primary d-none d-sm-inline-block">
-                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M12 5l0 14" />
-                  <path d="M5 12l14 0" />
-                </svg>Add New Candidate
-              </a>
-              <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
-                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M12 5l0 14" />
-                  <path d="M5 12l14 0" />
-                </svg>
-              </a>
-            </div>
+<div class="page-wrapper">
+  <!-- Page header -->
+  <div class="page-header d-print-none">
+    <div class="container-xl">
+      <div class="row g-2 align-items-center">
+        <div class="col">
+          <h2 class="page-title">Selected Candidates</h2>
+          <div class="text-muted mt-1">
+            <span id="total-candidates">{{ candidates|length }}</span> selected candidates
           </div>
         </div>
-      </div>
-    </div>
-    <!-- Page body -->
-    <div class="page-body">
-      <div class="container-xl">
-        <div class="row row-deck row-cards">
-          <div class="page-header d-print-none">
-            <div class="container-xl">
-              <div class="row g-2 align-items-center">
-                <div class="col-12">
-                  <div class="card">
-                    <div class="card-body border-bottom py-3">
-                      <div class="d-flex">
-                        <div class="text-secondary">
-                          Show<div class="mx-2 d-inline-block">
-                            <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
-                          </div>entries
-                        </div>
-                        <div class="ms-auto text-secondary">
-                          Search:<div class="ms-2 d-inline-block">
-                            <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="table-responsive">
-                      <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
-                        <thead>
-                          <tr>
-                            <th class="w-1">No.</th>
-                            <th>Photo</th>
-                            <th>Candidate Name</th>
-                            <th>Unique Code</th>
-                            <th>Mobile No.</th>
-                            <th>Company</th>
-                            <th>DOS</th>
-                            <th>Profile</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% for candidate in candidates %}
-                            <tr>
-                              <td>
-                                <span class="text-secondary">{{ forloop.counter }}</span>
-                              </td>
-                              <td>
-                                {% if candidate.candidate_photo %}
-                                  <img src="{{ candidate.candidate_photo.url }}" class="avatar me-3" alt="" />
-                                {% else %}
-                                  No Photo
-                                {% endif %}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                <a href="{% url 'employee_candidate_profile' candidate.id %}">{{ candidate.candidate_name }}</a>
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.unique_code }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.candidate_mobile_number }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.company_name }}
-                              </td>
-                              <td>
-                                <span class="me-2"></span>
-                                {{ candidate.selection_date }}
-                                
-                              </td>
-                              <td>
-                                <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
-                                  <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-bitbucket w-100 btn-icon">
-                                    <!-- Download SVG icon from http://tabler-icons.io/i/brand-github -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                      <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path>
-                                    </svg>
-                                  </a>
-                                </div>
-                              </td>
-                            </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div class="card-footer d-flex align-items-center">
-                      <p class="m-0 text-secondary">
-                        Showing <span>1</span> to <span>8</span> of <span>16</span> entries
-                      </p>
-                      <ul class="pagination m-0 ms-auto">
-                        <li class="page-item disabled">
-                          <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                            <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                              <path d="M15 6l-6 6l6 6" />
-                            </svg>prev
-                          </a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">1</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">2</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">3</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">4</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">5</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">
-                            next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                              <path d="M9 6l6 6l-6 6" />
-                            </svg>
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div class="col-auto ms-auto d-print-none">
+          <div class="btn-list">
+            <a href="{% url 'employee_candidate_registration' %}" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M12 5l0 14" />
+                <path d="M5 12l14 0" />
+              </svg>
+              Add New Candidate
+            </a>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Page body -->
+  <div class="page-body">
+    <div class="container-xl">
+      <div class="card">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col-12 col-md-6 mb-3 mb-md-0">
+              <div class="input-group">
+                <span class="input-group-text">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                    <path d="M21 21l-6 -6" />
+                  </svg>
+                </span>
+                <input type="text" id="searchInput" class="form-control" placeholder="Search candidates..." aria-label="Search candidates">
+              </div>
+            </div>
+            <div class="col-12 col-md-6 ms-md-auto">
+              <div class="d-flex align-items-center justify-content-end">
+                <div class="me-3 text-nowrap">
+                  <label for="companyFilter" class="form-label">Company:</label>
+                </div>
+                <select id="companyFilter" class="form-select">
+                  <option value="">All Companies</option>
+                  {% for company in companies|dictsort:"company_name" %}
+                    <option value="{{ company.company_name }}">{{ company.company_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-vcenter table-hover table-nowrap" id="selectedCandidatesTable">
+            <thead>
+              <tr>
+                <th class="w-1">#</th>
+                <th>Candidate</th>
+                <th>Contact</th>
+                <th>Company</th>
+                <th>Selection Date</th>
+                <th>Joining Date</th>
+                <th>Salary</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for candidate in candidates %}
+              <tr data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }} {{ candidate.company_name|lower }}"
+                  data-company="{{ candidate.company_name }}">
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="me-3">
+                      {% if candidate.candidate_photo %}
+                      <img src="{{ candidate.candidate_photo.url }}" class="avatar avatar-md rounded-circle" alt="{{ candidate.candidate_name }}">
+                      {% else %}
+                      <div class="avatar avatar-md rounded-circle bg-blue-lt">
+                        {{ candidate.candidate_name|first|upper }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div>
+                      <div class="font-weight-medium">
+                        <a href="{% url 'employee_candidate_profile' candidate.id %}" class="text-reset">
+                          {{ candidate.candidate_name }}
+                        </a>
+                      </div>
+                      <div class="text-muted small">
+                        <code>{{ candidate.unique_code }}</code>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="text-muted">
+                    <a href="tel:{{ candidate.candidate_mobile_number }}" class="text-reset d-block">
+                      {{ candidate.candidate_mobile_number }}
+                    </a>
+                    {% if candidate.candidate_email_address %}
+                    <a href="mailto:{{ candidate.candidate_email_address }}" class="text-reset d-block small text-truncate" style="max-width: 150px;">
+                      {{ candidate.candidate_email_address }}
+                    </a>
+                    {% endif %}
+                  </div>
+                </td>
+                <td>
+                  <span class="badge bg-blue-lt">
+                    {{ candidate.company_name|default:"-" }}
+                  </span>
+                </td>
+                <td>
+                  <div class="text-muted">
+                    {{ candidate.selection_date|date:"M d, Y"|default:"-" }}
+                  </div>
+                </td>
+                <td>
+                  <div class="text-muted">
+                    {{ candidate.candidate_joining_date|date:"M d, Y"|default:"Not joined" }}
+                  </div>
+                </td>
+                <td>
+                  <div class="font-weight-medium">
+                    {% if candidate.offered_salary %}
+                    ₹{{ candidate.offered_salary }}
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                  </div>
+                </td>
+                <td class="text-center">
+                  <div class="btn-list justify-content-center">
+                    <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                        <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                      </svg>
+                    </a>
+                    {% if candidate.candidate_resume %}
+                    <a href="{{ candidate.candidate_resume.url }}" target="_blank" class="btn btn-sm btn-icon" title="View Resume" data-bs-toggle="tooltip">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+                        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
+                        <path d="M9 9l1 0"></path>
+                        <path d="M9 13l6 0"></path>
+                        <path d="M9 17l6 0"></path>
+                      </svg>
+                    </a>
+                    <a href="{{ candidate.candidate_resume.url }}" download class="btn btn-sm btn-icon" title="Download Resume" data-bs-toggle="tooltip">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+                        <path d="M7 11l5 5l5 -5"></path>
+                        <path d="M12 4l0 12"></path>
+                      </svg>
+                    </a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card-footer d-flex align-items-center">
+          <div class="pagination-info">
+            Showing <span id="showingFrom">1</span> to <span id="showingTo">{{ candidates|length }}</span> of <span id="totalCount">{{ candidates|length }}</span> candidates
+          </div>
+          <ul class="pagination m-0 ms-auto">
+            <li class="page-item disabled">
+              <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M15 6l-6 6l6 6" />
+                </svg>
+                prev
+              </a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+              <a class="page-link" href="#">
+                next
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M9 6l6 6l-6 6" />
+                </svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f1f5f9;
+  }
+  
+  .badge.bg-blue-lt {
+    background-color: rgba(65, 138, 221, 0.1);
+    color: #418add;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  @media (max-width: 768px) {
+    .card-header .row > div {
+      width: 100%;
+    }
+    
+    .card-header .input-group {
+      margin-bottom: 1rem;
+    }
+  }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Initialize tooltips
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+
+  // Search and filter functionality
+  const searchInput = document.getElementById('searchInput');
+  const companyFilter = document.getElementById('companyFilter');
+  const selectedCandidatesTable = document.getElementById('selectedCandidatesTable');
+  const rows = selectedCandidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+  const totalCountEl = document.getElementById('totalCount');
+  const showingFromEl = document.getElementById('showingFrom');
+  const showingToEl = document.getElementById('showingTo');
+  
+  function filterCandidates() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const companyFilterValue = companyFilter.value.toLowerCase();
+    let visibleCount = 0;
+    
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const searchContent = row.getAttribute('data-search');
+      const rowCompany = row.getAttribute('data-company');
+      
+      const matchesSearch = searchContent.includes(searchTerm);
+      const matchesCompany = companyFilterValue === '' || 
+                          (rowCompany && rowCompany.toLowerCase().includes(companyFilterValue));
+      
+      if (matchesSearch && matchesCompany) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    }
+    
+    // Update counters
+    showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
+    showingToEl.textContent = visibleCount;
+    document.getElementById('total-candidates').textContent = visibleCount;
+  }
+  
+  // Event listeners
+  searchInput.addEventListener('input', filterCandidates);
+  companyFilter.addEventListener('change', filterCandidates);
+  
+  // Initial filter
+  filterCandidates();
+  
+  // Make table rows clickable (except when clicking on buttons)
+  document.querySelectorAll('#selectedCandidatesTable tbody tr').forEach(row => {
+    row.addEventListener('click', (e) => {
+      // Check if the click was on a button or link
+      if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+        return;
+      }
+      
+      // Find the profile link in the row and navigate to it
+      const profileLink = row.querySelector('td:nth-child(2) a');
+      if (profileLink) {
+        window.location.href = profileLink.href;
+      }
+    });
+    
+    // Change cursor on hover
+    row.style.cursor = 'pointer';
+  });
+});
+</script>
+
 {% endblock %}

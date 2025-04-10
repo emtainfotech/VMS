@@ -46,6 +46,10 @@ def custom_admin_login(request):
             messages.error(request, "Invalid credentials or insufficient permissions.")
     return render(request, "hrms/admin-login.html")
 
+def custom_admin_logout(request):
+    logout(request)
+    return redirect('custom_admin_login')
+
 def crm_dashboard(request):
     return render(request, "crm/crm-dashboard.html")
 
@@ -158,7 +162,7 @@ def admin_candidate_profile(request,id) :
                 
                 
 
-            return redirect('candidate-details', id=id)
+            return redirect('admin_candidate_profile', id=id)
         context = {
             'candidate': candidate
         }
@@ -638,7 +642,7 @@ def admin_vendor_candidate_list(request, id):
             # Ensure account number and confirm account number match
             if account_number != confirm_account_number:
                 messages.error(request, "Account numbers do not match!")
-                return redirect('employee-bank-details', id=employee.id)  # Redirect back to the same page
+                return redirect('admin_vendor_candidate_list', id=employee.id)  # Redirect back to the same page
 
             # Update or create bank details for the employee
             vendor_bank_detail.account_holder_name = account_holder_name
@@ -1218,3 +1222,258 @@ def admin_company_registration(request):
         'job_sectors' : job_sectors,
         'departments' : departments
         })
+
+
+def admin_vendor_profile(request, id):
+    vendor = get_object_or_404(Vendor, id=id)
+    candidates = Candidate.objects.filter(refer_code=vendor.refer_code).order_by('-id')
+    vendor_profile_detail, _ = Vendor_profile_details.objects.get_or_create(vendor=vendor)
+    vendor_bussiness_detail, _ = Vendor_bussiness_details.objects.get_or_create(vendor=vendor)
+    vendor_bank_detail, _ = Vendor_bank_details.objects.get_or_create(vendor=vendor)
+
+    if request.method == 'POST':
+        if 'submit_all_details' in request.POST:
+            # Handle all three forms at once
+            # Profile Details
+            vendor.user.first_name = request.POST.get('first_name')
+            vendor.user.last_name = request.POST.get('last_name')
+            vendor.user.save()
+            vendor.mobile_number = request.POST.get('mobile_number')
+            vendor.email = request.POST.get('email')
+            vendor.date_of_birth = request.POST.get('date_of_birth')
+            
+            if 'vendor_profile_image' in request.FILES:
+                vendor.vendor_profile_image = request.FILES['vendor_profile_image']
+            vendor.save()
+            
+            vendor_profile_detail.gender = request.POST.get('gender')
+            vendor_profile_detail.address = request.POST.get('address')
+            vendor_profile_detail.adhar_card_number = request.POST.get('adhar_card_number')
+            vendor_profile_detail.pan_card_number = request.POST.get('pan_card_number')
+            vendor_profile_detail.location = request.POST.get('location')
+            
+            if 'adhar_card_image' in request.FILES:
+                vendor_profile_detail.adhar_card_image = request.FILES['adhar_card_image']
+            if 'pan_card_image' in request.FILES:
+                vendor_profile_detail.pan_card_image = request.FILES['pan_card_image']
+            vendor_profile_detail.save()
+
+            # Business Details
+            vendor_bussiness_detail.shop_name = request.POST.get('shop_name')
+            vendor_bussiness_detail.busness_type = request.POST.get('busness_type')
+            vendor_bussiness_detail.shop_address = request.POST.get('shop_address')
+            vendor_bussiness_detail.Contact_number = request.POST.get('Contact_number')
+            vendor_bussiness_detail.Busness_email = request.POST.get('Busness_email')
+            vendor_bussiness_detail.Gumasta_number = request.POST.get('Gumasta_number')
+            vendor_bussiness_detail.gst_number = request.POST.get('gst_number')
+            vendor_bussiness_detail.Bpan_number = request.POST.get('Bpan_number')
+            vendor_bussiness_detail.MSME_number = request.POST.get('MSME_number')
+            vendor_bussiness_detail.VCname = request.POST.get('VCname')
+            vendor_bussiness_detail.VCmobile = request.POST.get('VCmobile')
+            vendor_bussiness_detail.VCaddress = request.POST.get('VCaddress')
+            
+            if 'gumasta_image' in request.FILES:
+                vendor_bussiness_detail.gumasta_image = request.FILES['gumasta_image']
+            if 'gst_image' in request.FILES:
+                vendor_bussiness_detail.gst_image = request.FILES['gst_image']
+            if 'Bpan_image' in request.FILES:
+                vendor_bussiness_detail.Bpan_image = request.FILES['Bpan_image']
+            if 'MSME_image' in request.FILES:
+                vendor_bussiness_detail.MSME_image = request.FILES['MSME_image']
+            if 'Bphoto_outer' in request.FILES:
+                vendor_bussiness_detail.Bphoto_outer = request.FILES['Bphoto_outer']
+            if 'Bphoto_inside' in request.FILES:
+                vendor_bussiness_detail.Bphoto_inside = request.FILES['Bphoto_inside']
+            vendor_bussiness_detail.save()
+
+            # Bank Details
+            vendor_bank_detail.account_holder_name = request.POST.get('account_holder_name')
+            vendor_bank_detail.bank_name = request.POST.get('bank_name')
+            vendor_bank_detail.account_number = request.POST.get('account_number')
+            vendor_bank_detail.ifs_code = request.POST.get('ifs_code')
+            vendor_bank_detail.micr_code = request.POST.get('micr_code')
+            vendor_bank_detail.account_type = request.POST.get('account_type')
+            vendor_bank_detail.preffered_payout_date = request.POST.get('preffered_payout_date')
+            
+            if 'bank_document' in request.FILES:
+                vendor_bank_detail.bank_document = request.FILES['bank_document']
+            vendor_bank_detail.save()
+
+            messages.success(request, 'All details updated successfully!')
+            return redirect('admin_vendor_profile', id=vendor.id)
+
+    districts = [
+        "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
+        "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
+        "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni",
+        "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch",
+        "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni",
+        "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
+        "Ujjain", "Umaria", "Vidisha"
+    ]
+    context = {
+        'vendor': vendor,
+        'vendor_profile_detail': vendor_profile_detail,
+        'vendor_bussiness_detail': vendor_bussiness_detail,
+        'vendor_bank_detail': vendor_bank_detail,
+        'districts' : districts,
+        'candidates' : candidates
+    }
+    return render(request, 'crm/evms-vendor-profile.html', context)
+
+def admin_evms_vendor_paylist(request):
+    # Get current month and year
+    now = timezone.now()
+    current_month = now.month
+    current_year = now.year
+    
+    # Filter candidates with refer_code, pending commission, and payout date in current month
+    remaining_pays = Candidate.objects.filter(
+        vendor_commission_status='Pending',
+        selection_status='Selected',
+        refer_code__isnull=False,
+        vendor_payout_date__month=current_month,
+        vendor_payout_date__year=current_year
+    ).order_by('-id')
+    
+    # Prepare data for template
+    candidates = []
+    for candidate in remaining_pays:
+        try:
+            vendor = Vendor.objects.get(refer_code=candidate.refer_code)
+            vendor_name = f"{vendor.user.first_name} {vendor.user.last_name}"
+        except Vendor.DoesNotExist:
+            vendor_name = "Unknown Vendor"
+        
+        # Add vendor name to candidate object (we'll use this in template)
+        candidate.vendor_name = vendor_name
+        candidates.append(candidate)
+    
+    context = {
+        'candidates': candidates
+    }
+    return render(request, 'crm/vendor-pay-list.html', context)
+
+
+def admin_evms_vendor_transaction_history(request):
+    
+    # Filter candidates with refer_code, pending commission, and payout date in current month
+    remaining_pays = Candidate.objects.filter(
+        vendor_commission_status__in=['Complete', 'Failed'],
+        selection_status='Selected',
+        refer_code__isnull=False,
+    ).order_by('-id')
+    
+    # Prepare data for template
+    candidates = []
+    for candidate in remaining_pays:
+        try:
+            vendor = Vendor.objects.get(refer_code=candidate.refer_code)
+            vendor_name = f"{vendor.user.first_name} {vendor.user.last_name}"
+        except Vendor.DoesNotExist:
+            vendor_name = "Unknown Vendor"
+        
+        # Add vendor name to candidate object (we'll use this in template)
+        candidate.vendor_name = vendor_name
+        candidates.append(candidate)
+    
+    context = {
+        'candidates': candidates
+    }
+    return render(request, 'crm/vendor-transaction-history.html', context)
+
+import pandas as pd
+from django.http import HttpResponse
+
+def admin_export_vendors_to_excel(request):
+    # Get all vendors with related data
+    vendors = Vendor.objects.all().select_related(
+        'vendor_profile_details',
+        'vendor_bussiness_details',
+        'vendor_bank_details'
+    )
+    
+    # Prepare data for Excel
+    data = []
+    for vendor in vendors:
+        data.append({
+            'Vendor Code': vendor.refer_code,
+            'First Name': vendor.user.first_name,
+            'Last Name': vendor.user.last_name,
+            'Email': vendor.user.email,
+            'Mobile Number': vendor.mobile_number,
+            'Date of Birth': vendor.date_of_birth,
+            'Verification Status': vendor.profileVerification,
+            'Total Commission': vendor.total_commission_received,
+            
+            # Profile Details
+            'Address': vendor.vendor_profile_details.address if hasattr(vendor, 'vendor_profile_details') else '',
+            'Gender': vendor.vendor_profile_details.gender if hasattr(vendor, 'vendor_profile_details') else '',
+            'Aadhar Number': vendor.vendor_profile_details.adhar_card_number if hasattr(vendor, 'vendor_profile_details') else '',
+            'PAN Number': vendor.vendor_profile_details.pan_card_number if hasattr(vendor, 'vendor_profile_details') else '',
+            'Location': vendor.vendor_profile_details.location if hasattr(vendor, 'vendor_profile_details') else '',
+            
+            # Business Details
+            'Shop Name': vendor.vendor_bussiness_details.shop_name if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'Shop Address': vendor.vendor_bussiness_details.shop_address if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'Business Type': vendor.vendor_bussiness_details.busness_type if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'Gumasta Number': vendor.vendor_bussiness_details.Gumasta_number if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'GST Number': vendor.vendor_bussiness_details.gst_number if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'Business PAN': vendor.vendor_bussiness_details.Bpan_number if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'MSME Number': vendor.vendor_bussiness_details.MSME_number if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'Contact Number': vendor.vendor_bussiness_details.Contact_number if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'Business Email': vendor.vendor_bussiness_details.Busness_email if hasattr(vendor, 'vendor_bussiness_details') else '',
+            
+            # Bank Details
+            'Account Holder': vendor.vendor_bank_details.account_holder_name if hasattr(vendor, 'vendor_bank_details') else '',
+            'Account Number': vendor.vendor_bank_details.account_number if hasattr(vendor, 'vendor_bank_details') else '',
+            'Bank Name': vendor.vendor_bank_details.bank_name if hasattr(vendor, 'vendor_bank_details') else '',
+            'IFSC Code': vendor.vendor_bank_details.ifs_code if hasattr(vendor, 'vendor_bank_details') else '',
+            'MICR Code': vendor.vendor_bank_details.micr_code if hasattr(vendor, 'vendor_bank_details') else '',
+            'Account Type': vendor.vendor_bank_details.account_type if hasattr(vendor, 'vendor_bank_details') else '',
+            'Payout Date': vendor.vendor_bank_details.preffered_payout_date if hasattr(vendor, 'vendor_bank_details') else '',
+        })
+    
+    # Create DataFrame
+    df = pd.DataFrame(data)
+    
+    # Create HTTP response with Excel file
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="vendors_export.xlsx"'
+    
+    # Write DataFrame to Excel
+    df.to_excel(response, index=False, sheet_name='Vendors')
+    
+    return response
+
+def selected_candidate(request) :
+    candidates = Candidate_registration.objects.filter(selection_status='Selected').order_by('-id')
+    context = {
+        'candidates': candidates
+    }
+    return render(request,'crm/selected-candidate.html',context)
+
+def follow_up_candidate(request):
+    today = timezone.now().date()
+    date_range_start = today - timedelta(days=2)  # 25th if today is 27th
+    date_range_end = today + timedelta(days=3)    # 30th if today is 27th
+    
+    candidates = Candidate_registration.objects.filter(
+        next_follow_up_date__isnull=False,
+        next_follow_up_date__gte=date_range_start,
+        next_follow_up_date__lte=date_range_end
+    ).order_by('next_follow_up_date')  # Order by follow-up date
+    
+    context = {
+        'candidates': candidates,
+        'today': today
+    }
+    return render(request, 'crm/follow-up-candidate.html', context)
+
+
+def generated_leads(request):
+    candidates = Candidate_registration.objects.filter(lead_generate='Yes').order_by('-id')
+    context = {
+        'candidates': candidates
+    }
+    return render(request,'crm/lead-generate.html',context)

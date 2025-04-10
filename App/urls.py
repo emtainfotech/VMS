@@ -41,7 +41,6 @@ urlpatterns = [
     path('termination/',termination_view,name = 'termination_view'),
     path('delete-termination/<int:termination_id>/', delete_termination, name='delete_termination'),
     path('announcement/',announcement_view,name = 'announcement_view'),
-    path('delete-announcement/<int:announcement_id>/', delete_announcement, name='delete_announcement'),
     path('team-meeting/',team_meeting_view,name = 'team_meeting_view'),
     path('delete-meeting/<int:meeting_id>/', delete_meeting, name='delete_meeting'),
     path('awards/',awards_view,name = 'awards_view'),
@@ -58,7 +57,10 @@ urlpatterns = [
     path('get-session-details/', get_session_details, name='get_session_details'),
     path('attendance-status/', today_employee_attendance_status, name='today_employee_attendance_status'),
     path('employee-attendance-list/', employee_attendance_list, name='employee_attendance_list'),
-    path('task-assign/',assign_task,name = 'assign_task'),
+    path('tasks/assign/', assign_task, name='assign_task'),
+    path('tasks/edit/<int:task_id>/', edit_task, name='edit_task'),
+    path('tasks/delete/<int:task_id>/', delete_task, name='delete_task'),
+    path('tasks/update-status/<int:task_id>/', update_task_status, name='update_task_status'),
     
 
     path('admin/', admin.site.urls),

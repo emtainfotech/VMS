@@ -26,6 +26,7 @@ from django.utils.timezone import localtime, make_aware
 from datetime import datetime, timedelta, time
 from App.models import *
 from EVMS.models import *
+from django.core.paginator import Paginator
 
 def employee_login(request):
     if request.method == 'POST':
@@ -390,40 +391,131 @@ def employee_profile_view(request,id):
 @login_required
 def employee_leave_request_view(request):
     logged_in_employee = Employee.objects.get(user=request.user)
-    leave_requests = LeaveRequest.objects.filter(employee=logged_in_employee).order_by('-id')
+    leave_requests = LeaveRequest.objects.filter(employee=logged_in_employee).order_by('-created_at')
+    
+    # Calculate days count for each leave request
+    for leave in leave_requests:
+        leave.days_count = (leave.end_date - leave.start_date).days + 1
+    
     if request.method == "POST":
-        reason = request.POST.get('name')  # Get the reason
-        start_date = request.POST.get('start_date')  # Get the start date
-        end_date = request.POST.get('end_date')  # Get the end date
-        attachment = request.FILES.get('name')  # Get the file (if any)
-        status = request.POST.get('status','Hold')  # Get the status
-        # Basic validation (you can expand this as needed)
+        reason = request.POST.get('reason')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        attachment = request.FILES.get('attachment')
+        
         if not reason or not start_date or not end_date:
             return render(request, 'employee/leave-request.html', {
-                'error': 'All fields are required!'
+                'error': 'All required fields must be filled!',
+                'leave_requests': leave_requests,
+                'today': date.today()
             })
+        
+        try:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            
+            if end_date < start_date:
+                return render(request, 'employee/leave-request.html', {
+                    'error': 'End date must be after start date!',
+                    'leave_requests': leave_requests,
+                    'today': date.today()
+                })
+                
+            LeaveRequest.objects.create(
+                employee=logged_in_employee,
+                reason=reason,
+                attachment=attachment,
+                start_date=start_date,
+                end_date=end_date,
+                status='Pending'
+            )
+            
+            messages.success(request, 'Leave request submitted successfully!')
+            return redirect('employee_leave_request_view')
+            
+        except ValueError:
+            return render(request, 'employee/leave-request.html', {
+                'error': 'Invalid date format!',
+                'leave_requests': leave_requests,
+                'today': date.today()
+            })
+    
+    return render(request, 'employee/leave-request.html', {
+        'leave_requests': leave_requests,
+        'today': date.today()
+    })
 
-        # Save the file if an attachment is uploaded
-        if attachment:
-            fs = FileSystemStorage()
-            file_path = fs.save(attachment.name, attachment)
-        else:
-            file_path = None
+@login_required
+def edit_leave_request(request, leave_id):
+    try:
+        leave_request = LeaveRequest.objects.get(id=leave_id, employee__user=request.user)
+        
+        if leave_request.status != 'Pending':
+            messages.error(request, 'Only pending leave requests can be edited!')
+            return redirect('employee_leave_request_view')
+            
+        if request.method == "POST":
+            reason = request.POST.get('reason')
+            start_date = request.POST.get('start_date')
+            end_date = request.POST.get('end_date')
+            attachment = request.FILES.get('attachment')
+            
+            if not reason or not start_date or not end_date:
+                messages.error(request, 'All required fields must be filled!')
+                return redirect('employee_leave_request_view')
+            
+            try:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+                
+                if end_date < start_date:
+                    messages.error(request, 'End date must be after start date!')
+                    return redirect('employee_leave_request_view')
+                    
+                leave_request.reason = reason
+                leave_request.start_date = start_date
+                leave_request.end_date = end_date
+                
+                if attachment:
+                    if leave_request.attachment:
+                        # Delete old attachment if it exists
+                        leave_request.attachment.delete()
+                    leave_request.attachment = attachment
+                    
+                leave_request.save()
+                messages.success(request, 'Leave request updated successfully!')
+                return redirect('employee_leave_request_view')
+                
+            except ValueError:
+                messages.error(request, 'Invalid date format!')
+                return redirect('employee_leave_request_view')
+                
+        return redirect('employee_leave_request_view')
+        
+    except LeaveRequest.DoesNotExist:
+        messages.error(request, 'Leave request not found!')
+        return redirect('employee_leave_request_view')
 
-        # Save the leave request to the database
-        LeaveRequest.objects.create(
-            employee=logged_in_employee,
-            reason=reason,
-            attachment=file_path,
-            start_date=start_date,
-            end_date=end_date,
-            status=status
-        )
-
-        return redirect('employee_leave_request_view')  # Redirect to the leave request list view
-
-    return render(request, 'employee/leave-request.html', {'leave_requests': leave_requests})
-
+@login_required
+def delete_leave_request(request, leave_id):
+    try:
+        leave_request = LeaveRequest.objects.get(id=leave_id, employee__user=request.user)
+        
+        if leave_request.status != 'Pending':
+            messages.error(request, 'Only pending leave requests can be deleted!')
+            return redirect('employee_leave_request_view')
+            
+        if request.method == "POST":
+            if leave_request.attachment:
+                leave_request.attachment.delete()
+            leave_request.delete()
+            messages.success(request, 'Leave request deleted successfully!')
+            
+        return redirect('employee_leave_request_view')
+        
+    except LeaveRequest.DoesNotExist:
+        messages.error(request, 'Leave request not found!')
+        return redirect('employee_leave_request_view')
 
 def employee_holiday_view(request):
     
@@ -433,14 +525,20 @@ def employee_holiday_view(request):
     return render(request, 'employee/holiday.html', {'holidays': holidays})
 
 
+from django.core.paginator import Paginator
 
 @login_required
 def office_employee_expense_view(request):
     # Get the logged-in user and corresponding employee record
     logged_in_employee = Employee.objects.get(user=request.user)
 
-    # Filter expenses specific to the logged-in employee
-    office_expenses = OfficeExpense.objects.filter(employee_name=logged_in_employee).order_by('-id')
+    # Get all expenses for the logged-in employee
+    office_expenses = OfficeExpense.objects.filter(employee_name=logged_in_employee).order_by('-purchase_date')
+
+    # Pagination
+    paginator = Paginator(office_expenses, 10)  # Show 10 expenses per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     # Get current month and year
     today = date.today()
@@ -449,7 +547,8 @@ def office_employee_expense_view(request):
 
     # Filter expenses for the current month
     monthly_expenses = office_expenses.filter(
-        purchase_date__month=current_month, purchase_date__year=current_year
+        purchase_date__month=current_month, 
+        purchase_date__year=current_year
     )
 
     # Calculate totals
@@ -461,40 +560,80 @@ def office_employee_expense_view(request):
     # Store total expense in MonthlyExpense model
     month_start = date(current_year, current_month, 1)
     monthly_expense_record, created = MonthlyExpense.objects.get_or_create(
-        month=month_start, defaults={'total_expense': 0}
+        month=month_start, 
+        defaults={'total_expense': 0}
     )
     monthly_expense_record.total_expense = total_expense_month
     monthly_expense_record.save()
 
     if request.method == 'POST':
-        # Handle new expense creation
-        item_name = request.POST.get('item_name')
-        purchase_date = request.POST.get('purchase_date')
-        amount = request.POST.get('amount')
-        paid_status = request.POST.get('paid_status', 'Unpaid')
-        attech = request.FILES.get('attech')
-
-        # Save to database
-        OfficeExpense.objects.create(
-            employee_name=logged_in_employee,
-            item_name=item_name,
-            purchase_date=purchase_date,
-            amount=amount,
-            paid_status=paid_status,
-            attech = attech
-        )
-
-        return redirect('office_employee_expense_view')
+        # Check if this is an edit request
+        if 'expense_id' in request.POST:
+            return handle_edit_expense(request, logged_in_employee)
+        # Check if this is a delete request
+        elif 'delete_id' in request.POST:
+            return handle_delete_expense(request)
+        # Otherwise handle new expense creation
+        else:
+            return handle_new_expense(request, logged_in_employee)
 
     context = {
         'logged_in_employee': logged_in_employee,
-        'OfficeExpenses': office_expenses,
+        'OfficeExpenses': page_obj,
         'total_paid': total_paid,
         'total_unpaid': total_unpaid,
         'total_partially_paid': total_partially_paid,
         'total_expense_month': total_expense_month,
+        'current_month': f"{current_year}-{current_month:02d}",
+        'employee': logged_in_employee,
+        'today': today.strftime('%Y-%m-%d')
     }
     return render(request, 'employee/employee-expense.html', context)
+
+def handle_new_expense(request, logged_in_employee):
+    """Handle creation of new expense"""
+    item_name = request.POST.get('item_name')
+    purchase_date = request.POST.get('purchase_date')
+    amount = request.POST.get('amount')
+    paid_status = request.POST.get('paid_status', 'Unpaid')
+    description = request.POST.get('description', '')
+    attech = request.FILES.get('attech')
+
+    OfficeExpense.objects.create(
+        employee_name=logged_in_employee,
+        item_name=item_name,
+        purchase_date=purchase_date,
+        amount=amount,
+        paid_status=paid_status,
+        description=description,
+        attech=attech
+    )
+    return redirect('office_employee_expense_view')
+
+def handle_edit_expense(request, logged_in_employee):
+    """Handle editing an existing expense"""
+    expense_id = request.POST.get('expense_id')
+    expense = get_object_or_404(OfficeExpense, id=expense_id, employee_name=logged_in_employee)
+    
+    expense.item_name = request.POST.get('item_name')
+    expense.purchase_date = request.POST.get('purchase_date')
+    expense.amount = request.POST.get('amount')
+    expense.paid_status = request.POST.get('paid_status', 'Unpaid')
+    expense.description = request.POST.get('description', '')
+    
+    # Only update attachment if a new file was provided
+    if 'attech' in request.FILES:
+        expense.attech = request.FILES.get('attech')
+    
+    expense.save()
+    return redirect('office_employee_expense_view')
+
+def handle_delete_expense(request):
+    """Handle deleting an expense"""
+    expense_id = request.POST.get('delete_id')
+    expense = get_object_or_404(OfficeExpense, id=expense_id)
+    expense.delete()
+    return redirect('office_employee_expense_view')
 
 
 def base_view(request) :
@@ -503,41 +642,69 @@ def base_view(request) :
 
 
 
+
+
 @login_required
 def employee_resignation_view(request):
     logged_in_employee = Employee.objects.get(user=request.user)
-    resignations = Resignation.objects.filter(employee=logged_in_employee)
+    
+    # Get all resignations for the logged-in employee
+    resignations_list = Resignation.objects.filter(employee=logged_in_employee).order_by('-resignation_date')
+    
+    # Pagination
+    paginator = Paginator(resignations_list, 10)  # Show 10 resignations per page
+    page_number = request.GET.get('page')
+    resignations = paginator.get_page(page_number)
+    
     if request.method == 'POST':
-        status = request.POST.get('status','Pending')
+        # Handle form submission
         resignation_date = request.POST.get('resignation_date')
         last_working_day = request.POST.get('last_working_day')
         description = request.POST.get('description')
+        status = 'Pending'  # Default status
         
-        # Parse the resignation date to a datetime object
-        resignation_date = dateparse.parse_date(resignation_date)
-        
-        # Save the resignation details to the database
+        # Create new resignation
         Resignation.objects.create(
             employee=logged_in_employee,
-            status=status,
             resignation_date=resignation_date,
             last_working_day=last_working_day,
-            description=description
+            description=description,
+            status=status
         )
         
-        return redirect('employee_resignation_view')  # Redirect to a success page
+        return redirect('employee_resignation_view')
 
     context = {
         'logged_in_employee': logged_in_employee,
         'resignations': resignations
     }
-    return render(request, 'employee/resignation.html',context)
+    return render(request, 'employee/resignation.html', context)
 
+@login_required
+def edit_employee_resignation_view(request, resignation_id):
+    resignation = get_object_or_404(Resignation, id=resignation_id, employee__user=request.user)
+    
+    if request.method == 'POST':
+        # Update resignation details
+        resignation.resignation_date = request.POST.get('resignation_date')
+        resignation.last_working_day = request.POST.get('last_working_day')
+        resignation.description = request.POST.get('description')
+        resignation.status = request.POST.get('status', 'Pending')
+        resignation.save()
+        
+        return redirect('employee_resignation_view')
+    
+    # If GET request, the modal form will handle the display
+    return redirect('employee_resignation_view')
+
+@login_required
 def delete_employee_resignation_view(request, resignation_id):
-    resignation = get_object_or_404(Resignation, id=resignation_id)
-    resignation.delete()
-    return redirect('employee_resignation_view') 
-
+    resignation = get_object_or_404(Resignation, id=resignation_id, employee__user=request.user)
+    
+    if request.method == 'POST':
+        resignation.delete()
+    
+    return redirect('employee_resignation_view')
 
 def update_task_status(request,task_id) :
     if request.method == 'POST':
@@ -911,7 +1078,7 @@ def employee_company_registration(request):
         company_unique_code = request.POST.get('company_unique_code')
         job_profile = request.POST.get('job_profile')
         company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
-        vacancy_opening_date = request.POST.get('vacancy_opening_date')
+        vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
         company_email_address = request.POST.get('company_email_address')
         vacancy_status = request.POST.get('vacancy_status','Pending')
         company_contact_person_name = request.POST.get('company_contact_person_name')
@@ -921,8 +1088,8 @@ def employee_company_registration(request):
         payroll = request.POST.get('payroll')
         third_party_name = request.POST.get('third_party_name')
         job_opening_origin = request.POST.get('job_opening_origin')
-        sector_type = request.POST.getlist('sector_type')
-        department_name = request.POST.getlist('department_name')
+        sector_type = request.POST.get('sector_type')
+        department_name = request.POST.get('department_name')
         fresher_status = request.POST.get('fresher_status')
         minimum_age = request.POST.get('minimum_age')
         maximum_age = request.POST.get('maximum_age')
@@ -933,13 +1100,13 @@ def employee_company_registration(request):
         specialization = request.POST.get('specialization')
         minimum_salary_range = request.POST.get('minimum_salary_range')
         maximum_salary_range = request.POST.get('maximum_salary_range')
-        vacancy_closing_date = request.POST.get('vacancy_closing_date')
+        vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
         special_instruction = request.POST.get('special_instruction')
         company_usp = request.POST.get('company_usp')
         status_of_incentive = request.POST.get('status_of_incentive')
         status_of_proposal = request.POST.get('status_of_proposal')
-        invoice_generation_date = request.POST.get('invoice_generation_date')
-        payout_date = request.POST.get('payout_date')
+        invoice_generation_date = request.POST.get('invoice_generation_date') or None
+        payout_date = request.POST.get('payout_date') or None
         payment_condiation = request.POST.get('payment_condiation')
         replacement_criteria = request.POST.get('replacement_criteria')
         remark = request.POST.get('remark')
@@ -1412,7 +1579,7 @@ def employee_evms_candidate_profile(request,id) :
             calling_remark = request.POST.get('calling_remark')
             lead_generate = request.POST.get('lead_generate')
             send_for_interview = request.POST.get('send_for_interview')
-            next_follow_up_date = request.POST.get('next_follow_up_date')
+            next_follow_up_date = request.POST.get('next_follow_up_date') or None
             submit_by = request.POST.get('submit_by')
 
             candidate.call_connection = call_connection
@@ -1430,8 +1597,8 @@ def employee_evms_candidate_profile(request,id) :
             selection_status = request.POST.get('selection_status')
             company_name = request.POST.get('company_name')
             offered_salary = request.POST.get('offered_salary')
-            selection_date = request.POST.get('selection_date')
-            candidate_joining_date = request.POST.get('candidate_joining_date')
+            selection_date = request.POST.get('selection_date') or None
+            candidate_joining_date = request.POST.get('candidate_joining_date') or None
             emta_commission = request.POST.get('emta_commission')
             payout_date = request.POST.get('payout_date')
 
@@ -1448,12 +1615,12 @@ def employee_evms_candidate_profile(request,id) :
         elif 'submit_vendor_related_data' in request.POST:
             # Handle form submission for bank details
             vendor_commission = request.POST.get('vendor_commission')
-            vendor_payout_date = request.POST.get('vendor_payout_date')
-            commission_generation_date = request.POST.get('commission_generation_date')
+            vendor_payout_date = request.POST.get('vendor_payout_date') or None
+            commission_generation_date = request.POST.get('commission_generation_date') or None
             vendor_commission_status = request.POST.get('vendor_commission_status')
             vendor_payment_remark = request.POST.get('vendor_payment_remark')
             payment_done_by = request.POST.get('payment_done_by')
-            payment_done_by_date = request.POST.get('payment_done_by_date')
+            payment_done_by_date = request.POST.get('payment_done_by_date') or None
             submit_recipt = request.FILES.get('submit_recipt')
 
 
@@ -2199,3 +2366,95 @@ def evms_vendor_paylist(request):
         'candidates': candidates
     }
     return render(request, 'employee/evms-vendor-paylist.html', context)
+
+
+def evms_vendor_transaction_history(request):
+    
+    # Filter candidates with refer_code, pending commission, and payout date in current month
+    remaining_pays = Candidate.objects.filter(
+        vendor_commission_status__in=['Complete', 'Failed'],
+        selection_status='Selected',
+        refer_code__isnull=False,
+    ).order_by('-id')
+    
+    # Prepare data for template
+    candidates = []
+    for candidate in remaining_pays:
+        try:
+            vendor = Vendor.objects.get(refer_code=candidate.refer_code)
+            vendor_name = f"{vendor.user.first_name} {vendor.user.last_name}"
+        except Vendor.DoesNotExist:
+            vendor_name = "Unknown Vendor"
+        
+        # Add vendor name to candidate object (we'll use this in template)
+        candidate.vendor_name = vendor_name
+        candidates.append(candidate)
+    
+    context = {
+        'candidates': candidates
+    }
+    return render(request, 'employee/vendor-transaction-history.html', context)
+
+import pandas as pd
+from django.http import HttpResponse
+
+def export_vendors_to_excel(request):
+    # Get all vendors with related data
+    vendors = Vendor.objects.all().select_related(
+        'vendor_profile_details',
+        'vendor_bussiness_details',
+        'vendor_bank_details'
+    )
+    
+    # Prepare data for Excel
+    data = []
+    for vendor in vendors:
+        data.append({
+            'Vendor Code': vendor.refer_code,
+            'First Name': vendor.user.first_name,
+            'Last Name': vendor.user.last_name,
+            'Email': vendor.user.email,
+            'Mobile Number': vendor.mobile_number,
+            'Date of Birth': vendor.date_of_birth,
+            'Verification Status': vendor.profileVerification,
+            'Total Commission': vendor.total_commission_received,
+            
+            # Profile Details
+            'Address': vendor.vendor_profile_details.address if hasattr(vendor, 'vendor_profile_details') else '',
+            'Gender': vendor.vendor_profile_details.gender if hasattr(vendor, 'vendor_profile_details') else '',
+            'Aadhar Number': vendor.vendor_profile_details.adhar_card_number if hasattr(vendor, 'vendor_profile_details') else '',
+            'PAN Number': vendor.vendor_profile_details.pan_card_number if hasattr(vendor, 'vendor_profile_details') else '',
+            'Location': vendor.vendor_profile_details.location if hasattr(vendor, 'vendor_profile_details') else '',
+            
+            # Business Details
+            'Shop Name': vendor.vendor_bussiness_details.shop_name if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'Shop Address': vendor.vendor_bussiness_details.shop_address if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'Business Type': vendor.vendor_bussiness_details.busness_type if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'Gumasta Number': vendor.vendor_bussiness_details.Gumasta_number if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'GST Number': vendor.vendor_bussiness_details.gst_number if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'Business PAN': vendor.vendor_bussiness_details.Bpan_number if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'MSME Number': vendor.vendor_bussiness_details.MSME_number if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'Contact Number': vendor.vendor_bussiness_details.Contact_number if hasattr(vendor, 'vendor_bussiness_details') else '',
+            'Business Email': vendor.vendor_bussiness_details.Busness_email if hasattr(vendor, 'vendor_bussiness_details') else '',
+            
+            # Bank Details
+            'Account Holder': vendor.vendor_bank_details.account_holder_name if hasattr(vendor, 'vendor_bank_details') else '',
+            'Account Number': vendor.vendor_bank_details.account_number if hasattr(vendor, 'vendor_bank_details') else '',
+            'Bank Name': vendor.vendor_bank_details.bank_name if hasattr(vendor, 'vendor_bank_details') else '',
+            'IFSC Code': vendor.vendor_bank_details.ifs_code if hasattr(vendor, 'vendor_bank_details') else '',
+            'MICR Code': vendor.vendor_bank_details.micr_code if hasattr(vendor, 'vendor_bank_details') else '',
+            'Account Type': vendor.vendor_bank_details.account_type if hasattr(vendor, 'vendor_bank_details') else '',
+            'Payout Date': vendor.vendor_bank_details.preffered_payout_date if hasattr(vendor, 'vendor_bank_details') else '',
+        })
+    
+    # Create DataFrame
+    df = pd.DataFrame(data)
+    
+    # Create HTTP response with Excel file
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="vendors_export.xlsx"'
+    
+    # Write DataFrame to Excel
+    df.to_excel(response, index=False, sheet_name='Vendors')
+    
+    return response
