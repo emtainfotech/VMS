@@ -1030,23 +1030,118 @@ def admin_candidate_list(request) :
         # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
     
+    
+
 def designation_view(request):
     if request.user.is_staff or request.user.is_superuser:
+        # Handle POST request (create or update)
         if request.method == 'POST':
-            name = request.POST.get('name')
-            department = request.POST.get('department')
-            designation = Designation.objects.create(name=name, department=department)
-            messages.success(request, 'Designation created successfully!')
-
-            return redirect('designation_view') 
+            designation_id = request.POST.get('designation_id')
+            
+            if designation_id:  # Update existing designation
+                designation = get_object_or_404(Designation, id=designation_id)
+                designation.name = request.POST.get('name')
+                designation.department = request.POST.get('department')
+                designation.description = request.POST.get('description', '')
+                designation.color = request.POST.get('color', '#f0f0f0')
+                designation.save()
+                messages.success(request, 'Designation updated successfully!')
+            else:  # Create new designation
+                name = request.POST.get('name')
+                department = request.POST.get('department')
+                description = request.POST.get('description', '')
+                color = request.POST.get('color', '#f0f0f0')
+                
+                Designation.objects.create(
+                    name=name,
+                    department=department,
+                    description=description,
+                    color=color
+                )
+                messages.success(request, 'Designation created successfully!')
+            
+            return redirect('designation_view')
+        
+        # Handle GET request
         designations = Designation.objects.all()
-
+        
+        # Get unique departments for dropdown
+        departments = Designation.objects.values_list('department', flat=True).distinct()
+        
         context = {
-            'designations': designations
+            'designations': designations,
+            'departments': sorted(set(departments)),  # Convert to set to remove duplicates
         }
         return render(request, 'hrms/designation.html', context)
     else:
-        # If the user is not an admin, show a 404 page
+        return render(request, '404.html', status=404)
+
+def edit_designation(request, designation_id):
+    if request.user.is_staff or request.user.is_superuser:
+        designation = get_object_or_404(Designation, id=designation_id)
+        
+        if request.method == 'POST':
+            # Handle AJAX request for quick edit
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                field = request.POST.get('field')
+                value = request.POST.get('value')
+                
+                if field and hasattr(designation, field):
+                    setattr(designation, field, value)
+                    designation.save()
+                    return JsonResponse({'status': 'success'})
+                return JsonResponse({'status': 'error', 'message': 'Invalid field'})
+            
+            # Handle regular form submission
+            designation.name = request.POST.get('name')
+            designation.department = request.POST.get('department')
+            designation.description = request.POST.get('description', '')
+            designation.color = request.POST.get('color', '#f0f0f0')
+            designation.save()
+            messages.success(request, 'Designation updated successfully!')
+            return redirect('designation_view')
+        
+        # For GET request, return JSON data for modal
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'id': designation.id,
+                'name': designation.name,
+                'department': designation.department,
+                'description': designation.description,
+                'color': designation.color,
+            })
+        
+        return redirect('designation_view')
+    else:
+        return render(request, '404.html', status=404)
+
+def delete_designation(request, designation_id):
+    if request.user.is_staff or request.user.is_superuser:
+        designation = get_object_or_404(Designation, id=designation_id)
+        
+        if request.method == 'POST':
+            # Check if any employees are assigned to this designation
+            if designation.employee_set.exists():
+                messages.error(request, 'Cannot delete designation with assigned employees!')
+            else:
+                designation.delete()
+                messages.success(request, 'Designation deleted successfully!')
+            
+            return redirect('designation_view')
+        
+        # For AJAX requests
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            if designation.employee_set.exists():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Cannot delete designation with assigned employees!'
+                }, status=400)
+            
+            designation.delete()
+            return JsonResponse({'status': 'success'})
+        
+        return redirect('designation_view')
+    else:
         return render(request, '404.html', status=404)
     
 def department_employee_count(request):
@@ -1220,65 +1315,122 @@ def save_monthly_attendance():
         # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
 
+
+from django.db.models import Q
+
 @login_required
 def leave_request_view(request):
     if request.user.is_staff or request.user.is_superuser:
-        leave_requests = LeaveRequest.objects.all().order_by('-id')
-        return render(request, 'hrms/leave-request.html', {'leave_requests': leave_requests})
+        # Get filter parameter
+        status_filter = request.GET.get('status', 'all')
+        
+        # Base queryset
+        leave_requests = LeaveRequest.objects.all().select_related('employee').order_by('-created_at')
+        
+        # Apply filters
+        if status_filter == 'pending':
+            leave_requests = leave_requests.filter(status='Pending')
+        elif status_filter == 'approved':
+            leave_requests = leave_requests.filter(status='Approved')
+        elif status_filter == 'rejected':
+            leave_requests = leave_requests.filter(status='Rejected')
+        
+        # Search functionality
+        search_query = request.GET.get('search')
+        if search_query:
+            leave_requests = leave_requests.filter(
+                Q(employee__first_name__icontains=search_query) |
+                Q(employee__last_name__icontains=search_query) |
+                Q(reason__icontains=search_query) |
+                Q(leave_type__icontains=search_query)
+            )
+        
+        # Calculate duration for each leave request
+        for leave in leave_requests:
+            delta = leave.end_date - leave.start_date
+            leave.duration = delta.days + 1  # +1 to include both start and end dates
+        
+        context = {
+            'leave_requests': leave_requests,
+            'status_filter': status_filter,
+        }
+        return render(request, 'hrms/leave-request.html', context)
     else:
-        # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
-    
+
 @login_required
 def update_leave_status(request, leave_id):
-    if request.method == "POST":
-        status = request.POST.get('status')
+    if request.user.is_staff or request.user.is_superuser:
         leave_request = get_object_or_404(LeaveRequest, id=leave_id)
-
-        # Update the status
-        leave_request.status = status
-        leave_request.save()
-
+        
+        if request.method == "POST":
+            old_status = leave_request.status
+            new_status = request.POST.get('status')
+            
+            # Validate status transition
+            valid_transitions = {
+                'Pending': ['Approved', 'Rejected'],
+                'Approved': ['Rejected'],
+                'Rejected': ['Approved']
+            }
+            
+            if new_status in valid_transitions.get(old_status, []):
+                leave_request.status = new_status
+                leave_request.processed_by = request.user
+                leave_request.processed_at = datetime.now()
+                leave_request.save()
+                
+                messages.success(request, f'Leave request status updated to {new_status}')
+            else:
+                messages.error(request, f'Invalid status transition from {old_status} to {new_status}')
+            
+            return redirect('leave_request_view')
+        
         return redirect('leave_request_view')
-
-
+    else:
+        return render(request, '404.html', status=404)
+    
+    
 def holiday_view(request):
     if request.user.is_staff or request.user.is_superuser:
         if request.method == "POST":
-            # Adding a new holiday
+            # Adding or updating a holiday
+            holiday_id = request.POST.get('holiday_id')
             date = request.POST.get('date')
             day = request.POST.get('day')
             name = request.POST.get('name')
-            if date and day and name:
-                Holiday.objects.create(date=date, day=day, name=name)
-                Notification.objects.create(
-                notification_type='Holiday',
-                message=f'{name} on {date} has been added.',
-                )
-            return redirect('holiday_view')  # Redirect to avoid form resubmission
-
             
+            if holiday_id:
+                # Editing existing holiday
+                holiday = get_object_or_404(Holiday, id=holiday_id)
+                holiday.date = date
+                holiday.day = day
+                holiday.name = name
+                holiday.save()
+                
+            else:
+                # Creating new holiday
+                if date and day and name:
+                    Holiday.objects.create(date=date, day=day, name=name)
+                    
+            
+            return redirect('holiday_view')
 
         elif request.method == "GET" and "delete_id" in request.GET:
             # Deleting a holiday
             delete_id = request.GET.get("delete_id")
             holiday = get_object_or_404(Holiday, id=delete_id)
+            holiday_name = holiday.name
+            holiday_date = holiday.date
             holiday.delete()
-            Notification.objects.create(
-                notification_type='Holiday',
-                message=f'{holiday.name} on {holiday.date} has been deleted.',
-            )
-            return redirect('holiday_view')  # Redirect to refresh the list after deletion
 
-            
+            return redirect('holiday_view')
 
         # Fetch all holidays to display
-        holidays = Holiday.objects.all().order_by('-id')
+        holidays = Holiday.objects.all().order_by('-date')
         return render(request, 'hrms/holiday.html', {'holidays': holidays})
     else:
-        # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
-
 
 def project_view(request) :
     if request.user.is_staff or request.user.is_superuser:
@@ -1407,19 +1559,30 @@ def pay_slip_view(request, salary_id):
         # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
 
+
+
+@login_required
 def office_expense_view(request):
     if request.user.is_staff or request.user.is_superuser:
         employees = Employee.objects.all()
-        office_expenses = OfficeExpense.objects.all().order_by('-id')
+        office_expenses = OfficeExpense.objects.all().order_by('-purchase_date')
 
-        # Get current month and year
+        # Date filtering
+        date_from = request.GET.get('date_from')
+        date_to = request.GET.get('date_to')
+        
+        if date_from and date_to:
+            office_expenses = office_expenses.filter(
+                purchase_date__range=[date_from, date_to]
+            )
+        
+        # Current month expenses (for dashboard)
         today = date.today()
         current_month = today.month
         current_year = today.year
-
-        # Filter expenses for the current month
         monthly_expenses = office_expenses.filter(
-            purchase_date__month=current_month, purchase_date__year=current_year
+            purchase_date__month=current_month, 
+            purchase_date__year=current_year
         )
 
         # Calculate totals
@@ -1430,17 +1593,19 @@ def office_expense_view(request):
 
         # Store total expense in MonthlyExpense model
         month_start = date(current_year, current_month, 1)
-        monthly_expense_record, created = MonthlyExpense.objects.get_or_create(month=month_start, defaults={'total_expense': 0})
-        monthly_expense_record.total_expense = total_expense_month
-        monthly_expense_record.save()
+        monthly_expense_record, created = MonthlyExpense.objects.get_or_create(
+            month=month_start, 
+            defaults={'total_expense': total_expense_month}
+        )
+        if not created:
+            monthly_expense_record.total_expense = total_expense_month
+            monthly_expense_record.save()
 
         if request.method == 'POST':
             if 'update_paid_status' in request.POST:
-                # Handle the status update request
+                # AJAX status update
                 expense_id = request.POST.get('expense_id')
                 new_status = request.POST.get('new_status')
-
-                # Update the paid status in the database
                 try:
                     expense = OfficeExpense.objects.get(id=expense_id)
                     expense.paid_status = new_status
@@ -1449,23 +1614,46 @@ def office_expense_view(request):
                 except OfficeExpense.DoesNotExist:
                     return JsonResponse({'success': False, 'message': 'Expense not found'})
 
-            # Handle new expense creation
+            elif 'delete_expense' in request.POST:
+                # AJAX delete
+                expense_id = request.POST.get('expense_id')
+                try:
+                    expense = OfficeExpense.objects.get(id=expense_id)
+                    expense.delete()
+                    return JsonResponse({'success': True, 'message': 'Expense deleted successfully'})
+                except OfficeExpense.DoesNotExist:
+                    return JsonResponse({'success': False, 'message': 'Expense not found'})
+
+            # Handle expense creation/editing
+            expense_id = request.POST.get('expense_id')
             employee_name = request.POST.get('employee_name')
             item_name = request.POST.get('item_name')
             purchase_date = request.POST.get('purchase_date')
             amount = request.POST.get('amount')
-            paid_status = request.POST.get('paid_status','Unpaid')
-            attech = request.FILES.get('attech')
+            paid_status = request.POST.get('paid_status', 'Unpaid')
+            attachment = request.FILES.get('attachment')
 
-            # Save to database
-            OfficeExpense.objects.create(
-                employee_name=employee_name,
-                item_name=item_name,
-                purchase_date=purchase_date,
-                amount=amount,
-                paid_status=paid_status,
-                attech = attech
-            )
+            if expense_id:  # Edit existing expense
+                expense = get_object_or_404(OfficeExpense, id=expense_id)
+                expense.employee_name = employee_name
+                expense.item_name = item_name
+                expense.purchase_date = purchase_date
+                expense.amount = amount
+                expense.paid_status = paid_status
+                if attachment:
+                    expense.attachment = attachment
+                expense.save()
+                messages.success(request, 'Expense updated successfully!')
+            else:  # Create new expense
+                OfficeExpense.objects.create(
+                    employee_name=employee_name,
+                    item_name=item_name,
+                    purchase_date=purchase_date,
+                    amount=amount,
+                    paid_status=paid_status,
+                    attachment=attachment
+                )
+                messages.success(request, 'Expense created successfully!')
 
             return redirect('office_expense_view')
 
@@ -1476,31 +1664,57 @@ def office_expense_view(request):
             'total_unpaid': total_unpaid,
             'total_partially_paid': total_partially_paid,
             'total_expense_month': total_expense_month,
+            'date_from': date_from,
+            'date_to': date_to,
         }
         return render(request, 'hrms/office-expense.html', context)
     else:
-        # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
 
+@login_required
 def delete_expense(request, id):
-    officeExpense = get_object_or_404(OfficeExpense, id=id)
-    officeExpense.delete()
+    if request.method == "POST":
+        expense = get_object_or_404(OfficeExpense, id=id)
+        expense.delete()
+        messages.success(request, 'Expense deleted successfully!')
+        return redirect('office_expense_view')
     return redirect('office_expense_view')
 
-
 @login_required
-def update_expense_status(request, expense_id):
-    if request.method == "POST":
-        paid_status = request.POST.get('paid_status')
-        expense = get_object_or_404(OfficeExpense, id=expense_id)
-
-        # Update the paid status
-        expense.paid_status = paid_status
-        expense.save()
-
-        return redirect('office_expense_view')  # Replace with the appropriate view name
-
-
+def edit_expense(request, id):
+    if request.user.is_staff or request.user.is_superuser:
+        expense = get_object_or_404(OfficeExpense, id=id)
+        
+        if request.method == "POST":
+            # Handle the edit form submission
+            expense.employee_name = request.POST.get('employee_name')
+            expense.item_name = request.POST.get('item_name')
+            expense.purchase_date = request.POST.get('purchase_date')
+            expense.amount = request.POST.get('amount')
+            expense.paid_status = request.POST.get('paid_status', 'Unpaid')
+            if 'attachment' in request.FILES:
+                expense.attachment = request.FILES['attachment']
+            expense.save()
+            messages.success(request, 'Expense updated successfully!')
+            return redirect('office_expense_view')
+        
+        # For AJAX requests
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'id': expense.id,
+                'employee_name': expense.employee_name,
+                'item_name': expense.item_name,
+                'purchase_date': expense.purchase_date.strftime('%Y-%m-%d'),
+                'amount': str(expense.amount),
+                'paid_status': expense.paid_status,
+                'attachment_url': expense.attachment.url if expense.attachment else None,
+            })
+        
+        return redirect('office_expense_view')
+    else:
+        return render(request, '404.html', status=404)
+    
+    
 def incentive_view(request):
     if request.user.is_staff or request.user.is_superuser:
         if request.method == 'POST':
@@ -1557,36 +1771,40 @@ def delete_incentive(request, incentive_id):
     incentive.delete()
     return redirect('incentive_view') 
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from django.core.paginator import Paginator
+from .models import Employee, Bonus
+
+@login_required
 def bonus_view(request):
     if request.user.is_staff or request.user.is_superuser:
-        employees = Employee.objects.all()  # Get all employees to populate the dropdown
+        employees = Employee.objects.all()
 
-        # Calculate total bonus, paid, unpaid, and hold amounts
+        # Calculate totals
         total_bonus = Bonus.objects.aggregate(total=Sum('amount'))['total'] or 0
         total_paid = Bonus.objects.filter(status='Paid').aggregate(total=Sum('amount'))['total'] or 0
         total_unpaid = Bonus.objects.filter(status='Unpaid').aggregate(total=Sum('amount'))['total'] or 0
         total_hold = Bonus.objects.filter(status='Hold').aggregate(total=Sum('amount'))['total'] or 0
 
         if request.method == 'POST':
-            # Extract data from the POST request
             employee_id = request.POST.get('employee')
             amount = request.POST.get('amount')
             reason = request.POST.get('reason')
-            
 
-            # Check if the data is valid
             if employee_id and amount and reason:
                 try:
-                    # Get the employee by ID
                     employee = Employee.objects.get(id=employee_id)
-
-                    # Create a new bonus record
-                    bonus = Bonus(employee=employee, amount=amount, reason=reason)
-                    bonus.save()
-
+                    Bonus.objects.create(
+                        employee=employee,
+                        amount=amount,
+                        reason=reason,
+                        status='Unpaid'  # Default status
+                    )
                     messages.success(request, 'Bonus added successfully!')
-                    return redirect('bonus_view')  # Redirect back to the bonus view
-
+                    return redirect('bonus_view')
                 except Employee.DoesNotExist:
                     messages.error(request, 'Employee not found.')
                 except Exception as e:
@@ -1594,40 +1812,70 @@ def bonus_view(request):
             else:
                 messages.error(request, 'All fields are required.')
 
-        # Fetch all bonuses to display
-        bonuses = Bonus.objects.all().order_by('-id')
+        # Pagination
+        bonuses_list = Bonus.objects.all().order_by('-created_at')
+        paginator = Paginator(bonuses_list, 10)
+        page_number = request.GET.get('page')
+        bonuses = paginator.get_page(page_number)
 
         return render(request, 'hrms/bonus.html', {
             'bonuses': bonuses,
-            'employees': employees,  # Pass employees to template
+            'employees': employees,
             'total_bonus': total_bonus,
             'total_paid': total_paid,
             'total_unpaid': total_unpaid,
             'total_hold': total_hold,
         })
     else:
-        # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
-    
+
+@login_required
 def update_bonus_status(request, bonus_id):
-    bonus = get_object_or_404(Bonus, id=bonus_id)
+    if request.user.is_staff or request.user.is_superuser:
+        bonus = get_object_or_404(Bonus, id=bonus_id)
 
-    if request.method == 'POST':
-        status = request.POST.get('paid_status')
+        if request.method == 'POST':
+            status = request.POST.get('paid_status')
 
-        if status in ['Paid', 'Unpaid', 'Hold']:
-            bonus.status = status
-            bonus.save()
-            messages.success(request, f'Bonus status updated to {status}.')
-        else:
-            messages.error(request, 'Invalid status.')
+            if status in ['Paid', 'Unpaid', 'Hold']:
+                bonus.status = status
+                bonus.save()
+                messages.success(request, f'Bonus status updated to {status}.')
+            else:
+                messages.error(request, 'Invalid status.')
 
-    return redirect('bonus_view')  # Redirect back to the bonus view
-    
-    
+    return redirect('bonus_view')
+
+@login_required
+def edit_bonus(request, bonus_id):
+    if request.user.is_staff or request.user.is_superuser:
+        bonus = get_object_or_404(Bonus, id=bonus_id)
+
+        if request.method == 'POST':
+            try:
+                employee_id = request.POST.get('employee')
+                bonus.employee = Employee.objects.get(id=employee_id)
+                bonus.amount = request.POST.get('amount')
+                bonus.reason = request.POST.get('reason')
+                bonus.status = request.POST.get('status')
+                bonus.save()
+                messages.success(request, 'Bonus updated successfully!')
+            except Employee.DoesNotExist:
+                messages.error(request, 'Employee not found.')
+            except Exception as e:
+                messages.error(request, f'Error: {str(e)}')
+
+    return redirect('bonus_view')
+
+@login_required
 def delete_bonus(request, bonus_id):
-    bonus = get_object_or_404(Bonus, id=bonus_id)
-    bonus.delete()
+    if request.user.is_staff or request.user.is_superuser:
+        bonus = get_object_or_404(Bonus, id=bonus_id)
+
+        if request.method == 'POST':
+            bonus.delete()
+            messages.success(request, 'Bonus deleted successfully!')
+
     return redirect('bonus_view')
 
 def resignation_view(request) :
@@ -1864,50 +2112,87 @@ def delete_meeting(request, meeting_id):
     meeting.delete()
     return redirect('team_meeting_view')
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+
+@login_required
+@user_passes_test(lambda u: u.is_staff or u.is_superuser)
 def awards_view(request):
-    if request.user.is_staff or request.user.is_superuser:
-        if request.method == 'POST':
-            # Get data from the form
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'add':
+            # Handle add new award
             employee_id = request.POST.get('employee')
             award_type = request.POST.get('award_type')
             award_date = request.POST.get('award_date')
             gift = request.POST.get('gift')
             description = request.POST.get('description')
 
-            # Validate data (simple example)
-            if employee_id and award_type and award_date and gift and description:
-                employee = Employee.objects.get(id=employee_id)
+            if not all([employee_id, award_type, award_date, gift, description]):
+                messages.error(request, "All fields are required")
+                return redirect('awards_view')
 
-                # Create and save the new Award record
-                Award.objects.create(
+            try:
+                employee = Employee.objects.get(id=employee_id)
+                award = Award.objects.create(
                     employee=employee,
                     award_type=award_type,
                     award_date=award_date,
                     gift=gift,
                     description=description
                 )
+                
                 Notification.objects.create(
-                user=employee.user,
-                notification_type='Awrad',
-                message=f'{award_type} on {award_date} to {employee_id}.',
+                    user=employee.user,
+                    notification_type='Award',
+                    message=f'You received {award_type} on {award_date}.',
                 )
-                # Redirect to avoid form resubmission
-                return redirect('awards_view')
+                messages.success(request, "Award created successfully")
+            except Employee.DoesNotExist:
+                messages.error(request, "Employee not found")
+                
+        elif action == 'edit':
+            # Handle edit award
+            award_id = request.POST.get('award_id')
+            try:
+                award = Award.objects.get(id=award_id)
+                employee_id = request.POST.get('employee')
+                employee = Employee.objects.get(id=employee_id)
+                
+                award.employee = employee
+                award.award_type = request.POST.get('award_type')
+                award.award_date = request.POST.get('award_date')
+                award.gift = request.POST.get('gift')
+                award.description = request.POST.get('description')
+                award.save()
+                
+                messages.success(request, "Award updated successfully")
+            except (Award.DoesNotExist, Employee.DoesNotExist):
+                messages.error(request, "Award or Employee not found")
+                
+        elif action == 'delete':
+            # Handle delete award
+            award_id = request.POST.get('award_id')
+            try:
+                award = Award.objects.get(id=award_id)
+                award.delete()
+                messages.success(request, "Award deleted successfully")
+            except Award.DoesNotExist:
+                messages.error(request, "Award not found")
 
+        return redirect('awards_view')
 
-        # Fetch all employees for the dropdown
-        employees = Employee.objects.all()
-        awards = Award.objects.all()
-        return render(request, 'hrms/awards.html', {'employees': employees,'awards': awards})
-    else:
-        # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
-
-def delete_award(request, award_id):
-    award = get_object_or_404(Award, id=award_id)
-    award.delete()
-    return redirect('awards_view')
-
+    # Fetch all employees and awards for the page
+    employees = Employee.objects.all()
+    awards = Award.objects.all().order_by('-award_date')
+    return render(request, 'hrms/awards.html', {
+        'employees': employees,
+        'awards': awards
+    })
+    
+    
 def office_activity_view(request):
     if request.user.is_staff or request.user.is_superuser:
         if request.method == "POST":

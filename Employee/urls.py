@@ -51,6 +51,7 @@ urlpatterns = [
     path('vendor-pay-list/',evms_vendor_paylist, name = 'evms_vendor_paylist'),
     path('vendor-transaction-history/',evms_vendor_transaction_history, name = 'evms_vendor_transaction_history'),
     path('export-vendors/', export_vendors_to_excel, name='export_vendors'),
+    path('api/companies/', search_companies, name='search_companies'),
     
     path('admin/', admin.site.urls),
 ]

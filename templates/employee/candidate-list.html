@@ -69,6 +69,7 @@
                 <th class="w-1">#</th>
                 <th>Candidate</th>
                 <th>Contact</th>
+                <th>Source</th>
                 <th>Status</th>
                 <th>Experience</th>
                 <th>Current Status</th>
@@ -93,12 +94,16 @@
                     </div>
                     <div>
                       <div class="font-weight-medium">
-                        <a href="{% url 'employee_candidate_profile' candidate.id %}" class="text-reset">
+                        <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'employee_evms_candidate_profile' candidate.id %}{% else %}{% url 'employee_candidate_profile' candidate.id %}{% endif %}" class="text-reset">
                           {{ candidate.candidate_name }}
                         </a>
                       </div>
                       <div class="text-muted small">
+                        {% if candidate.lead_source == 'EVMS' %}
+                         <code>{{ candidate.refer_code }}-{{ candidate.unique_id }}</code> 
+                         {% else %} 
                         <code>{{ candidate.unique_code }}</code>
+                        {% endif %}
                       </div>
                     </div>
                   </div>
@@ -114,6 +119,11 @@
                     </a>
                     {% endif %}
                   </div>
+                </td>
+                <td>
+                  <span>
+                    {{ candidate.lead_source }}
+                  </span>
                 </td>
                 <td>
                   <span class="status-badge status-{{ candidate.selection_status|lower }}">
@@ -142,7 +152,7 @@
                 </td>
                 <td class="text-center">
                   <div class="btn-list justify-content-center">
-                    <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
+                    <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'employee_evms_candidate_profile' candidate.id %}{% else %}{% url 'employee_candidate_profile' candidate.id %}{% endif %}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
@@ -261,75 +271,101 @@
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  // Initialize tooltips
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-
-  // Search functionality
-  const searchInput = document.getElementById('searchInput');
-  const statusFilter = document.getElementById('statusFilter');
-  const candidatesTable = document.getElementById('candidatesTable');
-  const rows = candidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-  const totalCountEl = document.getElementById('totalCount');
-  const showingFromEl = document.getElementById('showingFrom');
-  const showingToEl = document.getElementById('showingTo');
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
   
-  function filterCandidates() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const statusFilterValue = statusFilter.value.toLowerCase();
-    let visibleCount = 0;
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const candidatesTable = document.getElementById('candidatesTable');
+    const rows = candidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    const totalCountEl = document.getElementById('totalCount');
+    const showingFromEl = document.getElementById('showingFrom');
+    const showingToEl = document.getElementById('showingTo');
     
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const searchContent = row.getAttribute('data-search');
-      const rowStatus = row.getAttribute('data-status');
+    function filterCandidates() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const statusFilterValue = statusFilter.value.toLowerCase();
+      let visibleCount = 0;
       
-      const matchesSearch = searchContent.includes(searchTerm);
-      const matchesStatus = statusFilterValue === '' || rowStatus === statusFilterValue;
-      
-      if (matchesSearch && matchesStatus) {
-        row.style.display = '';
-        visibleCount++;
-      } else {
-        row.style.display = 'none';
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const rowStatus = row.getAttribute('data-status');
+        
+        // Check if row matches status filter
+        const matchesStatus = statusFilterValue === '' || rowStatus === statusFilterValue;
+        
+        // Check if row matches search term (search all visible text content)
+        let matchesSearch = true;
+        if (searchTerm) {
+          matchesSearch = false;
+          // Get all text content from the row (excluding buttons and hidden elements)
+          const rowText = row.textContent.toLowerCase().replace(/\s+/g, ' ');
+          
+          // Check if any part of the row matches the search term
+          if (rowText.includes(searchTerm)) {
+            matchesSearch = true;
+          }
+        }
+        
+        if (matchesSearch && matchesStatus) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
       }
+      
+      // Update counters
+      showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
+      showingToEl.textContent = visibleCount;
+      document.getElementById('total-candidates').textContent = visibleCount;
     }
     
-    // Update counters
-    showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
-    showingToEl.textContent = visibleCount;
-    document.getElementById('total-candidates').textContent = visibleCount;
-  }
-  
-  // Event listeners
-  searchInput.addEventListener('input', filterCandidates);
-  statusFilter.addEventListener('change', filterCandidates);
-  
-  // Initial filter
-  filterCandidates();
-  
-  // Make table rows clickable (except when clicking on buttons)
-  document.querySelectorAll('#candidatesTable tbody tr').forEach(row => {
-    row.addEventListener('click', (e) => {
-      // Check if the click was on a button or link
-      if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-        return;
-      }
-      
-      // Find the profile link in the row and navigate to it
-      const profileLink = row.querySelector('td:nth-child(2) a');
-      if (profileLink) {
-        window.location.href = profileLink.href;
+    // Event listeners
+    searchInput.addEventListener('input', filterCandidates);
+    statusFilter.addEventListener('change', filterCandidates);
+    
+    // Make search case insensitive and trigger on paste
+    searchInput.addEventListener('keyup', function(e) {
+      if (e.key === 'Enter' || e.keyCode === 13) {
+        filterCandidates();
       }
     });
     
-    // Change cursor on hover
-    row.style.cursor = 'pointer';
+    searchInput.addEventListener('paste', function() {
+      setTimeout(filterCandidates, 100);
+    });
+    
+    // Initial filter
+    filterCandidates();
+    
+    // Make table rows clickable (except when clicking on buttons)
+    document.querySelectorAll('#candidatesTable tbody tr').forEach(row => {
+      row.addEventListener('click', (e) => {
+        // Check if the click was on a button or link
+        if (e.target.tagName === 'A' || e.target.closest('a') || 
+            e.target.tagName === 'BUTTON' || e.target.closest('button') ||
+            e.target.tagName === 'INPUT' || e.target.closest('input') ||
+            e.target.tagName === 'SELECT' || e.target.closest('select')) {
+          return;
+        }
+        
+        // Find the profile link in the row and navigate to it
+        const profileLink = row.querySelector('td:nth-child(2) a');
+        if (profileLink) {
+          window.location.href = profileLink.href;
+        }
+      });
+      
+      // Change cursor on hover
+      row.style.cursor = 'pointer';
+    });
   });
-});
-</script>
+  </script>
 
 {% endblock %}

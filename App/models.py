@@ -459,6 +459,20 @@ class Company_registration(models.Model):
 
     def __str__(self):
         return self.company_name
+    
+# class Company_vacancy(models.Model) :
+#     company = models.ForeignKey(Company_registration, on_delete=models.CASCADE)
+#     vancancy_code = models.CharField(max_length=255, blank=True, null=True)
+#     job_profile = models.CharField(max_length=255, blank=True, null=True)
+#     job_description = models.TextField(blank=True, null=True)
+#     job_location = models.CharField(max_length=255, blank=True, null=True)
+#     job_opening_date = models.DateField(blank=True, null=True)
+#     job_closing_date = models.DateField(blank=True, null=True)
+#     job_type = models.CharField(max_length=255, blank=True, null=True)
+#     job_shift = models.CharField(max_length=255, blank=True, null=True)
+#     job_salary = models.CharField(max_length=255, blank=True, null=True)
+#     job_vacancy = models.CharField(max_length=255, blank=True, null=True)
+#     job_experience = models.CharField(max_length=255, blank=True, null=True)
 
 class Ticket(models.Model):
     ticket_number = models.CharField(max_length=50, unique=True)

@@ -614,6 +614,111 @@
 
         </div>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Function to fill form with company data
+        function fillFormWithCompanyData(companyData) {
+            // Basic confirmation
+            if (!confirm(`A company named "${companyData.company_name}" already exists. Do you want to load its details?`)) {
+                return;
+            }
+    
+            // Fill all form fields except company_name and vacancy fields
+            const form = document.getElementById('companyForm');
+            for (const [fieldName, value] of Object.entries(companyData)) {
+                // Skip these fields - we want to keep them new
+                if (['id', 'company_vacancy_unique_code', 'vacancy_opening_date', 
+                     'vacancy_closing_date', 'vacancy_status'].includes(fieldName)) {
+                    continue;
+                }
+    
+                const field = form.querySelector(`[name="${fieldName}"]`);
+                
+                if (field) {
+                    // Handle different field types
+                    if (field.type === 'checkbox' || field.type === 'radio') {
+                        field.checked = true;
+                    } 
+                    else if (field.tagName === 'SELECT') {
+                        // For single select
+                        if (!field.multiple) {
+                            field.value = value || '';
+                        }
+                        // For multi-select (TomSelect)
+                        else if (window.TomSelect && field.id.includes('select-')) {
+                            const tomSelect = field.tomselect;
+                            if (tomSelect && value) {
+                                const values = value.split(', '); // Assuming company_location is stored as "value1, value2"
+                                tomSelect.setValue(values);
+                            }
+                        }
+                    }
+                    else if (field.type === 'file') {
+                        // Skip file fields
+                        continue;
+                    }
+                    else {
+                        field.value = value || '';
+                    }
+                    
+                    // Trigger change event for fields that have dependent logic
+                    if (['payroll', 'sector_type'].includes(fieldName)) {
+                        field.dispatchEvent(new Event('change'));
+                    }
+                }
+            }
+    
+            // Special handling for dates - we'll keep these empty for new vacancy
+            document.querySelector('[name="vacancy_opening_date"]').value = '';
+            document.querySelector('[name="vacancy_closing_date"]').value = '';
+            
+            // Generate new vacancy code
+            document.querySelector('[name="company_vacancy_unique_code"]').value = '';
+        }
+    
+        // Add event listener to company name field
+        const companyNameField = document.querySelector('[name="company_name"]');
+        if (companyNameField) {
+            // Debounce function to prevent too many requests
+            function debounce(func, timeout = 1000){
+                let timer;
+                return (...args) => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+                };
+            }
+    
+            companyNameField.addEventListener('input', debounce(function(e) {
+                const companyName = e.target.value.trim();
+                if (companyName.length >= 3) {
+                    // Check if company exists
+                    fetch(`{% url "employee_company_registration" %}?company_name=${encodeURIComponent(companyName)}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Company not found');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.error) {
+                            console.log(data.error);
+                            return;
+                        }
+                        fillFormWithCompanyData(data);
+                    })
+                    .catch(error => {
+                        console.log('Company not found or error:', error);
+                    });
+                }
+            }));
+        }
+    
+        // [Keep all your existing form validation code]
+        // ...
+    });
+</script>
 <!-- Libs JS -->
 <script src="/static/dist/libs/nouislider/dist/nouislider.min.js?1692870487" defer></script>
 <script src="/static/dist/libs/litepicker/dist/litepicker.js?1692870487" defer></script>

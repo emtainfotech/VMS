@@ -1,276 +1,429 @@
 {% extends 'hrms/base.html' %}
 
 {% block content %}
-  <div class="page-wrapper">
+<div class="page-wrapper">
     <!-- Page header -->
     <div class="page-header d-print-none">
-      <div class="container-xl">
-        <div class="row g-2 align-items-center">
-          <div class="col">
-            <!-- Page pre-title -->
-            {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
-            <h2 class="page-title">Bonus</h2>
-          </div>
-          <!-- Page title actions -->
-          <div class="col-auto ms-auto d-print-none">
-            <div class="btn-list">
-              <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
-                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M12 5l0 14" />
-                  <path d="M5 12l14 0" />
-                </svg>Create Bonus
-              </a>
-              <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
-                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M12 5l0 14" />
-                  <path d="M5 12l14 0" />
-                </svg>
-              </a>
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">Bonus</h2>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M12 5l0 14" />
+                                <path d="M5 12l14 0" />
+                            </svg>Create Bonus
+                        </a>
+                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M12 5l0 14" />
+                                <path d="M5 12l14 0" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
+
+    <!-- Success Message Modal -->
+    {% if messages %}
+    <div class="modal modal-blur fade show" id="successModal" tabindex="-1" style="display: block; padding-right: 17px;" aria-modal="true" role="dialog">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-status bg-success"></div>
+                <div class="modal-body text-center py-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-green icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M5 12l5 5l10 -10"></path>
+                    </svg>
+                    {% for message in messages %}
+                    <h3>{{ message }}</h3>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <div class="w-100">
+                        <div class="row">
+                            <div class="col">
+                                <a href="#" class="btn w-100" data-bs-dismiss="modal">Close</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Page body -->
     <div class="page-body">
-      <div class="container-xl">
-        <div class="row row-deck row-cards">
-          <div class="col-sm-6 col-lg-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="subheader">Total Bonus</div>
+        <div class="container-xl">
+            <div class="row row-deck row-cards">
+                <!-- Summary Cards -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="subheader">Total Bonus</div>
+                            </div>
+                            <div class="h1 mb-3">₹{{ total_bonus }}</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="h1 mb-3">{{ total_bonus }}</div>
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="subheader">Total Paid</div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="subheader">Total Paid</div>
+                            </div>
+                            <div class="d-flex align-items-baseline">
+                                <div class="h1 mb-0 me-2">₹{{ total_paid }}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="d-flex align-items-baseline">
-                  <div class="h1 mb-0 me-2">{{ total_paid }}</div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="subheader">Total Unpaid</div>
+                            </div>
+                            <div class="d-flex align-items-baseline">
+                                <div class="h1 mb-0 me-2">₹{{ total_unpaid }}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-              {% comment %} <div id="chart-revenue-bg" class="chart-sm"></div> {% endcomment %}
-            </div>
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="subheader">Total Unpaid</div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="subheader">Total Hold</div>
+                            </div>
+                            <div class="d-flex align-items-baseline">
+                                <div class="h1 mb-0 me-2">₹{{ total_hold }}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="d-flex align-items-baseline">
-                  <div class="h1 mb-0 me-2">{{ total_unpaid }}</div>
-                </div>
-              </div>
-              {% comment %} <div id="chart-revenue-bg" class="chart-sm"></div> {% endcomment %}
-            </div>
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="subheader">Total Hold</div>
-                </div>
-                <div class="d-flex align-items-baseline">
-                  <div class="h1 mb-0 me-2">{{ total_hold }}</div>
-                </div>
-              </div>
-              {% comment %} <div id="chart-revenue-bg" class="chart-sm"></div> {% endcomment %}
-            </div>
-          </div>
 
-          <div class="page-header d-print-none">
-            <div class="container-xl">
-              <div class="row g-2 align-items-center">
+                <!-- Bonus Table -->
                 <div class="col-12">
-                  <div class="card">
-                    {% comment %} <div class="card-header">
-                      <h3 class="card-title">Designations</h3>
-                    </div> {% endcomment %}
-                    <div class="card-body border-bottom py-3">
-                      <div class="d-flex">
-                        <div class="text-secondary">
-                          Show<div class="mx-2 d-inline-block">
-                            <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
-                          </div>entries
-                        </div>
-                        <div class="ms-auto text-secondary">
-                          Search:
-                          <div class="ms-2 d-inline-block">
-                            <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="table-responsive">
-                      <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
-                        <thead>
-                          <tr>
-                            <th class="w-1">
-                              No. <!-- Download SVG icon from http://tabler-icons.io/i/chevron-up -->
-                            </th>
-                            <th>Name</th>
-                            <th>Reason</th>
-                            <th>Ammount</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% for bonus in bonuses %}
-                          <tr>
-                            <td>
-                              <span class="text-secondary">{{forloop.counter}}</span>
-                            </td>
-      
-                            <td>
-                              <span class="me-2"></span>
-                              {{ bonus.employee }}
-                            </td>
-                            <td>
-                              <span class="me-2"></span>
-                              {{ bonus.reason }}
-                            </td>
-                            <td>
-                              <span class="me-2"></span>
-                              {{ bonus.amount }}
-                            </td>
-                            <td>
-                              <span class="me-2"></span>
-                              {{ bonus.created_at }}
-                            </td>
-                            <td>
-                              <form method="post" action="{% url 'update_bonus_status' bonus.id %}">
-                                  {% csrf_token %}
-                                  <select class="form-select" name="paid_status" onchange="this.form.submit()" style="width: auto;">
-                                      <option value="Paid" {% if bonus.status == 'Paid' %}selected{% endif %}>Paid</option>
-                                      <option value="Unpaid" {% if bonus.status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
-                                      <option value="Hold" {% if bonus.status == 'Hold' %}selected{% endif %}>Hold</option>
-                                  </select>
-                              </form>
-                          </td>
-                          
-                            
-                            <td>
-                              <span class="me-2">
-                                <div class="d-flex justify-content-center">
-                                  <button class="btn btn-light p-2" style="background-color: #FDECEA; border-radius: 10%; border: none;">
-                                    <a href="{% url 'delete_bonus' bonus.id %}" style="color: #FF4C4C;">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </button>
+                    <div class="card">
+                        <div class="card-body border-bottom py-3">
+                            <div class="d-flex">
+                                <div class="text-secondary">
+                                    Show
+                                    <select class="form-select form-select-sm d-inline-block w-auto" id="entriesPerPage">
+                                        <option value="10">10</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                    entries
                                 </div>
-                            </span>
-                            </td>
-      
-      
-      
-                          </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div class="card-footer d-flex align-items-center">
-                      <p class="m-0 text-secondary">
-                        Showing <span>1</span> to <span>8</span> of <span>16</span> entries
-                      </p>
-                      <ul class="pagination m-0 ms-auto">
-                        <li class="page-item disabled">
-                          <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                            <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                              <path d="M15 6l-6 6l6 6" />
-                            </svg>prev
-                          </a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">1</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">2</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">3</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">4</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">5</a>
-                        </li>
-                        <li class="page-item">
-                          <a class="page-link" href="#">
-                            next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                              <path d="M9 6l6 6l-6 6" />
-                            </svg>
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+                                <div class="ms-auto text-secondary">
+                                    Search:
+                                    <div class="ms-2 d-inline-block">
+                                        <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search bonuses" placeholder="Search...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter text-nowrap datatable" id="bonusTable">
+                                <thead>
+                                    <tr>
+                                        <th class="w-1">No.</th>
+                                        <th>Name</th>
+                                        <th>Reason</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bonus in bonuses %}
+                                    <tr>
+                                        <td><span class="text-secondary">{{ forloop.counter }}</span></td>
+                                        <td>{{ bonus.employee }}</td>
+                                        <td>{{ bonus.reason|truncatechars:30 }}</td>
+                                        <td>₹{{ bonus.amount }}</td>
+                                        <td>{{ bonus.created_at|date:"d M Y" }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if bonus.status == 'Paid' %}bg-green
+                                                {% elif bonus.status == 'Unpaid' %}bg-red
+                                                {% else %}bg-yellow{% endif %}">
+                                                {{ bonus.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap">
+                                                <!-- Edit Button -->
+                                                <a href="#" class="btn btn-sm btn-icon" title="Edit" data-bs-toggle="modal" data-bs-target="#edit-modal-{{ bonus.id }}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                        <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path>
+                                                        <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path>
+                                                        <path d="M16 5l3 3"></path>
+                                                    </svg>
+                                                </a>
+                                                
+                                                <!-- Delete Button -->
+                                                <a href="#" class="btn btn-sm btn-icon" title="Delete" data-bs-toggle="modal" data-bs-target="#delete-modal-{{ bonus.id }}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                        <path d="M4 7l16 0"></path>
+                                                        <path d="M10 11l0 6"></path>
+                                                        <path d="M14 11l0 6"></path>
+                                                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
+                                                        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
+                                                    </svg>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Edit Modal for each bonus -->
+                                    <div class="modal modal-blur fade" id="edit-modal-{{ bonus.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Edit Bonus</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form method="POST" action="{% url 'edit_bonus' bonus.id %}">
+                                                    {% csrf_token %}
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Employee</label>
+                                                            <select name="employee" class="form-select" required>
+                                                                {% for employee in employees %}
+                                                                    <option value="{{ employee.id }}" {% if employee.id == bonus.employee.id %}selected{% endif %}>{{ employee.first_name }} {{ employee.last_name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Amount</label>
+                                                            <input type="number" name="amount" class="form-control" value="{{ bonus.amount }}" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Reason</label>
+                                                            <textarea name="reason" class="form-control" required>{{ bonus.reason }}</textarea>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Status</label>
+                                                            <select name="status" class="form-select" required>
+                                                                <option value="Paid" {% if bonus.status == 'Paid' %}selected{% endif %}>Paid</option>
+                                                                <option value="Unpaid" {% if bonus.status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+                                                                <option value="Hold" {% if bonus.status == 'Hold' %}selected{% endif %}>Hold</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Delete Modal for each bonus -->
+                                    <div class="modal modal-blur fade" id="delete-modal-{{ bonus.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-body">
+                                                    <div class="modal-title">Are you sure?</div>
+                                                    <div>You are about to delete this bonus permanently.</div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Cancel</button>
+                                                    <form method="POST" action="{% url 'delete_bonus' bonus.id %}">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger">Yes, delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer d-flex align-items-center">
+                            <p class="m-0 text-secondary">
+                                Showing <span>{{ bonuses.start_index }}</span> to <span>{{ bonuses.end_index }}</span> of <span>{{ bonuses.paginator.count }}</span> entries
+                            </p>
+                            <ul class="pagination m-0 ms-auto">
+                                {% if bonuses.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1" tabindex="-1" aria-disabled="true">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M15 6l-6 6l6 6" />
+                                            </svg>
+                                            First
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ bonuses.previous_page_number }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M15 6l-6 6l6 6" />
+                                            </svg>
+                                            Prev
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M15 6l-6 6l6 6" />
+                                            </svg>
+                                            First
+                                        </a>
+                                    </li>
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M15 6l-6 6l6 6" />
+                                            </svg>
+                                            Prev
+                                        </a>
+                                    </li>
+                                {% endif %}
 
-  <div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Create New Bonus</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                {% for num in bonuses.paginator.page_range %}
+                                    {% if bonuses.number == num %}
+                                        <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                                    {% elif num > bonuses.number|add:'-3' and num < bonuses.number|add:'3' %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if bonuses.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ bonuses.next_page_number }}">
+                                            Next
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M9 6l6 6l-6 6" />
+                                            </svg>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ bonuses.paginator.num_pages }}">
+                                            Last
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M9 6l6 6l-6 6" />
+                                            </svg>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                            Next
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M9 6l6 6l-6 6" />
+                                            </svg>
+                                        </a>
+                                    </li>
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                            Last
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M9 6l6 6l-6 6" />
+                                            </svg>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="modal-body">
-          <form method="POST">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label for="employee" class="form-label">Employee</label>
-                <select name="employee" id="employee" class="form-select" required>
-                    <option value="" selected disabled>Select Employee</option>
-                    {% for employee in employees %}
-                        <option value="{{ employee.id }}">{{ employee.first_name }} {{ employee.last_name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="amount" class="form-label">Amount</label>
-                <input type="text" name="amount" id="amount" class="form-control" required />
-            </div>
-            <div class="mb-3">
-                <label for="reason" class="form-label">Reason</label>
-                <input type="text" name="reason" id="reason" class="form-control" required />
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-        </div>
-      </div>
     </div>
-  </div>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const list = new List('table-default', {
-        sortClass: 'table-sort',
-        listClass: 'table-tbody',
-        valueNames: ['sort-ID', 'sort-Name', 'sort-Designation', 'sort-Email', 'sort-Joining-Date', 'sort-Salary', 'sort-Status', { attr: 'data-date', name: 'sort-date' }, { attr: 'data-progress', name: 'sort-progress' }, 'sort-quantity']
-      })
-    })
-  </script>
+</div>
+
+<!-- Add Bonus Modal -->
+<div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Bonus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'bonus_view' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Employee</label>
+                        <select name="employee" class="form-select" required>
+                            <option value="" selected disabled>Select Employee</option>
+                            {% for employee in employees %}
+                                <option value="{{ employee.id }}">{{ employee.first_name }} {{ employee.last_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount</label>
+                        <input type="number" name="amount" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <textarea name="reason" class="form-control" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#bonusTable tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Entries per page selector
+    document.getElementById('entriesPerPage').addEventListener('change', function() {
+        window.location.href = `?per_page=${this.value}`;
+    });
+
+    // Auto-close success modal after 3 seconds
+    {% if messages %}
+    setTimeout(function() {
+        const successModal = document.getElementById('successModal');
+        if (successModal) {
+            const modal = bootstrap.Modal.getInstance(successModal);
+            modal.hide();
+        }
+    }, 3000);
+    {% endif %}
+</script>
 {% endblock %}

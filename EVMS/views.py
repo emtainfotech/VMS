@@ -274,19 +274,19 @@ def clear_signup_session(request):
             del request.session[key]
 
 def get_next_username():
-    # Get all usernames that start with 'EMTA' and end with 4 digits
-    users = User.objects.filter(username__regex=r'^EMTA\d{4}$').values_list('username', flat=True)
+    # Get all usernames that start with 'EMTA' and end with 5 digits
+    users = User.objects.filter(username__regex=r'^EMTA\d{5}$').values_list('username', flat=True)
 
     # Extract the numeric part from each username
-    numbers = [int(re.search(r'\d{4}', username).group()) for username in users]
+    numbers = [int(re.search(r'\d{5}', username).group()) for username in users]
 
     if numbers:
         next_number = max(numbers) + 1  # Increment the max number found
     else:
-        next_number = 1  # Start with EMTA0001 if no usernames exist
+        next_number = 1  # Start with EMTA00001 if no usernames exist
 
-    # Format the next username with leading zeros (e.g., EMTA0001)
-    return f"EMTA{next_number:04d}"
+    # Format the next username with leading zeros (e.g., EMTA00001)
+    return f"EMTA{next_number:05d}"
 
 def vendor_login(request):
     if request.method == 'POST':

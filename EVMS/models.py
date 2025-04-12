@@ -158,7 +158,7 @@ class Candidate(models.Model):
                 new_id_number = last_id_number + 1
             else:
                 new_id_number = 1
-            self.unique_id = f"EVC{new_id_number:06d}"
+            self.unique_id = f"C{new_id_number:06d}"
             
         super().save(*args, **kwargs)
         

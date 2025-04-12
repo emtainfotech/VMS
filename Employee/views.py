@@ -728,10 +728,24 @@ def employee_update_task_status(request,task_id) :
             )
         return redirect('assign_task')
 
-def employee_candidate_list(request) :
+def employee_candidate_list(request):
     logged_in_employee = Employee.objects.get(user=request.user)
-    candidates = Candidate_registration.objects.filter(employee_name=logged_in_employee).order_by('-id')
-    return render (request,'employee/candidate-list.html',{'candidates':candidates})
+    
+    # Get candidates from both models
+    reg_candidates = Candidate_registration.objects.filter(
+        employee_name=logged_in_employee
+    ).order_by('-id')
+    
+    cand_candidates = Candidate.objects.all(
+    ).order_by('-id')
+    
+    # Combine both querysets
+    combined_candidates = list(reg_candidates) + list(cand_candidates)
+    
+    # Sort by register_time (descending)
+    combined_candidates.sort(key=lambda x: x.register_time, reverse=True)
+    
+    return render(request, 'employee/candidate-list.html', {'candidates': combined_candidates})
     
 def employee_candidate_registration(request) :
     logged_in_employee = Employee.objects.get(user=request.user)
@@ -1282,12 +1296,49 @@ def employee_company_registration(request):
     ]
     
 
-    # Render the template with the context
-    return render(request, 'employee/company-registration.html',{
-        'districts' : districts,
-        'job_sectors' : job_sectors,
-        'departments' : departments
-        })
+    context = {
+        'districts': districts,
+        'job_sectors': job_sectors,
+        'departments': departments,
+    }
+    
+    # Check for AJAX request to fetch company data
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.GET.get('company_name'):
+        company_name = request.GET.get('company_name')
+        try:
+            company_data = Company_registration.objects.filter(
+                company_name__iexact=company_name
+            ).latest('id')
+            # Convert model instance to dict
+            from django.forms.models import model_to_dict
+            data = model_to_dict(company_data)
+            # Handle file fields and dates
+            if company_data.company_logo:
+                data['company_logo_url'] = company_data.company_logo.url
+            # Convert date fields to strings
+            date_fields = ['vacancy_opening_date', 'vacancy_closing_date', 
+                          'invoice_generation_date', 'payout_date']
+            for field in date_fields:
+                if getattr(company_data, field):
+                    data[field] = getattr(company_data, field).isoformat()
+            return JsonResponse(data)
+        except Company_registration.DoesNotExist:
+            return JsonResponse({'error': 'Company not found'}, status=404)
+    
+    return render(request, 'employee/company-registration.html', context)
+
+
+def search_companies(request):
+    search_term = request.GET.get('search', '').strip()
+    
+    if len(search_term) >= 3:
+        companies = Company_registration.objects.filter(
+            company_name__icontains=search_term
+        ).values('id', 'company_name', 'company_unique_code').distinct()[:10]
+        
+        return JsonResponse(list(companies), safe=False)
+    
+    return JsonResponse([], safe=False)
 
 def employee_company_list(request) :
     companys = Company_registration.objects.all().order_by('-id')
