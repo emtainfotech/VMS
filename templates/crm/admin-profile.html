@@ -1,0 +1,813 @@
+{% extends 'crm/base.html' %}
+
+{% block content %}
+  <style>
+    .card {
+      border: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+    .object-cover {
+      object-fit: cover;
+    }
+    .card-body h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .card-body .btn {
+      background-color: #6c63ff;
+      color: #fff;
+      font-weight: 500;
+    }
+    .card-body .btn:hover {
+      background-color: #574bce;
+    }
+    .edit-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      color: #6c63ff;
+    }
+  </style>
+
+  <div class="container py-4">
+    <div class="row g-4">
+        <!-- Personal Information Card -->
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Personal Information</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-profile">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column flex-md-row gap-4 align-items-start">
+                        <!-- Employee Photo -->
+                        <div class="text-center">
+                            {% if employee.employee_photo %}
+                            <img src="{{employee.employee_photo.url}}" 
+                                 class="rounded-circle object-cover border" 
+                                 style="width: 120px; height: 120px;" 
+                                 alt="Employee Photo">
+                            {% else %}
+                            <div class="d-flex align-items-center justify-content-center  rounded-circle border" 
+                                 style="width: 120px; height: 120px;">
+                                <span class="text-muted small">No Photo</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Employee Details -->
+                        <div class="flex-grow-1">
+                            <h4 class="mb-2">{{ employee.employee_id }} - {{ employee.first_name }} {{ employee.last_name }}</h4>
+                            <p class="text-muted mb-3">{{ employee.designation }} - {{ employee.department }}</p>
+                            
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <span class="d-block text-muted small">Date of Join</span>
+                                        <span class="fw-medium">{{ employee.joining_date|date:"M d, Y" }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="d-block text-muted small">Phone</span>
+                                        <span class="fw-medium">{{ employee.contact_number }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <span class="d-block text-muted small">Email</span>
+                                        <span class="fw-medium">{{ employee.user.email }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="d-block text-muted small">Birthday</span>
+                                        <span class="fw-medium">{{ additional_info.date_of_birth|date:"M d, Y" }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="d-block text-muted small">Gender</span>
+                                        <span class="fw-medium">{{ additional_info.gender }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Address Details Card -->
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Address Details</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-address">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Permanent Address</span>
+                                <span class="fw-medium">{{ address_details.permanent_address|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Present Address</span>
+                                <span class="fw-medium">{{ address_details.present_address|default:"-" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">City</span>
+                                <span class="fw-medium">{{ address_details.city|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">State</span>
+                                <span class="fw-medium">{{ address_details.state|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Country</span>
+                                <span class="fw-medium">{{ address_details.country|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Zip Code</span>
+                                <span class="fw-medium">{{ address_details.zip_code|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Nationality</span>
+                                <span class="fw-medium">{{ address_details.nationality|default:"-" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bank Account Card -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Bank Account</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-bank">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Account Holder</span>
+                                <span class="fw-medium">{{ bank_details.account_holder_name|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Account Number</span>
+                                <span class="fw-medium">{{ bank_details.account_number|default:"-" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Bank Name</span>
+                                <span class="fw-medium">{{ bank_details.bank_name|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">Branch</span>
+                                <span class="fw-medium">{{ bank_details.branch_name|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block text-muted small">IFSC Code</span>
+                                <span class="fw-medium">{{ bank_details.ifsc_code|default:"-" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Family Details Card -->
+        <div class="col-lg-6 mt-4">
+          <div class="card">
+              <div class="card-header  d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">Family Details</h5>
+                  <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-family">
+                      <i class="bi bi-pencil"></i> Edit
+                  </a>
+              </div>
+              <div class="card-body">
+                  <div class="table-responsive">
+                      <table class="table table-hover">
+                          <thead class="table-light">
+                              <tr>
+                                  <th>#</th>
+                                  <th>Name</th>
+                                  <th>Relation</th>
+                                  <th>Contact No.</th>
+                                  <th>Date of Birth</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {% for family in family_details %}
+                              <tr>
+                                  <td>{{ forloop.counter }}</td>
+                                  <td>{{ family.member_name|default:"-" }}</td>
+                                  <td>{{ family.relation|default:"-" }}</td>
+                                  <td>{{ family.contact_number|default:"-" }}</td>
+                                  <td>{{ family.date_of_birth|date:"M d, Y"|default:"-" }}</td>
+                              </tr>
+                              {% empty %}
+                              <tr>
+                                  <td colspan="5" class="text-center text-muted">No family details available</td>
+                              </tr>
+                              {% endfor %}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+        <!-- Education Details Card -->
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Education Details</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-education">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Institution</th>
+                                    <th>Course</th>
+                                    <th>Period</th>
+                                    <th>Grade</th>
+                                    <th>Document</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for edu in education_details %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ edu.institution_name|default:"-" }}</td>
+                                    <td>{{ edu.cource_name|default:"-" }}</td>
+                                    <td>{{ edu.start_year|default:"-" }} - {{ edu.end_year|default:"-" }}</td>
+                                    <td>{{ edu.grade|default:"-" }}</td>
+                                    <td>
+                                        {% if edu.education_certificate %}
+                                        <a href="{{ edu.education_certificate.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                            <i class="bi bi-file-earmark-text"></i> View
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">No Document</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ edu.description|default:"-" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No education details available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Experience Details Card -->
+        <div class="col-lg-12 mt-4">
+            <div class="card">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Experience Details</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-experience">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Organization</th>
+                                    <th>Designation</th>
+                                    <th>Period</th>
+                                    <th>Duration</th>
+                                    <th>Description</th>
+                                    <th>Certificate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exp in experience_details %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ exp.organization_name|default:"-" }}</td>
+                                    <td>{{ exp.designation_name|default:"-" }}</td>
+                                    <td>
+                                        {{ exp.start_date|date:"M d, Y"|default:"-" }} - 
+                                        {{ exp.end_date|date:"M d, Y"|default:"Present" }}
+                                    </td>
+                                    <td class="experience-duration" 
+                                        data-start="{{ exp.start_date }}" 
+                                        data-end="{{ exp.end_date }}">
+                                        Calculating...
+                                    </td>
+                                    <td>{{ exp.description|default:"-" }}</td>
+                                    <td>
+                                        {% if exp.experience_certificate %}
+                                        <a href="{{ exp.experience_certificate.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                            <i class="bi bi-file-earmark-text"></i> View
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">No Document</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No experience details available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents Card -->
+        <div class="col-lg-12 mt-4">
+            <div class="card">
+                <div class="card-header  d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Documents</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-document">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Type</th>
+                                    <th>Document Number</th>
+                                    <th>Attachment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in docs %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ doc.document_type|default:"-" }}</td>
+                                    <td>{{ doc.document_number|default:"-" }}</td>
+                                    <td>
+                                        {% if doc.document_file %}
+                                        <a href="{{ doc.document_file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                            <i class="bi bi-file-earmark-text"></i> View
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">No Document</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No documents available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calculate and display experience duration
+    document.querySelectorAll('.experience-duration').forEach(el => {
+        const startDate = new Date(el.dataset.start);
+        const endDate = el.dataset.end ? new Date(el.dataset.end) : new Date();
+        
+        const diffInMs = endDate - startDate;
+        const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+        
+        const years = Math.floor(diffInDays / 365);
+        const months = Math.floor((diffInDays % 365) / 30);
+        
+        el.textContent = years > 0 ? 
+            `${years} year${years > 1 ? 's' : ''} ${months} month${months > 1 ? 's' : ''}` : 
+            `${months} month${months > 1 ? 's' : ''}`;
+    });
+});
+</script>
+
+  {% comment %}profile details{% endcomment %}
+
+  <div class="modal modal-blur fade" id="modal-profile" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Personal Information</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+              <!-- Employee Fields -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="first_name" value="{{ employee.first_name }}" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="last_name" value="{{ employee.last_name }}" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="contact_number" value="{{ employee.contact_number }}" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" name="email" value="{{ employee.user.email }}" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Joining Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="joining_date" value="{{ employee.joining_date|date:'Y-m-d' }}" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Employee Photo <span class="text-danger">*</span></label>
+                <input type="file" class="form-control" name="employee_photo" />
+              </div>
+          
+              <!-- EmployeeAdditionalInfo Fields -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Date Of Birth <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="date_of_birth" value="{{ additional_info.date_of_birth|date:'Y-m-d' }}" required/>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Gender</label>
+                <select class="form-select" name="gender">
+                  <option value="Male" {% if additional_info.gender == "Male" %}selected{% endif %}>Male</option>
+                  <option value="Female" {% if additional_info.gender == "Female" %}selected{% endif %}>Female</option>
+                  <option value="Other" {% if additional_info.gender == "Other" %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+            </div>
+          
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" name="submit_employee_details" class="btn btn-primary">Save Changes</button>
+            </div>
+          </form>
+          
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  {% comment %}contact{% endcomment %}
+
+  <div class="modal modal-blur fade" id="modal-address" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Address Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Permanent Address <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="permanent_address" 
+                       value="{{ address_details.permanent_address }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Present Address <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="present_address" 
+                       value="{{ address_details.present_address }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">City<span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="city" 
+                       value="{{ address_details.city }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">State<span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="state" 
+                       value="{{ address_details.state }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Country<span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="country" 
+                       value="{{ address_details.country }}" >
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">ZIP Code <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="zip_code" 
+                       value="{{ address_details.zip_code }}" >
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Nationality<span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="nationality" 
+                     value="{{ address_details.nationality }}" >
+          </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" name="submit_address_details" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  {% comment %}Education{% endcomment %}
+  <div class="modal modal-blur fade" id="modal-document" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Document's</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Document Type</label>
+                    <input type="text" name="document_type" class="form-control" >
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Document Number</label>
+                    <input type="text" name="document_number" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Attech Certificate</label>
+                    <input type="file" name="document_file" class="form-control" >
+                </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" name="submit_documents_details" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% comment %}Bank{% endcomment %}
+
+  <div class="modal modal-blur fade" id="modal-bank" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Bank Account Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <!-- Account Holder Name & Bank Name -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Account Holder Name<span class="text-danger">*</span></label>
+                    <input type="text" name="account_holder_name" class="form-control" value="{{ bank_details.account_holder_name }}" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+                    <input type="text" name="bank_name" class="form-control" value="{{ bank_details.bank_name }}" required />
+                </div>
+        
+                <!-- Account Number & Confirm Account Number -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Account Number<span class="text-danger">*</span></label>
+                    <input type="text" name="account_number" class="form-control" value="{{ bank_details.account_number }}" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Confirm Account Number <span class="text-danger">*</span></label>
+                    <input type="text" name="confirm_account_number" class="form-control" value="{{ bank_details.confirm_account_number }}" required />
+                </div>
+        
+                <!-- Branch Name & IFSC Code -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Branch Name<span class="text-danger">*</span></label>
+                    <input type="text" name="branch_name" class="form-control" value="{{ bank_details.branch_name }}" required />
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">IFSC Code <span class="text-danger">*</span></label>
+                    <input type="text" name="ifsc_code" class="form-control" value="{{ bank_details.ifsc_code }}" required />
+                </div>
+        
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="submit_bank_account" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+        </form>
+        
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="modal-education" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Document Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Course Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="cource_name"  required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Institution Name<span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="institution_name" >
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Start Year<span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="start_year" min="1900" max="2100" required>
+          </div>
+          <div class="col-md-6 mb-3">
+              <label class="form-label">End Year<span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="end_year" min="1900" max="2100">
+          </div>
+          
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Grade<span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="grade"  >
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Certificate<span class="text-danger">*</span></label>
+              <input type="file" class="form-control" name="education_certificate" >
+          </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Description <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="description"  >
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" name="submit_education_details" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="modal-experience" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Experience Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Organization Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="organization_name" required>
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Designation <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="designation_name" required>
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" name="start_date" required>
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="end_date">
+                </div>
+        
+                
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Experience Certificate</label>
+                  <input type="file" class="form-control" name="experience_certificate">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Description <span class="text-danger">*</span></label>
+                    <textarea class="form-control" name="description" rows="3" required></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="submit_experience_details" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </form>
+        
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="modal-family" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Family Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Member Name<span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="member_name" required>
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Relation<span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="relation" required>
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Contact Number<span class="text-danger">*</span></label>
+                    <input type="tel" class="form-control" name="contact_number" required>
+                </div>
+        
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" class="form-control" name="date_of_birth">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="sumbit_family_details" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </form>
+        
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll("tr").forEach(row => {
+            let startTd = row.querySelector(".experience-duration");
+            let experienceTd = row.querySelector(".total-experience");
+    
+            if (startTd && experienceTd) {
+                let startDate = new Date(startTd.dataset.start);
+                let endDate = startTd.dataset.end ? new Date(startTd.dataset.end) : new Date(); // Use today if end_date is missing
+    
+                if (!isNaN(startDate) && !isNaN(endDate)) {
+                    let years = endDate.getFullYear() - startDate.getFullYear();
+                    let months = endDate.getMonth() - startDate.getMonth();
+                    let days = endDate.getDate() - startDate.getDate();
+    
+                    if (days < 0) {
+                        months -= 1;
+                        days += new Date(endDate.getFullYear(), endDate.getMonth(), 0).getDate();
+                    }
+                    if (months < 0) {
+                        years -= 1;
+                        months += 12;
+                    }
+    
+                    experienceTd.innerText = `${years} years, ${months} months, ${days} days`;
+                } else {
+                    experienceTd.innerText = "Invalid dates";
+                }
+            }
+        });
+    });
+    </script>
+{% endblock %}

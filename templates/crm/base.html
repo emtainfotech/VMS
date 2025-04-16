@@ -103,7 +103,7 @@
                 </div>
               </a>
               <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                {% comment %} <a href="{% url 'employee_profile_view' user.id %}" class="dropdown-item">Profile</a> {% endcomment %}
+                <a href="{% url 'crm_admin_profile' user.id %}" class="dropdown-item">Profile</a>
                 <a href="{% url 'custom_admin_logout' %}" class="dropdown-item">Logout</a>
               </div>
             </div>
@@ -144,8 +144,8 @@
                   </a>
                 </li>
                 
-                <li class="nav-item {% if request.path == '/crm/admin-company-list/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'admin_company_list' %}">
+                <li class="nav-item {% if request.path == '/crm/admin-vacancy-list/' %}active{% endif %}">
+                  <a class="nav-link" href="{% url 'admin_vacancy_list' %}">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                       <!-- Company Icon -->
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -159,7 +159,7 @@
                         <path d="M9 18l0 .01"/>
                       </svg>
                     </span>
-                    <span class="nav-link-title">Company's</span>
+                    <span class="nav-link-title">Vacancies</span>
                   </a>
                 </li>
       

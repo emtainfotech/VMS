@@ -52,6 +52,10 @@ def custom_admin_login(request):
             messages.error(request, "Invalid credentials or insufficient permissions.")
     return render(request, "hrms/admin-login.html")
 
+def custom_admin_logout(request):
+    logout(request)
+    return redirect('custom_admin_login') 
+
 def admin_signup_view(request):
     if request.method == 'POST':
         # Capture form data
@@ -1392,45 +1396,52 @@ def update_leave_status(request, leave_id):
     
     
 def holiday_view(request):
-    if request.user.is_staff or request.user.is_superuser:
-        if request.method == "POST":
-            # Adding or updating a holiday
-            holiday_id = request.POST.get('holiday_id')
-            date = request.POST.get('date')
-            day = request.POST.get('day')
-            name = request.POST.get('name')
-            
-            if holiday_id:
-                # Editing existing holiday
-                holiday = get_object_or_404(Holiday, id=holiday_id)
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, '404.html', status=404)
+
+    if request.method == "POST":
+        # Handle both add and edit operations
+        holiday_id = request.POST.get('holiday_id')
+        date = request.POST.get('date')
+        day = request.POST.get('day')
+        name = request.POST.get('name')
+        
+        if holiday_id:
+            # Editing existing holiday
+            try:
+                holiday = Holiday.objects.get(id=holiday_id)
                 holiday.date = date
                 holiday.day = day
                 holiday.name = name
                 holiday.save()
-                
+                messages.success(request, 'Holiday updated successfully!')
+            except Holiday.DoesNotExist:
+                messages.error(request, 'Holiday not found!')
+        else:
+            # Creating new holiday
+            if date and day and name:
+                Holiday.objects.create(date=date, day=day, name=name)
+                messages.success(request, 'Holiday added successfully!')
             else:
-                # Creating new holiday
-                if date and day and name:
-                    Holiday.objects.create(date=date, day=day, name=name)
-                    
-            
-            return redirect('holiday_view')
+                messages.error(request, 'Please fill all required fields!')
+        
+        return redirect('holiday_view')
 
-        elif request.method == "GET" and "delete_id" in request.GET:
-            # Deleting a holiday
-            delete_id = request.GET.get("delete_id")
-            holiday = get_object_or_404(Holiday, id=delete_id)
-            holiday_name = holiday.name
-            holiday_date = holiday.date
+    elif request.method == "GET" and "delete_id" in request.GET:
+        # Deleting a holiday
+        delete_id = request.GET.get("delete_id")
+        try:
+            holiday = Holiday.objects.get(id=delete_id)
             holiday.delete()
+            messages.success(request, 'Holiday deleted successfully!')
+        except Holiday.DoesNotExist:
+            messages.error(request, 'Holiday not found!')
+        
+        return redirect('holiday_view')
 
-            return redirect('holiday_view')
-
-        # Fetch all holidays to display
-        holidays = Holiday.objects.all().order_by('-date')
-        return render(request, 'hrms/holiday.html', {'holidays': holidays})
-    else:
-        return render(request, '404.html', status=404)
+    # Fetch all holidays to display
+    holidays = Holiday.objects.all().order_by('-date')
+    return render(request, 'hrms/holiday.html', {'holidays': holidays})
 
 def project_view(request) :
     if request.user.is_staff or request.user.is_superuser:
@@ -1715,62 +1726,69 @@ def edit_expense(request, id):
         return render(request, '404.html', status=404)
     
     
+@login_required
 def incentive_view(request):
     if request.user.is_staff or request.user.is_superuser:
         if request.method == 'POST':
-            # Get the form data from the POST request
-            employee_name_id = request.POST.get('employee_name')
+            # Handle form submission
+            employee_id = request.POST.get('employee_name')
             amount = request.POST.get('amount')
             reason = request.POST.get('reason')
+            status = request.POST.get('status', 'Unpaid')
 
-            # Create and save the new incentive record
             try:
-                employee = Employee.objects.get(id=employee_name_id)  # Assuming you're using Django's User model for employees
-                incentive = Incentive(employee_name=employee, amount=amount, reason=reason)
-                incentive.save()
-                return redirect('incentive_view')  # Redirect to the same page or a success page
+                employee = Employee.objects.get(id=employee_id)
+                Incentive.objects.create(
+                    employee_name=employee,
+                    amount=amount,
+                    reason=reason,
+                    status=status
+                )
+                return redirect('incentive_view')
             except Employee.DoesNotExist:
-                # Handle case where the employee does not exist
                 return render(request, 'hrms/incentive.html', {'error': 'Employee not found'})
 
-        # Handle GET request: Render the form
-        employees = Employee.objects.all()  # Get all employees (assuming using Django's User model)
+        # Get current month/year for filtering
         current_month = timezone.now().month
         current_year = timezone.now().year
 
-        incentives = Incentive.objects.filter(created_at__month=current_month, created_at__year=current_year).order_by('-id')
-        
-        # Calculate totals for different statuses
-        total_incentive = incentives.aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-        total_paid = incentives.filter(status='Paid').aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-        total_unpaid = incentives.filter(status='Unpaid').aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-        total_hold = incentives.filter(status='Hold').aggregate(total_amount=Sum('amount'))['total_amount'] or 0
+        # Get all incentives (you can remove the month/year filter if you want to show all)
+        incentives = Incentive.objects.filter(
+            created_at__month=current_month,
+            created_at__year=current_year
+        ).order_by('-created_at')
 
-        return render(request, 'hrms/incentive.html', {
-            'employees' : employees,
+        # Calculate totals
+        total_incentive = incentives.aggregate(total=Sum('amount'))['total'] or 0
+        total_paid = incentives.filter(status='Paid').aggregate(total=Sum('amount'))['total'] or 0
+        total_unpaid = incentives.filter(status='Unpaid').aggregate(total=Sum('amount'))['total'] or 0
+
+        context = {
+            'employees': Employee.objects.all(),
             'incentives': incentives,
             'total_incentive': total_incentive,
             'total_paid': total_paid,
             'total_unpaid': total_unpaid,
-            'total_hold': total_hold
-        })
+        }
+        return render(request, 'hrms/incentive.html', context)
     else:
-        # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
 
+@login_required
 def update_incentive_status(request, incentive_id):
     if request.method == 'POST':
-        incentive = Incentive.objects.get(id=incentive_id)
-        paid_status = request.POST.get('paid_status')
-        incentive.status = paid_status
+        incentive = get_object_or_404(Incentive, id=incentive_id)
+        incentive.amount = request.POST.get('amount')
+        incentive.reason = request.POST.get('reason')
+        incentive.status = request.POST.get('status')
         incentive.save()
-        return redirect('incentive_view')
+    return redirect('incentive_view')
 
+@login_required
 def delete_incentive(request, incentive_id):
     incentive = get_object_or_404(Incentive, id=incentive_id)
     incentive.delete()
-    return redirect('incentive_view') 
-
+    return redirect('incentive_view')
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -1889,53 +1907,153 @@ def resignation_view(request) :
 def documents_view(request) :
     return render(request,'hrms/documents.html')
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+from .models import Employee, Designation, Promotion, Notification
+from celery import shared_task
+
 def promotion_view(request):
-    if request.user.is_staff or request.user.is_superuser:
-        employees = Employee.objects.all()
-        designations = Designation.objects.all()
-        promotions = Promotion.objects.all().order_by('-id')
-
-        if request.method == "POST":
-            employee_id = request.POST.get('employee')
-            new_designation_id = request.POST.get('new_designation')
-            promotion_title = request.POST.get('promotion_title')
-            promotion_date = request.POST.get('promotion_date')
-            description = request.POST.get('description')
-
-            employee = Employee.objects.get(id=employee_id)
-            new_designation = Designation.objects.get(id=new_designation_id)
-
-            # Create a promotion record
-            Promotion.objects.create(
-                employee=employee,
-                old_designation=employee.designation,
-                new_designation=new_designation.name,
-                promotion_date=promotion_date,
-                description=description
-            )
-
-            Notification.objects.create(
-                user=employee.user,  # Assuming `Employee` has a related `User` model
-                notification_type='Promotion',
-                message=f"You're Promoted {employee.designation} to {new_designation} on {promotion_date} . For : {description}.",
-            )
-            
-            # Update the employee's designation if the promotion date is today or earlier
-            if promotion_date <= timezone.now().date().isoformat():
-                employee.designation = new_designation.name
-                employee.save()
-            else:
-                # For future promotions, schedule the update using Celery or another task scheduler
-                pass
-
-            return redirect('promotion_view')
-
-        return render(request, 'hrms/promotion.html', {'employees': employees, 'designations': designations, 'promotions' : promotions})
-    else:
-        # If the user is not an admin, show a 404 page
+    if not (request.user.is_staff or request.user.is_superuser):
         return render(request, '404.html', status=404)
 
+    employees = Employee.objects.all()
+    designations = Designation.objects.all()
+    promotions = Promotion.objects.all().order_by('-id')
 
+    if request.method == "POST":
+        # Check if this is an edit request
+        promotion_id = request.POST.get('promotion_id')
+        
+        if promotion_id:
+            # Editing existing promotion
+            try:
+                promotion = Promotion.objects.get(id=promotion_id)
+                new_designation_id = request.POST.get('new_designation')
+                promotion_date = request.POST.get('promotion_date')
+                description = request.POST.get('description')
+
+                new_designation = Designation.objects.get(id=new_designation_id)
+                
+                # Update promotion record
+                promotion.new_designation = new_designation.name
+                promotion.promotion_date = promotion_date
+                promotion.description = description
+                promotion.save()
+
+                # Update employee's designation if promotion date is today or earlier
+                if promotion_date <= timezone.now().date().isoformat():
+                    promotion.employee.designation = new_designation.name
+                    promotion.employee.save()
+
+                messages.success(request, 'Promotion updated successfully!')
+                
+                # Send notification email
+                send_promotion_email(
+                    promotion.employee,
+                    promotion.old_designation,
+                    promotion.new_designation,
+                    promotion.promotion_date,
+                    promotion.description,
+                    is_update=True
+                )
+                
+            except Exception as e:
+                messages.error(request, f'Error updating promotion: {str(e)}')
+        else:
+            # Creating new promotion
+            try:
+                employee_id = request.POST.get('employee')
+                new_designation_id = request.POST.get('new_designation')
+                promotion_date = request.POST.get('promotion_date')
+                description = request.POST.get('description')
+
+                employee = Employee.objects.get(id=employee_id)
+                new_designation = Designation.objects.get(id=new_designation_id)
+
+                # Create promotion record
+                promotion = Promotion.objects.create(
+                    employee=employee,
+                    old_designation=employee.designation,
+                    new_designation=new_designation.name,
+                    promotion_date=promotion_date,
+                    description=description
+                )
+
+                # Create notification
+                Notification.objects.create(
+                    user=employee.user,
+                    notification_type='Promotion',
+                    message=f"You're promoted from {employee.designation} to {new_designation.name} on {promotion_date}. Details: {description}",
+                )
+                
+                # Update employee's designation if promotion date is today or earlier
+                if promotion_date <= timezone.now().date().isoformat():
+                    employee.designation = new_designation.name
+                    employee.save()
+
+                messages.success(request, 'Promotion created successfully!')
+                
+                # Send notification email
+                send_promotion_email(
+                    employee,
+                    employee.designation,
+                    new_designation.name,
+                    promotion_date,
+                    description
+                )
+                
+            except Exception as e:
+                messages.error(request, f'Error creating promotion: {str(e)}')
+
+        return redirect('promotion_view')
+
+    return render(request, 'hrms/promotion.html', {
+        'employees': employees,
+        'designations': designations,
+        'promotions': promotions
+    })
+
+def send_promotion_email(employee, old_designation, new_designation, promotion_date, description, is_update=False):
+    subject = "Promotion Notification" if not is_update else "Promotion Update Notification"
+    message = f"""
+    Dear {employee.first_name} {employee.last_name},
+    
+    {'Your promotion details have been updated:' if is_update else 'We are pleased to inform you about your promotion:'}
+    
+    - Previous Position: {old_designation}
+    - New Position: {new_designation}
+    - Effective Date: {promotion_date}
+    - Details: {description}
+    
+    {'' if is_update else 'Congratulations on this achievement!'}
+    
+    Best regards,
+    HR Department
+    """
+    
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [employee.user.email],
+        fail_silently=False,
+    )
+
+def delete_promotion(request, promotion_id):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, '404.html', status=404)
+    
+    try:
+        promotion = get_object_or_404(Promotion, id=promotion_id)
+        promotion.delete()
+        messages.success(request, 'Promotion deleted successfully!')
+    except Exception as e:
+        messages.error(request, f'Error deleting promotion: {str(e)}')
+    
+    return redirect('promotion_view')
 
 @shared_task
 def update_designations():
@@ -1943,13 +2061,17 @@ def update_designations():
     promotions = Promotion.objects.filter(promotion_date=today)
 
     for promotion in promotions:
-        promotion.employee.current_designation = promotion.new_designation
+        promotion.employee.designation = promotion.new_designation
         promotion.employee.save()
-
-def delete_promotion(request, promotion_id):
-    promotion = get_object_or_404(Promotion, id=promotion_id)
-    promotion.delete()
-    return redirect('promotion_view')
+        
+        # Send email notification
+        send_promotion_email(
+            promotion.employee,
+            promotion.old_designation,
+            promotion.new_designation,
+            str(promotion.promotion_date),
+            promotion.description
+        )
 
 
 
@@ -1965,38 +2087,173 @@ def termination_view(request):
             notice_date = request.POST.get('notice_date')
             termination_date = request.POST.get('termination_date')
             description = request.POST.get('description')
+            status = request.POST.get('status')
 
             employee = Employee.objects.get(id=employee_id)
 
             # Create a Termination record
-            Termination.objects.create(
+            termination = Termination.objects.create(
                 employee=employee,
                 termination_type=termination_type,
                 notice_date=notice_date,
                 termination_date=termination_date,
-                description=description
+                description=description,
+                status=status
             )
 
             # Create a notification for the employee about the termination
             Notification.objects.create(
-                user=employee.user,  # Assuming `Employee` has a related `User` model
+                user=employee.user,
                 notification_type='termination',
                 message=f'{employee} employment has been terminated. Termination type: {termination_type}.',
             )
 
+            # Send email notification
+            subject = f'Termination Notice - {employee.first_name} {employee.last_name}'
+            message = f"""
+            Dear {employee.first_name},
+            
+            This is to inform you that your employment termination has been initiated.
+            
+            Termination Type: {termination_type}
+            Notice Date: {notice_date}
+            Termination Date: {termination_date}
+            Status: {status}
+            
+            Description:
+            {description}
+            
+            Please contact HR if you have any questions.
+            
+            Regards,
+            HR Department
+            """
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [employee.user.email],
+                fail_silently=False,
+            )
+
             return redirect('termination_view')
 
-        return render(request, 'hrms/termination.html', {'employees': employees, 'terminations': terminations,'notifications' : notifications})
+        return render(request, 'hrms/termination.html', {
+            'employees': employees, 
+            'terminations': terminations,
+            'notifications': notifications
+        })
     else:
-        # If the user is not an admin, show a 404 page
         return render(request, '404.html', status=404)
 
+def edit_termination(request, termination_id):
+    if request.user.is_staff or request.user.is_superuser:
+        termination = get_object_or_404(Termination, id=termination_id)
+        
+        if request.method == "POST":
+            termination.termination_type = request.POST.get('termination_type')
+            termination.notice_date = request.POST.get('notice_date')
+            termination.termination_date = request.POST.get('termination_date')
+            termination.description = request.POST.get('description')
+            termination.status = request.POST.get('status')
+            termination.save()
+
+            # Create a notification for the employee about the update
+            Notification.objects.create(
+                user=termination.employee.user,
+                notification_type='termination_update',
+                message=f'Your termination details have been updated. New status: {termination.status}.',
+            )
+
+            # Send email notification about the update
+            subject = f'Termination Update - {termination.employee.first_name} {termination.employee.last_name}'
+            message = f"""
+            Dear {termination.employee.first_name},
+            
+            Your termination details have been updated.
+            
+            Updated Termination Type: {termination.termination_type}
+            Updated Notice Date: {termination.notice_date}
+            Updated Termination Date: {termination.termination_date}
+            Updated Status: {termination.status}
+            
+            Updated Description:
+            {termination.description}
+            
+            Please contact HR if you have any questions.
+            
+            Regards,
+            HR Department
+            """
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [termination.employee.user.email],
+                fail_silently=False,
+            )
+
+            return redirect('termination_view')
+
+        return redirect('termination_view')
+    else:
+        return render(request, '404.html', status=404)
 
 def delete_termination(request, termination_id):
-    termination = get_object_or_404(Termination, id=termination_id)
-    termination.delete()
-    return redirect('termination_view')
+    if request.user.is_staff or request.user.is_superuser:
+        termination = get_object_or_404(Termination, id=termination_id)
+        
+        # Get employee details before deletion
+        employee = termination.employee
+        termination_details = {
+            'type': termination.termination_type,
+            'notice_date': termination.notice_date,
+            'termination_date': termination.termination_date,
+            'description': termination.description
+        }
+        
+        termination.delete()
 
+        # Create a notification for the employee about the deletion
+        Notification.objects.create(
+            user=employee.user,
+            notification_type='termination_cancel',
+            message='Your termination record has been cancelled.',
+        )
+
+        # Send email notification about the deletion
+        subject = f'Termination Cancelled - {employee.first_name} {employee.last_name}'
+        message = f"""
+        Dear {employee.first_name},
+        
+        Your termination record has been cancelled and removed from our system.
+        
+        Original Termination Details:
+        Type: {termination_details['type']}
+        Notice Date: {termination_details['notice_date']}
+        Termination Date: {termination_details['termination_date']}
+        
+        Description:
+        {termination_details['description']}
+        
+        Please contact HR if you have any questions.
+        
+        Regards,
+        HR Department
+        """
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [employee.user.email],
+            fail_silently=False,
+        )
+
+        return redirect('termination_view')
+    else:
+        return render(request, '404.html', status=404)
+    
+    
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required, user_passes_test
 
@@ -2067,9 +2324,30 @@ def announcement_view(request):
         'announcements': announcements
     })
 
-def team_meeting_view(request) :
+from django.core.mail import send_mail
+from django.conf import settings
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.utils import timezone
+from datetime import datetime
+from .models import Meeting, Notification
+from django.core.paginator import Paginator
+
+def team_meeting_view(request):
     if request.user.is_staff or request.user.is_superuser:
-        meetings = Meeting.objects.all()
+        today = timezone.now().date()
+        
+        # Get unique departments for filter dropdown
+        departments = Meeting.objects.values_list('department', flat=True).distinct()
+        
+        # Get all meetings ordered by date
+        meetings_list = Meeting.objects.all().order_by('date', 'time')
+        
+        # Pagination
+        paginator = Paginator(meetings_list, 10)  # Show 10 meetings per page
+        page_number = request.GET.get('page')
+        meetings = paginator.get_page(page_number)
+        
         if request.method == 'POST':
             # Extract data from the POST request
             title = request.POST.get('title')
@@ -2077,41 +2355,97 @@ def team_meeting_view(request) :
             time = request.POST.get('time')
             department = request.POST.get('department')
             location = request.POST.get('location')
-
-            # Validate the data
-            if title and date and time and location:
-                # Create a notification for the employee about the termination
-                Notification.objects.create(
-                    notification_type='Meeting',
-                    message=f'{department} department Meeting Schedule at {date} on {time}.',
-                )
-                # Save the meeting data to the database
-                meeting = Meeting(
-                    title=title,
-                    date=datetime.strptime(date, '%Y-%m-%d').date(),  # Convert string to date
-                    time=datetime.strptime(time, '%H:%M').time(),# Convert string to time
-                    department = department,
-                    location=location
-                )
-                meeting.save()
-
-                # Redirect to a success page or render a success message
-                return redirect('team_meeting_view')
-            else:
-                # Return error if validation fails
-                return HttpResponse('All fields are required!', status=400)
+            description = request.POST.get('description', '')
             
-        else:
-            return render(request,'hrms/team-meeting.html',{'meetings' : meetings})
+            # Validate the data
+            if title and date and time and department and location:
+                try:
+                    # Create and save the meeting
+                    meeting = Meeting.objects.create(
+                        title=title,
+                        date=datetime.strptime(date, '%Y-%m-%d').date(),
+                        time=datetime.strptime(time, '%H:%M').time(),
+                        department=department,
+                        location=location,
+                        description=description
+                    )
+                    
+                    # Send email notifications (in production you'd want to use Celery for this)
+                    send_mail(
+                        subject=f'New Meeting Scheduled: {title}',
+                        message=f'''
+                        Meeting Details:
+                        Title: {title}
+                        Department: {department}
+                        Date: {date}
+                        Time: {time}
+                        Location: {location}
+                        
+                        Description:
+                        {description}
+                        
+                        Please mark your calendar.
+                        ''',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[request.user.email],  # In real app, send to all participants
+                        fail_silently=True,
+                    )
+                    
+                    messages.success(request, 'Meeting successfully scheduled!')
+                    return redirect('team_meeting_view')
+                    
+                except Exception as e:
+                    messages.error(request, f'Error scheduling meeting: {str(e)}')
+            else:
+                messages.error(request, 'All required fields must be filled!')
+        
+        return render(request, 'hrms/team-meeting.html', {
+            'meetings': meetings,
+            'departments': departments,
+            'today': today
+        })
     else:
-        # If the user is not an admin, show a 404 page
+        return render(request, '404.html', status=404)
+
+def edit_meeting(request, meeting_id):
+    if request.user.is_staff or request.user.is_superuser:
+        meeting = get_object_or_404(Meeting, id=meeting_id)
+        
+        if request.method == 'POST':
+            # Update meeting details
+            meeting.title = request.POST.get('title')
+            meeting.date = datetime.strptime(request.POST.get('date'), '%Y-%m-%d').date()
+            meeting.time = datetime.strptime(request.POST.get('time'), '%H:%M').time()
+            meeting.department = request.POST.get('department')
+            meeting.location = request.POST.get('location')
+            meeting.description = request.POST.get('description', '')
+            meeting.is_completed = request.POST.get('is_completed') == 'true'
+            meeting.save()
+            
+            # Create notification
+            Notification.objects.create(
+                notification_type='Meeting Update',
+                message=f'Meeting "{meeting.title}" has been updated. New date: {meeting.date} at {meeting.time}.',
+            )
+            
+            messages.success(request, 'Meeting successfully updated!')
+            return redirect('team_meeting_view')
+        
+        return redirect('team_meeting_view')
+    else:
+        return render(request, '404.html', status=404)
+
+def delete_meeting(request, meeting_id):
+    if request.user.is_staff or request.user.is_superuser:
+        meeting = get_object_or_404(Meeting, id=meeting_id)
+        
+        meeting.delete()
+        messages.success(request, 'Meeting successfully deleted!')
+        return redirect('team_meeting_view')
+    else:
         return render(request, '404.html', status=404)
     
-def delete_meeting(request, meeting_id):
-    meeting = get_object_or_404(Meeting, id=meeting_id)
-    meeting.delete()
-    return redirect('team_meeting_view')
-
+    
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -2228,50 +2562,148 @@ def delete_activity(request, officeactivity_id):
 def clients_view(request) :
     return render(request,'hrms/clients.html')
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+from datetime import datetime
+from .models import Employee, Warning, Notification
+
 def warning_view(request):
-    if request.user.is_staff or request.user.is_superuser:
-        employees = Employee.objects.all()
-
-        if request.method == "POST":
-            employee_id = request.POST.get('employee')
-            subject = request.POST.get('subject')
-            warning_date = request.POST.get('warning_date')
-            description = request.POST.get('description')
-
-            # Convert warning_date to the correct format
-            try:
-                formatted_warning_date = datetime.strptime(warning_date, "%Y-%m-%d").date()
-            except ValueError:
-                formatted_warning_date = None
-
-            # Get the employee instance
-            employee = Employee.objects.get(id=employee_id)
-
-            # Create a Warning record
-            Warning.objects.create(
-                employee=employee,
-                subject=subject,
-                warning_date=formatted_warning_date,
-                description=description
-            )
-            Notification.objects.create(
-            user=employee.user, 
-            notification_type='Warning',
-            message=f"{employee} Warning for {subject} on {warning_date}.",
-            )
-
-            return redirect('warning_view')
-
-        # Fetch all warnings to display
-        warnings = Warning.objects.all()
-        return render(request, 'hrms/warning.html', {'employees': employees, 'warnings': warnings})
-    else:
-        # If the user is not an admin, show a 404 page
+    if not (request.user.is_staff or request.user.is_superuser):
         return render(request, '404.html', status=404)
+
+    employees = Employee.objects.all()
+    warnings = Warning.objects.all().order_by('-warning_date')
+
+    if request.method == "POST":
+        # Check if this is an edit request
+        warning_id = request.POST.get('warning_id')
         
+        if warning_id:
+            # Editing existing warning
+            try:
+                warning = Warning.objects.get(id=warning_id)
+                subject = request.POST.get('subject')
+                warning_date = request.POST.get('warning_date')
+                description = request.POST.get('description')
+
+                # Update warning record
+                warning.subject = subject
+                warning.warning_date = warning_date
+                warning.description = description
+                warning.save()
+
+                messages.success(request, 'Warning updated successfully!')
+                
+                # Send notification email
+                send_warning_email(
+                    warning.employee,
+                    warning.subject,
+                    warning.warning_date,
+                    warning.description,
+                    is_update=True
+                )
+                
+                # Update notification
+                Notification.objects.filter(
+                    notification_type='Warning',
+                    message__contains=f"Warning for {warning.subject}"
+                ).update(
+                    message=f"{warning.employee} Warning for {warning.subject} on {warning.warning_date}."
+                )
+                
+            except Exception as e:
+                messages.error(request, f'Error updating warning: {str(e)}')
+        else:
+            # Creating new warning
+            try:
+                employee_id = request.POST.get('employee')
+                subject = request.POST.get('subject')
+                warning_date = request.POST.get('warning_date')
+                description = request.POST.get('description')
+
+                employee = Employee.objects.get(id=employee_id)
+
+                # Create warning record
+                warning = Warning.objects.create(
+                    employee=employee,
+                    subject=subject,
+                    warning_date=warning_date,
+                    description=description
+                )
+
+                # Create notification
+                Notification.objects.create(
+                    user=employee.user,
+                    notification_type='Warning',
+                    message=f"{employee} Warning for {subject} on {warning_date}.",
+                )
+                
+                messages.success(request, 'Warning created successfully!')
+                
+                # Send notification email
+                send_warning_email(
+                    employee,
+                    subject,
+                    warning_date,
+                    description
+                )
+                
+            except Exception as e:
+                messages.error(request, f'Error creating warning: {str(e)}')
+
+        return redirect('warning_view')
+
+    return render(request, 'hrms/warning.html', {
+        'employees': employees,
+        'warnings': warnings
+    })
+
+def send_warning_email(employee, subject, warning_date, description, is_update=False):
+    subject = "Warning Notification" if not is_update else "Warning Update Notification"
+    message = f"""
+    Dear {employee.first_name} {employee.last_name},
+    
+    {'Your warning details have been updated:' if is_update else 'This is to inform you about a formal warning:'}
+    
+    - Subject: {subject}
+    - Date: {warning_date}
+    - Details: {description}
+    
+    Please take this warning seriously and ensure compliance with company policies.
+    
+    Best regards,
+    HR Department
+    """
+    
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [employee.user.email],
+        fail_silently=False,
+    )
+
 def delete_warning(request, warning_id):
-    warning = get_object_or_404(Warning, id=warning_id)
-    warning.delete()
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, '404.html', status=404)
+    
+    try:
+        warning = get_object_or_404(Warning, id=warning_id)
+        
+        # Delete associated notification
+        Notification.objects.filter(
+            notification_type='Warning',
+            message__contains=f"Warning for {warning.subject}"
+        ).delete()
+        
+        warning.delete()
+        messages.success(request, 'Warning deleted successfully!')
+    except Exception as e:
+        messages.error(request, f'Error deleting warning: {str(e)}')
+    
     return redirect('warning_view')
 
 @login_required
@@ -3214,3 +3646,202 @@ def update_task_status(request, task_id):
             messages.error(request, f'Error updating task status: {str(e)}')
     
     return redirect('assign_task')
+
+
+def admin_profile(request,id):
+    if request.user.is_authenticated:
+        # Fetch the employee object or return a 404
+        employee = get_object_or_404(Employee, user=request.user)
+        attendance_sheet = MonthlyAttendance.objects.filter(employee=employee.user).order_by('year', 'month')
+        designations = Designation.objects.all()
+        additional_info, _ = EmployeeAdditionalInfo.objects.get_or_create(employee=employee)
+        address_details, _ = Employee_address.objects.get_or_create(employee=employee)
+        bank_details, _ = EmployeeBankDetails.objects.get_or_create(employee=employee)
+
+        if request.method == 'POST':
+            if 'submit_employee_details' in request.POST:
+                # Handle Employee fields
+                first_name = request.POST.get('first_name')
+                last_name = request.POST.get('last_name')
+                contact_number = request.POST.get('contact_number')
+                email = request.POST.get('email')
+                joining_date = request.POST.get('joining_date')
+                employee_photo = request.FILES.get('employee_photo')
+
+                employee.first_name = first_name
+                employee.last_name = last_name
+                employee.contact_number = contact_number
+                employee.email = email
+                employee.joining_date = joining_date
+                if employee_photo:
+                    employee.employee_photo = employee_photo
+                employee.save()
+
+                # Update EmployeeAdditionalInfo fields
+                date_of_birth = request.POST.get('date_of_birth')
+                gender = request.POST.get('gender')
+                department = request.POST.get('department')
+                designation = request.POST.get('designation')
+                blood_group = request.POST.get('blood_group')
+                reporting_to = request.POST.get('reporting_to')
+
+                additional_info.date_of_birth = date_of_birth
+                additional_info.gender = gender
+                employee.department = department
+                employee.designation = designation
+                additional_info.blood_group = blood_group
+                additional_info.reporting_to = reporting_to
+                additional_info.save()
+
+                messages.success(request, 'Employee details updated successfully!')
+
+            elif 'sumbit_family_details' in request.POST:
+                # Handle Emergency Contact fields
+                member_name = request.POST.get('member_name')
+                relation = request.POST.get('relation')
+                contact_number = request.POST.get('contact_number')
+                date_of_birth = request.POST.get('date_of_birth')
+
+                Family_details.objects.create(
+                    employee=employee,
+                    member_name=member_name,
+                    relation=relation,
+                    contact_number=contact_number,
+                    date_of_birth=date_of_birth
+                )
+
+                messages.success(request, 'Emergency contact details updated successfully!')
+                
+            elif 'submit_address_details' in request.POST:
+                # Handle Social Media details form submission
+                permanent_address = request.POST.get('permanent_address')
+                present_address = request.POST.get('present_address')
+                city = request.POST.get('city')
+                state = request.POST.get('state')
+                country = request.POST.get('country')
+                zip_code = request.POST.get('zip_code')
+                nationality = request.POST.get('nationality')
+
+                address_details.permanent_address = permanent_address
+                address_details.present_address = present_address
+                address_details.city = city
+                address_details.state = state
+                address_details.country = country
+                address_details.zip_code = zip_code
+                address_details.nationality = nationality
+                address_details.save()
+                
+                messages.success(request, 'Address details updated successfully!')
+                
+            elif 'submit_education_details' in request.POST:
+                # Retrieve form data
+                cource_name = request.POST.get('cource_name')
+                institution_name = request.POST.get('institution_name')
+                start_year = request.POST.get('start_year')
+                end_year = request.POST.get('end_year')
+                grade = request.POST.get('grade')
+                description = request.POST.get('description')
+                education_certificate = request.FILES.get('education_certificate')
+
+                # Create a new education record for the employee
+                Education_details.objects.create(
+                    employee=employee,  # Ensure you have the employee instance already fetched
+                    cource_name=cource_name,
+                    institution_name=institution_name,
+                    start_year=start_year,
+                    end_year=end_year,
+                    grade=grade,
+                    description=description,
+                    education_certificate=education_certificate
+                )
+
+                # Add a success message
+                messages.success(request, 'Education details updated successfully!')
+
+            
+            elif 'submit_experience_details' in request.POST:
+                # Handle Social Media details form submission
+                organization_name = request.POST.get('organization_name')
+                designation_name = request.POST.get('designation_name')
+                start_date = request.POST.get('start_date')
+                end_date = request.POST.get('end_date')
+                description = request.POST.get('description')
+                experience_certificate = request.FILES.get('experience_certificate')
+
+                Experience_details.objects.create(
+                    employee = employee,
+                    organization_name = organization_name,
+                    designation_name = designation_name,
+                    start_date = start_date,
+                    end_date = end_date,
+                    description = description,
+                    experience_certificate = experience_certificate
+                )
+                
+                messages.success(request, 'Experience details updated successfully!')
+             
+            elif 'submit_documents_details' in request.POST:
+                document_number = request.POST.get('document_number')
+                document_type = request.POST.get('document_type')
+                document_file = request.FILES.get('document_file')
+
+                # Create a new document record for the employee
+                Documents_details.objects.create(
+                    employee=employee,  # Use the employee fetched at the start of the view
+                    document_type=document_type,
+                    document_number=document_number,
+                    document_file=document_file
+                )
+
+                messages.success(request, 'Document details added successfully!')
+
+                
+            elif 'submit_bank_account' in request.POST:
+                # Handle form submission for bank details
+                account_holder_name = request.POST.get('account_holder_name')
+                bank_name = request.POST.get('bank_name')
+                account_number = request.POST.get('account_number')
+                confirm_account_number = request.POST.get('confirm_account_number')
+                branch_name = request.POST.get('branch_name')
+                ifsc_code = request.POST.get('ifsc_code')
+
+                # Ensure account number and confirm account number match
+                if account_number != confirm_account_number:
+                    messages.error(request, "Account numbers do not match!")
+                    return redirect('employee-bank-details', id=employee.id)  # Redirect back to the same page
+
+                # Update or create bank details for the employee
+                bank_details.account_holder_name = account_holder_name
+                bank_details.bank_name = bank_name
+                bank_details.account_number = account_number
+                bank_details.confirm_account_number = confirm_account_number
+                bank_details.branch_name = branch_name
+                bank_details.ifsc_code = ifsc_code
+                bank_details.save()
+
+                messages.success(request, 'Bank details updated successfully!')
+                
+                
+
+            return redirect('admin_profile', id=employee.id)  # Adjust 'employee-details' to your URL name
+        # Get all document details related to the employee
+        docs = Documents_details.objects.filter(employee=employee)
+        education_details = Education_details.objects.filter(employee=employee)
+        experience_details = Experience_details.objects.filter(employee=employee)
+        family_details = Family_details.objects.filter(employee=employee)
+
+        context = {
+            'employee': employee,
+            'additional_info': additional_info,
+            'address_details': address_details,
+            'family_details' : family_details,
+            'education_details' : education_details,
+            'experience_details' : experience_details,
+            'bank_details': bank_details,
+            'attendance_sheet' : attendance_sheet,
+            'designations' : designations,
+            'docs' : docs
+        }
+        return render(request, 'hrms/admin-profile.html', context)
+    else:
+        return render(request, 'employee/login.html', {'error': 'User not authenticated'})

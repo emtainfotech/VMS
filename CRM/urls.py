@@ -26,6 +26,8 @@ urlpatterns = [
     path('selected-candidate-list/', selected_candidate, name='selected_candidate'),
     path('follow-up-candidate/',follow_up_candidate, name = 'follow_up_candidate'),
     path('leads/',generated_leads, name = 'generated_leads'),
+    path('admin-vacancy-list/',admin_vacancy_list,name = 'admin_vacancy_list'),
+    path('admin-profile/<int:id>/', crm_admin_profile, name='crm_admin_profile'),
     
     path('admin/', admin.site.urls),
 ]

@@ -419,7 +419,6 @@ def admin_company_profile(request,id) :
         if 'company_personal_information' in request.POST:
             # Handle Employee fields
             company_name = request.POST.get('company_name')
-            vacancy_status = request.POST.get('vacancy_status')
             company_location = request.POST.get('company_location')
             company_unique_code = request.POST.get('company_unique_code')
             job_profile = request.POST.get('job_profile')
@@ -433,8 +432,7 @@ def admin_company_profile(request,id) :
             company.company_unique_code = company_unique_code
             company.job_profile = job_profile
             company.company_vacancy_unique_code = company_vacancy_unique_code
-            company.company_email_address=company_email_address
-            company.vacancy_status=vacancy_status
+            company_email_address=company_email_address
             if company_logo:
                 company.company_logo = company_logo
             company.vacancy_opening_date = vacancy_opening_date
@@ -515,8 +513,232 @@ def admin_company_profile(request,id) :
             company.save()
             
             messages.success(request, 'company Calling details updated successfully!')
+            
+        elif 'add_vacancy' in request.POST:
+            # Handle new vacancy creation
+            job_profile = request.POST.get('job_profile')
+            company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
+            vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
+            vacancy_status = request.POST.get('vacancy_status', 'Pending')
+            payroll = request.POST.get('payroll')
+            third_party_name = request.POST.get('third_party_name')
+            job_opening_origin = request.POST.get('job_opening_origin')
+            sector_type = request.POST.get('sector_type')
+            department_name = request.POST.get('department_name')
+            fresher_status = request.POST.get('fresher_status')
+            minimum_age = request.POST.get('minimum_age')
+            maximum_age = request.POST.get('maximum_age')
+            gender = request.POST.get('gender')
+            minimum_experience = request.POST.get('minimum_experience')
+            maximum_experience = request.POST.get('maximum_experience')
+            minimum_education_qualification = request.POST.get('minimum_education_qualification')
+            specialization = request.POST.get('specialization')
+            minimum_salary_range = request.POST.get('minimum_salary_range')
+            maximum_salary_range = request.POST.get('maximum_salary_range')
+            vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
+            special_instruction = request.POST.get('special_instruction')
+            company_usp = request.POST.get('company_usp')
+            status_of_incentive = request.POST.get('status_of_incentive')
+            replacement_criteria = request.POST.get('replacement_criteria')
+
+            VacancyDetails.objects.create(
+                company=company,
+                job_profile=job_profile,
+                company_vacancy_unique_code=company_vacancy_unique_code,
+                vacancy_opening_date=vacancy_opening_date,
+                vacancy_status=vacancy_status,
+                payroll=payroll,
+                third_party_name=third_party_name,
+                job_opening_origin=job_opening_origin,
+                sector_type=sector_type,
+                department_name=department_name,
+                fresher_status=fresher_status,
+                minimum_age=minimum_age,
+                maximum_age=maximum_age,
+                gender=gender,
+                minimum_experience=minimum_experience,
+                maximum_experience=maximum_experience,
+                minimum_education_qualification=minimum_education_qualification,
+                specialization=specialization,
+                minimum_salary_range=minimum_salary_range,
+                maximum_salary_range=maximum_salary_range,
+                vacancy_closing_date=vacancy_closing_date,
+                special_instruction=special_instruction,
+                company_usp=company_usp,
+                status_of_incentive=status_of_incentive,
+                replacement_criteria=replacement_criteria,
+            )
+            messages.success(request, 'Vacancy added successfully!')
+            
+        elif 'edit_vacancy' in request.POST:
+            # Handle vacancy editing
+            vacancy_id = request.POST.get('vacancy_id')
+            try:
+                vacancy = VacancyDetails.objects.get(id=vacancy_id, company=company)
+                vacancy.job_profile = request.POST.get('job_profile')
+                vacancy.company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
+                vacancy.vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
+                vacancy.vacancy_status = request.POST.get('vacancy_status', 'Pending')
+                vacancy.payroll = request.POST.get('payroll')
+                vacancy.sector_type = request.POST.get('sector_type')
+                vacancy.department_name = request.POST.get('department_name')
+                vacancy.minimum_salary_range = request.POST.get('minimum_salary_range')
+                vacancy.maximum_salary_range = request.POST.get('maximum_salary_range')
+                vacancy.minimum_experience = request.POST.get('minimum_experience')
+                vacancy.maximum_experience = request.POST.get('maximum_experience')
+                vacancy.special_instruction = request.POST.get('special_instruction')
+                vacancy.vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
+                vacancy.save()
+                messages.success(request, 'Vacancy updated successfully!')
+            except VacancyDetails.DoesNotExist:
+                messages.error(request, 'Vacancy not found!')
+                
+        elif 'delete_vacancy' in request.POST:
+            # Handle vacancy deletion
+            vacancy_id = request.POST.get('vacancy_id')
+            try:
+                vacancy = VacancyDetails.objects.get(id=vacancy_id, company=company)
+                vacancy.delete()
+                messages.success(request, 'Vacancy deleted successfully!')
+            except VacancyDetails.DoesNotExist:
+                messages.error(request, 'Vacancy not found!')
+                
         return redirect('admin_company_profile', id=id)
-    return render(request,'crm/company-profile.html',{'company':company})
+    districts = [
+    "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
+    "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
+    "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni",
+    "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch",
+    "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni",
+    "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
+    "Ujjain", "Umaria", "Vidisha"
+    ]
+    job_sectors = [
+    "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
+    "Healthcare and Pharmaceuticals","Education and Training",
+    "Retail and E-commerce", "Manufacturing and Production","Real Estate and Construction", "Hospitality and Tourism",
+    "Media and Entertainment", "Telecommunications","Logistics and Supply Chain","Marketing and Advertising","Human Resources",
+    "Legal and Compliance","Engineering and Infrastructure","Automobile Industry",
+    "Fashion and Textile", "FMCG (Fast Moving Consumer Goods)",
+    "Agriculture and Farming", "Insurance","Government Sector","NGO and Social Services",
+    "Energy and Power","Aviation and Aerospace"
+    ]
+    departments = [
+    # IT (Information Technology)
+    "Software Development", "IT Support", "Web Development", 
+    "Network Administration", "Cybersecurity", 
+    "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)",
+
+    # BPO (Business Process Outsourcing)
+    "Customer Support", "Technical Support", "Voice Process", 
+    "Non-Voice Process", "Back Office Operations",
+
+    # Banking and Finance
+    "Investment Banking", "Retail Banking", "Loan Processing", 
+    "Risk Management", "Accounting and Auditing", 
+    "Financial Analysis", "Wealth Management",
+
+    # Healthcare and Pharmaceuticals
+    "Medical Representatives", "Clinical Research", "Nursing", 
+    "Medical Technicians", "Pharmacy Operations", 
+    "Healthcare Administration",
+
+    # Education and Training
+    "Teaching", "Curriculum Development", "Academic Counseling", 
+    "E-Learning Development", "Education Administration",
+
+    # Retail and E-commerce
+    "Store Operations", "Supply Chain Management", 
+    "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
+
+    # Manufacturing and Production
+    "Production Planning", "Quality Control", "Maintenance and Repair", 
+    "Operations Management", "Inventory Management",
+
+    # Real Estate and Construction
+    "Sales and Marketing", "Civil Engineering", "Project Management", 
+    "Interior Designing", "Surveying and Valuation",
+
+    # Hospitality and Tourism
+    "Hotel Management", "Travel Coordination", "Event Planning", 
+    "Food and Beverage Services", "Guest Relations",
+
+    # Media and Entertainment
+    "Content Writing", "Video Editing", "Graphic Designing", 
+    "Social Media Management", "Event Production",
+
+    # Telecommunications
+    "Network Installation", "Customer Support", "Telecom Engineering", 
+    "Technical Operations", "Business Development",
+
+    # Logistics and Supply Chain
+    "Logistics Coordination", "Warehouse Management", "Procurement", 
+    "Transportation Management", "Inventory Control",
+
+    # Marketing and Advertising
+    "Market Research", "Brand Management", "Advertising Sales", 
+    "Public Relations", "Digital Marketing",
+
+    # Human Resources
+    "Recruitment", "Employee Relations", "Payroll and Benefits", 
+    "Training and Development", "HR Analytics",
+
+    # Legal and Compliance
+    "Corporate Law", "Compliance Auditing", "Contract Management", 
+    "Intellectual Property Rights", "Legal Advisory",
+
+    # Engineering and Infrastructure
+    "Civil Engineering", "Mechanical Engineering", 
+    "Electrical Engineering", "Project Planning", "Structural Design",
+
+    # Automobile Industry
+    "Automotive Design", "Production and Assembly", "Sales and Service", 
+    "Supply Chain Management", "Quality Assurance",
+
+    # Fashion and Textile
+    "Fashion Design", "Merchandising", "Production Management", 
+    "Quality Control", "Retail Sales",
+
+    # FMCG (Fast Moving Consumer Goods)
+    "Sales and Marketing", "Supply Chain Operations", 
+    "Production Management", "Quality Control", "Brand Management",
+
+    # Agriculture and Farming
+    "Agribusiness Management", "Farm Operations", "Food Processing", 
+    "Agricultural Sales", "Quality Assurance",
+
+    # Insurance
+    "Sales and Business Development", "Underwriting", 
+    "Claims Management", "Actuarial Services", "Policy Administration",
+
+    # Government Sector
+    "Administrative Services", "Public Relations", 
+    "Policy Analysis", "Clerical Positions", "Field Operations",
+
+    # NGO and Social Services
+    "Community Development", "Fundraising", "Program Management", 
+    "Volunteer Coordination", "Policy Advocacy",
+
+    # Energy and Power
+    "Renewable Energy Operations", "Power Plant Engineering", 
+    "Energy Efficiency Management", "Electrical Design", "Maintenance",
+
+    # Aviation and Aerospace
+    "Flight Operations", "Ground Staff", "Aircraft Maintenance", 
+    "Cabin Crew", "Research and Development"
+    ]
+
+    vacancies = VacancyDetails.objects.filter(company=company).order_by('-id')
+    
+    context = {
+    'districts': districts,
+    'job_sectors': job_sectors,
+    'departments': departments,
+    'company': company,
+    'vacancies' : vacancies
+    }
+    
+    return render(request,'crm/company-profile.html',context)
 
 
 def admin_vendor_list(request) :
@@ -792,6 +1014,33 @@ def evms_candidate_profile(request,id) :
 
             messages.success(request, 'Secection details updated successfully!')
             
+        elif 'submit_vendor_related_data' in request.POST:
+            # Handle form submission for bank details
+            admin_status = request.POST.get('admin_status')
+            vendor_commission = request.POST.get('vendor_commission')
+            vendor_payout_date = request.POST.get('vendor_payout_date') or None
+            commission_generation_date = request.POST.get('commission_generation_date') or None
+            vendor_commission_status = request.POST.get('vendor_commission_status')
+            vendor_payment_remark = request.POST.get('vendor_payment_remark')
+            payment_done_by = request.POST.get('payment_done_by')
+            payment_done_by_date = request.POST.get('payment_done_by_date') or None
+            submit_recipt = request.FILES.get('submit_recipt')
+
+
+            # Update or create bank details for the employee
+            candidate.admin_status = admin_status
+            candidate.vendor_commission = vendor_commission
+            candidate.vendor_payout_date = vendor_payout_date
+            candidate.commission_generation_date = commission_generation_date
+            candidate.vendor_commission_status = vendor_commission_status
+            candidate.vendor_payment_remark = vendor_payment_remark
+            candidate.payment_done_by = payment_done_by
+            candidate.payment_done_by_date = payment_done_by_date
+            candidate.submit_recipt = submit_recipt
+            candidate.save()
+
+            messages.success(request, 'Vendor releted details updated successfully!')
+            
             
 
         return redirect('evms_candidate_profile', id=id)
@@ -1004,93 +1253,66 @@ def download_attendance_excel(request, user_id):
 
 def admin_company_registration(request):
     if request.method == 'POST':
-        # Capture form data from POST request
+        # Capture company data
         employee_name = request.POST.get('employee_name')
         company_name = request.POST.get('company_name')
         company_logo = request.FILES.get('company_logo')
-        company_location = request.POST.getlist('company_location')
+        company_location = ', '.join(request.POST.getlist('company_location'))
         company_unique_code = request.POST.get('company_unique_code')
-        job_profile = request.POST.get('job_profile')
-        company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
-        vacancy_opening_date = request.POST.get('vacancy_opening_date')
         company_email_address = request.POST.get('company_email_address')
-        vacancy_status = request.POST.get('vacancy_status','Pending')
         company_contact_person_name = request.POST.get('company_contact_person_name')
         company_contact_person_contact_details = request.POST.get('company_contact_person_contact_details')
         company_contact_person_designation = request.POST.get('company_contact_person_designation')
         interview_address = request.POST.get('interview_address')
-        payroll = request.POST.get('payroll')
-        third_party_name = request.POST.get('third_party_name')
-        job_opening_origin = request.POST.get('job_opening_origin')
-        sector_type = request.POST.getlist('sector_type')
-        department_name = request.POST.getlist('department_name')
-        fresher_status = request.POST.get('fresher_status')
-        minimum_age = request.POST.get('minimum_age')
-        maximum_age = request.POST.get('maximum_age')
-        gender = request.POST.get('gender')
-        minimum_experience = request.POST.get('minimum_experience')
-        maximum_experience = request.POST.get('maximum_experience')
-        minimum_education_qualification = request.POST.get('minimum_education_qualification')
-        specialization = request.POST.get('specialization')
-        minimum_salary_range = request.POST.get('minimum_salary_range')
-        maximum_salary_range = request.POST.get('maximum_salary_range')
-        vacancy_closing_date = request.POST.get('vacancy_closing_date')
-        special_instruction = request.POST.get('special_instruction')
-        company_usp = request.POST.get('company_usp')
-        status_of_incentive = request.POST.get('status_of_incentive')
         status_of_proposal = request.POST.get('status_of_proposal')
-        invoice_generation_date = request.POST.get('invoice_generation_date')
-        payout_date = request.POST.get('payout_date')
+        invoice_generation_date = request.POST.get('invoice_generation_date') or None
+        payout_date = request.POST.get('payout_date') or None
         payment_condiation = request.POST.get('payment_condiation')
-        replacement_criteria = request.POST.get('replacement_criteria')
         remark = request.POST.get('remark')
-        company_location_str = ', '.join(company_location)
 
-        # Create a new Company_registration record
-        Company_registration.objects.create(
-            employee_name=employee_name,
-            company_name=company_name,
-            company_logo = company_logo,
-            company_location=company_location_str,
+        # Create or update company
+        company, created = Company_registration.objects.get_or_create(
             company_unique_code=company_unique_code,
-            company_vacancy_unique_code=company_vacancy_unique_code,
-            vacancy_opening_date=vacancy_opening_date,
-            company_email_address=company_email_address,
-            vacancy_status=vacancy_status,
-            company_contact_person_name=company_contact_person_name,
-            company_contact_person_contact_details=company_contact_person_contact_details,
-            company_contact_person_designation=company_contact_person_designation,
-            interview_address=interview_address,
-            payroll=payroll,
-            third_party_name=third_party_name,
-            job_opening_origin=job_opening_origin,
-            sector_type=sector_type,
-            department_name=department_name,
-            job_profile=job_profile,
-            fresher_status=fresher_status,
-            minimum_age=minimum_age,
-            maximum_age=maximum_age,
-            gender=gender,
-            minimum_experience=minimum_experience,
-            maximum_experience=maximum_experience,
-            minimum_education_qualification=minimum_education_qualification,
-            specialization=specialization,
-            minimum_salary_range=minimum_salary_range,
-            maximum_salary_range=maximum_salary_range,
-            vacancy_closing_date=vacancy_closing_date,
-            special_instruction=special_instruction,
-            company_usp=company_usp,
-            status_of_incentive=status_of_incentive,
-            status_of_proposal=status_of_proposal,
-            invoice_generation_date=invoice_generation_date,
-            payout_date=payout_date,
-            payment_condiation=payment_condiation,
-            replacement_criteria=replacement_criteria,
-            remark=remark,
+            defaults={
+                'employee_name': employee_name,
+                'company_name': company_name,
+                'company_logo': company_logo,
+                'company_location': company_location,
+                'company_email_address': company_email_address,
+                'company_contact_person_name': company_contact_person_name,
+                'company_contact_person_contact_details': company_contact_person_contact_details,
+                'company_contact_person_designation': company_contact_person_designation,
+                'interview_address': interview_address,
+                'status_of_proposal': status_of_proposal,
+                'invoice_generation_date': invoice_generation_date,
+                'payout_date': payout_date,
+                'payment_condiation': payment_condiation,
+                'remark': remark,
+            }
         )
 
+        # If company exists but fields are different, update them
+        if not created:
+            company.employee_name = employee_name
+            company.company_name = company_name
+            if company_logo:
+                company.company_logo = company_logo
+            company.company_location = company_location
+            company.company_email_address = company_email_address
+            company.company_contact_person_name = company_contact_person_name
+            company.company_contact_person_contact_details = company_contact_person_contact_details
+            company.company_contact_person_designation = company_contact_person_designation
+            company.interview_address = interview_address
+            company.status_of_proposal = status_of_proposal
+            company.invoice_generation_date = invoice_generation_date
+            company.payout_date = payout_date
+            company.payment_condiation = payment_condiation
+            company.remark = remark
+            company.save()
+
         # Redirect to the same page after saving
-        return redirect('admin_company_list')
+        return redirect('admin_company_registration')
+    
     districts = [
         "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
         "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
@@ -1216,12 +1438,14 @@ def admin_company_registration(request):
     ]
     
 
+    context = {
+        'districts': districts,
+        'job_sectors': job_sectors,
+        'departments': departments,
+    }
+
     # Render the template with the context
-    return render(request, 'crm/company-registration.html',{
-        'districts' : districts,
-        'job_sectors' : job_sectors,
-        'departments' : departments
-        })
+    return render(request, 'crm/company-registration.html',context)
 
 
 def admin_vendor_profile(request, id):
@@ -1477,3 +1701,218 @@ def generated_leads(request):
         'candidates': candidates
     }
     return render(request,'crm/lead-generate.html',context)
+
+
+def admin_vacancy_list(request) :
+    # Get all companies with their vacancy counts
+    companies = Company_registration.objects.annotate(
+        vacancy_count=Count('vacancies')
+    ).order_by('-id')
+    
+    # Get all unique sector types from vacancies
+    sectors = VacancyDetails.objects.values('sector_type').distinct()
+    
+    context = {
+        'companys': companies,
+        'sectors': sectors,
+        'total_vacancies': VacancyDetails.objects.count()
+    }
+    return render(request, 'crm/vacancy-list.html', context)
+
+def crm_admin_profile(request,id):
+    if request.user.is_authenticated:
+        # Fetch the employee object or return a 404
+        employee = get_object_or_404(Employee, user=request.user)
+        attendance_sheet = MonthlyAttendance.objects.filter(employee=employee.user).order_by('year', 'month')
+        designations = Designation.objects.all()
+        additional_info, _ = EmployeeAdditionalInfo.objects.get_or_create(employee=employee)
+        address_details, _ = Employee_address.objects.get_or_create(employee=employee)
+        bank_details, _ = EmployeeBankDetails.objects.get_or_create(employee=employee)
+
+        if request.method == 'POST':
+            if 'submit_employee_details' in request.POST:
+                # Handle Employee fields
+                first_name = request.POST.get('first_name')
+                last_name = request.POST.get('last_name')
+                contact_number = request.POST.get('contact_number')
+                email = request.POST.get('email')
+                joining_date = request.POST.get('joining_date')
+                employee_photo = request.FILES.get('employee_photo')
+
+                employee.first_name = first_name
+                employee.last_name = last_name
+                employee.contact_number = contact_number
+                employee.email = email
+                employee.joining_date = joining_date
+                if employee_photo:
+                    employee.employee_photo = employee_photo
+                employee.save()
+
+                # Update EmployeeAdditionalInfo fields
+                date_of_birth = request.POST.get('date_of_birth')
+                gender = request.POST.get('gender')
+                department = request.POST.get('department')
+                designation = request.POST.get('designation')
+                blood_group = request.POST.get('blood_group')
+                reporting_to = request.POST.get('reporting_to')
+
+                additional_info.date_of_birth = date_of_birth
+                additional_info.gender = gender
+                employee.department = department
+                employee.designation = designation
+                additional_info.blood_group = blood_group
+                additional_info.reporting_to = reporting_to
+                additional_info.save()
+
+                messages.success(request, 'Employee details updated successfully!')
+
+            elif 'sumbit_family_details' in request.POST:
+                # Handle Emergency Contact fields
+                member_name = request.POST.get('member_name')
+                relation = request.POST.get('relation')
+                contact_number = request.POST.get('contact_number')
+                date_of_birth = request.POST.get('date_of_birth')
+
+                Family_details.objects.create(
+                    employee=employee,
+                    member_name=member_name,
+                    relation=relation,
+                    contact_number=contact_number,
+                    date_of_birth=date_of_birth
+                )
+
+                messages.success(request, 'Emergency contact details updated successfully!')
+                
+            elif 'submit_address_details' in request.POST:
+                # Handle Social Media details form submission
+                permanent_address = request.POST.get('permanent_address')
+                present_address = request.POST.get('present_address')
+                city = request.POST.get('city')
+                state = request.POST.get('state')
+                country = request.POST.get('country')
+                zip_code = request.POST.get('zip_code')
+                nationality = request.POST.get('nationality')
+
+                address_details.permanent_address = permanent_address
+                address_details.present_address = present_address
+                address_details.city = city
+                address_details.state = state
+                address_details.country = country
+                address_details.zip_code = zip_code
+                address_details.nationality = nationality
+                address_details.save()
+                
+                messages.success(request, 'Address details updated successfully!')
+                
+            elif 'submit_education_details' in request.POST:
+                # Retrieve form data
+                cource_name = request.POST.get('cource_name')
+                institution_name = request.POST.get('institution_name')
+                start_year = request.POST.get('start_year')
+                end_year = request.POST.get('end_year')
+                grade = request.POST.get('grade')
+                description = request.POST.get('description')
+                education_certificate = request.FILES.get('education_certificate')
+
+                # Create a new education record for the employee
+                Education_details.objects.create(
+                    employee=employee,  # Ensure you have the employee instance already fetched
+                    cource_name=cource_name,
+                    institution_name=institution_name,
+                    start_year=start_year,
+                    end_year=end_year,
+                    grade=grade,
+                    description=description,
+                    education_certificate=education_certificate
+                )
+
+                # Add a success message
+                messages.success(request, 'Education details updated successfully!')
+
+            
+            elif 'submit_experience_details' in request.POST:
+                # Handle Social Media details form submission
+                organization_name = request.POST.get('organization_name')
+                designation_name = request.POST.get('designation_name')
+                start_date = request.POST.get('start_date')
+                end_date = request.POST.get('end_date')
+                description = request.POST.get('description')
+                experience_certificate = request.FILES.get('experience_certificate')
+
+                Experience_details.objects.create(
+                    employee = employee,
+                    organization_name = organization_name,
+                    designation_name = designation_name,
+                    start_date = start_date,
+                    end_date = end_date,
+                    description = description,
+                    experience_certificate = experience_certificate
+                )
+                
+                messages.success(request, 'Experience details updated successfully!')
+             
+            elif 'submit_documents_details' in request.POST:
+                document_number = request.POST.get('document_number')
+                document_type = request.POST.get('document_type')
+                document_file = request.FILES.get('document_file')
+
+                # Create a new document record for the employee
+                Documents_details.objects.create(
+                    employee=employee,  # Use the employee fetched at the start of the view
+                    document_type=document_type,
+                    document_number=document_number,
+                    document_file=document_file
+                )
+
+                messages.success(request, 'Document details added successfully!')
+
+                
+            elif 'submit_bank_account' in request.POST:
+                # Handle form submission for bank details
+                account_holder_name = request.POST.get('account_holder_name')
+                bank_name = request.POST.get('bank_name')
+                account_number = request.POST.get('account_number')
+                confirm_account_number = request.POST.get('confirm_account_number')
+                branch_name = request.POST.get('branch_name')
+                ifsc_code = request.POST.get('ifsc_code')
+
+                # Ensure account number and confirm account number match
+                if account_number != confirm_account_number:
+                    messages.error(request, "Account numbers do not match!")
+                    return redirect('employee-bank-details', id=employee.id)  # Redirect back to the same page
+
+                # Update or create bank details for the employee
+                bank_details.account_holder_name = account_holder_name
+                bank_details.bank_name = bank_name
+                bank_details.account_number = account_number
+                bank_details.confirm_account_number = confirm_account_number
+                bank_details.branch_name = branch_name
+                bank_details.ifsc_code = ifsc_code
+                bank_details.save()
+
+                messages.success(request, 'Bank details updated successfully!')
+                
+                
+
+            return redirect('crm_admin_profile', id=employee.id)  # Adjust 'employee-details' to your URL name
+        # Get all document details related to the employee
+        docs = Documents_details.objects.filter(employee=employee)
+        education_details = Education_details.objects.filter(employee=employee)
+        experience_details = Experience_details.objects.filter(employee=employee)
+        family_details = Family_details.objects.filter(employee=employee)
+
+        context = {
+            'employee': employee,
+            'additional_info': additional_info,
+            'address_details': address_details,
+            'family_details' : family_details,
+            'education_details' : education_details,
+            'experience_details' : experience_details,
+            'bank_details': bank_details,
+            'attendance_sheet' : attendance_sheet,
+            'designations' : designations,
+            'docs' : docs
+        }
+        return render(request, 'crm/admin-profile.html', context)
+    else:
+        return render(request, 'hrms/admin-login.html', {'error': 'User not authenticated'})

@@ -7,6 +7,7 @@ from django.urls import path
 
 urlpatterns = [
     path('',custom_admin_login,name = 'custom_admin_login'),
+    path("admin-logout/", custom_admin_logout, name="custom_admin_logout"),
     path('admin-signup/',admin_signup_view,name = 'admin_signup_view'),
     path('notifications/mark-as-read/', mark_notifications_as_read, name='mark_notifications_as_read'),
     path('Dashboard/',home,name = 'dashboard'),
@@ -40,11 +41,13 @@ urlpatterns = [
     path('documents/',documents_view,name = 'documents_view'),
     path('promotion/',promotion_view,name = 'promotion_view'),
     path('delete-promotion/<int:promotion_id>/', delete_promotion, name='delete_promotion'),
-    path('termination/',termination_view,name = 'termination_view'),
-    path('delete-termination/<int:termination_id>/', delete_termination, name='delete_termination'),
+    path('terminations/', termination_view, name='termination_view'),
+    path('terminations/edit/<int:termination_id>/', edit_termination, name='edit_termination'),
+    path('terminations/delete/<int:termination_id>/', delete_termination, name='delete_termination'),
     path('announcement/',announcement_view,name = 'announcement_view'),
-    path('team-meeting/',team_meeting_view,name = 'team_meeting_view'),
-    path('delete-meeting/<int:meeting_id>/', delete_meeting, name='delete_meeting'),
+    path('meeting/', team_meeting_view, name='team_meeting_view'),
+    path('meeting/edit/<int:meeting_id>/', edit_meeting, name='edit_meeting'),
+    path('meeting/delete/<int:meeting_id>/', delete_meeting, name='delete_meeting'),
     path('awards/',awards_view,name = 'awards_view'),
     path('office-activities/',office_activity_view,name = 'office_activity_view'),
     path('delete-activity/<int:officeactivity_id>/', delete_activity, name='delete_activity'),
@@ -62,6 +65,8 @@ urlpatterns = [
     path('tasks/edit/<int:task_id>/', edit_task, name='edit_task'),
     path('tasks/delete/<int:task_id>/', delete_task, name='delete_task'),
     path('tasks/update-status/<int:task_id>/', update_task_status, name='update_task_status'),
+    path('admin-profile/<int:id>/', admin_profile, name='admin_profile'),
+    
     
 
     path('admin/', admin.site.urls),

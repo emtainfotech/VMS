@@ -1084,93 +1084,66 @@ def employee_candidate_profile(request,id) :
 @login_required
 def employee_company_registration(request):
     if request.method == 'POST':
-        # Capture form data from POST request
+        # Capture company data
         employee_name = request.POST.get('employee_name')
         company_name = request.POST.get('company_name')
         company_logo = request.FILES.get('company_logo')
-        company_location = request.POST.getlist('company_location')
+        company_location = ', '.join(request.POST.getlist('company_location'))
         company_unique_code = request.POST.get('company_unique_code')
-        job_profile = request.POST.get('job_profile')
-        company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
-        vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
         company_email_address = request.POST.get('company_email_address')
-        vacancy_status = request.POST.get('vacancy_status','Pending')
         company_contact_person_name = request.POST.get('company_contact_person_name')
         company_contact_person_contact_details = request.POST.get('company_contact_person_contact_details')
         company_contact_person_designation = request.POST.get('company_contact_person_designation')
         interview_address = request.POST.get('interview_address')
-        payroll = request.POST.get('payroll')
-        third_party_name = request.POST.get('third_party_name')
-        job_opening_origin = request.POST.get('job_opening_origin')
-        sector_type = request.POST.get('sector_type')
-        department_name = request.POST.get('department_name')
-        fresher_status = request.POST.get('fresher_status')
-        minimum_age = request.POST.get('minimum_age')
-        maximum_age = request.POST.get('maximum_age')
-        gender = request.POST.get('gender')
-        minimum_experience = request.POST.get('minimum_experience')
-        maximum_experience = request.POST.get('maximum_experience')
-        minimum_education_qualification = request.POST.get('minimum_education_qualification')
-        specialization = request.POST.get('specialization')
-        minimum_salary_range = request.POST.get('minimum_salary_range')
-        maximum_salary_range = request.POST.get('maximum_salary_range')
-        vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
-        special_instruction = request.POST.get('special_instruction')
-        company_usp = request.POST.get('company_usp')
-        status_of_incentive = request.POST.get('status_of_incentive')
         status_of_proposal = request.POST.get('status_of_proposal')
         invoice_generation_date = request.POST.get('invoice_generation_date') or None
         payout_date = request.POST.get('payout_date') or None
         payment_condiation = request.POST.get('payment_condiation')
-        replacement_criteria = request.POST.get('replacement_criteria')
         remark = request.POST.get('remark')
-        company_location_str = ', '.join(company_location)
 
-        # Create a new Company_registration record
-        Company_registration.objects.create(
-            employee_name=employee_name,
-            company_name=company_name,
-            company_logo = company_logo,
-            company_location=company_location_str,
+        # Create or update company
+        company, created = Company_registration.objects.get_or_create(
             company_unique_code=company_unique_code,
-            company_vacancy_unique_code=company_vacancy_unique_code,
-            vacancy_opening_date=vacancy_opening_date,
-            company_email_address=company_email_address,
-            vacancy_status=vacancy_status,
-            company_contact_person_name=company_contact_person_name,
-            company_contact_person_contact_details=company_contact_person_contact_details,
-            company_contact_person_designation=company_contact_person_designation,
-            interview_address=interview_address,
-            payroll=payroll,
-            third_party_name=third_party_name,
-            job_opening_origin=job_opening_origin,
-            sector_type=sector_type,
-            department_name=department_name,
-            job_profile=job_profile,
-            fresher_status=fresher_status,
-            minimum_age=minimum_age,
-            maximum_age=maximum_age,
-            gender=gender,
-            minimum_experience=minimum_experience,
-            maximum_experience=maximum_experience,
-            minimum_education_qualification=minimum_education_qualification,
-            specialization=specialization,
-            minimum_salary_range=minimum_salary_range,
-            maximum_salary_range=maximum_salary_range,
-            vacancy_closing_date=vacancy_closing_date,
-            special_instruction=special_instruction,
-            company_usp=company_usp,
-            status_of_incentive=status_of_incentive,
-            status_of_proposal=status_of_proposal,
-            invoice_generation_date=invoice_generation_date,
-            payout_date=payout_date,
-            payment_condiation=payment_condiation,
-            replacement_criteria=replacement_criteria,
-            remark=remark,
+            defaults={
+                'employee_name': employee_name,
+                'company_name': company_name,
+                'company_logo': company_logo,
+                'company_location': company_location,
+                'company_email_address': company_email_address,
+                'company_contact_person_name': company_contact_person_name,
+                'company_contact_person_contact_details': company_contact_person_contact_details,
+                'company_contact_person_designation': company_contact_person_designation,
+                'interview_address': interview_address,
+                'status_of_proposal': status_of_proposal,
+                'invoice_generation_date': invoice_generation_date,
+                'payout_date': payout_date,
+                'payment_condiation': payment_condiation,
+                'remark': remark,
+            }
         )
+
+        # If company exists but fields are different, update them
+        if not created:
+            company.employee_name = employee_name
+            company.company_name = company_name
+            if company_logo:
+                company.company_logo = company_logo
+            company.company_location = company_location
+            company.company_email_address = company_email_address
+            company.company_contact_person_name = company_contact_person_name
+            company.company_contact_person_contact_details = company_contact_person_contact_details
+            company.company_contact_person_designation = company_contact_person_designation
+            company.interview_address = interview_address
+            company.status_of_proposal = status_of_proposal
+            company.invoice_generation_date = invoice_generation_date
+            company.payout_date = payout_date
+            company.payment_condiation = payment_condiation
+            company.remark = remark
+            company.save()
 
         # Redirect to the same page after saving
         return redirect('employee_company_list')
+    
     districts = [
         "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
         "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
@@ -1302,29 +1275,6 @@ def employee_company_registration(request):
         'departments': departments,
     }
     
-    # Check for AJAX request to fetch company data
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.GET.get('company_name'):
-        company_name = request.GET.get('company_name')
-        try:
-            company_data = Company_registration.objects.filter(
-                company_name__iexact=company_name
-            ).latest('id')
-            # Convert model instance to dict
-            from django.forms.models import model_to_dict
-            data = model_to_dict(company_data)
-            # Handle file fields and dates
-            if company_data.company_logo:
-                data['company_logo_url'] = company_data.company_logo.url
-            # Convert date fields to strings
-            date_fields = ['vacancy_opening_date', 'vacancy_closing_date', 
-                          'invoice_generation_date', 'payout_date']
-            for field in date_fields:
-                if getattr(company_data, field):
-                    data[field] = getattr(company_data, field).isoformat()
-            return JsonResponse(data)
-        except Company_registration.DoesNotExist:
-            return JsonResponse({'error': 'Company not found'}, status=404)
-    
     return render(request, 'employee/company-registration.html', context)
 
 
@@ -1343,6 +1293,22 @@ def search_companies(request):
 def employee_company_list(request) :
     companys = Company_registration.objects.all().order_by('-id')
     return render(request,'employee/company-list.html',{'companys':companys})
+
+def employee_vacancy_list(request) :
+    # Get all companies with their vacancy counts
+    companies = Company_registration.objects.annotate(
+        vacancy_count=Count('vacancies')
+    ).order_by('-id')
+    
+    # Get all unique sector types from vacancies
+    sectors = VacancyDetails.objects.values('sector_type').distinct()
+    
+    context = {
+        'companys': companies,
+        'sectors': sectors,
+        'total_vacancies': VacancyDetails.objects.count()
+    }
+    return render(request, 'employee/vacancy-list.html', context)
 
 def employee_company_profile(request,id) :
     company = get_object_or_404(Company_registration, id=id)
@@ -1444,8 +1410,232 @@ def employee_company_profile(request,id) :
             company.save()
             
             messages.success(request, 'company Calling details updated successfully!')
+            
+        elif 'add_vacancy' in request.POST:
+            # Handle new vacancy creation
+            job_profile = request.POST.get('job_profile')
+            company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
+            vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
+            vacancy_status = request.POST.get('vacancy_status', 'Pending')
+            payroll = request.POST.get('payroll')
+            third_party_name = request.POST.get('third_party_name')
+            job_opening_origin = request.POST.get('job_opening_origin')
+            sector_type = request.POST.get('sector_type')
+            department_name = request.POST.get('department_name')
+            fresher_status = request.POST.get('fresher_status')
+            minimum_age = request.POST.get('minimum_age')
+            maximum_age = request.POST.get('maximum_age')
+            gender = request.POST.get('gender')
+            minimum_experience = request.POST.get('minimum_experience')
+            maximum_experience = request.POST.get('maximum_experience')
+            minimum_education_qualification = request.POST.get('minimum_education_qualification')
+            specialization = request.POST.get('specialization')
+            minimum_salary_range = request.POST.get('minimum_salary_range')
+            maximum_salary_range = request.POST.get('maximum_salary_range')
+            vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
+            special_instruction = request.POST.get('special_instruction')
+            company_usp = request.POST.get('company_usp')
+            status_of_incentive = request.POST.get('status_of_incentive')
+            replacement_criteria = request.POST.get('replacement_criteria')
+
+            VacancyDetails.objects.create(
+                company=company,
+                job_profile=job_profile,
+                company_vacancy_unique_code=company_vacancy_unique_code,
+                vacancy_opening_date=vacancy_opening_date,
+                vacancy_status=vacancy_status,
+                payroll=payroll,
+                third_party_name=third_party_name,
+                job_opening_origin=job_opening_origin,
+                sector_type=sector_type,
+                department_name=department_name,
+                fresher_status=fresher_status,
+                minimum_age=minimum_age,
+                maximum_age=maximum_age,
+                gender=gender,
+                minimum_experience=minimum_experience,
+                maximum_experience=maximum_experience,
+                minimum_education_qualification=minimum_education_qualification,
+                specialization=specialization,
+                minimum_salary_range=minimum_salary_range,
+                maximum_salary_range=maximum_salary_range,
+                vacancy_closing_date=vacancy_closing_date,
+                special_instruction=special_instruction,
+                company_usp=company_usp,
+                status_of_incentive=status_of_incentive,
+                replacement_criteria=replacement_criteria,
+            )
+            messages.success(request, 'Vacancy added successfully!')
+        elif 'edit_vacancy' in request.POST:
+            # Handle vacancy editing
+            vacancy_id = request.POST.get('vacancy_id')
+            try:
+                vacancy = VacancyDetails.objects.get(id=vacancy_id, company=company)
+                vacancy.job_profile = request.POST.get('job_profile')
+                vacancy.company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
+                vacancy.vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
+                vacancy.vacancy_status = request.POST.get('vacancy_status', 'Pending')
+                vacancy.payroll = request.POST.get('payroll')
+                vacancy.sector_type = request.POST.get('sector_type')
+                vacancy.department_name = request.POST.get('department_name')
+                vacancy.minimum_salary_range = request.POST.get('minimum_salary_range')
+                vacancy.maximum_salary_range = request.POST.get('maximum_salary_range')
+                vacancy.minimum_experience = request.POST.get('minimum_experience')
+                vacancy.maximum_experience = request.POST.get('maximum_experience')
+                vacancy.special_instruction = request.POST.get('special_instruction')
+                vacancy.vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
+                vacancy.save()
+                messages.success(request, 'Vacancy updated successfully!')
+            except VacancyDetails.DoesNotExist:
+                messages.error(request, 'Vacancy not found!')
+                
+        elif 'delete_vacancy' in request.POST:
+            # Handle vacancy deletion
+            vacancy_id = request.POST.get('vacancy_id')
+            try:
+                vacancy = VacancyDetails.objects.get(id=vacancy_id, company=company)
+                vacancy.delete()
+                messages.success(request, 'Vacancy deleted successfully!')
+            except VacancyDetails.DoesNotExist:
+                messages.error(request, 'Vacancy not found!')
+                
         return redirect('employee_company_profile', id=id)
-    return render(request,'employee/company-profile.html',{'company':company})
+    
+    districts = [
+    "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
+    "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
+    "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni",
+    "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch",
+    "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni",
+    "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
+    "Ujjain", "Umaria", "Vidisha"
+    ]
+    job_sectors = [
+    "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
+    "Healthcare and Pharmaceuticals","Education and Training",
+    "Retail and E-commerce", "Manufacturing and Production","Real Estate and Construction", "Hospitality and Tourism",
+    "Media and Entertainment", "Telecommunications","Logistics and Supply Chain","Marketing and Advertising","Human Resources",
+    "Legal and Compliance","Engineering and Infrastructure","Automobile Industry",
+    "Fashion and Textile", "FMCG (Fast Moving Consumer Goods)",
+    "Agriculture and Farming", "Insurance","Government Sector","NGO and Social Services",
+    "Energy and Power","Aviation and Aerospace"
+    ]
+    departments = [
+    # IT (Information Technology)
+    "Software Development", "IT Support", "Web Development", 
+    "Network Administration", "Cybersecurity", 
+    "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)",
+
+    # BPO (Business Process Outsourcing)
+    "Customer Support", "Technical Support", "Voice Process", 
+    "Non-Voice Process", "Back Office Operations",
+
+    # Banking and Finance
+    "Investment Banking", "Retail Banking", "Loan Processing", 
+    "Risk Management", "Accounting and Auditing", 
+    "Financial Analysis", "Wealth Management",
+
+    # Healthcare and Pharmaceuticals
+    "Medical Representatives", "Clinical Research", "Nursing", 
+    "Medical Technicians", "Pharmacy Operations", 
+    "Healthcare Administration",
+
+    # Education and Training
+    "Teaching", "Curriculum Development", "Academic Counseling", 
+    "E-Learning Development", "Education Administration",
+
+    # Retail and E-commerce
+    "Store Operations", "Supply Chain Management", 
+    "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
+
+    # Manufacturing and Production
+    "Production Planning", "Quality Control", "Maintenance and Repair", 
+    "Operations Management", "Inventory Management",
+
+    # Real Estate and Construction
+    "Sales and Marketing", "Civil Engineering", "Project Management", 
+    "Interior Designing", "Surveying and Valuation",
+
+    # Hospitality and Tourism
+    "Hotel Management", "Travel Coordination", "Event Planning", 
+    "Food and Beverage Services", "Guest Relations",
+
+    # Media and Entertainment
+    "Content Writing", "Video Editing", "Graphic Designing", 
+    "Social Media Management", "Event Production",
+
+    # Telecommunications
+    "Network Installation", "Customer Support", "Telecom Engineering", 
+    "Technical Operations", "Business Development",
+
+    # Logistics and Supply Chain
+    "Logistics Coordination", "Warehouse Management", "Procurement", 
+    "Transportation Management", "Inventory Control",
+
+    # Marketing and Advertising
+    "Market Research", "Brand Management", "Advertising Sales", 
+    "Public Relations", "Digital Marketing",
+
+    # Human Resources
+    "Recruitment", "Employee Relations", "Payroll and Benefits", 
+    "Training and Development", "HR Analytics",
+
+    # Legal and Compliance
+    "Corporate Law", "Compliance Auditing", "Contract Management", 
+    "Intellectual Property Rights", "Legal Advisory",
+
+    # Engineering and Infrastructure
+    "Civil Engineering", "Mechanical Engineering", 
+    "Electrical Engineering", "Project Planning", "Structural Design",
+
+    # Automobile Industry
+    "Automotive Design", "Production and Assembly", "Sales and Service", 
+    "Supply Chain Management", "Quality Assurance",
+
+    # Fashion and Textile
+    "Fashion Design", "Merchandising", "Production Management", 
+    "Quality Control", "Retail Sales",
+
+    # FMCG (Fast Moving Consumer Goods)
+    "Sales and Marketing", "Supply Chain Operations", 
+    "Production Management", "Quality Control", "Brand Management",
+
+    # Agriculture and Farming
+    "Agribusiness Management", "Farm Operations", "Food Processing", 
+    "Agricultural Sales", "Quality Assurance",
+
+    # Insurance
+    "Sales and Business Development", "Underwriting", 
+    "Claims Management", "Actuarial Services", "Policy Administration",
+
+    # Government Sector
+    "Administrative Services", "Public Relations", 
+    "Policy Analysis", "Clerical Positions", "Field Operations",
+
+    # NGO and Social Services
+    "Community Development", "Fundraising", "Program Management", 
+    "Volunteer Coordination", "Policy Advocacy",
+
+    # Energy and Power
+    "Renewable Energy Operations", "Power Plant Engineering", 
+    "Energy Efficiency Management", "Electrical Design", "Maintenance",
+
+    # Aviation and Aerospace
+    "Flight Operations", "Ground Staff", "Aircraft Maintenance", 
+    "Cabin Crew", "Research and Development"
+    ]
+
+    vacancies = VacancyDetails.objects.filter(company=company).order_by('-id')
+    
+    context = {
+    'districts': districts,
+    'job_sectors': job_sectors,
+    'departments': departments,
+    'company': company,
+    'vacancies' : vacancies
+    }
+      
+    return render(request,'employee/company-profile.html',context)
 
 
 def employee_vendor_list(request) :

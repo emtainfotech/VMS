@@ -308,6 +308,16 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
+                          <p class="mb-2">
+                            <strong>Admin Status:</strong><br>
+                            <span class="badge 
+                                {% if candidate.admin_status == 'Approved' %}bg-success
+                                {% elif candidate.admin_status == 'Hold' %}bg-danger
+                                {% elif candidate.admin_status == 'In Process' %}bg-primary
+                                {% else %}bg-warning {% endif %} text-white">
+                                {{ candidate.admin_status|default:"Pending" }}
+                            </span>
+                          </p>
                             <p class="mb-2">
                                 <strong>Vendor Commission:</strong><br>
                                 {% if candidate.vendor_commission %}
@@ -380,7 +390,6 @@
                                 <span class="badge bg-warning text-dark">No Recipt</span>
                                 {% endif %}
                         </p>
-                            
                             
                         </div>
                     </div>
@@ -1029,6 +1038,21 @@ document.addEventListener('DOMContentLoaded', function() {
         <form method="post" enctype="multipart/form-data" id="vendorDataForm" novalidate>
           {% csrf_token %}
           <div class="row">
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Status <span class="text-danger">*</span></label>
+              <select class="form-select" name="admin_status" required>
+                <option value="" disabled selected>Select Payment Status</option>
+                <option value="Approved" {% if candidate.admin_status == "Approved" %}selected{% endif %}>Approved</option>
+                <option value="Hold" {% if candidate.admin_status == "Hold" %}selected{% endif %}>Hold</option>
+                <option value="In Process" {% if candidate.admin_status == "In Process" %}selected{% endif %}>In Process</option>
+                <option value="Pending" {% if candidate.admin_status == "Pending" %}selected{% endif %}>Pending</option>
+              </select>
+              <div class="invalid-feedback">
+                Please select approve status
+              </div>
+            </div>
+
             <!-- Vendor Commission -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Vendor Commission (₹) <span class="text-danger">*</span></label>

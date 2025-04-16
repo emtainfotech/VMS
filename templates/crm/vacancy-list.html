@@ -1,0 +1,357 @@
+{% extends 'crm/base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+  <!-- Page header -->
+  <div class="page-header d-print-none">
+    <div class="container-xl">
+      <div class="row g-2 align-items-center">
+        <div class="col">
+          <h2 class="page-title">Company & Vacancy Directory</h2>
+          <div class="text-muted mt-1">
+            <div class="text-muted mt-1">
+                <a href="{% url 'admin_company_list' %}">
+              <span id="total-companies">{{ companys|length }}</span> registered companies
+            </a> |
+
+              <span id="total-vacancies">{{ total_vacancies }}</span> active vacancies
+            </div>
+          </div>
+        </div>
+        <div class="col-auto ms-auto d-print-none">
+          <div class="btn-list">
+            <a href="{% url 'admin_company_registration' %}" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M12 5l0 14" />
+                <path d="M5 12l14 0" />
+              </svg>
+              Add New Company
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page body -->
+  <div class="page-body">
+    <div class="container-xl">
+      <div class="card">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col-12 col-md-6 mb-3 mb-md-0">
+              <div class="input-group">
+                <span class="input-group-text">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                    <path d="M21 21l-6 -6" />
+                  </svg>
+                </span>
+                <input type="text" id="searchInput" class="form-control" placeholder="Search companies or vacancies..." aria-label="Search">
+              </div>
+            </div>
+            <div class="col-12 col-md-6 ms-md-auto">
+              <div class="d-flex align-items-center justify-content-end">
+                <div class="me-3 text-nowrap">
+                  <label for="statusFilter" class="form-label">Status:</label>
+                </div>
+                <select id="statusFilter" class="form-select me-3" style="width: 120px;">
+                  <option value="">All Status</option>
+                  <option value="Active">Active</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Closed">Closed</option>
+                </select>
+                <div class="me-3 text-nowrap">
+                  <label for="sectorFilter" class="form-label">Sector:</label>
+                </div>
+                <select id="sectorFilter" class="form-select" style="width: 150px;">
+                  <option value="">All Sectors</option>
+                  {% for sector in sectors|dictsort:"sector_type" %}
+                    <option value="{{ sector.sector_type }}">{{ sector.sector_type }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-vcenter table-hover table-nowrap" id="companiesTable">
+            <thead>
+              <tr>
+                <th class="w-1">#</th>
+                <th>Company</th>
+                <th>Vacancy Details</th>
+                <th>Job Profile</th>
+                <th>Salary Range</th>
+                <th>Status</th>
+                <th>Dates</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for company in companys %}
+                {% for vacancy in company.vacancies.all %}
+                <tr data-search="{{ company.company_name|lower }} {{ vacancy.job_profile|lower }} {{ vacancy.company_vacancy_unique_code|lower }} {{ vacancy.sector_type|lower }} {{ company.company_location|lower }}"
+                    data-sector="{{ vacancy.sector_type }}"
+                    data-status="{{ vacancy.vacancy_status }}">
+                  <td>{{ forloop.counter }}</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="me-3">
+                        {% if company.company_logo %}
+                        <img src="{{ company.company_logo.url }}" class="avatar avatar-md rounded-circle" alt="{{ company.company_name }}">
+                        {% else %}
+                        <div class="avatar avatar-md rounded-circle bg-blue-lt">
+                          {{ company.company_name|first|upper }}
+                        </div>
+                        {% endif %}
+                      </div>
+                      <div>
+                        <div class="font-weight-medium">
+                          <a href="{% url 'admin_company_profile' company.id %}" class="text-reset">
+                            {{ company.company_name }}
+                          </a>
+                        </div>
+                        <div class="text-muted small">
+                          <code>{{ company.company_unique_code }}</code>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="text-muted">
+                      <div class="small"><strong>Code:</strong> {{ vacancy.company_vacancy_unique_code }}</div>
+                      <div class="small"><strong>Department:</strong> {{ vacancy.department_name|default:"-" }}</div>
+                      <div class="small"><strong>Experience:</strong> {{ vacancy.minimum_experience|default:"0" }}-{{ vacancy.maximum_experience }} yrs</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="font-weight-medium">{{ vacancy.job_profile }}</div>
+                    <div class="text-muted small">{{ vacancy.sector_type }}</div>
+                  </td>
+                  <td>
+                    <div class="font-weight-medium">
+                      ₹{{ vacancy.minimum_salary_range|default:"-" }} - ₹{{ vacancy.maximum_salary_range|default:"-" }}
+                    </div>
+                    <div class="text-muted small">{{ vacancy.payroll|default:"-" }}</div>
+                  </td>
+                  <td>
+                    <span class="badge {% if vacancy.vacancy_status == 'Active' %}bg-green{% elif vacancy.vacancy_status == 'Closed' %}bg-red{% else %}bg-yellow{% endif %} text-white">
+                      {{ vacancy.vacancy_status }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="text-muted small">
+                      <div>Open: {{ vacancy.vacancy_opening_date|date:"d M Y"|default:"-" }}</div>
+                      <div>Close: {{ vacancy.vacancy_closing_date|date:"d M Y"|default:"-" }}</div>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-list justify-content-center">
+                      <a href="{% url 'admin_company_profile' company.id %}#vacancies" 
+                         class="btn btn-sm btn-icon" 
+                         title="View Vacancy" 
+                         data-bs-toggle="tooltip">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                          <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                          <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                        </svg>
+                      </a>
+                      <a href="tel:{{ company.company_contact_person_contact_details }}" 
+                         class="btn btn-sm btn-icon" 
+                         title="Call Contact" 
+                         data-bs-toggle="tooltip">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-phone" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                          <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"></path>
+                        </svg>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                {% comment %} <tr>
+                  <td colspan="8" class="text-center py-4">
+                    <div class="d-flex flex-column align-items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-briefcase-off" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M11 7h8a2 2 0 0 1 2 2v8m-1.166 2.818a1.993 1.993 0 0 1 -.834 .182h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2h2"></path>
+                        <path d="M8.185 4.158a2 2 0 0 1 1.815 -1.158h4a2 2 0 0 1 2 2v2"></path>
+                        <path d="M12 12v.01"></path>
+                        <path d="M3 13a20 20 0 0 0 11.905 1.928m3.263 -.763a20 20 0 0 0 2.832 -1.165"></path>
+                        <path d="M3 3l18 18"></path>
+                      </svg>
+                      <span class="mt-2">No vacancies found for this company</span>
+                    </div>
+                  </td>
+                </tr> {% endcomment %}
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card-footer d-flex align-items-center">
+          <div class="pagination-info">
+            Showing <span id="showingFrom">1</span> to <span id="showingTo">{{ companys|length }}</span> of <span id="totalCount">{{ companys|length }}</span> entries
+          </div>
+          <ul class="pagination m-0 ms-auto">
+            <li class="page-item disabled">
+              <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M15 6l-6 6l6 6" />
+                </svg>
+                prev
+              </a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+              <a class="page-link" href="#">
+                next
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M9 6l6 6l-6 6" />
+                </svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f1f5f9;
+  }
+  
+  .badge.bg-blue-lt {
+    background-color: rgba(65, 138, 221, 0.1);
+    color: #418add;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .badge.bg-yellow {
+    background-color: #ffc107;
+  }
+  
+  .badge.bg-green {
+    background-color: #2fb344;
+  }
+  
+  .badge.bg-red {
+    background-color: #d63939;
+  }
+  
+  @media (max-width: 768px) {
+    .card-header .row > div {
+      width: 100%;
+    }
+    
+    .card-header .input-group {
+      margin-bottom: 1rem;
+    }
+    
+    #companiesTable td {
+      white-space: normal !important;
+    }
+  }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Initialize tooltips
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+
+  // Search and filter functionality
+  const searchInput = document.getElementById('searchInput');
+  const sectorFilter = document.getElementById('sectorFilter');
+  const statusFilter = document.getElementById('statusFilter');
+  const companiesTable = document.getElementById('companiesTable');
+  const rows = companiesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+  const totalCountEl = document.getElementById('totalCount');
+  const showingFromEl = document.getElementById('showingFrom');
+  const showingToEl = document.getElementById('showingTo');
+  const totalCompaniesEl = document.getElementById('total-companies');
+  const totalVacanciesEl = document.getElementById('total-vacancies');
+  
+  function filterCompanies() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const sectorFilterValue = sectorFilter.value.toLowerCase();
+    const statusFilterValue = statusFilter.value.toLowerCase();
+    let visibleCount = 0;
+    
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const searchContent = row.getAttribute('data-search');
+      const rowSector = row.getAttribute('data-sector');
+      const rowStatus = row.getAttribute('data-status');
+      
+      const matchesSearch = searchContent.includes(searchTerm);
+      const matchesSector = sectorFilterValue === '' || 
+                          (rowSector && rowSector.toLowerCase().includes(sectorFilterValue));
+      const matchesStatus = statusFilterValue === '' || 
+                          (rowStatus && rowStatus.toLowerCase() === statusFilterValue.toLowerCase());
+      
+      if (matchesSearch && matchesSector && matchesStatus) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    }
+    
+    // Update counters
+    showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
+    showingToEl.textContent = visibleCount;
+    totalCountEl.textContent = visibleCount;
+  }
+  
+  // Event listeners
+  searchInput.addEventListener('input', filterCompanies);
+  sectorFilter.addEventListener('change', filterCompanies);
+  statusFilter.addEventListener('change', filterCompanies);
+  
+  // Initial filter
+  filterCompanies();
+  
+  // Make table rows clickable (except when clicking on buttons)
+  document.querySelectorAll('#companiesTable tbody tr').forEach(row => {
+    row.addEventListener('click', (e) => {
+      // Check if the click was on a button or link
+      if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+        return;
+      }
+      
+      // Find the profile link in the row and navigate to it
+      const profileLink = row.querySelector('td:nth-child(2) a');
+      if (profileLink) {
+        window.location.href = profileLink.href;
+      }
+    });
+    
+    // Change cursor on hover
+    row.style.cursor = 'pointer';
+  });
+});
+</script>
+
+{% endblock %}

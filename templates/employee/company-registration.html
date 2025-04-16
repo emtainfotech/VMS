@@ -7,7 +7,7 @@
       <div class="row row-cards">
         <div class="col-12">
             <div class="card-header">
-              <h4 class="card-title">Company Details</h4>
+              <h4 class="card-title">Company & Vacancy Details</h4>
             </div>
             <div class="card-body">
               <div class="row g-5">
@@ -19,6 +19,11 @@
                         {% csrf_token %}
                         <div class="card-body">
                             <div class="row row-cards">
+                                <!-- Company Section -->
+                                <div class="col-12">
+                                    <h5 class="mb-3">Company Information</h5>
+                                </div>
+                                
                                 <!-- Company Name -->
                                 <div class="col-md-5">
                                     <div class="mb-3">
@@ -27,7 +32,7 @@
                                                pattern="[A-Za-z0-9 &.,-]{3,}" 
                                                title="Company name should contain at least 3 characters (letters, numbers, spaces, &.,-)" required>
                                         <div class="invalid-feedback">Please provide a valid company name (min 3 characters).</div>
-                                        <input type="hidden" class="form-control" name="employee_name" value="{{user.username}}" required>
+                                        <input type="hidden" class="form-control" name="employee_name" value="{{user.employee.first_name}} {{user.employee.last_name}} ({{user.username}})" required>
                                     </div>
                                 </div>
                                 
@@ -42,36 +47,14 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Job Profile -->
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Job Profile</label>
-                                        <input type="text" name='third_party_name' class="form-control" 
-                                               pattern="[A-Za-z0-9 &.,-]{3,}" required>
-                                        <div class="invalid-feedback">Please provide a valid job profile.</div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Vacancy Code -->
-                                <div class="col-sm-6 col-md-2">
-                                    <div class="mb-3">
-                                        <label class="form-label">Vacancy Code</label>
-                                        <input type="text" class="form-control" name="company_vacancy_unique_code" 
-                                               pattern="[A-Za-z0-9-]{3,}" required>
-                                        <div class="invalid-feedback">Please provide a valid vacancy code.</div>
-                                    </div>
-                                </div>
-                                
                                 <!-- Company Location -->
                                 <div class="col-sm-6 col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label">Company Location</label>
                                         <select type="text" class="form-select" placeholder="Select Location" id="select-location" 
-                                                name="company_location" multiple required>
+                                                name="company_location" required>
                                             {% for district in districts %}
-                                            <option value="{{ district }}" {% if Company_registration.company_location == district %}selected{% endif %}>
-                                                {{ district }}
-                                            </option>
+                                            <option value="{{ district }}">{{ district }}</option>
                                             {% endfor %}
                                         </select>
                                         <div class="invalid-feedback">Please select at least one location.</div>
@@ -79,7 +62,7 @@
                                 </div>
                                 
                                 <!-- Company Logo -->
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="mb-2">
                                         <label class="form-label">Company Logo</label>
                                         <input type="file" class="form-control" name="company_logo" accept="image/*">
@@ -87,18 +70,8 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Vacancy Opening Date -->
-                                <div class="col-sm-4 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Vacancy Opening Date</label>
-                                        <input type="date" class="form-control" name="vacancy_opening_date" 
-                                               max="{{ today|date:'Y-m-d' }}" required>
-                                        <div class="invalid-feedback">Please select a valid opening date.</div>
-                                    </div>
-                                </div>
-                                
                                 <!-- Company Email Address -->
-                                <div class="col-sm-4 col-md-3">
+                                <div class="col-sm-6 col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label">Company Email Address</label>
                                         <input type="email" class="form-control" name="company_email_address" 
@@ -118,7 +91,7 @@
                                 </div>
                                 
                                 <!-- Contact Details -->
-                                <div class="col-sm-6 col-md-4">
+                                <div class="col-sm-6 col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label">Contact Details</label>
                                         <input type="tel" name='company_contact_person_contact_details' class="form-control" 
@@ -133,112 +106,19 @@
                                         <label class="form-label">Contact Person Designation</label>
                                         <select name="company_contact_person_designation" class="form-select" required>
                                             <option value="">Select Designation</option>
-                                            <option value="HR" {% if Company_registration.company_contact_person_designation == "HR" %}selected{% endif %}>HR</option>
-                                            <option value="CEO" {% if Company_registration.company_contact_person_designation == "CEO" %}selected{% endif %}>CEO</option>
-                                            <option value="Admin" {% if Company_registration.company_contact_person_designation == "Admin" %}selected{% endif %}>Admin</option>
-                                            <option value="Boss" {% if Company_registration.company_contact_person_designation == "Boss" %}selected{% endif %}>Boss</option>
-                                            <option value="Employee" {% if Company_registration.company_contact_person_designation == "Employee" %}selected{% endif %}>Employee</option>
-                                            <option value="Other" {% if Company_registration.company_contact_person_designation == "Other" %}selected{% endif %}>Other</option>
+                                            <option value="HR">HR</option>
+                                            <option value="CEO">CEO</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="Boss">Boss</option>
+                                            <option value="Employee">Employee</option>
+                                            <option value="Other">Other</option>
                                         </select>
                                         <div class="invalid-feedback">Please select a designation.</div>
                                     </div>
                                 </div>
                                 
-                                <!-- Job Opening Origin -->
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Job Opening Origin</label>
-                                        <select name="job_opening_origin" class="form-select" required>
-                                            <option value="">Select Origin</option>
-                                            <option value="EVMS" {% if Company_registration.job_opening_origin == "EVMS" %}selected{% endif %}>EVMS</option>
-                                            <option value="Walk-In" {% if Company_registration.job_opening_origin == "Walk-In" %}selected{% endif %}>Walk-In</option>
-                                            <option value="Job Hai" {% if Company_registration.job_opening_origin == "Job Hai" %}selected{% endif %}>Job Hai</option>
-                                            <option value="Naukari" {% if Company_registration.job_opening_origin == "Naukari" %}selected{% endif %}>Naukari</option>
-                                            <option value="Apna" {% if Company_registration.job_opening_origin == "Apna" %}selected{% endif %}>Apna</option>
-                                            <option value="Expertia" {% if Company_registration.job_opening_origin == "Expertia" %}selected{% endif %}>Expertia</option>
-                                            <option value="Instagram" {% if Company_registration.job_opening_origin == "Instagram" %}selected{% endif %}>Instagram</option>
-                                            <option value="Website" {% if Company_registration.job_opening_origin == "Website" %}selected{% endif %}>Website</option>
-                                            <option value="Indeed" {% if Company_registration.job_opening_origin == "Indeed" %}selected{% endif %}>Indeed</option>
-                                            <option value="Facebook" {% if Company_registration.job_opening_origin == "Facebook" %}selected{% endif %}>Facebook</option>
-                                            <option value="Linkedin" {% if Company_registration.job_opening_origin == "Linkedin" %}selected{% endif %}>Linkedin</option>
-                                            <option value="Personal Refference" {% if Company_registration.job_opening_origin == "Personal Refference" %}selected{% endif %}>Personal Refference</option>
-                                            <option value="Other" {% if Company_registration.job_opening_origin == "Other" %}selected{% endif %}>Other</option>
-                                        </select>
-                                        <div class="invalid-feedback">Please select job opening origin.</div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Gender Preference -->
-                                <div class="col-sm-6 col-md-2">
-                                    <div class="mb-3">
-                                        <div class="form-label">Gender Preference</div>
-                                        <select name="gender" class="form-select" required>
-                                            <option value="Both" {% if Company_registration.gender == "Both" %}selected{% endif %}>Both</option>
-                                            <option value="Male" {% if Company_registration.gender == "Male" %}selected{% endif %}>Male</option>
-                                            <option value="Female" {% if Company_registration.gender == "Female" %}selected{% endif %}>Female</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <!-- Qualification -->
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <div class="form-label">Qualification</div>
-                                        <select class="form-select" name='minimum_education_qualification' required>
-                                            <option value="" disabled selected>Select Qualification</option>
-                                            <option value="Secondary School" {% if Company_registration.minimum_education_qualification == "Secondary School" %}selected{% endif %}>Secondary School</option>
-                                            <option value="Higher Secondary School" {% if Company_registration.minimum_education_qualification == "Higher Secondary School" %}selected{% endif %}>Higher Secondary School</option>
-                                            <option value="Graduate" {% if Company_registration.minimum_education_qualification == "Graduate" %}selected{% endif %}>Graduate</option>
-                                            <option value="Post-Graduate" {% if Company_registration.minimum_education_qualification == "Post-Graduate" %}selected{% endif %}>Post-Graduate</option>
-                                            <option value="Ph.D." {% if Company_registration.minimum_education_qualification == "Ph.D." %}selected{% endif %}>Ph.D.</option>
-                                            <option value="Others" {% if Company_registration.minimum_education_qualification == "Others" %}selected{% endif %}>Others</option>
-                                        </select>
-                                        <div class="invalid-feedback">Please select minimum qualification.</div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Specialization -->
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Specialization (If Any)</label>
-                                        <input type="text" class="form-control" name="specialization" placeholder="Specialization">
-                                    </div>
-                                </div>
-                                
-                                <!-- Sector -->
-                                <div class="col-sm-6 col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label">Sector</label>
-                                        <select type="text" class="form-select" name='sector_type' required>
-                                            <option value="">Select Sector</option>
-                                            {% for job_sector in job_sectors %}
-                                            <option value="{{ job_sector }}" {% if Company_registration.sector_type == job_sector %}selected{% endif %}>
-                                                {{ job_sector }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="invalid-feedback">Please select a sector.</div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Department -->
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Department</label>
-                                        <select type="text" class="form-select" placeholder="Select Company Department" 
-                                                id="select-department" name='department_name' multiple required>
-                                            {% for department in departments %}
-                                            <option value="{{ department }}" {% if Company_registration.department == department %}selected{% endif %}>
-                                                {{ department }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="invalid-feedback">Please select at least one department.</div>
-                                    </div>
-                                </div>
-                                
                                 <!-- Interview Address -->
-                                <div class="col-sm-6 col-md-4">
+                                <div class="col-sm-12 col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Interview Address</label>
                                         <input type="text" name='interview_address' class="form-control" required>
@@ -246,148 +126,30 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Payroll -->
-                                <div class="col-sm-6 col-md-2">
-                                    <div class="mb-3">
-                                        <label class="form-label">Payroll</label>
-                                        <select name="payroll" class="form-select" id="payrollSelect" required>
-                                            <option value="">Select Option</option>
-                                            <option value="Self" {% if Company_registration.payroll == "Self" %}selected{% endif %}>Self</option>
-                                            <option value="Third Party" {% if Company_registration.payroll == "Third Party" %}selected{% endif %}>Third Party</option>
-                                        </select>
-                                        <div class="invalid-feedback">Please select payroll type.</div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Third Party Input (Conditional) -->
-                                <div class="col-sm-6 col-md-3" id="thirdPartyInput" style="display: none;">
-                                    <div class="mb-3">
-                                        <label class="form-label">Third-Party Payroll</label>
-                                        <input type="text" name="third_party_name" class="form-control">
-                                    </div>
-                                </div>
-                                
-                                <!-- Age and Experience Fields -->
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Minimum Age</label>
-                                        <input type="number" name='minimum_age' class="form-control" min="18" max="70">
-                                        <div class="invalid-feedback">Please enter valid age (18-70).</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Maximum Age</label>
-                                        <input type="number" name='maximum_age' class="form-control" min="18" max="70">
-                                        <div class="invalid-feedback">Please enter valid age (18-70).</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-sm-6 col-md-2">
-                                    <div class="mb-3">
-                                        <label class="form-label">Minimum Experience</label>
-                                        <input type="number" name='minimum_experience' class="form-control" min="0" max="50">
-                                        <div class="invalid-feedback">Please enter valid experience (0-50).</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-sm-6 col-md-2">
-                                    <div class="mb-3">
-                                        <label class="form-label">Maximum Experience</label>
-                                        <input type="number" name='maximum_experience' class="form-control" min="0" max="50">
-                                        <div class="invalid-feedback">Please enter valid experience (0-50).</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-sm-6 col-md-2">
-                                    <div class="mb-3">
-                                        <label class="form-label">Fresher Allowed</label>
-                                        <select name="fresher_status" class="form-select" required>
-                                            <option value="Both" {% if Company_registration.fresher_status == "Both" %}selected{% endif %}>Both</option>
-                                            <option value="Yes" {% if Company_registration.fresher_status == "Yes" %}selected{% endif %}>Yes</option>
-                                            <option value="No" {% if Company_registration.fresher_status == "No" %}selected{% endif %}>No</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <!-- Salary Fields -->
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Minimum Salary Package/Range</label>
-                                        <input type="number" name='minimum_salary_range' class="form-control" min="0" step="1000" required>
-                                        <div class="invalid-feedback">Please enter valid salary.</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Maximum Salary Package/Range</label>
-                                        <input type="number" name='maximum_salary_range' class="form-control" min="0" step="1000">
-                                        <div class="invalid-feedback">Please enter valid salary.</div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Status of Incentive -->
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Status of Incentive</label>
-                                        <select class="form-control form-select" name='status_of_incentive' required>
-                                            <option value="No" {% if Company_registration.status_of_incentive == "No" %}selected{% endif %}>No</option>
-                                            <option value="Yes" {% if Company_registration.status_of_incentive == "Yes" %}selected{% endif %}>Yes</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <!-- Vacancy Close Date -->
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Vacancy Close Date</label>
-                                        <input type="date" name='vacancy_closing_date' class="form-control" min="{{ today|date:'Y-m-d' }}">
-                                        <div class="invalid-feedback">Please select valid closing date.</div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Special Instructions -->
-                                <div class="col-sm-6 col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label">Special Instructions</label>
-                                        <input type="text" name='special_instruction' class="form-control" maxlength="255">
-                                    </div>
-                                </div>
-                                
-                                <!-- Company USP -->
-                                <div class="col-sm-6 col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label">Company USP</label>
-                                        <input type="text" name='company_usp' class="form-control" maxlength="255">
-                                    </div>
-                                </div>
-                                
                                 <!-- Status of Proposal -->
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Status of Proposal</label>
                                         <select class="form-control form-select" name='status_of_proposal' required>
-                                            <option value="None" {% if Company_registration.status_of_proposal == "None" %}selected{% endif %}>None</option>
-                                            <option value="Lead Generate" {% if Company_registration.status_of_proposal == "Lead Generate" %}selected{% endif %}>Lead Generate</option>
-                                            <option value="Follow-Up" {% if Company_registration.status_of_proposal == "Follow-Up" %}selected{% endif %}>Follow-Up</option>
-                                            <option value="Shortlisted for Banking Counselling" {% if Company_registration.status_of_proposal == "Shortlisted for Banking Counselling" %}selected{% endif %}>Shortlisted for Banking Counselling</option>
-                                            <option value="RNR" {% if Company_registration.status_of_proposal == "RNR" %}selected{% endif %}>RNR</option>
-                                            <option value="Switch Off" {% if Company_registration.status_of_proposal == "Switch Off" %}selected{% endif %}>Switch Off</option>
-                                            <option value="Not Intrested" {% if Company_registration.status_of_proposal == "Not Intrested" %}selected{% endif %}>Not Intrested</option>
-                                            <option value="Sharing Resume" {% if Company_registration.status_of_proposal == "Sharing Resume" %}selected{% endif %}>Sharing Resume</option>
-                                            <option value="Hold" {% if Company_registration.status_of_proposal == "Hold" %}selected{% endif %}>Hold</option>
-                                            <option value="Not Eligeble" {% if Company_registration.status_of_proposal == "Not Eligeble" %}selected{% endif %}>Not Eligeble</option>
-                                            <option value="Call Back" {% if Company_registration.status_of_proposal == "Call Back" %}selected{% endif %}>Call Back</option>
-                                            <option value="Coming Tomorrow" {% if Company_registration.status_of_proposal == "Coming Tomorrow" %}selected{% endif %}>Coming Tomorrow</option>
-                                            <option value="Busy" {% if Company_registration.status_of_proposal == "Busy" %}selected{% endif %}>Busy</option>
-                                            <option value="Not Available" {% if Company_registration.status_of_proposal == "Not Available" %}selected{% endif %}>Not Available</option>
-                                            <option value="Got a Job" {% if Company_registration.status_of_proposal == "Got a Job" %}selected{% endif %}>Got a Job</option>
-                                            <option value="Call After Some Time" {% if Company_registration.status_of_proposal == "Call After Some Time" %}selected{% endif %}>Call After Some Time</option>
-                                            <option value="No Incoming" {% if Company_registration.status_of_proposal == "No Incoming" %}selected{% endif %}>No Incoming</option>
-                                            <option value="Temporary Not Available" {% if Company_registration.status_of_proposal == "Temporary Not Available" %}selected{% endif %}>Temporary Not Available</option>
-                                            <option value="Out Of Town" {% if Company_registration.status_of_proposal == "Out Of Town" %}selected{% endif %}>Out Of Town</option>
+                                            <option value="None">None</option>
+                                            <option value="Lead Generate">Lead Generate</option>
+                                            <option value="Follow-Up">Follow-Up</option>
+                                            <option value="Shortlisted for Banking Counselling">Shortlisted for Banking Counselling</option>
+                                            <option value="RNR">RNR</option>
+                                            <option value="Switch Off">Switch Off</option>
+                                            <option value="Not Intrested">Not Intrested</option>
+                                            <option value="Sharing Resume">Sharing Resume</option>
+                                            <option value="Hold">Hold</option>
+                                            <option value="Not Eligeble">Not Eligeble</option>
+                                            <option value="Call Back">Call Back</option>
+                                            <option value="Coming Tomorrow">Coming Tomorrow</option>
+                                            <option value="Busy">Busy</option>
+                                            <option value="Not Available">Not Available</option>
+                                            <option value="Got a Job">Got a Job</option>
+                                            <option value="Call After Some Time">Call After Some Time</option>
+                                            <option value="No Incoming">No Incoming</option>
+                                            <option value="Temporary Not Available">Temporary Not Available</option>
+                                            <option value="Out Of Town">Out Of Town</option>
                                         </select>
                                     </div>
                                 </div>
@@ -407,18 +169,11 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Payment and Replacement Fields -->
-                                <div class="col-sm-6 col-md-6">
+                                <!-- Payment Conditions -->
+                                <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Payment Conditions</label>
                                         <textarea name='payment_condiation' class="form-control" rows="2" maxlength="500"></textarea>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-sm-6 col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Replacement Criteria</label>
-                                        <textarea name='replacement_criteria' class="form-control" rows="2" maxlength="500"></textarea>
                                     </div>
                                 </div>
                                 
@@ -429,6 +184,8 @@
                                         <textarea name='remark' class="form-control" rows="2" maxlength="500"></textarea>
                                     </div>
                                 </div>
+                                
+                                
                             </div>
                             <div class="card-footer text-end">
                                 <button type="submit" class="btn btn-primary">Submit</button>
@@ -448,7 +205,7 @@
                             }
                             
                             // Custom validation for multi-select fields
-                            const multiSelectFields = ['company_location', 'department_name'];
+                            const multiSelectFields = ['company_location'];
                             let isValid = true;
                             
                             multiSelectFields.forEach(fieldName => {
@@ -516,7 +273,7 @@
                         
                         // Real-time validation for fields
                         const fieldsToValidate = [
-                            'company_name', 'company_unique_code', 'third_party_name', 
+                            'company_name', 'company_unique_code', 'job_profile', 
                             'company_vacancy_unique_code', 'company_email_address',
                             'company_contact_person_name', 'company_contact_person_contact_details',
                             'minimum_age', 'maximum_age', 'minimum_experience', 'maximum_experience',
@@ -579,29 +336,6 @@
                                     this.control_input.checkValidity();
                                 }
                             });
-                            
-                            new TomSelect(document.getElementById('select-department'), {
-                                copyClassesToDropdown: false,
-                                dropdownParent: 'body',
-                                controlInput: '<input>',
-                                render: {
-                                    item: function(data,escape) {
-                                        if (data.customProperties) {
-                                            return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                                        }
-                                        return '<div>' + escape(data.text) + '</div>';
-                                    },
-                                    option: function(data,escape) {
-                                        if (data.customProperties) {
-                                            return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-                                        }
-                                        return '<div>' + escape(data.text) + '</div>';
-                                    },
-                                },
-                                onItemAdd: function() {
-                                    this.control_input.checkValidity();
-                                }
-                            });
                         }
                     });
                     </script>
@@ -611,114 +345,10 @@
               </div>
             </div>
           </div>
-
         </div>
+    </div>
 </div>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Function to fill form with company data
-        function fillFormWithCompanyData(companyData) {
-            // Basic confirmation
-            if (!confirm(`A company named "${companyData.company_name}" already exists. Do you want to load its details?`)) {
-                return;
-            }
-    
-            // Fill all form fields except company_name and vacancy fields
-            const form = document.getElementById('companyForm');
-            for (const [fieldName, value] of Object.entries(companyData)) {
-                // Skip these fields - we want to keep them new
-                if (['id', 'company_vacancy_unique_code', 'vacancy_opening_date', 
-                     'vacancy_closing_date', 'vacancy_status'].includes(fieldName)) {
-                    continue;
-                }
-    
-                const field = form.querySelector(`[name="${fieldName}"]`);
-                
-                if (field) {
-                    // Handle different field types
-                    if (field.type === 'checkbox' || field.type === 'radio') {
-                        field.checked = true;
-                    } 
-                    else if (field.tagName === 'SELECT') {
-                        // For single select
-                        if (!field.multiple) {
-                            field.value = value || '';
-                        }
-                        // For multi-select (TomSelect)
-                        else if (window.TomSelect && field.id.includes('select-')) {
-                            const tomSelect = field.tomselect;
-                            if (tomSelect && value) {
-                                const values = value.split(', '); // Assuming company_location is stored as "value1, value2"
-                                tomSelect.setValue(values);
-                            }
-                        }
-                    }
-                    else if (field.type === 'file') {
-                        // Skip file fields
-                        continue;
-                    }
-                    else {
-                        field.value = value || '';
-                    }
-                    
-                    // Trigger change event for fields that have dependent logic
-                    if (['payroll', 'sector_type'].includes(fieldName)) {
-                        field.dispatchEvent(new Event('change'));
-                    }
-                }
-            }
-    
-            // Special handling for dates - we'll keep these empty for new vacancy
-            document.querySelector('[name="vacancy_opening_date"]').value = '';
-            document.querySelector('[name="vacancy_closing_date"]').value = '';
-            
-            // Generate new vacancy code
-            document.querySelector('[name="company_vacancy_unique_code"]').value = '';
-        }
-    
-        // Add event listener to company name field
-        const companyNameField = document.querySelector('[name="company_name"]');
-        if (companyNameField) {
-            // Debounce function to prevent too many requests
-            function debounce(func, timeout = 1000){
-                let timer;
-                return (...args) => {
-                    clearTimeout(timer);
-                    timer = setTimeout(() => { func.apply(this, args); }, timeout);
-                };
-            }
-    
-            companyNameField.addEventListener('input', debounce(function(e) {
-                const companyName = e.target.value.trim();
-                if (companyName.length >= 3) {
-                    // Check if company exists
-                    fetch(`{% url "employee_company_registration" %}?company_name=${encodeURIComponent(companyName)}`, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Company not found');
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.error) {
-                            console.log(data.error);
-                            return;
-                        }
-                        fillFormWithCompanyData(data);
-                    })
-                    .catch(error => {
-                        console.log('Company not found or error:', error);
-                    });
-                }
-            }));
-        }
-    
-        // [Keep all your existing form validation code]
-        // ...
-    });
-</script>
+
 <!-- Libs JS -->
 <script src="/static/dist/libs/nouislider/dist/nouislider.min.js?1692870487" defer></script>
 <script src="/static/dist/libs/litepicker/dist/litepicker.js?1692870487" defer></script>
@@ -728,6 +358,3 @@
 <script src="/static/dist/js/demo.min.js?1692870487" defer></script>
 
 {% endblock content %}
-
-
-

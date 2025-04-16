@@ -34,7 +34,7 @@
       <div class="card">
         <div class="card-header">
           <div class="row align-items-center">
-            <div class="col-12 col-md-6 mb-3 mb-md-0">
+            <div class="col-12 col-md-12 mb-3 mb-md-0">
               <div class="input-group">
                 <span class="input-group-text">
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -46,19 +46,28 @@
                 <input type="text" id="searchInput" class="form-control" placeholder="Search companies..." aria-label="Search companies">
               </div>
             </div>
-            <div class="col-12 col-md-6 ms-md-auto">
+            {% comment %} <div class="col-12 col-md-6 ms-md-auto">
               <div class="d-flex align-items-center justify-content-end">
                 <div class="me-3 text-nowrap">
-                  <label for="sectorFilter" class="form-label">Sector:</label>
+                  <label for="statusFilter" class="form-label">Status:</label>
                 </div>
-                <select id="sectorFilter" class="form-select">
-                  <option value="">All Sectors</option>
-                  {% for sector in sectors|dictsort:"sector_type" %}
-                    <option value="{{ sector.sector_type }}">{{ sector.sector_type }}</option>
+                <select id="statusFilter" class="form-select me-3">
+                  <option value="">All Status</option>
+                  {% for status in status_choices %}
+                    <option value="{{ status.0 }}">{{ status.1 }}</option>
+                  {% endfor %}
+                </select>
+                <div class="me-3 text-nowrap">
+                  <label for="locationFilter" class="form-label">Location:</label>
+                </div>
+                <select id="locationFilter" class="form-select">
+                  <option value="">All Locations</option>
+                  {% for location in locations %}
+                    <option value="{{ location }}">{{ location }}</option>
                   {% endfor %}
                 </select>
               </div>
-            </div>
+            </div> {% endcomment %}
           </div>
         </div>
 
@@ -70,15 +79,16 @@
                 <th>Company</th>
                 <th>Details</th>
                 <th>Contact</th>
-                <th>Vacancy</th>
                 <th>Status</th>
+                {% comment %} <th>Last Updated</th> {% endcomment %}
                 <th class="text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for company in companys %}
-              <tr data-search="{{ company.company_name|lower }} {{ company.company_unique_code|lower }} {{ company.company_vacancy_unique_code|lower }} {{ company.sector_type|lower }} {{ company.company_location|lower }}"
-                  data-sector="{{ company.sector_type }}">
+              <tr data-search="{{ company.company_name|lower }} {{ company.company_unique_code|lower }} {{ company.company_location|lower }} {{ company.company_contact_person_name|lower }}"
+                  data-status="{{ company.status_of_proposal }}"
+                  data-location="{{ company.company_location }}">
                 <td>{{ forloop.counter }}</td>
                 <td>
                   <div class="d-flex align-items-center">
@@ -105,35 +115,31 @@
                 </td>
                 <td>
                   <div class="text-muted">
-                    <div class="small">{{ company.sector_type }}</div>
-                    <div class="small">{{ company.job_profile|default:"-" }}</div>
-                    <div class="small">{{ company.company_location }}</div>
+                    <div class="small"><strong>Location:</strong> {{ company.company_location }}</div>
+                    <div class="small"><strong>Interview Address:</strong> {{ company.interview_address|truncatechars:30 }}</div>
                   </div>
                 </td>
                 <td>
                   <div class="text-muted">
-                    <div>{{ company.company_contact_person_name }}</div>
+                    <div>{{ company.company_contact_person_name|default:"-" }}</div>
                     <div class="small">{{ company.company_contact_person_designation|default:"-" }}</div>
-                    <div class="small">{{ company.company_contact_person_contact_details|default:"-" }}</div>
+                    <div class="small">
+                      {% if company.company_contact_person_contact_details %}
+                      <a href="tel:{{ company.company_contact_person_contact_details }}">{{ company.company_contact_person_contact_details }}</a>
+                      {% else %}-{% endif %}
+                    </div>
                   </div>
                 </td>
                 <td>
-                  <div class="text-muted">
-                    <div class="small">Vacancy: <code>{{ company.company_vacancy_unique_code }}</code></div>
-                    <div class="small">Opened: {{ company.vacancy_opening_date|date:"M d, Y"|default:"-" }}</div>
-                    <div class="small">Salary: ₹{{ company.minimum_salary_range|default:"-" }} - ₹{{ company.maximum_salary_range|default:"-" }}</div>
-                  </div>
+                  <span class="badge {% if company.status_of_proposal == 'Approved' %}bg-green{% elif company.status_of_proposal == 'Pending' %}bg-yellow{% else %}bg-blue{% endif %} text-white">
+                    {{ company.status_of_proposal }}
+                  </span>
                 </td>
-                <td>
-                  <div class="d-flex flex-column">
-                    <span class="badge {% if company.vacancy_status == 'Active' %}bg-green{% else %}bg-green{% endif %} text-white mb-1">
-                      {{ company.vacancy_status }}
-                    </span>
-                    <span class="badge {% if company.status_of_proposal == 'Approved' %}bg-green{% else %}bg-yellow{% endif %} text-white">
-                      {{ company.status_of_proposal }}
-                    </span>
+                {% comment %} <td>
+                  <div class="text-muted small">
+                    {{ company.updated_at|date:"M d, Y"|default:"-" }}
                   </div>
-                </td>
+                </td> {% endcomment %}
                 <td class="text-center">
                   <div class="btn-list justify-content-center">
                     <a href="{% url 'employee_company_profile' company.id %}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
@@ -143,11 +149,41 @@
                         <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
                       </svg>
                     </a>
+                    {% if company.company_contact_person_contact_details %}
                     <a href="tel:{{ company.company_contact_person_contact_details }}" class="btn btn-sm btn-icon" title="Call Contact" data-bs-toggle="tooltip">
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-phone" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                         <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"></path>
                       </svg>
+                    </a>
+                    {% endif %}
+                    <a href="mailto:{{ company.company_email_address|default:'' }}" class="btn btn-sm btn-icon" title="Email Company" data-bs-toggle="tooltip" {% if not company.company_email_address %}disabled{% endif %}>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z"></path>
+                        <path d="M3 7l9 6l9 -6"></path>
+                      </svg>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="7" class="text-center py-4">
+                  <div class="d-flex flex-column align-items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-building-skyscraper" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                      <path d="M3 21l18 0"></path>
+                      <path d="M5 21v-14l8 -4v18"></path>
+                      <path d="M19 21v-10l-6 -4"></path>
+                      <path d="M9 9l0 .01"></path>
+                      <path d="M9 12l0 .01"></path>
+                      <path d="M9 15l0 .01"></path>
+                      <path d="M9 18l0 .01"></path>
+                    </svg>
+                    <span class="mt-2">No companies found</span>
+                    <a href="{% url 'employee_company_registration' %}" class="btn btn-primary mt-2">
+                      Add New Company
                     </a>
                   </div>
                 </td>
@@ -162,6 +198,17 @@
             Showing <span id="showingFrom">1</span> to <span id="showingTo">{{ companys|length }}</span> of <span id="totalCount">{{ companys|length }}</span> companies
           </div>
           <ul class="pagination m-0 ms-auto">
+            {% if companys.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ companys.previous_page_number }}" tabindex="-1" aria-disabled="false">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M15 6l-6 6l6 6" />
+                </svg>
+                prev
+              </a>
+            </li>
+            {% else %}
             <li class="page-item disabled">
               <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -171,10 +218,28 @@
                 prev
               </a>
             </li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            {% endif %}
+            
+            {% for i in companys.paginator.page_range %}
+              {% if companys.number == i %}
+              <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+              {% else %}
+              <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+              {% endif %}
+            {% endfor %}
+            
+            {% if companys.has_next %}
             <li class="page-item">
+              <a class="page-link" href="?page={{ companys.next_page_number }}">
+                next
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M9 6l6 6l-6 6" />
+                </svg>
+              </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
               <a class="page-link" href="#">
                 next
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -183,6 +248,7 @@
                 </svg>
               </a>
             </li>
+            {% endif %}
           </ul>
         </div>
       </div>
@@ -205,12 +271,18 @@
   .badge.bg-blue-lt {
     background-color: rgba(65, 138, 221, 0.1);
     color: #418add;
-    padding: 0.25rem 0.5rem;
   }
   
   .badge.bg-yellow {
-    background-color: rgba(255, 193, 7, 0.1);
-    color: #ffc107;
+    background-color: #ffc107;
+  }
+
+  .badge.bg-green {
+    background-color: #2fb344;
+  }
+
+  .badge.bg-blue {
+    background-color: #467fcf;
   }
   
   @media (max-width: 768px) {
@@ -238,7 +310,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Search and filter functionality
   const searchInput = document.getElementById('searchInput');
-  const sectorFilter = document.getElementById('sectorFilter');
+  const locationFilter = document.getElementById('locationFilter');
+  const statusFilter = document.getElementById('statusFilter');
   const companiesTable = document.getElementById('companiesTable');
   const rows = companiesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
   const totalCountEl = document.getElementById('totalCount');
@@ -247,19 +320,21 @@ document.addEventListener("DOMContentLoaded", function() {
   
   function filterCompanies() {
     const searchTerm = searchInput.value.toLowerCase();
-    const sectorFilterValue = sectorFilter.value.toLowerCase();
+    const locationFilterValue = locationFilter.value;
+    const statusFilterValue = statusFilter.value;
     let visibleCount = 0;
     
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       const searchContent = row.getAttribute('data-search');
-      const rowSector = row.getAttribute('data-sector');
+      const rowLocation = row.getAttribute('data-location');
+      const rowStatus = row.getAttribute('data-status');
       
       const matchesSearch = searchContent.includes(searchTerm);
-      const matchesSector = sectorFilterValue === '' || 
-                          (rowSector && rowSector.toLowerCase().includes(sectorFilterValue));
+      const matchesLocation = locationFilterValue === '' || rowLocation === locationFilterValue;
+      const matchesStatus = statusFilterValue === '' || rowStatus === statusFilterValue;
       
-      if (matchesSearch && matchesSector) {
+      if (matchesSearch && matchesLocation && matchesStatus) {
         row.style.display = '';
         visibleCount++;
       } else {
@@ -270,12 +345,14 @@ document.addEventListener("DOMContentLoaded", function() {
     // Update counters
     showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
     showingToEl.textContent = visibleCount;
+    totalCountEl.textContent = visibleCount;
     document.getElementById('total-companies').textContent = visibleCount;
   }
   
   // Event listeners
   searchInput.addEventListener('input', filterCompanies);
-  sectorFilter.addEventListener('change', filterCompanies);
+  locationFilter.addEventListener('change', filterCompanies);
+  statusFilter.addEventListener('change', filterCompanies);
   
   // Initial filter
   filterCompanies();
@@ -300,5 +377,41 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 });
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const searchInput = document.getElementById("searchInput");
+  {% comment %} const statusFilter = document.getElementById("statusFilter");
+  const locationFilter = document.getElementById("locationFilter"); {% endcomment %}
+  const rows = document.querySelectorAll("#companiesTable tbody tr");
+
+  function filterRows() {
+    const search = searchInput.value.toLowerCase();
+    {% comment %} const status = statusFilter.value;
+    const location = locationFilter.value; {% endcomment %}
+
+    rows.forEach(row => {
+      const searchText = row.getAttribute("data-search");
+      {% comment %} const rowStatus = row.getAttribute("data-status");
+      const rowLocation = row.getAttribute("data-location"); {% endcomment %}
+
+      const matchesSearch = searchText.includes(search);
+      {% comment %} const matchesStatus = !status || rowStatus === status;
+      const matchesLocation = !location || rowLocation === location; {% endcomment %}
+
+      if (matchesSearch ) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    });
+  }
+
+  searchInput.addEventListener("input", filterRows);
+  {% comment %} statusFilter.addEventListener("change", filterRows);
+  locationFilter.addEventListener("change", filterRows); {% endcomment %}
+});
+</script>
+
 
 {% endblock %}

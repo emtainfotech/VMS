@@ -94,16 +94,15 @@
             </div>
             <div class="nav-item dropdown">
               <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
-                <span class="avatar avatar-sm" style="background-image: url(/static/avatars/000m.jpg)"></span>
+                <img class="avatar avatar-sm" src="{{user.employee.employee_photo.url}}" alt="{{user.username}}">
                 <div class="d-none d-xl-block ps-2">
-                  <div>{{employee.employee_id}}</div>
-                  <div class="mt-1 small text-secondary">UI Designer</div>
+                  <div>{{user.username}}</div>
+                  <div class="mt-1 small text-secondary">{{user.employee.designation}}</div>
                 </div>
               </a>
               <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                <a href="./profile.html" class="dropdown-item">Profile</a>
-                {% comment %} <a href="./settings.html" class="dropdown-item">Settings</a> {% endcomment %}
-                <a href="./sign-in.html" class="dropdown-item">Logout</a>
+                <a href="{% url 'admin_profile' user.id %}" class="dropdown-item">Profile</a>
+                <a href="{% url 'custom_admin_logout' %}" class="dropdown-item">Logout</a>
               </div>
             </div>
           </div>
@@ -114,7 +113,7 @@
           <div class="navbar">
             <div class="container-xl">
               <ul class="navbar-nav">
-                <li class="nav-item  {% if request.path == '/Dashboard/' %}active  {% endif %}">
+                <li class="nav-item  {% if request.path == '/hrms/Dashboard/' %}active  {% endif %}">
                   <a class="nav-link" href="{% url 'dashboard' %}">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                       <!-- Download SVG icon from http://tabler-icons.io/i/home -->
@@ -129,7 +128,7 @@
                   </a>
                 </li>
                 
-                <li class="nav-item  {% if request.path == '/employee/' %}active{% endif %}">
+                <li class="nav-item  {% if request.path == '/hrms/employee/' %}active{% endif %}">
                   <a class="nav-link" href="{% url 'employee_view' %}">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-user-hexagon">
@@ -142,7 +141,7 @@
                     <span class="nav-link-title">Employee's</span>
                   </a>
                 </li>
-                <li class="nav-item  {% if request.path == '/employee/' %}active{% endif %}">
+                <li class="nav-item  {% if request.path == '/hrms/tasks/assign/' %}active{% endif %}">
                   <a class="nav-link" href="{% url 'assign_task' %}">
                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-user-hexagon">
@@ -190,42 +189,6 @@
                         <a class="dropdown-item" href="{% url 'clients_view' %}">Client's</a>
                         <a class="dropdown-item" href="{% url 'warning_view' %}">Warning</a>      
                                           
-                      </div>
-                    </div>
-                  </div>
-                </li>
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-coin-rupee"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M15 8h-6h1a3 3 0 0 1 0 6h-1l3 3" /><path d="M9 11h6" /></svg>
-                    </span>
-                    <span class="nav-link-title">EVMS</span>
-                  </a>
-
-                  <div class="dropdown-menu">
-                    <div class="dropdown-menu-columns">
-                      <div class="dropdown-menu-column">
-                        <a class="dropdown-item" href="{% url 'admin_vendor_list' %}">Vendor's</a>
-                        <a class="dropdown-item" href="{% url 'admin_evms_candidate_list' %}">Candidate's</a>
-                        <a class="dropdown-item" href="{% url 'pay_list_view' %}">Pay List</a>
-                        <a class="dropdown-item" href="{% url 'holiday_view' %}">Transaction History</a>       
-                      </div>
-                    </div>
-                  </div>
-                </li>
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-coin-rupee"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M15 8h-6h1a3 3 0 0 1 0 6h-1l3 3" /><path d="M9 11h6" /></svg>
-                    </span>
-                    <span class="nav-link-title">Working Data</span>
-                  </a>
-                  
-                  <div class="dropdown-menu">
-                    <div class="dropdown-menu-columns">
-                      <div class="dropdown-menu-column">
-                        <a class="dropdown-item" href="{% url 'admin_candidate_list' %}">Company's</a>
-                        <a class="dropdown-item" href="{% url 'admin_candidate_list' %}">Candidate's</a>      
                       </div>
                     </div>
                   </div>

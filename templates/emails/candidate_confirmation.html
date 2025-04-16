@@ -1,120 +1,129 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Application Received - EMTA VMS</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            color: #4a4a4a;
-            background-color: #fafafa;
             margin: 0;
             padding: 0;
+            background-color: #f2f4f8;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #2d2d2d;
         }
-        .container {
-            max-width: 600px;
-            margin: 20px auto;
+        .email-wrapper {
+            max-width: 640px;
+            margin: 40px auto;
             background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
             overflow: hidden;
         }
-        .header {
-            background-color: #f0f7ff;
-            padding: 30px 20px;
+        .email-header {
+            background-color: #1a2e45;
+            color: #ffffff;
             text-align: center;
-            border-bottom: 1px solid #e0e9f5;
+            padding: 40px 30px;
         }
-        .header h1 {
-            color: #2c6ecb;
+        .email-header h1 {
             margin: 0;
-            font-weight: 500;
+            font-size: 26px;
+            font-weight: 600;
         }
-        .header p {
-            color: #6b8ab8;
-            margin: 5px 0 0;
-            font-size: 16px;
+        .email-header p {
+            margin: 10px 0 0;
+            font-size: 15px;
+            color: #d0d6dc;
         }
-        .content {
+        .email-body {
             padding: 30px;
         }
-        .content p {
-            margin: 0 0 20px;
-            color: #555;
+        .email-body p {
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            color: #444;
         }
-        .content h3 {
-            color: #3a6ea5;
-            margin: 25px 0 15px;
+        .email-body h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1a2e45;
+            margin: 30px 0 15px;
+        }
+        .info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 30px;
+            border: 1px solid #e2e6ea;
+            border-radius: 6px;
+        }
+        .info-list li {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e6ea;
+            font-size: 14px;
+        }
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+        .info-list strong {
+            display: inline-block;
+            width: 160px;
             font-weight: 500;
-            font-size: 18px;
-        }
-        ul {
-            padding-left: 20px;
-            margin: 0 0 20px;
-        }
-        li {
-            margin-bottom: 8px;
-            color: #555;
-        }
-        li strong {
-            color: #4a4a4a;
-            font-weight: 500;
-        }
-        a {
-            color: #2c6ecb;
-            text-decoration: none;
-        }
-        .footer {
-            margin-top: 20px;
-            padding: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #8c98ab;
-            background-color: #f8fafd;
-            border-top: 1px solid #eef2f7;
+            color: #2d2d2d;
         }
         .divider {
             height: 1px;
-            background-color: #eef2f7;
-            margin: 25px 0;
+            background-color: #e4e7eb;
+            margin: 30px 0;
+        }
+        a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        .email-footer {
+            background-color: #f8fafc;
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #7a8699;
+            border-top: 1px solid #e2e6ea;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Application Received</h1>
+    <div class="email-wrapper">
+        <div class="email-header">
+            <h1>Application Successfully Received</h1>
             <p>EMTA Vendor Management System</p>
         </div>
-        
-        <div class="content">
+        <div class="email-body">
             <p>Dear {{ candidate_name }},</p>
-            
-            <p>Thank you for submitting your application through EMTA VMS. We have received your details and our team will review your application shortly.</p>
-            
+
+            <p>Thank you for applying through EMTA VMS. We have received your application and our recruitment team will be reviewing it shortly.</p>
+
             <div class="divider"></div>
-            
-            <h3>Your Application Details:</h3>
-            <ul>
+
+            <h3>Application Summary</h3>
+            <ul class="info-list">
                 <li><strong>Name:</strong> {{ candidate_name }}</li>
                 <li><strong>Qualification:</strong> {{ qualification }}</li>
                 <li><strong>Sector:</strong> {{ sector }}</li>
                 <li><strong>Job Type:</strong> {{ job_type }}</li>
                 <li><strong>Preferred Location:</strong> {{ preferred_location }}</li>
-                {% if refer_code %}<li><strong>Referral Code:</strong> {{ refer_code }}</li>{% endif %}
+                {% if refer_code %}
+                <li><strong>Referral Code:</strong> {{ refer_code }}</li>
+                {% endif %}
             </ul>
-            
+
             <div class="divider"></div>
-            
-            <p>We will contact you if your profile matches our current requirements. Please keep your phone and email active for communication.</p>
-            
-            <p>For any queries, please contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
-            
-            <p>Best regards,<br>
-            The {{ company_name }} Team</p>
+
+            <p>If your profile aligns with any of our open positions, we will reach out to you via email or phone. Please ensure your contact details are active and reachable.</p>
+
+            <p>For any further assistance, feel free to contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
+
+            <p>Warm regards,<br>The {{ company_name }} Team</p>
         </div>
-        
-        <div class="footer">
+        <div class="email-footer">
             <p>&copy; {% now "Y" %} {{ company_name }}. All rights reserved.</p>
         </div>
     </div>

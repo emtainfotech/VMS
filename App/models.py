@@ -113,6 +113,7 @@ class Meeting(models.Model):
     time = models.TimeField()
     location = models.CharField(max_length=255)
     department = models.CharField(max_length=255)
+    description = models.TextField()
 
     def __str__(self):
         return self.title
@@ -285,6 +286,7 @@ class Termination(models.Model):
     notice_date = models.DateField()
     termination_date = models.DateField()
     description = models.TextField()
+    status = models.CharField(max_length=20, default='Pending')
 
     def __str__(self):
         return f"Termination of {self.employee} ({self.termination_type})"
@@ -416,26 +418,37 @@ class Candidate_Interview(models.Model):
         return self.candidate.candidate_name
 
 class Company_registration(models.Model):
-    employee_name = models.CharField(max_length=50)
-    company_name = models.CharField(max_length=255)
-    company_logo = models.FileField(upload_to='Company-Logo/')
-    company_location = models.CharField(max_length=255)
-    company_unique_code = models.CharField(max_length=255)
+    employee_name = models.CharField(max_length=50, blank=True, null=True)
+    company_name = models.CharField(max_length=255, blank=True, null=True)
+    company_logo = models.FileField(upload_to='Company-Logo/', blank=True, null=True)
+    company_location = models.CharField(max_length=255, blank=True, null=True)
+    company_unique_code = models.CharField(max_length=255, blank=True, null=True)
+    company_email_address = models.EmailField(blank=True, null=True)
+    company_contact_person_name = models.CharField(max_length=255, blank=True, null=True)
+    company_contact_person_contact_details = models.CharField(max_length=255, blank=True, null=True)
+    company_contact_person_designation = models.CharField(max_length=255, blank=True, null=True)
+    interview_address = models.CharField(max_length=255, blank=True, null=True)
+    status_of_proposal = models.CharField(max_length=100, blank=True, null=True)
+    invoice_generation_date = models.CharField(max_length=10, blank=True, null=True)
+    payout_date = models.CharField(max_length=10, blank=True, null=True)
+    payment_condiation = models.CharField(max_length=255, blank=True, null=True)
+    remark = models.CharField(max_length=255, blank=True, null=True)
+   
+    def __str__(self):
+        return self.company_name
+
+class VacancyDetails(models.Model):
+    company = models.ForeignKey(Company_registration, on_delete=models.CASCADE, related_name='vacancies')
     job_profile = models.CharField(max_length=255, blank=True, null=True)
     company_vacancy_unique_code = models.CharField(max_length=15)
     vacancy_opening_date = models.DateField(blank=True, null=True)
-    company_email_address = models.EmailField(blank=True, null=True)
-    vacancy_status = models.CharField(max_length=10)
-    company_contact_person_name = models.CharField(max_length=255)
-    company_contact_person_contact_details = models.CharField(max_length=255, blank=True, null=True)
-    company_contact_person_designation = models.CharField(max_length=255, blank=True, null=True)
-    interview_address = models.CharField(max_length=255)
+    vacancy_status = models.CharField(max_length=10, blank=True, null=True)
     payroll = models.CharField(max_length=255, blank=True, null=True)
     third_party_name = models.CharField(max_length=255, blank=True, null=True)
     job_opening_origin = models.CharField(max_length=255, blank=True, null=True)
     sector_type = models.CharField(max_length=255, blank=True, null=True)
     department_name = models.CharField(max_length=255, blank=True, null=True)
-    fresher_status = models.CharField(max_length=50)
+    fresher_status = models.CharField(max_length=50, blank=True, null=True)
     minimum_age = models.CharField(max_length=10, blank=True, null=True)
     maximum_age = models.CharField(max_length=10, blank=True, null=True)
     gender = models.CharField(max_length=255, blank=True, null=True)
@@ -449,30 +462,10 @@ class Company_registration(models.Model):
     special_instruction = models.CharField(max_length=255, blank=True, null=True)
     company_usp = models.CharField(max_length=255,blank=True, null=True)
     status_of_incentive = models.CharField(max_length=255, blank=True, null=True)
-    status_of_proposal = models.CharField(max_length=100)
-    invoice_generation_date = models.CharField(max_length=10, blank=True, null=True)
-    payout_date = models.CharField(max_length=10, blank=True, null=True)
-    payment_condiation = models.CharField(max_length=255, blank=True, null=True)
     replacement_criteria = models.CharField(max_length=255, blank=True, null=True)
-    remark = models.CharField(max_length=255, blank=True, null=True)
-   
 
     def __str__(self):
-        return self.company_name
-    
-# class Company_vacancy(models.Model) :
-#     company = models.ForeignKey(Company_registration, on_delete=models.CASCADE)
-#     vancancy_code = models.CharField(max_length=255, blank=True, null=True)
-#     job_profile = models.CharField(max_length=255, blank=True, null=True)
-#     job_description = models.TextField(blank=True, null=True)
-#     job_location = models.CharField(max_length=255, blank=True, null=True)
-#     job_opening_date = models.DateField(blank=True, null=True)
-#     job_closing_date = models.DateField(blank=True, null=True)
-#     job_type = models.CharField(max_length=255, blank=True, null=True)
-#     job_shift = models.CharField(max_length=255, blank=True, null=True)
-#     job_salary = models.CharField(max_length=255, blank=True, null=True)
-#     job_vacancy = models.CharField(max_length=255, blank=True, null=True)
-#     job_experience = models.CharField(max_length=255, blank=True, null=True)
+        return f"{self.job_profile} at {self.company.company_name}"
 
 class Ticket(models.Model):
     ticket_number = models.CharField(max_length=50, unique=True)

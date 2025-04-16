@@ -7,16 +7,11 @@
       <div class="container-xl">
         <div class="row g-2 align-items-center">
           <div class="col">
-            <!-- Page pre-title -->
-            {% comment %} <div class="page-pretitle">Overview</div> {% endcomment %}
-            <h2 class="page-title" style="margin-bottom: 50px;">Warning</h2>
+            <h2 class="page-title" style="margin-bottom: 50px;">Warnings</h2>
           </div>
-          <!-- Page title actions -->
           <div class="col-auto ms-auto d-print-none">
             <div class="btn-list">
-              {% comment %} <span class="d-none d-sm-inline"><a href="#" class="btn">New view</a></span> {% endcomment %}
               <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
-                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                   <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                   <path d="M12 5l0 14" />
@@ -24,7 +19,6 @@
                 </svg>Add Warning
               </a>
               <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
-                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                   <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                   <path d="M12 5l0 14" />
@@ -41,19 +35,22 @@
         <div class="row g-2 align-items-center">
           <div class="col-12">
             <div class="card">
-              {% comment %} <div class="card-header">
-                <h3 class="card-title">Designations</h3>
-              </div> {% endcomment %}
               <div class="card-body border-bottom py-3">
                 <div class="d-flex">
                   <div class="text-secondary">
-                    Show<div class="mx-2 d-inline-block">
-                      <input type="text" class="form-control form-control-sm" value="8" size="3" aria-label="Invoices count" />
-                    </div>entries
+                    Show
+                    <select class="form-select form-select-sm d-inline-block w-auto mx-1" id="entriesPerPage">
+                      <option value="5">5</option>
+                      <option value="10" selected>10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                    </select>
+                    entries
                   </div>
                   <div class="ms-auto text-secondary">
-                    Search:<div class="ms-2 d-inline-block">
-                      <input type="text" id="searchInput" class="form-control form-control-sm" aria-label="Search invoices" placeholder="Search in table" />
+                    Search:
+                    <div class="ms-2 d-inline-block">
+                      <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search warnings..." />
                     </div>
                   </div>
                 </div>
@@ -62,45 +59,56 @@
                 <table class="table card-table table-vcenter text-nowrap datatable" id="searchableTable">
                   <thead>
                     <tr>
-                      <th class="w-1">
-                        No. <!-- Download SVG icon from http://tabler-icons.io/i/chevron-up -->
-                      </th>
+                      <th class="w-1">No.</th>
                       <th>Employee</th>
                       <th>Subject</th>
                       <th>Warning Date</th>
                       <th>Description</th>
-                      <th>Action</th>
+                      <th class="text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {% for warning in warnings %}
                     <tr>
-                      <td>
-                        <span class="text-secondary">{{forloop.counter}}</span>
-                      </td>
-
-                      <td>
-                        <span class="me-2"></span>
-                        {{warning.employee.first_name}} {{warning.employee.last_name}}
-                      </td>
-                      <td>
-                        <span class="me-2"></span>
-                        {{warning.subject}}
-                      </td>
-                      <td>
-                        <span class="me-2"></span>
-                        {{warning.warning_date}}
-                      </td>
-                      <td>
-                        <span class="me-2"></span>
-                        {{warning.description}}
-                      </td>
-                      <td>
-                        <span class="me-2">
-                          <div class="d-flex justify-content-center">
-                            <button class="btn btn-light p-2" style="background-color: #FDECEA; border-radius: 10%; border: none;"><a href="{% url 'delete_warning' warning.id %}" style="color: #FF4C4C;"><i class="bi bi-trash"></i></a></button>
-                          </div>
-                        </span>
+                      <td><span class="text-secondary">{{ forloop.counter }}</span></td>
+                      <td>{{ warning.employee.first_name }} {{ warning.employee.last_name }}</td>
+                      <td>{{ warning.subject }}</td>
+                      <td>{{ warning.warning_date|date:"M d, Y" }}</td>
+                      <td>{{ warning.description|truncatechars:30 }}</td>
+                      <td class="text-center">
+                        <div class="btn-group">
+                          <!-- Edit Button -->
+                          <button class="btn btn-icon btn-outline-primary btn-sm" 
+                                  data-bs-toggle="modal" 
+                                  data-bs-target="#editModal"
+                                  data-warning-id="{{ warning.id }}"
+                                  data-employee-id="{{ warning.employee.id }}"
+                                  data-subject="{{ warning.subject }}"
+                                  data-warning-date="{{ warning.warning_date|date:'Y-m-d' }}"
+                                  data-description="{{ warning.description }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                              <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path>
+                              <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path>
+                              <path d="M16 5l3 3"></path>
+                            </svg>
+                          </button>
+                          
+                          <!-- Delete Button -->
+                          <form method="post" action="{% url 'delete_warning' warning.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-icon btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to delete this warning?')">
+                              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M4 7l16 0"></path>
+                                <path d="M10 11l0 6"></path>
+                                <path d="M14 11l0 6"></path>
+                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
+                                <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
+                              </svg>
+                            </button>
+                          </form>
+                        </div>
                       </td>
                     </tr>
                     {% endfor %}
@@ -109,36 +117,21 @@
               </div>
               <div class="card-footer d-flex align-items-center">
                 <p class="m-0 text-secondary">
-                  Showing <span>1</span> to <span>8</span> of <span>16</span> entries
+                  Showing <span>1</span> to <span>{{ warnings|length }}</span> of <span>{{ warnings|length }}</span> entries
                 </p>
                 <ul class="pagination m-0 ms-auto">
                   <li class="page-item disabled">
                     <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                      <!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M15 6l-6 6l6 6" />
                       </svg>prev
                     </a>
                   </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">1</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">2</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">3</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">4</a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">5</a>
-                  </li>
+                  <li class="page-item active"><a class="page-link" href="#">1</a></li>
                   <li class="page-item">
                     <a class="page-link" href="#">
-                      next <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
+                      next
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M9 6l6 6l-6 6" />
@@ -154,6 +147,7 @@
     </div>
   </div>
 
+  <!-- Add Warning Modal -->
   <div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
@@ -161,42 +155,121 @@
           <h5 class="modal-title">Add New Warning</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body">
-          <form method="POST">
-            {% csrf_token %}
+        <form method="post" id="addWarningForm">
+          {% csrf_token %}
+          <div class="modal-body">
             <div class="row">
-                <div class="col-lg-6">
-                    <div class="mb-3">
-                        <label class="form-label">Employee Name</label>
-                        <select class="form-select" name="employee" required>
-                            <option value="" disabled selected>Select Employee</option>
-                            {% for employee in employees %}
-                                <option value="{{ employee.id }}">{{ employee.first_name }} {{ employee.last_name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Subject</label>
-                    <input type="text" class="form-control" name="subject" required />
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Warning Date</label>
-                    <input type="date" class="form-control" name="warning_date" required />
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-control" name="description" rows="4" required></textarea>
-                </div>
+              <div class="col-lg-6 mb-3">
+                <label class="form-label">Employee Name <span class="text-danger">*</span></label>
+                <select class="form-select" name="employee" required>
+                  <option value="" selected disabled>Select Employee</option>
+                  {% for employee in employees %}
+                    <option value="{{ employee.id }}">{{ employee.first_name }} {{ employee.last_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-lg-6 mb-3">
+                <label class="form-label">Subject <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="subject" required />
+              </div>
+              <div class="col-lg-6 mb-3">
+                <label class="form-label">Warning Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="warning_date" required />
+              </div>
+              <div class="col-lg-12 mb-3">
+                <label class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea class="form-control" name="description" rows="4" required></textarea>
+              </div>
             </div>
-    
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
         </form>
-        </div>
       </div>
     </div>
   </div>
+
+  <!-- Edit Warning Modal -->
+  <div class="modal modal-blur fade" id="editModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Warning</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="post" id="editWarningForm">
+          {% csrf_token %}
+          <input type="hidden" name="warning_id" id="editWarningId">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-lg-6 mb-3">
+                <label class="form-label">Employee Name</label>
+                <input type="text" class="form-control" id="editEmployeeName" readonly>
+              </div>
+              <div class="col-lg-6 mb-3">
+                <label class="form-label">Subject <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="subject" id="editSubject" required />
+              </div>
+              <div class="col-lg-6 mb-3">
+                <label class="form-label">Warning Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="warning_date" id="editWarningDate" required />
+              </div>
+              <div class="col-lg-12 mb-3">
+                <label class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea class="form-control" name="description" id="editDescription" rows="4" required></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Edit modal handler
+    document.addEventListener('DOMContentLoaded', function() {
+      const editModal = document.getElementById('editModal');
+      
+      editModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const warningId = button.getAttribute('data-warning-id');
+        const employeeId = button.getAttribute('data-employee-id');
+        const employeeName = button.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
+        const subject = button.getAttribute('data-subject');
+        const warningDate = button.getAttribute('data-warning-date');
+        const description = button.getAttribute('data-description');
+        
+        // Populate the edit form
+        document.getElementById('editWarningId').value = warningId;
+        document.getElementById('editEmployeeName').value = employeeName;
+        document.getElementById('editSubject').value = subject;
+        document.getElementById('editWarningDate').value = warningDate;
+        document.getElementById('editDescription').value = description;
+      });
+
+      // Search functionality
+      document.getElementById('searchInput').addEventListener('keyup', function() {
+        const input = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#searchableTable tbody tr');
+        
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(input) ? '' : 'none';
+        });
+      });
+
+      // Entries per page functionality
+      document.getElementById('entriesPerPage').addEventListener('change', function() {
+        const entries = parseInt(this.value);
+        // Implement pagination logic here
+        console.log(`Show ${entries} entries per page`);
+      });
+    });
+  </script>
 {% endblock %}

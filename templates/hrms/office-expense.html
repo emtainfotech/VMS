@@ -123,7 +123,6 @@
                             <th>Parchase Date</th>
                             <th>Ammount</th>
                             <th>Status</th>
-                            <th>Action</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -150,14 +149,14 @@
                               {{OfficeExpense.amount}}
                             </td>
                             <td>
-                              <form method="post" action="{% url 'update_expense_status' OfficeExpense.id %}">
-                                  {% csrf_token %}
-                                  <select class="form-select" name="paid_status" onchange="this.form.submit()" style="width: auto;">
-                                      <option value="Paid" {% if OfficeExpense.paid_status == 'Paid' %}selected{% endif %}>Paid</option>
-                                      <option value="Unpaid" {% if OfficeExpense.paid_status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
-                                      <option value="Hold" {% if OfficeExpense.paid_status == 'Hold' %}selected{% endif %}>Hold</option>
-                                  </select>
-                              </form>
+                              <span class="me-2"></span>
+                              {% if OfficeExpense.paid_status == 'Paid' %}
+                                <span class="badge bg-success text-white">{{ OfficeExpense.paid_status }}</span>
+                              {% elif OfficeExpense.paid_status == 'Unpaid' %}
+                                <span class="badge bg-danger text-white">{{ OfficeExpense.paid_status }}</span>
+                              {% else %}
+                                <span class="badge bg-warning text-white">{{ OfficeExpense.paid_status }}</span>
+                              {% endif %}
                           </td>
                           
                             
@@ -196,13 +195,7 @@
                             </script>
                             
 
-                            <td>
-                              <span class="me-2">
-                                <div class="d-flex justify-content-center">
-                                  <a href="{% url 'delete_expense' OfficeExpense.id %}" onsubmit="return confirm('Are you sure you want to delete this designation?');"><button class="btn btn-light p-2" style="background-color: #FDECEA; border-radius: 10%; border: none;"><i class="bi bi-trash" style="color: #FF4C4C;"></i></button></a>
-                                </div>
-                              </span>
-                            </td>
+                            
                           </tr>
                           {% endfor %}
                         </tbody>
