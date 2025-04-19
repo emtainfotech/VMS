@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .logo { width: 100px; height: auto; }
+        h2, h3 { margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .total-row { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>{{ company_name }}</h2>
+        <h3>Salary Slip for {{ month_name }} {{ salary.year }}</h3>
+    </div>
+
+    <div>
+        <h3>Employee Information</h3>
+        <p><strong>Name:</strong> {{ employee.first_name }} {{ employee.last_name }}</p>
+        <p><strong>Employee ID:</strong> {{ employee.employee_id }}</p>
+        <p><strong>Designation:</strong> {{ employee.designation }}</p>
+        <p><strong>Department:</strong> {{ employee.department }}</p>
+    </div>
+
+    <div>
+        <h3>Salary Details</h3>
+        <table>
+            <tr>
+                <th>Earnings</th>
+                <th>Amount (₹)</th>
+            </tr>
+            <tr>
+                <td>Basic Salary</td>
+                <td>{{ salary.basic_salary|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td>HRA</td>
+                <td>{{ salary.hra|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td>DA</td>
+                <td>{{ salary.da|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td>TA</td>
+                <td>{{ salary.ta|floatformat:2 }}</td>
+            </tr>
+            <tr class="total-row">
+                <td>Total Earnings</td>
+                <td>{{ salary.total_earnings|floatformat:2 }}</td>
+            </tr>
+            
+            <tr>
+                <th colspan="2">Deductions</th>
+            </tr>
+            <tr>
+                <td>PF</td>
+                <td>{{ salary.pf|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td>Professional Tax</td>
+                <td>{{ salary.professional_tax|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td>Leave Deduction</td>
+                <td>{{ salary.leave_deduction|floatformat:2 }}</td>
+            </tr>
+            <tr class="total-row">
+                <td>Total Deductions</td>
+                <td>{{ salary.total_deductions|floatformat:2 }}</td>
+            </tr>
+            
+            <tr class="total-row">
+                <td>Net Pay</td>
+                <td>₹{{ salary.net_pay|floatformat:2 }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div>
+        <p><strong>Net Pay in Words:</strong> {{ net_pay_in_words }} only</p>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <p>This is a system generated salary slip and does not require signature.</p>
+    </div>
+</body>
+</html>

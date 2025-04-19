@@ -39,6 +39,13 @@
 </style>
 
 <div class="container py-4">
+  <div class="d-flex justify-content-between py-3">
+    <h4>Company Details</h4>
+    <div>
+        <a href="{% url 'admin_company_communication_list' company.id %}" class="btn btn-sm btn-outline-primary">Communication Record</a>
+        {% comment %} <a href="{% url 'interview_list' candidate.id %}" class="btn btn-sm btn-outline-primary">Interview Record</a> {% endcomment %}
+    </div>
+</div>
     <div class="row g-4">
       <div class="col-lg-6">
         <div class="card h-100">

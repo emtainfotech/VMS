@@ -4,187 +4,326 @@
 <div class="page-wrapper">
     <!-- Page header -->
     <div class="page-header d-print-none">
-      <div class="container-xl">
-        <div class="row g-2 align-items-center">
-          <div class="col">
-            <h2 class="page-title">
-              Invoice
-            </h2>
-          </div>
-          <!-- Page title actions -->
-          <div class="col-auto ms-auto d-print-none">
-            <button type="button" class="btn btn-primary" onclick="javascript:window.print();">
-              <!-- Download SVG icon from http://tabler-icons.io/i/printer -->
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2" /><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4" /><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" /></svg>
-              Print Invoice
-            </button>
-          </div>
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">
+                        Salary Slip
+                    </h2>
+                    <div class="text-muted mt-1">
+                        Generated on: {% now "d M Y" %}
+                    </div>
+                </div>
+                <!-- Page title actions -->
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <button type="button" class="btn btn-primary" onclick="javascript:window.print();">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2" />
+                                <path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4" />
+                                <path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" />
+                            </svg>
+                            Print Salary Slip
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
     <!-- Page body -->
     <div class="page-body">
-      <div class="container-xl">
-        <div class="card card-lg">
-          <style>
-            
-            .header {
-                text-align: center;
-                padding-bottom: 10px;
-                border-bottom: 2px solid #000;
-            }
-            .logo {
-                width: 100px;
-                height: auto;
-            }
-            h2, h3 {
-                margin: 5px 0;
-            }
-            .section {
-                border-bottom: 1px solid #000;
-                padding: 10px 0;
-            }
-            .info-table, .salary-table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 10px;
-            }
-            .info-table td, .salary-table td, .salary-table th {
-                border: 1px solid #000;
-                padding: 8px;
-                text-align: left;
-            }
-            .salary-table th {
-                background-color: #f2f2f2;
-            }
-            .footer {
-                text-align: center;
-                margin-top: 20px;
-                font-style: italic;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="row">
-          <div class="col-6">
-            <img src="/static/logo.png" alt="Company Logo" class="logo">
-            <p class="h3">Elite Manpower &amp; Training Academy</p>
-          </div>
-          <div class="col-6 text-end">
-            <address>
-              155,Mangal City Mall<br>
-              Vijay Nagar, Indore<br>
-              MP - 452010<br>
-              MD@EMTA.CO.IN
-            </address>
-          </div>
+        <div class="container-xl">
+            <div class="card card-lg">
+                <div class="card-body">
+                    <style>
+                        .salary-slip {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        }
+                        .header {
+                            text-align: center;
+                            padding-bottom: 20px;
+                            border-bottom: 2px solid #e1e1e1;
+                            margin-bottom: 20px;
+                        }
+                        .company-logo {
+                            width: 120px;
+                            height: auto;
+                            margin-bottom: 10px;
+                        }
+                        .company-name {
+                            font-size: 1.5rem;
+                            font-weight: 600;
+                            color: #2c3e50;
+                        }
+                        .salary-period {
+                            font-size: 1.2rem;
+                            font-weight: 500;
+                            margin: 10px 0;
+                            color: #3498db;
+                        }
+                        .section-title {
+                            font-size: 1.1rem;
+                            font-weight: 600;
+                            color: #2c3e50;
+                            margin: 15px 0 10px 0;
+                            padding-bottom: 5px;
+                            border-bottom: 1px solid #e1e1e1;
+                        }
+                        .info-table, .salary-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 20px;
+                        }
+                        .info-table td, .salary-table td, .salary-table th {
+                            padding: 10px;
+                            text-align: left;
+                            border: 1px solid #e1e1e1;
+                        }
+                        .salary-table th {
+                            background-color: #f8f9fa;
+                            font-weight: 600;
+                        }
+                        .total-row {
+                            font-weight: 600;
+                            background-color: #f1f8fe;
+                        }
+                        .deductions-section {
+                            margin-top: 20px;
+                        }
+                        .footer {
+                            text-align: center;
+                            margin-top: 30px;
+                            padding-top: 15px;
+                            border-top: 1px solid #e1e1e1;
+                            font-style: italic;
+                            color: #7f8c8d;
+                        }
+                        .text-right {
+                            text-align: right;
+                        }
+                        .text-center {
+                            text-align: center;
+                        }
+                        .company-address {
+                            color: #7f8c8d;
+                            font-size: 0.9rem;
+                        }
+                        .watermark {
+                            position: absolute;
+                            opacity: 0.1;
+                            font-size: 5rem;
+                            transform: rotate(-30deg);
+                            z-index: -1;
+                            top: 30%;
+                            left: 20%;
+                        }
+                        .leave-details {
+                            margin-top: 5px;
+                            font-size: 0.9rem;
+                            color: #555;
+                        }
+                    </style>
+
+                    <div class="salary-slip">
+                        <!-- Watermark -->
+                        <div class="watermark d-print-none">CONFIDENTIAL</div>
+                        
+                        <!-- Header Section -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <img src="/static/logo.png" alt="Company Logo" class="company-logo">
+                                <div class="company-name">Elite Manpower & Training Academy</div>
+                                <div class="company-address">
+                                    155, Mangal City Mall<br>
+                                    Vijay Nagar, Indore<br>
+                                    MP - 452010<br>
+                                    MD@EMTA.CO.IN
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <div class="salary-period">SALARY SLIP FOR {{ month_name }}-{{ salary.year }} (PROVISIONAL)</div>
+                                <div>({{ month_name }} 01, {{ salary.year }} to {{ month_name }}, {{ salary.year }})</div>
+                                <div class="mt-2">
+                                    <strong>Status:</strong> 
+                                    <span class="badge bg-{% if salary.status == 'paid' %}success{% elif salary.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                        {{ salary.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employee Information Section -->
+                        <div>
+                            <h3 class="section-title">Employee Information</h3>
+                            <table class="info-table">
+                                <tr>
+                                    <td width="50%"><strong>Employee Name:</strong> {{ employee.first_name }} {{ employee.last_name }}</td>
+                                    <td width="50%"><strong>Employee Code:</strong> {{ employee.employee_id }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date of Birth:</strong> {{ employee.date_of_birth|date:"d/m/Y"|default:"--" }}</td>
+                                    <td><strong>Date of Joining:</strong> {{ employee.joining_date|date:"d/m/Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Location:</strong> {{ employee.location|default:"Entity - India" }}</td>
+                                    <td><strong>Department:</strong> {{ employee.department }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Designation:</strong> {{ employee.designation }}</td>
+                                    <td><strong>PF UAN:</strong> {{ employee.uan_number|default:"--" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Attendance Details Section -->
+                        <div>
+                            <h3 class="section-title">Attendance Details</h3>
+                            <table class="info-table">
+                                <tr>
+                                    <td width="25%"><strong>Presents:</strong> {{ leave_details.present|default:"0" }}</td>
+                                    <td width="25%"><strong>Absents:</strong> {{ leave_details.absent|default:"0" }}</td>
+                                    <td width="25%"><strong>Half Days:</strong> {{ leave_details.half_day|default:"0" }}</td>
+                                    {% comment %} <td width="25%"><strong>Payable Days:</strong> {{ leave_details.present|add:leave_details.half_day|div:2|default:"30" }}</td> {% endcomment %}
+                                </tr>
+                            </table>
+                            <div class="leave-details">
+                                * Half day leaves count as 0.5 days for payable days calculation
+                            </div>
+                        </div>
+
+                        <!-- Salary Breakdown Section -->
+                        <div>
+                            <h3 class="section-title">Earnings</h3>
+                            <table class="salary-table">
+                                <thead>
+                                    <tr>
+                                        <th width="60%">Component</th>
+                                        <th class="text-right" width="20%">Amount (₹)</th>
+                                        <th class="text-right" width="20%">Earned (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Basic Salary</td>
+                                        <td class="text-right">{{ salary.basic_salary|floatformat:2 }}</td>
+                                        <td class="text-right">{{ salary.basic_salary|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>House Rent Allowance (HRA)</td>
+                                        <td class="text-right">{{ salary.hra|floatformat:2 }}</td>
+                                        <td class="text-right">{{ salary.hra|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Dearness Allowance (DA)</td>
+                                        <td class="text-right">{{ salary.da|floatformat:2 }}</td>
+                                        <td class="text-right">{{ salary.da|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Transport Allowance (TA)</td>
+                                        <td class="text-right">{{ salary.ta|floatformat:2 }}</td>
+                                        <td class="text-right">{{ salary.ta|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr class="total-row">
+                                        <td><strong>Total Earnings</strong></td>
+                                        <td class="text-right"><strong>{{ salary.gross_salary|floatformat:2 }}</strong></td>
+                                        <td class="text-right"><strong>{{ salary.gross_salary|floatformat:2 }}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Deductions Section -->
+                        <div class="deductions-section">
+                            <h3 class="section-title">Deductions</h3>
+                            <table class="salary-table">
+                                <thead>
+                                    <tr>
+                                        <th width="60%">Component</th>
+                                        <th class="text-right" width="20%">Amount (₹)</th>
+                                        <th class="text-right" width="20%">Deducted (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Provident Fund (PF)</td>
+                                        <td class="text-right">{{ salary.pf|floatformat:2 }}</td>
+                                        <td class="text-right">{{ salary.pf|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Professional Tax</td>
+                                        <td class="text-right">{{ salary.professional_tax|floatformat:2 }}</td>
+                                        <td class="text-right">{{ salary.professional_tax|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Leave Deduction ({{ leave_details.absent|default:"0" }} days)</td>
+                                        <td class="text-right">{{ salary.leave_deduction|floatformat:2 }}</td>
+                                        <td class="text-right">{{ salary.leave_deduction|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr class="total-row">
+                                        <td><strong>Total Deductions</strong></td>
+                                        <td class="text-right"><strong>{{ salary.total_deductions|floatformat:2 }}</strong></td>
+                                        <td class="text-right"><strong>{{ salary.total_deductions|floatformat:2 }}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Net Salary Section -->
+                        <div class="mt-4">
+                            <table class="salary-table">
+                                <tr class="total-row">
+                                    <td colspan="2"><strong>Net Salary Payable</strong></td>
+                                    <td class="text-right"><strong>₹ {{ salary.net_pay|floatformat:2 }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3">
+                                        <strong>In Words:</strong> {{ net_pay_in_words }} only
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Bank Details Section -->
+                        {% if bank_details %}
+                        <div class="mt-4">
+                            <h3 class="section-title">Bank Details</h3>
+                            <table class="info-table">
+                                <tr>
+                                    <td width="50%"><strong>Bank Name:</strong> {{ bank_details.bank_name }}</td>
+                                    <td width="50%"><strong>Account Number:</strong> ****{{ bank_details.account_number|slice:"-4:" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Branch:</strong> {{ bank_details.branch }}</td>
+                                    <td><strong>IFSC Code:</strong> {{ bank_details.ifsc_code }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        {% endif %}
+
+                        <!-- Footer Section -->
+                        <div class="footer">
+                            <p>*This is a computer-generated statement hence requires no signature.</p>
+                            <p>For any discrepancies, please contact HR department within 7 days of receiving this slip.</p>
+                        </div>
+
+                        <!-- Print Only Section -->
+                        <div class="d-none d-print-block mt-4">
+                            <div class="row">
+                                <div class="col-6">
+                                    <p>Employee Signature</p>
+                                    <div style="border-top: 1px dashed #000; width: 200px; margin-top: 50px;"></div>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <p>Authorized Signatory</p>
+                                    <div style="border-top: 1px dashed #000; width: 200px; margin-top: 50px; margin-left: auto;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="header">
-          <h3>SALARY SLIP FOR Jun-2024 (PROVISIONAL)</h3>
-          <h3>(Jun 01, 2024 to Jun 30, 2024)</h3>
-      </div>
-        <div class="section">
-            <h3>Employee Info</h3>
-            <table class="info-table">
-                <tr>
-                    <td><strong>Employee Name:</strong> Sagar Gurjar</td>
-                    <td><strong>Employee Code:</strong> EMP-20240425-001</td>
-                </tr>
-                <tr>
-                    <td><strong>Date of Birth:</strong> --</td>
-                    <td><strong>Date of Joining:</strong> 25/04/2022</td>
-                </tr>
-                <tr>
-                    <td><strong>Location:</strong> Entity - India</td>
-                    <td><strong>Department:</strong> Admin Department</td>
-                </tr>
-                <tr>
-                    <td><strong>Designation:</strong> Executive</td>
-                    <td><strong>PF UAN:</strong> --</td>
-                </tr>
-            </table>
-        </div>
-    
-        <div class="section">
-            <h3>HR & Attendance Details</h3>
-            <table class="info-table">
-                <tr>
-                    <td><strong>Presents:</strong> 10</td>
-                    <td><strong>Absents:</strong> 10</td>
-                    <td><strong>Payable Days:</strong> 20</td>
-                </tr>
-            </table>
-        </div>
-    
-        <div class="section">
-            <h3>Salary Components</h3>
-            <table class="salary-table">
-                <tr>
-                    <th>Salary Component</th>
-                    <th>Gross</th>
-                    <th>Earned</th>
-                </tr>
-                <tr>
-                    <td>Basic Salary</td>
-                    <td>15,207</td>
-                    <td>10,138</td>
-                </tr>
-                <tr>
-                    <td>LTA</td>
-                    <td>4,423</td>
-                    <td>2,948.67</td>
-                </tr>
-                <tr>
-                    <td>House Rent Allowance</td>
-                    <td>7,854</td>
-                    <td>5,236</td>
-                </tr>
-                <tr>
-                    <td>Conveyance Allowance</td>
-                    <td>8,830</td>
-                    <td>5,886.67</td>
-                </tr>
-                <tr>
-                    <td>City Compensatory</td>
-                    <td>11,286</td>
-                    <td>7,524</td>
-                </tr>
-                <tr>
-                    <td>Petrol Allowance</td>
-                    <td>0</td>
-                    <td>700</td>
-                </tr>
-                <tr>
-                    <th colspan="3">Deductions</th>
-                </tr>
-                <tr>
-                    <td>Health Insurance Premium</td>
-                    <td colspan="2">500</td>
-                </tr>
-                <tr>
-                    <td>Children Allowance</td>
-                    <td colspan="2">1,000</td>
-                </tr>
-                <tr>
-                    <td>Miscellaneous</td>
-                    <td colspan="2">1,000</td>
-                </tr>
-                <tr>
-                    <th colspan="2">Total Salary</th>
-                    <th>INR 29,933.34</th>
-                </tr>
-            </table>
-        </div>
-    
-        <div class="footer">
-            *This is a computer-generated statement hence requires no signature.
-        </div>
-        </div>
-      </div>
     </div>
-    
-  </div>
-  
+</div>
 {% endblock %}
-
-

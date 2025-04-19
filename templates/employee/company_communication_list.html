@@ -1,0 +1,231 @@
+{% extends 'employee/performance-base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">
+                        Communication Records - {{ company.company_name }}
+                    </h2>
+                    <div class="text-muted mt-1">
+                        {% if company.company_contact_person_name %}Contact: {{ company.company_contact_person_name}}{% endif %}
+                        {% if company.company_email_address %} | {{ company.company_email_address }}{% endif %}
+                        {% if company.company_contact_person_contact_details %} | {{ company.company_contact_person_contact_details }}{% endif %}
+                    </div>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <a href="#add-communication" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Communication
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <form method="get" class="row g-2">
+                                <div class="col-md-5">
+                                    <select name="type" class="form-select">
+                                        <option value="all">All Types</option>
+                                        {% for type in communication_types %}
+                                        <option value="{{ type.0 }}" {% if type_filter == type.0 %}selected{% endif %}>
+                                            {{ type.1 }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <select name="priority" class="form-select">
+                                        <option value="all">All Priorities</option>
+                                        {% for priority in priority_choices %}
+                                        <option value="{{ priority.0 }}" {% if priority_filter == priority.0 %}selected{% endif %}>
+                                            {{ priority.1 }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-vcenter">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Subject</th>
+                                    <th>Contact Person</th>
+                                    <th>Priority</th>
+                                    <th>Follow-up</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for comm in communications %}
+                                <tr class="{% if comm.is_follow_up_due %}table-warning{% endif %}">
+                                    <td>
+                                        {{ comm.communication_date|date:"M d, Y" }}<br>
+                                        <small>{{ comm.communication_date|time:"H:i" }}</small>
+                                    </td>
+                                    <td>{{ comm.get_communication_type_display }}</td>
+                                    <td>{{ comm.subject|truncatechars:30 }}</td>
+                                    <td>
+                                        {{ comm.contact_person }}
+                                        {% if comm.designation %}<br><small>{{ comm.designation }}</small>{% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge text-white bg-{% if comm.priority == 'high' %}red{% elif comm.priority == 'medium' %}orange{% elif comm.priority == 'urgent' %}danger{% else %}green{% endif %}">
+                                            {{ comm.get_priority_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if comm.follow_up_date %}
+                                            {{ comm.follow_up_date|date:"M d, Y" }}
+                                            {% if comm.is_follow_up_due %}
+                                                <span class="badge bg-danger">Due</span>
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'company_communication_detail' comm.id %}" class="btn btn-sm btn-primary">View</a>
+                                        <a href="{% url 'delete_company_communication' comm.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">Delete</a>
+                                        <form method="post" action="{% url 'company_communication_list' company.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="communication_id" value="{{ comm.id }}">
+                                            <button type="submit" name="send_email" class="btn btn-sm btn-success mt-1">
+                                                <i class="fas fa-envelope"></i> Send
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">No communication records found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if communications.has_other_pages %}
+                    <div class="mt-3">
+                        <ul class="pagination">
+                            {% if communications.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ communications.previous_page_number }}&type={{ type_filter }}&priority={{ priority_filter }}">&laquo;</a>
+                            </li>
+                            {% endif %}
+                            {% for num in communications.paginator.page_range %}
+                            <li class="page-item {% if communications.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}&type={{ type_filter }}&priority={{ priority_filter }}">{{ num }}</a>
+                            </li>
+                            {% endfor %}
+                            {% if communications.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ communications.next_page_number }}&type={{ type_filter }}&priority={{ priority_filter }}">&raquo;</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Add Communication Form -->
+            <div class="card mt-4" id="add-communication">
+                <div class="card-header">
+                    <h3 class="card-title">Add New Communication</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Contact Person</label>
+                                    <input type="text" name="contact_person" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Designation</label>
+                                    <input type="text" name="designation" class="form-control">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Contact Email</label>
+                                    <input type="email" name="contact_email" class="form-control">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Contact Phone</label>
+                                    <input type="text" name="contact_phone" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Communication Type</label>
+                                    <select name="communication_type" class="form-select" required>
+                                        {% for type in communication_types %}
+                                        <option value="{{ type.0 }}">{{ type.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Date & Time</label>
+                                    <input type="datetime-local" name="communication_date" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Priority</label>
+                                    <select name="priority" class="form-select" required>
+                                        {% for priority in priority_choices %}
+                                        <option value="{{ priority.0 }}" {% if priority.0 == 'medium' %}selected{% endif %}>{{ priority.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Follow-up Date (optional)</label>
+                                    <input type="date" name="follow_up_date" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Subject</label>
+                            <input type="text" name="subject" class="form-control" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Details</label>
+                            <textarea name="communication_details" class="form-control" rows="4" required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Outcome (optional)</label>
+                            <textarea name="outcome" class="form-control" rows="2"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Attachment (optional)</label>
+                            <input type="file" name="attachment" class="form-control">
+                        </div>
+                        
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary">Save Communication</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

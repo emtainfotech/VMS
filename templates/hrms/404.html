@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <title>Page 404 - Tabler - Premium and Open Source dashboard template with responsive and high quality UI.</title>
+    <!-- CSS files -->
+    <link href="/static/dist/css/tabler.min.css?1692870487" rel="stylesheet"/>
+    <link href="/static/dist/css/tabler-flags.min.css?1692870487" rel="stylesheet"/>
+    <link href="/static/dist/css/tabler-payments.min.css?1692870487" rel="stylesheet"/>
+    <link href="/static/dist/css/tabler-vendors.min.css?1692870487" rel="stylesheet"/>
+    <link href="/static/dist/css/demo.min.css?1692870487" rel="stylesheet"/>
+    <style>
+      @import url('https://rsms.me/inter/inter.css');
+      :root {
+      	--tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+      }
+      body {
+      	font-feature-settings: "cv03", "cv04", "cv11";
+      }
+    </style>
+  </head>
+  <body  class=" border-top-wide border-primary d-flex flex-column">
+    <script src="/static/dist/js/demo-theme.min.js?1692870487"></script>
+    <div class="page page-center">
+      <div class="container-tight py-4">
+        <div class="empty">
+          <div class="empty-header">404</div>
+          <p class="empty-title">Oops… You just found an error page</p>
+          <p class="empty-subtitle text-secondary">
+            We are sorry but the page you are looking for was not found
+          </p>
+          <div class="empty-action">
+            <a href="{% url "custom_admin_login" %}" class="btn btn-primary">
+              <!-- Download SVG icon from http://tabler-icons.io/i/arrow-left -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg>
+              Login Please
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Libs JS -->
+    <!-- Tabler Core -->
+    <script src="/static/dist/js/tabler.min.js?1692870487" defer></script>
+    <script src="/static/dist/js/demo.min.js?1692870487" defer></script>
+  </body>
+</html>
+
+
+<div class="col-12">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Last commits</h3>
+    </div>
+    <div class="list-group list-group-flush list-group-hoverable">
+      <div class="list-group-item">
+        <div class="row align-items-center">
+          <div class="col-auto"><span class="badge bg-red"></span></div>
+          <div class="col-auto">
+            <a href="#">
+              <span class="avatar" style="background-image: url(./static/avatars/000m.jpg)"></span>
+            </a>
+          </div>
+          <div class="col text-truncate">
+            <a href="#" class="text-reset d-block">Paweł Kuna</a>
+            <div class="d-block text-secondary text-truncate mt-n1">Change deprecated html tags to text decoration classes (#29604)</div>
+          </div>
+          <div class="col-auto">
+            <a href="#" class="list-group-item-actions"><!-- Download SVG icon from http://tabler-icons.io/i/star -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon text-secondary" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z"></path></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

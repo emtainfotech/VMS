@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #f8f9fa; padding: 15px; text-align: center; }
+        .details { margin: 20px 0; }
+        .detail-row { margin-bottom: 10px; }
+        .label { font-weight: bold; }
+        .footer { margin-top: 30px; font-size: 0.9em; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Interview Scheduled</h2>
+        </div>
+        
+        <div class="details">
+            <p>Dear {{ candidate.name }},</p>
+            <p>Your interview has been scheduled with the following details:</p>
+            
+            <div class="detail-row">
+                <span class="label">Company:</span> {{ interview.company_name }}
+            </div>
+            <div class="detail-row">
+                <span class="label">Position:</span> {{ interview.job_position }}
+            </div>
+            <div class="detail-row">
+                <span class="label">Date & Time:</span> 
+                {{ interview.interview_date|date:"F j, Y" }} at {{ interview.interview_time|time:"g:i A" }}
+            </div>
+            <div class="detail-row">
+                <span class="label">Mode:</span> {{ interview.interview_mode }}
+            </div>
+            {% if interview.interview_mode == 'in_person' %}
+            <div class="detail-row">
+                <span class="label">Location:</span> {{ interview.location }}
+            </div>
+            {% else %}
+            <div class="detail-row">
+                <span class="label">Meeting Link:</span> 
+                <a href="{{ interview.meeting_link }}">{{ interview.meeting_link }}</a>
+            </div>
+            {% endif %}
+            {% comment %} <div class="detail-row">
+                <span class="label">Interviewer:</span> {{ interview.interviewer_name }}
+            </div>
+            <div class="detail-row">
+                <span class="label">Duration:</span> {{ interview.duration }} minutes
+            </div> {% endcomment %}
+            {% if interview.requirements %}
+            <div class="detail-row">
+                <span class="label">Requirements:</span> {{ interview.requirements }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>Best regards,
+                {% comment %} <br>{{ interview.interviewer_name }} {% endcomment %}
+                <br>
+                {{ interview.company_name }}</p>
+            <p>If you have any questions, please contact us at <a href="">hr@emta.co.in</a> or 9522257477</p>
+        </div>
+    </div>
+</body>
+</html>

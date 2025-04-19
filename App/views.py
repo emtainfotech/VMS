@@ -22,15 +22,19 @@ import json
 from django.utils import timezone,dateparse
 from celery import shared_task
 import re
-from django.utils.timezone import localtime, make_aware
-from datetime import datetime, timedelta, time
 from EVMS.models import *
 import openpyxl
 from django.http import HttpResponse
-from django.utils.timezone import localtime
-from datetime import datetime
 from django.db.models import Sum, Min, Max
 from django.core.paginator import Paginator
+from datetime import date, datetime
+from django.db.models import Q
+from django.shortcuts import render, redirect, get_object_or_404
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.auth.decorators import login_required, user_passes_test
+from datetime import datetime
+from django.contrib.auth.decorators import login_required
 
 
 IST = pytz.timezone('Asia/Kolkata')
@@ -38,7 +42,6 @@ IST = pytz.timezone('Asia/Kolkata')
 def mark_notifications_as_read(request):
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     return redirect(request.META.get('HTTP_REFERER', '/'))
-
 
 def custom_admin_login(request):
     if request.method == "POST":
@@ -90,6 +93,7 @@ def admin_signup_view(request):
 
     return render(request, 'hrms/admin-signup.html')
 
+@login_required
 def home(request):
     if request.user.is_staff or request.user.is_superuser:
         Ajj = datetime.today().date()
@@ -253,14 +257,14 @@ def home(request):
         })
     else:
         # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
-
+@login_required
 def employee_attendence_details(request, user_id):
     if request.user.is_staff or request.user.is_superuser:
         today = localtime().date()
-        start_date = request.GET.get('start_date')
-        end_date = request.GET.get('end_date')
+        start_date = request.GET.get('start_date') or None
+        end_date = request.GET.get('end_date') or None
 
         # Handling date range filter
         if start_date and end_date:
@@ -372,7 +376,7 @@ def employee_attendence_details(request, user_id):
             "employee_name": employee_name,
         })
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
 def get_session_details(request):
     # Get the selected date from the request, default to today if no date provided
@@ -414,7 +418,8 @@ def get_session_details(request):
         "selected_date": date_obj.strftime('%Y-%m-%d'),
         "total_duration": total_duration_str
     })
-    
+
+@login_required    
 def employee_view(request):
     if request.user.is_staff or request.user.is_superuser:
         employees = Employee.objects.all()
@@ -432,7 +437,7 @@ def employee_view(request):
             address = request.POST.get('address')
             department = request.POST.get('department')
             designation = request.POST.get('designation')
-            joining_date = request.POST.get('joining_date')
+            joining_date = request.POST.get('joining_date') or None
             employee_photo = request.FILES.get('employee_photo')
             is_admin = request.POST.get('is_admin') 
 
@@ -478,8 +483,9 @@ def employee_view(request):
         return render(request, 'hrms/employee.html', {'employees': employees,  'designations': designations})
     else:
         # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
+@login_required
 def employee_details_view(request, id):
     if request.user.is_staff or request.user.is_superuser:
         # Fetch the employee object or return a 404
@@ -497,7 +503,7 @@ def employee_details_view(request, id):
                 last_name = request.POST.get('last_name')
                 contact_number = request.POST.get('contact_number')
                 email = request.POST.get('email')
-                joining_date = request.POST.get('joining_date')
+                joining_date = request.POST.get('joining_date')  or None
                 employee_photo = request.FILES.get('employee_photo')
 
                 employee.first_name = first_name
@@ -595,8 +601,8 @@ def employee_details_view(request, id):
                 # Handle Social Media details form submission
                 organization_name = request.POST.get('organization_name')
                 designation_name = request.POST.get('designation_name')
-                start_date = request.POST.get('start_date')
-                end_date = request.POST.get('end_date')
+                start_date = request.POST.get('start_date') or None
+                end_date = request.POST.get('end_date') or None
                 description = request.POST.get('description')
                 experience_certificate = request.FILES.get('experience_certificate')
 
@@ -677,8 +683,9 @@ def employee_details_view(request, id):
         return render(request, 'hrms/employee-details.html', context)
     else:
         # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
-    
+        return render(request, 'hrms/404.html', status=404)
+
+@login_required    
 def admin_candidate_profile(request,id) :
     if request.user.is_staff or request.user.is_superuser:
         candidate = get_object_or_404(Candidate_registration, id=id)
@@ -751,7 +758,7 @@ def admin_candidate_profile(request,id) :
                 calling_remark = request.POST.get('calling_remark')
                 lead_generate = request.POST.get('lead_generate')
                 send_for_interview = request.POST.get('send_for_interview')
-                next_follow_up_date = request.POST.get('next_follow_up_date')
+                next_follow_up_date = request.POST.get('next_follow_up_date') or None
                 submit_by = request.POST.get('submit_by')
 
                 candidate.call_connection = call_connection
@@ -769,10 +776,10 @@ def admin_candidate_profile(request,id) :
                 selection_status = request.POST.get('selection_status')
                 company_name = request.POST.get('company_name')
                 offered_salary = request.POST.get('offered_salary')
-                selection_date = request.POST.get('selection_date')
-                candidate_joining_date = request.POST.get('candidate_joining_date')
+                selection_date = request.POST.get('selection_date') or None
+                candidate_joining_date = request.POST.get('candidate_joining_date') or None
                 emta_commission = request.POST.get('emta_commission')
-                payout_date = request.POST.get('payout_date')
+                payout_date = request.POST.get('payout_date') or None
 
                 # Update or create bank details for the employee
                 candidate.selection_status = selection_status
@@ -795,8 +802,9 @@ def admin_candidate_profile(request,id) :
         return render(request,'hrms/candidate-profile.html',{'candidate':candidate})
     else:
         # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
-    
+        return render(request, 'hrms/404.html', status=404)
+
+@login_required    
 def admin_candidate_registration(request) :
     if request.user.is_staff or request.user.is_superuser:
         logged_in_employee = request.user
@@ -826,7 +834,7 @@ def admin_candidate_registration(request) :
             calling_remark = request.POST.get('calling_remark')
             lead_generate = request.POST.get('lead_generate')
             send_for_interview = request.POST.get('send_for_interview')
-            next_follow_up_date = request.POST.get('next_follow_up_date')
+            next_follow_up_date = request.POST.get('next_follow_up_date') or None
             remark = request.POST.get('remark')
             submit_by = request.POST.get('submit_by')
             preferred_location_str = ', '.join(preferred_location)
@@ -1005,8 +1013,9 @@ def admin_candidate_registration(request) :
         return render (request,'hrms/candidate-registration.html',context)    
     else:
         # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
-    
+        return render(request, 'hrms/404.html', status=404)
+ 
+@login_required   
 def admin_get_next_unique_code():
     candidate = Candidate_registration.objects.filter(unique_code__regex=r'^EC\d{6}$').values_list('unique_code', flat=True)
     numbers = [int(re.search(r'\d{6}', unique_code).group()) for unique_code in candidate]
@@ -1017,6 +1026,7 @@ def admin_get_next_unique_code():
         next_number = 1 
     return f"EC{next_number:06d}"
 
+@login_required
 def admin_candidate_list(request) :
     if request.user.is_staff or request.user.is_superuser:
         candidates = Candidate_registration.objects.all().order_by('-id')
@@ -1032,10 +1042,9 @@ def admin_candidate_list(request) :
         return render (request,'hrms/candidate-list.html',{'candidates':candidates,'districts':districts})
     else:
         # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
     
-    
-
+@login_required
 def designation_view(request):
     if request.user.is_staff or request.user.is_superuser:
         # Handle POST request (create or update)
@@ -1070,7 +1079,7 @@ def designation_view(request):
         designations = Designation.objects.all()
         
         # Get unique departments for dropdown
-        departments = Designation.objects.values_list('department', flat=True).distinct()
+        departments = ['IT', 'HR', 'Finance', 'Marketing', 'Sales']  # Example departments, replace with actual data
         
         context = {
             'designations': designations,
@@ -1078,8 +1087,9 @@ def designation_view(request):
         }
         return render(request, 'hrms/designation.html', context)
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
+@login_required
 def edit_designation(request, designation_id):
     if request.user.is_staff or request.user.is_superuser:
         designation = get_object_or_404(Designation, id=designation_id)
@@ -1117,11 +1127,12 @@ def edit_designation(request, designation_id):
         
         return redirect('designation_view')
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
-def delete_designation(request, designation_id):
+@login_required
+def delete_designation(request, id):
     if request.user.is_staff or request.user.is_superuser:
-        designation = get_object_or_404(Designation, id=designation_id)
+        designation = get_object_or_404(Designation, id=id)
         
         if request.method == 'POST':
             # Check if any employees are assigned to this designation
@@ -1132,22 +1143,10 @@ def delete_designation(request, designation_id):
                 messages.success(request, 'Designation deleted successfully!')
             
             return redirect('designation_view')
-        
-        # For AJAX requests
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            if designation.employee_set.exists():
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'Cannot delete designation with assigned employees!'
-                }, status=400)
-            
-            designation.delete()
-            return JsonResponse({'status': 'success'})
-        
-        return redirect('designation_view')
     else:
-        return render(request, '404.html', status=404)
-    
+        return render(request, 'hrms/404.html', status=404)
+   
+@login_required
 def department_employee_count(request):
     # Ensure the user is staff or superuser
     if request.user.is_staff or request.user.is_superuser:
@@ -1162,14 +1161,9 @@ def department_employee_count(request):
         return JsonResponse(list(employee_counts), safe=False)
     else:
         # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
     
-
-
-from datetime import date, datetime
-from django.http import JsonResponse
-from .models import Employee, EmployeeSession, LeaveRequest, Holiday  # Adjust imports if needed
-
+@login_required
 def today_employee_attendance_status(request):
     if request.user.is_staff or request.user.is_superuser:
         today = date.today()
@@ -1220,8 +1214,9 @@ def today_employee_attendance_status(request):
 
         return JsonResponse(attendance_data)
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
+@login_required
 def employee_attendance_list(request):
     if request.user.is_staff or request.user.is_superuser:
         today = date.today()
@@ -1268,8 +1263,9 @@ def employee_attendance_list(request):
             "employee_attendance_data": employee_attendance_data
         })
     else:
-        return render(request, '404.html', status=404)
-    
+        return render(request, 'hrms/404.html', status=404)
+
+@login_required    
 def delete_designation(request, id):
     # Get the designation object or return a 404 if not found
     designation = get_object_or_404(Designation, id=id)
@@ -1280,10 +1276,8 @@ def delete_designation(request, id):
 
     return redirect('designation_view')
 
-
-
-
-def save_monthly_attendance():
+@login_required
+def save_monthly_attendance(request):
     if request.user.is_staff or request.user.is_superuser:
         today = date.today()
         year = today.year
@@ -1317,10 +1311,7 @@ def save_monthly_attendance():
             )
     else:
         # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
-
-
-from django.db.models import Q
+        return render(request, 'hrms/404.html', status=404)
 
 @login_required
 def leave_request_view(request):
@@ -1360,7 +1351,7 @@ def leave_request_view(request):
         }
         return render(request, 'hrms/leave-request.html', context)
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
 @login_required
 def update_leave_status(request, leave_id):
@@ -1392,12 +1383,12 @@ def update_leave_status(request, leave_id):
         
         return redirect('leave_request_view')
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
     
-    
+@login_required 
 def holiday_view(request):
     if not (request.user.is_staff or request.user.is_superuser):
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
     if request.method == "POST":
         # Handle both add and edit operations
@@ -1443,135 +1434,244 @@ def holiday_view(request):
     holidays = Holiday.objects.all().order_by('-date')
     return render(request, 'hrms/holiday.html', {'holidays': holidays})
 
+@login_required
 def project_view(request) :
     if request.user.is_staff or request.user.is_superuser:
         return render(request,'hrms/projects.html')
     else:
         # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
-
+@login_required
 def pay_list_view(request):
     if request.user.is_staff or request.user.is_superuser:
-        if request.method == 'GET' and 'employee' in request.GET:
-            # Retrieve form values
-            employee_id = request.GET.get('employee')
-            basic_salary = float(request.GET.get('basic_salary', 0))
-            dearness_allowance = float(request.GET.get('dearness_allowance', 0))
-            transport_allowance = float(request.GET.get('transport_allowance', 0))
-            mobile_allowance = float(request.GET.get('mobile_allowance', 0))
-            bonus = float(request.GET.get('bonus', 0))
-            others_earning = float(request.GET.get('others_earning', 0))
-            provident_fund = float(request.GET.get('provident_fund', 0))
-            security_deposit = float(request.GET.get('security_deposit', 0))
-            personal_loan = float(request.GET.get('personal_loan', 0))
-            early_leaving = float(request.GET.get('early_leaving', 0))
-
-            # Assuming the employee_type should be a string value like "Full-time" or "Part-time"
-            employee_type = request.GET.get('employee_type', 'Full-time')  # Default to 'Full-time'
-
-            # Fetch the Employee object corresponding to the employee ID
-            employee = Employee.objects.get(id=employee_id)
-
-            # Create the Salary object with the provided data
-            Salary.objects.create(
-                employee=employee,  # Assign the Employee instance here
-                basic_salary=basic_salary,
-                dearness_allowance=dearness_allowance,
-                transport_allowance=transport_allowance,
-                mobile_allowance=mobile_allowance,
-                bonus=bonus,
-                others_earning=others_earning,
-                provident_fund=provident_fund,
-                security_deposit=security_deposit,
-                personal_loan=personal_loan,
-                early_leaving=early_leaving,
-                employee_type=employee_type  # Ensure employee_type is passed
-            )
-
-            return redirect('pay_list_view')  # Redirect to the pay list page after saving
-
-        # Display all salaries
-        salaries = Salary.objects.select_related('employee')
-        employees = Employee.objects.all()
-        return render(request, 'hrms/paylist.html', {'salaries': salaries, 'employees': employees})
+        current_month = datetime.now().month
+        current_year = datetime.now().year
+        
+        if request.method == 'POST':
+            # Generate salaries for all employees for current month
+            employees = Employee.objects.exclude(salary_ammount__isnull=True).exclude(salary_ammount='')
+            
+            for employee in employees:
+                # Check if salary already exists for this month
+                if not Salary.objects.filter(employee=employee, month=current_month, year=current_year).exists():
+                    try:
+                        # Get monthly attendance for leave deduction calculation
+                        monthly_attendance = MonthlyAttendance.objects.get(
+                            employee=employee.user,
+                            month=current_month,
+                            year=current_year
+                        )
+                        
+                        # Calculate leave deduction (assuming 1 day salary deduction per leave)
+                        basic_salary = float(employee.salary_ammount)
+                        per_day_salary = basic_salary / 30
+                        leave_deduction = monthly_attendance.total_absent * per_day_salary
+                        
+                        # Calculate Indian standard salary components
+                        hra = basic_salary * 0.4  # 40% of basic as HRA (common in India)
+                        da = basic_salary * 0.1   # 10% of basic as DA
+                        ta = 1600  # Standard transport allowance (exempt up to 1600/month)
+                        pf = basic_salary * 0.12  # Employee's PF contribution (12% of basic)
+                        
+                        # Create salary record
+                        Salary.objects.create(
+                            employee=employee,
+                            month=current_month,
+                            year=current_year,
+                            basic_salary=basic_salary,
+                            hra=hra,
+                            da=da,
+                            ta=ta,
+                            pf=pf,
+                            professional_tax=200,  # Standard PT in many Indian states
+                            leave_deduction=leave_deduction
+                        )
+                        
+                    except MonthlyAttendance.DoesNotExist:
+                        # If no attendance record, create salary without leave deduction
+                        basic_salary = float(employee.salary_ammount)
+                        hra = basic_salary * 0.4
+                        da = basic_salary * 0.1
+                        ta = 1600
+                        pf = basic_salary * 0.12
+                        
+                        Salary.objects.create(
+                            employee=employee,
+                            month=current_month,
+                            year=current_year,
+                            basic_salary=basic_salary,
+                            hra=hra,
+                            da=da,
+                            ta=ta,
+                            pf=pf,
+                            professional_tax=200
+                        )
+            
+            messages.success(request, "Salaries generated successfully for current month!")
+            return redirect('pay_list_view')
+        
+        # Display all salaries with filter options
+        month = request.GET.get('month', current_month)
+        year = request.GET.get('year', current_year)
+        
+        salaries = Salary.objects.filter(month=month, year=year).select_related('employee')
+        employees = Employee.objects.exclude(salary_ammount__isnull=True).exclude(salary_ammount='')
+        
+        context = {
+            'salaries': salaries,
+            'employees': employees,
+            'current_month': current_month,
+            'current_year': current_year,
+            'selected_month': int(month) if month else current_month,
+            'selected_year': int(year) if year else current_year,
+        }
+        
+        return render(request, 'hrms/paylist.html', context)
     else:
-        # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
-
-    
 @login_required
 def update_salary_status(request, salary_id):
-    if request.method == "POST":
-        status = request.POST.get('status')
-        salary = get_object_or_404(Salary, id=salary_id)
-
-        # Update the paid status
-        salary.status = status
-        salary.save()
-
-        return redirect('pay_list_view')  # Replace with the appropriate view name
-
-
-def delete_salary(request, id):
-    # Fetch the salary record by ID
-    salary = get_object_or_404(Salary, id=id)
-    
-    
-    # Delete the salary record
-    salary.delete()
-
-    # Redirect to the pay list view or another appropriate view
-    return redirect('pay_list_view')
-
-def pay_slip_view(request, salary_id):
     if request.user.is_staff or request.user.is_superuser:
-        salary = Salary.objects.get(id=salary_id)
-        
-        # Fetch employee details
-        employee = salary.employee  # Assuming Salary has a foreign key to the Employee model
-        bank_details = employee.bank_details
+        if request.method == "POST":
+            status = request.POST.get('status')
+            salary = get_object_or_404(Salary, id=salary_id)
 
-        # Calculate earnings and deductions
-        total_earnings = (
-            salary.basic_salary +
-            salary.dearness_allowance +
-            salary.transport_allowance +
-            salary.mobile_allowance +
-            salary.bonus +
-            salary.others_earning
-        )
+            # Update the paid status
+            salary.status = status
+            salary.save()
 
-        total_deductions = (
-            salary.provident_fund +
-            salary.security_deposit +
-            salary.personal_loan +
-            salary.early_leaving
-        )
+            # Send email if status is changed to 'paid'
+            if status == 'paid':
+                send_salary_slip_email(salary)
+            
+            messages.success(request, f"Salary status updated to {salary.get_status_display()}!")
+            return redirect('pay_list_view')
+    return render(request, 'hrms/404.html', status=404)
 
-        net_pay = total_earnings - total_deductions
-        net_pay_in_words = convert_number_to_words(net_pay)
-
-        # Pass employee details along with salary details to the template
+def send_salary_slip_email(salary):
+    try:
+        # Get employee and bank details
+        employee = salary.employee
         context = {
-            "bank_details" : bank_details,
             'salary': salary,
-            'employee': employee,  # Pass employee details
-            'total_earnings': total_earnings,
-            'total_deductions': total_deductions,
-            'net_pay': net_pay,
-            'net_pay_in_words': net_pay_in_words,
+            'employee': employee,
+            'month_name': datetime(2000, salary.month, 1).strftime('%B'),
+            'net_pay_in_words': convert_number_to_words(salary.net_pay),
             'company_name': 'EMTA INFOTECH',
         }
+        
+        # Try to get bank details if exists
+        try:
+            bank_details = employee.bank_details
+            context['bank_details'] = bank_details
+        except EmployeeBankDetails.DoesNotExist:
+            context['bank_details'] = None
+        
+        # Render HTML template
+        html_content = render_to_string('emails/email_salary_slip.html', context)
+        
+        # Create PDF (optional)
+        # You'll need to install weasyprint: pip install weasyprint
+        from weasyprint import HTML
+        pdf_file = f"salary_slip_{employee.employee_id}_{salary.month}_{salary.year}.pdf"
+        HTML(string=html_content).write_pdf(pdf_file)
+        
+        # Prepare email
+        subject = f"Salary Slip for {context['month_name']} {salary.year}"
+        email = EmailMessage(
+            subject,
+            f"Please find attached your salary slip for {context['month_name']} {salary.year}.",
+            settings.DEFAULT_FROM_EMAIL,
+            [employee.email],
+        )
+        
+        # Attach PDF
+        with open(pdf_file, 'rb') as f:
+            email.attach(pdf_file, f.read(), 'application/pdf')
+        
+        # Send email
+        email.send()
+        
+        # Clean up PDF file
+        os.remove(pdf_file)
+        
+    except Exception as e:
+        # Log error or handle it appropriately
+        print(f"Error sending salary slip email: {e}")
 
+@login_required
+def delete_salary(request, id):
+    if request.user.is_staff or request.user.is_superuser:
+        salary = get_object_or_404(Salary, id=id)
+        salary.delete()
+        messages.success(request, "Salary record deleted successfully!")
+        return redirect('pay_list_view')
+    else:
+        return render(request, 'hrms/404.html', status=404)
+
+@login_required
+def pay_slip_view(request, salary_id):
+    if request.user.is_staff or request.user.is_superuser or request.user == salary.employee.user:
+        salary = get_object_or_404(Salary, id=salary_id)
+        employee = salary.employee
+        
+        try:
+            bank_details = employee.bank_details
+        except EmployeeBankDetails.DoesNotExist:
+            bank_details = None
+        
+        # Get month name
+        month_name = datetime(2000, int(salary.month), 1).strftime('%B')
+        
+        # Get leave details
+        try:
+            monthly_attendance = MonthlyAttendance.objects.get(
+                employee=employee.user,
+                month=salary.month,
+                year=salary.year
+            )
+            leave_details = {
+                'present': monthly_attendance.total_present,
+                'absent': monthly_attendance.total_absent,
+                'half_day': monthly_attendance.total_half_day,
+            }
+        except MonthlyAttendance.DoesNotExist:
+            leave_details = None
+        
+        context = {
+            'salary': salary,
+            'employee': employee,
+            'bank_details': bank_details,
+            'month_name': month_name,
+            'leave_details': leave_details,
+            'net_pay_in_words': convert_number_to_words(salary.net_pay),
+            'company_name': 'EMTA INFOTECH',
+        }
+        
         return render(request, 'hrms/salary-slip.html', context)
     else:
-        # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
-
-
+@login_required
+def employee_self_salary_view(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    try:
+        employee = Employee.objects.get(user=request.user)
+        salaries = Salary.objects.filter(employee=employee).order_by('-year', '-month')
+        
+        context = {
+            'salaries': salaries,
+            'employee': employee,
+        }
+        
+        return render(request, 'hrms/employee_salary.html', context)
+    except Employee.DoesNotExist:
+        return render(request, 'hrms/404.html', status=404)
+    
 @login_required
 def office_expense_view(request):
     if request.user.is_staff or request.user.is_superuser:
@@ -1680,7 +1780,7 @@ def office_expense_view(request):
         }
         return render(request, 'hrms/office-expense.html', context)
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
 @login_required
 def delete_expense(request, id):
@@ -1700,7 +1800,7 @@ def edit_expense(request, id):
             # Handle the edit form submission
             expense.employee_name = request.POST.get('employee_name')
             expense.item_name = request.POST.get('item_name')
-            expense.purchase_date = request.POST.get('purchase_date')
+            expense.purchase_date = request.POST.get('purchase_date') or None
             expense.amount = request.POST.get('amount')
             expense.paid_status = request.POST.get('paid_status', 'Unpaid')
             if 'attachment' in request.FILES:
@@ -1723,9 +1823,8 @@ def edit_expense(request, id):
         
         return redirect('office_expense_view')
     else:
-        return render(request, '404.html', status=404)
-    
-    
+        return render(request, 'hrms/404.html', status=404)
+      
 @login_required
 def incentive_view(request):
     if request.user.is_staff or request.user.is_superuser:
@@ -1772,7 +1871,7 @@ def incentive_view(request):
         }
         return render(request, 'hrms/incentive.html', context)
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
 @login_required
 def update_incentive_status(request, incentive_id):
@@ -1789,12 +1888,6 @@ def delete_incentive(request, incentive_id):
     incentive = get_object_or_404(Incentive, id=incentive_id)
     incentive.delete()
     return redirect('incentive_view')
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.db.models import Sum
-from django.core.paginator import Paginator
-from .models import Employee, Bonus
 
 @login_required
 def bonus_view(request):
@@ -1845,7 +1938,7 @@ def bonus_view(request):
             'total_hold': total_hold,
         })
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
 @login_required
 def update_bonus_status(request, bonus_id):
@@ -1896,28 +1989,23 @@ def delete_bonus(request, bonus_id):
 
     return redirect('bonus_view')
 
+@login_required
 def resignation_view(request) :
     if request.user.is_staff or request.user.is_superuser:
         resignations = Resignation.objects.all()
         return render(request,'hrms/resignation.html',{'resignations':resignations})
     else:
         # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
+@login_required
 def documents_view(request) :
     return render(request,'hrms/documents.html')
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.core.mail import send_mail
-from django.conf import settings
-from django.utils import timezone
-from .models import Employee, Designation, Promotion, Notification
-from celery import shared_task
-
+@login_required
 def promotion_view(request):
     if not (request.user.is_staff or request.user.is_superuser):
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
     employees = Employee.objects.all()
     designations = Designation.objects.all()
@@ -1932,7 +2020,7 @@ def promotion_view(request):
             try:
                 promotion = Promotion.objects.get(id=promotion_id)
                 new_designation_id = request.POST.get('new_designation')
-                promotion_date = request.POST.get('promotion_date')
+                promotion_date = request.POST.get('promotion_date') or None
                 description = request.POST.get('description')
 
                 new_designation = Designation.objects.get(id=new_designation_id)
@@ -1967,7 +2055,7 @@ def promotion_view(request):
             try:
                 employee_id = request.POST.get('employee')
                 new_designation_id = request.POST.get('new_designation')
-                promotion_date = request.POST.get('promotion_date')
+                promotion_date = request.POST.get('promotion_date') or None
                 description = request.POST.get('description')
 
                 employee = Employee.objects.get(id=employee_id)
@@ -2016,6 +2104,7 @@ def promotion_view(request):
         'promotions': promotions
     })
 
+@login_required
 def send_promotion_email(employee, old_designation, new_designation, promotion_date, description, is_update=False):
     subject = "Promotion Notification" if not is_update else "Promotion Update Notification"
     message = f"""
@@ -2042,9 +2131,10 @@ def send_promotion_email(employee, old_designation, new_designation, promotion_d
         fail_silently=False,
     )
 
+@login_required
 def delete_promotion(request, promotion_id):
     if not (request.user.is_staff or request.user.is_superuser):
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
     
     try:
         promotion = get_object_or_404(Promotion, id=promotion_id)
@@ -2055,6 +2145,7 @@ def delete_promotion(request, promotion_id):
     
     return redirect('promotion_view')
 
+@login_required
 @shared_task
 def update_designations():
     today = timezone.now().date()
@@ -2073,8 +2164,7 @@ def update_designations():
             promotion.description
         )
 
-
-
+@login_required
 def termination_view(request):
     if request.user.is_staff or request.user.is_superuser:
         employees = Employee.objects.all()
@@ -2084,8 +2174,8 @@ def termination_view(request):
         if request.method == "POST":
             employee_id = request.POST.get('employee')
             termination_type = request.POST.get('termination_type')
-            notice_date = request.POST.get('notice_date')
-            termination_date = request.POST.get('termination_date')
+            notice_date = request.POST.get('notice_date') or None
+            termination_date = request.POST.get('termination_date') or None
             description = request.POST.get('description')
             status = request.POST.get('status')
 
@@ -2144,16 +2234,17 @@ def termination_view(request):
             'notifications': notifications
         })
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
+@login_required
 def edit_termination(request, termination_id):
     if request.user.is_staff or request.user.is_superuser:
         termination = get_object_or_404(Termination, id=termination_id)
         
         if request.method == "POST":
             termination.termination_type = request.POST.get('termination_type')
-            termination.notice_date = request.POST.get('notice_date')
-            termination.termination_date = request.POST.get('termination_date')
+            termination.notice_date = request.POST.get('notice_date') or None
+            termination.termination_date = request.POST.get('termination_date') or None
             termination.description = request.POST.get('description')
             termination.status = request.POST.get('status')
             termination.save()
@@ -2197,8 +2288,9 @@ def edit_termination(request, termination_id):
 
         return redirect('termination_view')
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
+@login_required
 def delete_termination(request, termination_id):
     if request.user.is_staff or request.user.is_superuser:
         termination = get_object_or_404(Termination, id=termination_id)
@@ -2251,12 +2343,8 @@ def delete_termination(request, termination_id):
 
         return redirect('termination_view')
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
     
-    
-from django.core.paginator import Paginator
-from django.contrib.auth.decorators import login_required, user_passes_test
-
 @login_required
 @user_passes_test(lambda u: u.is_staff or u.is_superuser)
 def announcement_view(request):
@@ -2271,8 +2359,8 @@ def announcement_view(request):
         if action == 'add':
             # Handle add new announcement
             title = request.POST.get('title')
-            start_date = request.POST.get('start_date')
-            end_date = request.POST.get('end_date')
+            start_date = request.POST.get('start_date') or None
+            end_date = request.POST.get('end_date') or None
             description = request.POST.get('description')
             announcements_image = request.FILES.get('announcements_image')
 
@@ -2296,8 +2384,8 @@ def announcement_view(request):
             try:
                 announcement = Announcement.objects.get(id=announcement_id)
                 announcement.title = request.POST.get('title')
-                announcement.start_date = request.POST.get('start_date')
-                announcement.end_date = request.POST.get('end_date')
+                announcement.start_date = request.POST.get('start_date') or None
+                announcement.end_date = request.POST.get('end_date') or None
                 announcement.description = request.POST.get('description')
                 
                 if 'announcements_image' in request.FILES:
@@ -2324,15 +2412,7 @@ def announcement_view(request):
         'announcements': announcements
     })
 
-from django.core.mail import send_mail
-from django.conf import settings
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.utils import timezone
-from datetime import datetime
-from .models import Meeting, Notification
-from django.core.paginator import Paginator
-
+@login_required
 def team_meeting_view(request):
     if request.user.is_staff or request.user.is_superuser:
         today = timezone.now().date()
@@ -2405,8 +2485,9 @@ def team_meeting_view(request):
             'today': today
         })
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
+@login_required
 def edit_meeting(request, meeting_id):
     if request.user.is_staff or request.user.is_superuser:
         meeting = get_object_or_404(Meeting, id=meeting_id)
@@ -2433,8 +2514,9 @@ def edit_meeting(request, meeting_id):
         
         return redirect('team_meeting_view')
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
+@login_required
 def delete_meeting(request, meeting_id):
     if request.user.is_staff or request.user.is_superuser:
         meeting = get_object_or_404(Meeting, id=meeting_id)
@@ -2443,13 +2525,8 @@ def delete_meeting(request, meeting_id):
         messages.success(request, 'Meeting successfully deleted!')
         return redirect('team_meeting_view')
     else:
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
     
-    
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
-
 @login_required
 @user_passes_test(lambda u: u.is_staff or u.is_superuser)
 def awards_view(request):
@@ -2460,7 +2537,7 @@ def awards_view(request):
             # Handle add new award
             employee_id = request.POST.get('employee')
             award_type = request.POST.get('award_type')
-            award_date = request.POST.get('award_date')
+            award_date = request.POST.get('award_date') or None
             gift = request.POST.get('gift')
             description = request.POST.get('description')
 
@@ -2497,7 +2574,7 @@ def awards_view(request):
                 
                 award.employee = employee
                 award.award_type = request.POST.get('award_type')
-                award.award_date = request.POST.get('award_date')
+                award.award_date = request.POST.get('award_date') or None
                 award.gift = request.POST.get('gift')
                 award.description = request.POST.get('description')
                 award.save()
@@ -2526,14 +2603,14 @@ def awards_view(request):
         'awards': awards
     })
     
-    
+@login_required   
 def office_activity_view(request):
     if request.user.is_staff or request.user.is_superuser:
         if request.method == "POST":
             title = request.POST.get('title')
             activity_type = request.POST.get('activity_type')
             owner_name = request.POST.get('owner_name')
-            start_date = request.POST.get('start_date')
+            start_date = request.POST.get('start_date') or None
             deadline = request.POST.get('deadline')
 
             # Create an OfficeActivity record
@@ -2552,27 +2629,22 @@ def office_activity_view(request):
         return render(request, 'hrms/office-activity.html', {'activities': activities})
     else:
         # If the user is not an admin, show a 404 page
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
+@login_required
 def delete_activity(request, officeactivity_id):
     activity = get_object_or_404(OfficeActivity, id=officeactivity_id)
     activity.delete()
     return redirect('office_activity_view')
 
+@login_required
 def clients_view(request) :
     return render(request,'hrms/clients.html')
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.core.mail import send_mail
-from django.conf import settings
-from django.utils import timezone
-from datetime import datetime
-from .models import Employee, Warning, Notification
-
+@login_required
 def warning_view(request):
     if not (request.user.is_staff or request.user.is_superuser):
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
 
     employees = Employee.objects.all()
     warnings = Warning.objects.all().order_by('-warning_date')
@@ -2586,7 +2658,7 @@ def warning_view(request):
             try:
                 warning = Warning.objects.get(id=warning_id)
                 subject = request.POST.get('subject')
-                warning_date = request.POST.get('warning_date')
+                warning_date = request.POST.get('warning_date') or None
                 description = request.POST.get('description')
 
                 # Update warning record
@@ -2621,7 +2693,7 @@ def warning_view(request):
             try:
                 employee_id = request.POST.get('employee')
                 subject = request.POST.get('subject')
-                warning_date = request.POST.get('warning_date')
+                warning_date = request.POST.get('warning_date') or None
                 description = request.POST.get('description')
 
                 employee = Employee.objects.get(id=employee_id)
@@ -2661,6 +2733,7 @@ def warning_view(request):
         'warnings': warnings
     })
 
+@login_required
 def send_warning_email(employee, subject, warning_date, description, is_update=False):
     subject = "Warning Notification" if not is_update else "Warning Update Notification"
     message = f"""
@@ -2686,9 +2759,10 @@ def send_warning_email(employee, subject, warning_date, description, is_update=F
         fail_silently=False,
     )
 
+@login_required
 def delete_warning(request, warning_id):
     if not (request.user.is_staff or request.user.is_superuser):
-        return render(request, '404.html', status=404)
+        return render(request, 'hrms/404.html', status=404)
     
     try:
         warning = get_object_or_404(Warning, id=warning_id)
@@ -2729,7 +2803,7 @@ def admin_company_registration(request):
         company_unique_code = request.POST.get('company_unique_code')
         job_profile = request.POST.get('job_profile')
         company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
-        vacancy_opening_date = request.POST.get('vacancy_opening_date')
+        vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
         company_email_address = request.POST.get('company_email_address')
         vacancy_status = request.POST.get('vacancy_status','Pending')
         company_contact_person_name = request.POST.get('company_contact_person_name')
@@ -2751,13 +2825,13 @@ def admin_company_registration(request):
         specialization = request.POST.get('specialization')
         minimum_salary_range = request.POST.get('minimum_salary_range')
         maximum_salary_range = request.POST.get('maximum_salary_range')
-        vacancy_closing_date = request.POST.get('vacancy_closing_date')
+        vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
         special_instruction = request.POST.get('special_instruction')
         company_usp = request.POST.get('company_usp')
         status_of_incentive = request.POST.get('status_of_incentive')
         status_of_proposal = request.POST.get('status_of_proposal')
-        invoice_generation_date = request.POST.get('invoice_generation_date')
-        payout_date = request.POST.get('payout_date')
+        invoice_generation_date = request.POST.get('invoice_generation_date') or None
+        payout_date = request.POST.get('payout_date') or None
         payment_condiation = request.POST.get('payment_condiation')
         replacement_criteria = request.POST.get('replacement_criteria')
         remark = request.POST.get('remark')
@@ -2940,10 +3014,12 @@ def admin_company_registration(request):
         'departments' : departments
         })
 
+@login_required
 def admin_company_list(request) :
     companys = Company_registration.objects.all().order_by('-id')
     return render(request,'hrms/company-list.html',{'companys':companys})
 
+@login_required
 def admin_company_profile(request,id) :
     company = get_object_or_404(Company_registration, id=id)
     if request.method == 'POST':
@@ -2956,7 +3032,7 @@ def admin_company_profile(request,id) :
             job_profile = request.POST.get('job_profile')
             company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
             company_logo = request.FILES.get('company_logo')
-            vacancy_opening_date = request.POST.get('vacancy_opening_date')
+            vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
             company_email_address = request.POST.get('company_email_address')
             
             company.company_name = company_name
@@ -2994,7 +3070,7 @@ def admin_company_profile(request,id) :
             maximum_experience = request.POST.get('maximum_experience')
             minimum_education_qualification = request.POST.get('minimum_education_qualification')
             specialization = request.POST.get('specialization')
-            vacancy_closing_date = request.POST.get('vacancy_closing_date')
+            vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
             
             # Update EmergencyContact fields
             company.company_contact_person_name = company_contact_person_name
@@ -3025,13 +3101,13 @@ def admin_company_profile(request,id) :
             company_usp = request.POST.get('company_usp')
             status_of_incentive = request.POST.get('status_of_incentive')
             status_of_proposal = request.POST.get('status_of_proposal')
-            invoice_generation_date = request.POST.get('invoice_generation_date')
-            payout_date = request.POST.get('payout_date')
+            invoice_generation_date = request.POST.get('invoice_generation_date') or None
+            payout_date = request.POST.get('payout_date') or None
             payment_condiation = request.POST.get('payment_condiation')
             replacement_criteria = request.POST.get('replacement_criteria')
             remark = request.POST.get('remark')
             specialization = request.POST.get('specialization')
-            vacancy_closing_date = request.POST.get('vacancy_closing_date')
+            vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
 
             company.company_usp = company_usp
             company.status_of_incentive = status_of_incentive
@@ -3049,7 +3125,7 @@ def admin_company_profile(request,id) :
         return redirect('admin_company_profile', id=id)
     return render(request,'hrms/company-profile.html',{'company':company})
 
-
+@login_required
 def admin_vendor_list(request) :
     vendors = Vendor.objects.all().order_by('-id')
     return render(request,'hrms/admin-vendor-list.html',{'vendors':vendors})
@@ -3058,11 +3134,7 @@ def admin_evms_candidate_list(request) :
     candidates = Candidate.objects.all().order_by('-id')
     return render(request,'hrms/admin-evms-candidate-list.html',{'candidates':candidates})
 
-# def admin_vendor_candidate_list(request,id) :
-#     vendor = get_object_or_404(Vendor, id=id)
-    
-#     return render(request,'hrms/admin-vendor-candidate-list.html',{'candidates':candidates,'vendor':vendor})
-
+@login_required
 def admin_vendor_candidate_list(request, id):
     vendor = get_object_or_404(Vendor, id=id)
     candidates = Candidate.objects.filter(refer_code=vendor.refer_code).order_by('-id')
@@ -3168,7 +3240,7 @@ def admin_vendor_candidate_list(request, id):
             account_type = request.POST.get('account_type')
             micr_code = request.POST.get('micr_code')
             bank_document = request.FILES.get('bank_document')
-            preffered_payout_date = request.POST.get('preffered_payout_date')
+            preffered_payout_date = request.POST.get('preffered_payout_date') or None
 
             # Ensure account number and confirm account number match
             if account_number != confirm_account_number:
@@ -3212,9 +3284,7 @@ def admin_vendor_candidate_list(request, id):
     }
     return render(request, 'hrms/admin-vendor-candidate-list.html', context)
 
-
-
-
+@login_required
 def evms_candidate_profile(request,id) :
     candidate = get_object_or_404(Candidate, id=id)
     employees = Employee.objects.all()
@@ -3288,7 +3358,7 @@ def evms_candidate_profile(request,id) :
             calling_remark = request.POST.get('calling_remark')
             lead_generate = request.POST.get('lead_generate')
             send_for_interview = request.POST.get('send_for_interview')
-            next_follow_up_date = request.POST.get('next_follow_up_date')
+            next_follow_up_date = request.POST.get('next_follow_up_date') or None
             submit_by = request.POST.get('submit_by')
 
             candidate.call_connection = call_connection
@@ -3306,10 +3376,10 @@ def evms_candidate_profile(request,id) :
             selection_status = request.POST.get('selection_status')
             company_name = request.POST.get('company_name')
             offered_salary = request.POST.get('offered_salary')
-            selection_date = request.POST.get('selection_date')
-            candidate_joining_date = request.POST.get('candidate_joining_date')
+            selection_date = request.POST.get('selection_date') or None
+            candidate_joining_date = request.POST.get('candidate_joining_date') or None
             emta_commission = request.POST.get('emta_commission')
-            payout_date = request.POST.get('payout_date')
+            payout_date = request.POST.get('payout_date') or None
 
             # Update or create bank details for the employee
             candidate.selection_status = selection_status
@@ -3332,6 +3402,7 @@ def evms_candidate_profile(request,id) :
     }
     return render(request,'hrms/evms-candidate-profile.html ',context)
 
+@login_required
 def evms_vendor_candidate_profile(request,id) :
     candidate = get_object_or_404(Candidate, id=id)
     employees = Employee.objects.all()
@@ -3405,7 +3476,7 @@ def evms_vendor_candidate_profile(request,id) :
             calling_remark = request.POST.get('calling_remark')
             lead_generate = request.POST.get('lead_generate')
             send_for_interview = request.POST.get('send_for_interview')
-            next_follow_up_date = request.POST.get('next_follow_up_date')
+            next_follow_up_date = request.POST.get('next_follow_up_date') or None
             submit_by = request.POST.get('submit_by')
 
             candidate.call_connection = call_connection
@@ -3423,10 +3494,10 @@ def evms_vendor_candidate_profile(request,id) :
             selection_status = request.POST.get('selection_status')
             company_name = request.POST.get('company_name')
             offered_salary = request.POST.get('offered_salary')
-            selection_date = request.POST.get('selection_date')
-            candidate_joining_date = request.POST.get('candidate_joining_date')
+            selection_date = request.POST.get('selection_date') or None
+            candidate_joining_date = request.POST.get('candidate_joining_date') or None
             emta_commission = request.POST.get('emta_commission')
-            payout_date = request.POST.get('payout_date')
+            payout_date = request.POST.get('payout_date') or None
 
             # Update or create bank details for the employee
             candidate.selection_status = selection_status
@@ -3449,12 +3520,13 @@ def evms_vendor_candidate_profile(request,id) :
     }
     return render(request,'hrms/evms-vendor-candidate-profile.html',context)
 
+@login_required
 def download_attendance_excel(request, user_id):
     if not (request.user.is_staff or request.user.is_superuser):
         return HttpResponse("Unauthorized", status=403)
 
-    start_date = request.GET.get("start_date")
-    end_date = request.GET.get("end_date")
+    start_date = request.GET.get("start_date") or None              
+    end_date = request.GET.get("end_date") or None
 
     if not start_date or not end_date:
         return HttpResponse("Invalid Date Range", status=400)
@@ -3533,8 +3605,6 @@ def download_attendance_excel(request, user_id):
 
     return response
 
-
-
 @login_required
 def assign_task(request):
     employees = Employee.objects.all()
@@ -3550,7 +3620,7 @@ def assign_task(request):
         title = request.POST.get('title')
         description = request.POST.get('description')
         assigned_to_id = request.POST.get('assigned_to')
-        due_date = request.POST.get('due_date')
+        due_date = request.POST.get('due_date') or None
         priority = request.POST.get('priority')
 
         # Validate the data
@@ -3597,7 +3667,7 @@ def edit_task(request, task_id):
             task.description = request.POST.get('description')
             assigned_to_id = request.POST.get('assigned_to')
             task.assigned_to = Employee.objects.get(id=assigned_to_id)
-            task.due_date = request.POST.get('due_date')
+            task.due_date = request.POST.get('due_date') or None
             task.priority = request.POST.get('priority')
             task.save()
             
@@ -3647,7 +3717,7 @@ def update_task_status(request, task_id):
     
     return redirect('assign_task')
 
-
+@login_required
 def admin_profile(request,id):
     if request.user.is_authenticated:
         # Fetch the employee object or return a 404
@@ -3665,7 +3735,7 @@ def admin_profile(request,id):
                 last_name = request.POST.get('last_name')
                 contact_number = request.POST.get('contact_number')
                 email = request.POST.get('email')
-                joining_date = request.POST.get('joining_date')
+                joining_date = request.POST.get('joining_date') or None
                 employee_photo = request.FILES.get('employee_photo')
 
                 employee.first_name = first_name
@@ -3763,8 +3833,8 @@ def admin_profile(request,id):
                 # Handle Social Media details form submission
                 organization_name = request.POST.get('organization_name')
                 designation_name = request.POST.get('designation_name')
-                start_date = request.POST.get('start_date')
-                end_date = request.POST.get('end_date')
+                start_date = request.POST.get('start_date') or None
+                end_date = request.POST.get('end_date') or None
                 description = request.POST.get('description')
                 experience_certificate = request.FILES.get('experience_certificate')
 

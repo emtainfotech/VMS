@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #f8f9fa; padding: 15px; text-align: center; }
+        .details { margin: 20px 0; }
+        .detail-row { margin-bottom: 10px; }
+        .label { font-weight: bold; }
+        .footer { margin-top: 30px; font-size: 0.9em; color: #666; }
+        .priority { 
+            display: inline-block; 
+            padding: 3px 8px; 
+            border-radius: 3px; 
+            font-weight: bold;
+        }
+        .priority-high { background-color: #ffdddd; color: #cc0000; }
+        .priority-medium { background-color: #fff4dd; color: #cc8500; }
+        .priority-low { background-color: #ddffdd; color: #007700; }
+        .priority-urgent { background-color: #ffddff; color: #990099; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Communication Record</h2>
+            <p>{{ communication.get_communication_type_display }} with {{ communication.company.company_name }}</p>
+        </div>
+        
+        <div class="details">
+            <div class="detail-row">
+                <span class="label">Subject:</span> {{ communication.subject }}
+            </div>
+            <div class="detail-row">
+                <span class="label">Date & Time:</span> 
+                {{ communication.communication_date|date:"F j, Y" }} at {{ communication.communication_date|time:"g:i A" }}
+            </div>
+            <div class="detail-row">
+                <span class="label">Priority:</span> 
+                <span class="priority priority-{{ communication.priority }}">
+                    {{ communication.get_priority_display }}
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Recorded By:</span> {{ communication.employee_name }}
+            </div>
+            
+            <h3 style="margin-top: 20px;">Contact Details</h3>
+            <div class="detail-row">
+                <span class="label">Contact Person:</span> {{ communication.contact_person }}
+            </div>
+            {% if communication.designation %}
+            <div class="detail-row">
+                <span class="label">Designation:</span> {{ communication.designation }}
+            </div>
+            {% endif %}
+            {% if communication.contact_email %}
+            <div class="detail-row">
+                <span class="label">Email:</span> {{ communication.contact_email }}
+            </div>
+            {% endif %}
+            {% if communication.contact_phone %}
+            <div class="detail-row">
+                <span class="label">Phone:</span> {{ communication.contact_phone }}
+            </div>
+            {% endif %}
+            
+            <h3 style="margin-top: 20px;">Communication Details</h3>
+            <div class="detail-row">
+                {{ communication.communication_details|linebreaks }}
+            </div>
+            
+            {% if communication.outcome %}
+            <h3 style="margin-top: 20px;">Outcome</h3>
+            <div class="detail-row">
+                {{ communication.outcome|linebreaks }}
+            </div>
+            {% endif %}
+            
+            {% if communication.follow_up_date %}
+            <h3 style="margin-top: 20px;">Follow-up</h3>
+            <div class="detail-row">
+                <span class="label">Follow-up Date:</span> {{ communication.follow_up_date|date:"F j, Y" }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>This communication was recorded in the system on {{ communication.created_at|date:"F j, Y" }}.</p>
+            <p>Please contact {{ communication.employee_name }} if you have any questions about this record.</p>
+        </div>
+    </div>
+</body>
+</html>

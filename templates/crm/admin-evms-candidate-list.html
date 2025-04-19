@@ -79,7 +79,7 @@
                                 {% endif %}
                                 <div>
                                   <div class="font-weight-medium">
-                                    <a href="{% url 'employee_evms_candidate_profile' candidate.id %}">{{ candidate.candidate_name }}</a>
+                                    <a href="{% url 'evms_candidate_profile' candidate.id %}">{{ candidate.candidate_name }}</a>
                                   </div>
                                   <div class="text-muted small">{{ candidate.candidate_email_address|default:"No email"|truncatechars:20 }}</div>
                                 </div>

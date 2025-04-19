@@ -6,8 +6,8 @@ from django.conf.urls.static import static
 from django.urls import path
 
 urlpatterns = [
-    path('',custom_admin_login,name = 'custom_admin_login'),
-    path('admin-logout/', custom_admin_logout, name='custom_admin_logout'),
+    path('',crm_admin_login,name = 'crm_admin_login'),
+    path('admin-logout/', crm_admin_logout, name='crm_admin_logout'),
     path('crm-dashboard/',crm_dashboard,name = 'crm_dashboard'),
     path('admin-candidate-registration/',admin_candidate_registration,name = 'admin_candidate_registration'),
     path('candidate-list/',admin_candidate_list,name = 'admin_candidate_list'),
@@ -28,6 +28,17 @@ urlpatterns = [
     path('leads/',generated_leads, name = 'generated_leads'),
     path('admin-vacancy-list/',admin_vacancy_list,name = 'admin_vacancy_list'),
     path('admin-profile/<int:id>/', crm_admin_profile, name='crm_admin_profile'),
+    path('candidates/bulk-upload/', admin_candidate_bulk_upload, name='admin_candidate_bulk_upload'),
+    path('candidate/<int:candidate_id>/chats/', admin_candidate_chat_list, name='admin_candidate_chat_list'),
+    path('candidate/chats/<int:pk>/delete/', admin_delete_chat, name='admin_delete_chat'),
+    path('candidate/<int:candidate_id>/interviews/', admin_interview_list, name='admin_interview_list'),
+    path('interview/<int:interview_id>/', admin_interview_detail, name='admin_interview_detail'),
+    path('interview/<int:interview_id>/delete/', admin_delete_interview, name='admin_delete_interview'),
+    path('company/<int:company_id>/communications/', admin_company_communication_list, name='admin_company_communication_list'),
+    path('communication/<int:communication_id>/', admin_company_communication_detail, name='admin_company_communication_detail'),
+    path('communication/<int:communication_id>/delete/', admin_delete_company_communication, name='admin_delete_company_communication'),
+    
+    
     
     path('admin/', admin.site.urls),
 ]

@@ -1,0 +1,163 @@
+{% extends 'employee/performance-base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">
+                        Interview Details
+                    </h2>
+                    <div class="text-muted mt-1">
+                        {{ interview.candidate.name }} | {{ interview.company_name }} | {{ interview.job_position }}
+                    </div>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <a href="{% url 'interview_list' interview.candidate.id %}" class="btn btn-secondary">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Company Name</label>
+                                    <input type="text" name="company_name" class="form-control" value="{{ interview.company_name }}" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Job Position</label>
+                                    <input type="text" name="job_position" class="form-control" value="{{ interview.job_position }}" required>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Interview Date</label>
+                                            <input type="date" name="interview_date" class="form-control" value="{{ interview.interview_date|date:'Y-m-d' }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Interview Time</label>
+                                            <input type="time" name="interview_time" class="form-control" value="{{ interview.interview_time|time:'H:i' }}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Interview Mode</label>
+                                    <select name="interview_mode" class="form-select" required>
+                                        {% for mode in mode_choices %}
+                                        <option value="{{ mode.0 }}" {% if mode.0 == interview.interview_mode %}selected{% endif %}>{{ mode.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Status</label>
+                                    <select name="status" class="form-select" required>
+                                        {% for status in status_choices %}
+                                        <option value="{{ status.0 }}" {% if status.0 == interview.status %}selected{% endif %}>{{ status.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Interviewer Name</label>
+                                    <input type="text" name="interviewer_name" class="form-control" value="{{ interview.interviewer_name }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Interviewer Email</label>
+                                    <input type="email" name="interviewer_email" class="form-control" value="{{ interview.interviewer_email }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Interviewer Phone</label>
+                                    <input type="text" name="interviewer_phone" class="form-control" value="{{ interview.interviewer_phone }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Duration (minutes)</label>
+                                    <input type="number" name="duration" class="form-control" value="{{ interview.duration }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" name="is_technical" class="form-check-input" {% if interview.is_technical %}checked{% endif %}>
+                                        <span class="form-check-label">Technical Interview</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Location/Meeting Link</label>
+                            {% if interview.interview_mode == 'in_person' %}
+                            <textarea name="location" class="form-control" rows="2">{{ interview.location }}</textarea>
+                            {% else %}
+                            <input type="url" name="meeting_link" class="form-control" value="{{ interview.meeting_link }}" placeholder="Video call link">
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Requirements</label>
+                            <textarea name="requirements" class="form-control" rows="2">{{ interview.requirements }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea name="notes" class="form-control" rows="3">{{ interview.notes }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Feedback</label>
+                            <textarea name="feedback" class="form-control" rows="3">{{ interview.feedback }}</textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Rating (1-10)</label>
+                                    <input type="number" name="rating" class="form-control" min="1" max="10" value="{{ interview.rating }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Attachment</label>
+                                    <input type="file" name="attachment" class="form-control">
+                                    {% if interview.attachment %}
+                                    <div class="mt-2">
+                                        <a href="{{ interview.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            View Current Attachment
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary">Update Interview</button>
+                            <a href="{% url 'interview_list' interview.candidate.id %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

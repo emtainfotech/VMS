@@ -33,6 +33,13 @@
   </style>
 
   <div class="container py-4">
+    <div class="d-flex justify-content-between py-3">
+        <h4>Personal Details</h4>
+        <div>
+            <a href="{% url 'admin_candidate_chat_list' candidate.id %}" class="btn btn-sm btn-outline-primary">Chat with Candidate</a>
+            <a href="{% url 'admin_interview_list' candidate.id %}" class="btn btn-sm btn-outline-primary">Interview Record</a>
+        </div>
+    </div>
     <div class="row g-4">
         <!-- Personal Information Card -->
         <div class="col-lg-6">
@@ -99,6 +106,7 @@
                                             {% endif %}
                                         </span>
                                     </div>
+                                    
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-2">
@@ -110,6 +118,12 @@
                                     <div class="mb-2">
                                         <span class="d-block text-muted small">Source</span>
                                         <span class="fw-medium">{{ candidate.lead_source|default:"-" }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <span class="d-block text-muted small">Follow-Up By</span>
+                                        <span class="fw-medium">{{ candidate.employee_name }}</span>
                                     </div>
                                 </div>
                             </div>

@@ -1,98 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Vendor Commission Invoice - {{ candidate.code }}</title>
-    <style>
-        @page {
-            size: A4;
-            margin: 1cm;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.5;
-            font-size: 12px;
-            color: #333;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-        .header img {
-            height: 60px;
-        }
-        .header h1 {
-            color: #4CAF50;
-            margin: 5px 0;
-            font-size: 18px;
-        }
-        .invoice-info, .vendor-business, .candidate-details, .commission-details, .bank-details {
-            width: 100%;
-            margin-bottom: 15px;
-            border-collapse: collapse;
-            font-size: 11px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-            font-size: 11px;
-        }
-        table th, table td {
-            border: 1px solid #ddd;
-            padding: 6px;
-            text-align: left;
-        }
-        table th {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .footer {
-            margin-top: 30px;
-            font-size: 10px;
-            text-align: center;
-            color: #777;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-        }
-    </style>
+<meta charset="utf-8" />
+<title>Vendor Commission Invoice - {{ candidate.code }}</title>
+<style>
+    @page {
+        size: A4;
+        margin: 1.5cm;
+    }
+    body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 12px;
+        line-height: 1.4;
+        color: #000;
+        margin: 0;
+        padding: 0;
+    }
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 10px;
+    }
+    header {
+        text-align: center;
+        margin-bottom: 25px;
+        border-bottom: 1.5px solid #000;
+        padding-bottom: 10px;
+    }
+    header img {
+        height: 60px;
+        margin-bottom: 8px;
+    }
+    header h1 {
+        font-weight: 700;
+        font-size: 20px;
+        margin: 0;
+        letter-spacing: 1px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 18px;
+        font-size: 11.5px;
+    }
+    th, td {
+        border: 1px solid #000;
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+    }
+    th {
+        background-color: #f2f2f2;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+    }
+    /* Remove background color for printing if preferred, or keep light gray */
+    /* th { background-color: #fff; } */
+    .section-title {
+        background-color: #e0e0e0;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 6px 10px;
+        border: 1px solid #000;
+        border-bottom: none;
+    }
+    .footer {
+        border-top: 1px solid #000;
+        font-size: 10px;
+        text-align: center;
+        padding-top: 10px;
+        color: #000;
+        margin-top: 30px;
+        font-style: italic;
+    }
+</style>
 </head>
 <body>
-    <div class="header">
-        <img src="https://emta.co.in/f.png" alt="Company Logo">
+<div class="container">
+    <header>
+        <img src="https://emta.co.in/f.png" alt="Company Logo" />
         <h1>Vendor Commission Invoice</h1>
-    </div>
+    </header>
 
-    <table class="invoice-info">
+    <table>
         <tr>
-            <td><strong>Invoice Number:</strong> INV-{{ current_date|date:"Ymd" }}-{{ candidate.code }}</td>
-            <td><strong>Date:</strong> {{ invoice_date }}</td>
+            <th>Invoice Number</th>
+            <td>INV-{{ current_date|date:"Ymd" }}-{{ candidate.code }}</td>
+            <th>Date</th>
+            <td>{{ invoice_date }}</td>
         </tr>
         <tr>
-            <td><strong>Due Date:</strong> {{ due_date }}</td>
-            <td><strong>Vendor Code:</strong> {{ vendor.code }}</td>
+            <th>Due Date</th>
+            <td>{{ due_date }}</td>
+            <th>Vendor Code</th>
+            <td>{{ vendor.code }}</td>
         </tr>
     </table>
 
-    <table class="vendor-business">
-        <tr><th colspan="2">Vendor Details</th></tr>
-        <tr><td>Name</td><td>{{ vendor.name }}</td></tr>
-        <tr><td>Mobile</td><td>{{ vendor.mobile }}</td></tr>
-        <tr><td>Email</td><td>{{ vendor.email }}</td></tr>
+    <div class="section-title">Vendor Details</div>
+    <table>
+        <tr><th>Name</th><td>{{ vendor.name }}</td></tr>
+        <tr><th>Mobile</th><td>{{ vendor.mobile }}</td></tr>
+        <tr><th>Email</th><td>{{ vendor.email }}</td></tr>
         {% if vendor_profile %}
-            <tr><td>Address</td><td>{{ vendor_profile.address|default:"-" }}</td></tr>
-            <tr><td>PAN</td><td>{{ vendor_profile.pan|default:"-" }}</td></tr>
+        <tr><th>Address</th><td>{{ vendor_profile.address|default:"-" }}</td></tr>
+        <tr><th>PAN</th><td>{{ vendor_profile.pan|default:"-" }}</td></tr>
         {% endif %}
     </table>
 
-    <table class="candidate-details">
-        <tr><th colspan="2">Candidate Details</th></tr>
-        <tr><td>Name</td><td>{{ candidate.name }}</td></tr>
-        <tr><td>Position</td><td>{{ candidate.position|default:"-" }}</td></tr>
-        <tr><td>Company</td><td>{{ candidate.company|default:"-" }}</td></tr>
-        <tr><td>Experience</td>
+    <div class="section-title">Candidate Details</div>
+    <table>
+        <tr><th>Name</th><td>{{ candidate.name }}</td></tr>
+        <tr><th>Position</th><td>{{ candidate.position|default:"-" }}</td></tr>
+        <tr><th>Company</th><td>{{ candidate.company|default:"-" }}</td></tr>
+        <tr>
+            <th>Experience</th>
             <td>
                 {% if candidate.experience_year or candidate.experience_month %}
                     {{ candidate.experience_year|default:"0" }} years {{ candidate.experience_month|default:"0" }} months
@@ -103,28 +125,39 @@
         </tr>
     </table>
 
-    <table class="commission-details">
-        <tr><th>Vendor Commission</th><th>EMTA Commission</th><th>Status</th><th>Payout Date</th></tr>
-        <tr>
-            <td>₹{{ commission.amount|default:"0.00" }}</td>
-            <td>₹{{ commission.emta_commission|default:"0.00" }}</td>
-            <td>{{ commission.status|default:"-" }}</td>
-            <td>{{ commission.payout_date|default:"-" }}</td>
-        </tr>
+    <div class="section-title">Commission Details</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Vendor Commission (₹)</th>
+                <th>EMTA Commission (₹)</th>
+                <th>Status</th>
+                <th>Payout Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ commission.amount|default:"0.00" }}</td>
+                <td>{{ commission.emta_commission|default:"0.00" }}</td>
+                <td>{{ commission.status|default:"-" }}</td>
+                <td>{{ commission.payout_date|default:"-" }}</td>
+            </tr>
+        </tbody>
     </table>
 
     {% if bank %}
-    <table class="bank-details">
-        <tr><th colspan="2">Bank Details for Payout</th></tr>
-        <tr><td>Account Holder</td><td>{{ bank.account_holder|default:"-" }}</td></tr>
-        <tr><td>Account Number</td><td>{{ bank.account_number|default:"-" }}</td></tr>
-        <tr><td>Bank Name</td><td>{{ bank.bank_name|default:"-" }}</td></tr>
-        <tr><td>IFSC Code</td><td>{{ bank.ifsc|default:"-" }}</td></tr>
+    <div class="section-title">Bank Details for Payout</div>
+    <table>
+        <tr><th>Account Holder</th><td>{{ bank.account_holder|default:"-" }}</td></tr>
+        <tr><th>Account Number</th><td>{{ bank.account_number|default:"-" }}</td></tr>
+        <tr><th>Bank Name</th><td>{{ bank.bank_name|default:"-" }}</td></tr>
+        <tr><th>IFSC Code</th><td>{{ bank.ifsc|default:"-" }}</td></tr>
     </table>
     {% endif %}
 
     <div class="footer">
-        <p>This is a computer-generated invoice and does not require a physical signature.</p>
+        This is a computer-generated invoice and does not require a physical signature.
     </div>
+</div>
 </body>
 </html>

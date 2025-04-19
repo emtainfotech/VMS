@@ -32,7 +32,7 @@
                                                pattern="[A-Za-z0-9 &.,-]{3,}" 
                                                title="Company name should contain at least 3 characters (letters, numbers, spaces, &.,-)" required>
                                         <div class="invalid-feedback">Please provide a valid company name (min 3 characters).</div>
-                                        <input type="hidden" class="form-control" name="employee_name" value="{{user.username}}" required>
+                                        <input type="hidden" class="form-control" name="employee_name" value="{{user.employee.first_name}} {{user.employee.last_name}} ({{user.username}})" required>
                                     </div>
                                 </div>
                                 

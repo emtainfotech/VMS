@@ -31,8 +31,15 @@
       color: #6c63ff;
     }
   </style>
-
+  
   <div class="container py-4">
+    <div class="d-flex justify-content-between py-3">
+        <h4>Personal Details</h4>
+        <div>
+            <a href="{% url 'candidate_chat_list' candidate.id %}" class="btn btn-sm btn-outline-primary">Chat with Candidate</a>
+            <a href="{% url 'interview_list' candidate.id %}" class="btn btn-sm btn-outline-primary">Interview Record</a>
+        </div>
+    </div>
     <div class="row g-4">
         <!-- Personal Information Card -->
         <div class="col-lg-6">
@@ -845,16 +852,19 @@ document.addEventListener('DOMContentLoaded', function() {
                       <!-- Company Name -->
                       <div class="col-md-6 mb-3">
                           <label class="form-label">Company Name <span class="text-danger">*</span></label>
-                          <input type="text" name="company_name" class="form-control" 
-                                 value="{{ candidate.company_name }}" maxlength="100">
-                          <div class="invalid-feedback">Please enter company name</div>
+                          <select name="company_name" class="form-control">
+                                <option value="" disabled selected>Select Company</option>
+                                {% for vacancy in vacancies %}
+                                    <option value="{{ vacancy.company_name }}" {% if candidate.company_name == vacancy.company_name %}selected{% endif %}>{{ vacancy.company_name }}</option>
+                                {% endfor %}
+                          </select>
                       </div>
 
                       <!-- Offered Salary -->
                       <div class="col-md-6 mb-3">
                           <label class="form-label">Offered Salary (₹) <span class="text-danger">*</span></label>
                           <input type="number" name="offered_salary" class="form-control" 
-                                 value="{{ candidate.offered_salary }}" min="0" step="1000">
+                                 value="{{ candidate.offered_salary }}" min="0" step="1">
                           <div class="invalid-feedback">Please enter valid salary</div>
                       </div>
 

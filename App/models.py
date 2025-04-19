@@ -16,6 +16,7 @@ class Employee(models.Model):
     department = models.CharField(max_length=100, null=True, blank=True)
     joining_date = models.DateField()
     employee_photo = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    salary_ammount = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.employee_id})"
@@ -122,6 +123,8 @@ class Meeting(models.Model):
 class Designation(models.Model):
     name = models.CharField(max_length=100)  
     department = models.CharField(max_length=100)  # Department selection
+    description = models.TextField(blank=True, null=True)
+    color = models.CharField(max_length=30, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -182,39 +185,58 @@ class Holiday(models.Model):
 from django.contrib.auth.models import User
 
 class Salary(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    basic_salary = models.FloatField(default=0)
-    dearness_allowance = models.FloatField(default=0)
-    transport_allowance = models.FloatField(default=0)
-    mobile_allowance = models.FloatField(default=0)
-    bonus = models.FloatField(default=0)
-    others_earning = models.FloatField(default=0)
-    provident_fund = models.FloatField(default=0)
-    security_deposit = models.FloatField(default=0)
-    personal_loan = models.FloatField(default=0)
-    early_leaving = models.FloatField(default=0)
-    employee_type = models.CharField(max_length=50, null=True, blank=True)
-    status = models.CharField(max_length=20)
+    month = models.TextField(blank=True, null=True)  # This field must exist
+    year = models.TextField(blank=True, null=True)
+    basic_salary = models.DecimalField(max_digits=12, decimal_places=2)
+    hra = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    da = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # Dearness Allowance
+    ta = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # Transport Allowance
+    medical_allowance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    special_allowance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    bonus = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    other_earnings = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # Deductions
+    pf = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # Provident Fund
+    esi = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # ESI
+    professional_tax = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    tds = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # Tax Deducted at Source
+    leave_deduction = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    other_deductions = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('employee', 'month', 'year')
+        ordering = ['-year', '-month']
+
+    def __str__(self):
+        return f"{self.employee.employee_id} - {self.month}/{self.year} - {self.get_status_display()}"
 
     @property
     def total_earnings(self):
-        return (
-            self.basic_salary + self.dearness_allowance +
-            self.transport_allowance + self.mobile_allowance +
-            self.bonus + self.others_earning
-        )
+        return (self.basic_salary + self.hra + self.da + self.ta + 
+                self.medical_allowance + self.special_allowance + 
+                self.bonus + self.other_earnings)
 
     @property
     def total_deductions(self):
-        return (
-            self.provident_fund + self.security_deposit +
-            self.personal_loan + self.early_leaving
-        )
+        return (self.pf + self.esi + self.professional_tax + 
+                self.tds + self.leave_deduction + self.other_deductions)
 
     @property
-    def net_salary(self):
+    def net_pay(self):
         return self.total_earnings - self.total_deductions
-
     
 class OfficeExpense(models.Model):
     employee_name = models.CharField(max_length=100)
@@ -399,23 +421,97 @@ class Candidate_registration(models.Model):
         return self.candidate_name
 
 class Candidate_chat(models.Model):
-    candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE)
+    candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE, related_name='chats')
     chat_date = models.DateTimeField(auto_now_add=True)
     chat_message = models.TextField()
-    chat_by = models.CharField(max_length=255)
-    
+    employee_name = models.CharField(max_length=255)
+    chat_type = models.CharField(max_length=20, choices=[
+        ('internal', 'Internal Note'),
+        ('candidate', 'Candidate Communication'),
+        ('client', 'Client Communication')
+    ], default='internal')
+    is_important = models.BooleanField(default=False)
+    next_followup = models.DateTimeField(null=True, blank=True)
+    attachment = models.FileField(upload_to='chat_attachments/', null=True, blank=True)
+
+    class Meta:
+        ordering = ['-chat_date']
+        verbose_name = 'Candidate Chat'
+        verbose_name_plural = 'Candidate Chats'
+
     def __str__(self):
-        return self.candidate.candidate_name
+        return f"Chat with {self.candidate.name} by {self.employee_name}"
+
+    def get_chat_type_class(self):
+        return {
+            'internal': 'primary',
+            'candidate': 'success',
+            'client': 'pink'
+        }.get(self.chat_type, 'secondary')
     
 class Candidate_Interview(models.Model):
-    candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE)
-    interview_date = models.CharField(max_length=255)
-    interview_time = models.CharField(max_length=255)
+    INTERVIEW_STATUS = [
+        ('scheduled', 'Scheduled'),
+        ('completed', 'Completed'),
+        ('rescheduled', 'Rescheduled'),
+        ('cancelled', 'Cancelled'),
+        ('no_show', 'No Show'),
+        ('selected', 'Selected'),
+        ('rejected', 'Rejected'),
+        ('on_hold', 'On Hold'),
+    ]
+    
+    INTERVIEW_MODE = [
+        ('in_person', 'In-Person'),
+        ('phone', 'Phone'),
+        ('video', 'Video Call'),
+        ('online_test', 'Online Test'),
+    ]
+
+    candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE, related_name='interviews')
+    interview_date = models.DateField(blank=True, null=True)
+    interview_time = models.TimeField(blank=True, null=True)
     company_name = models.CharField(max_length=255)
-    status = models.CharField(max_length=255)
+    job_position = models.CharField(max_length=255)
+    interviewer_name = models.CharField(max_length=255, blank=True, null=True)
+    interviewer_email = models.EmailField(blank=True, null=True)
+    interviewer_phone = models.CharField(max_length=20, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=INTERVIEW_STATUS, default='scheduled')
+    interview_mode = models.CharField(max_length=20, choices=INTERVIEW_MODE, default='in_person')
+    location = models.TextField(blank=True, null=True)
+    meeting_link = models.URLField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    feedback = models.TextField(blank=True, null=True)
+    rating = models.PositiveIntegerField(blank=True, null=True, help_text="Rating out of 10")
+    is_technical = models.BooleanField(default=False)
+    duration = models.PositiveIntegerField(help_text="Duration in minutes", default=60)
+    requirements = models.TextField(blank=True, null=True, help_text="Any special requirements")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    attachment = models.FileField(upload_to='interview_docs/', blank=True, null=True)
+
+    class Meta:
+        ordering = ['-interview_date', '-interview_time']
+        verbose_name = 'Candidate Interview'
+        verbose_name_plural = 'Candidate Interviews'
+
+    def get_interview_datetime(self):
+        if self.interview_date and self.interview_time:
+            return datetime.combine(self.interview_date, self.interview_time)
+        return None
+
     
     def __str__(self):
-        return self.candidate.candidate_name
+        return f"{self.candidate.name} - {self.company_name} ({self.interview_date})"
+
+    def get_interview_datetime(self):
+        return datetime.combine(self.interview_date, self.interview_time)
+
+    # def is_upcoming(self):
+    #     interview_datetime = datetime.datetime.combine(self.interview_date, self.interview_time)
+    #     interview_datetime = timezone.make_aware(interview_datetime)
+    #     return interview_datetime > timezone.now()
+
 
 class Company_registration(models.Model):
     employee_name = models.CharField(max_length=50, blank=True, null=True)
@@ -466,6 +562,57 @@ class VacancyDetails(models.Model):
 
     def __str__(self):
         return f"{self.job_profile} at {self.company.company_name}"
+    
+    
+class company_communication(models.Model):
+    COMMUNICATION_TYPES = [
+        ('email', 'Email'),
+        ('call', 'Phone Call'),
+        ('meeting', 'Meeting'),
+        ('message', 'Message'),
+        ('video_call', 'Video Call'),
+        ('letter', 'Letter'),
+        ('proposal', 'Proposal'),
+    ]
+    
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ]
+
+    company = models.ForeignKey(Company_registration, on_delete=models.CASCADE, related_name='communications')
+    contact_person = models.CharField(max_length=255)
+    designation = models.CharField(max_length=255, blank=True, null=True)
+    contact_email = models.EmailField(blank=True, null=True)
+    contact_phone = models.CharField(max_length=20, blank=True, null=True)
+    communication_date = models.DateTimeField()
+    communication_type = models.CharField(max_length=50, choices=COMMUNICATION_TYPES)
+    subject = models.CharField(max_length=255)
+    communication_details = models.TextField()
+    follow_up_date = models.DateField(blank=True, null=True)
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')
+    outcome = models.TextField(blank=True, null=True)
+    employee_name = models.CharField(max_length=255)
+    attachment = models.FileField(upload_to='communication_attachments/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-communication_date']
+        verbose_name = 'Company Communication'
+        verbose_name_plural = 'Company Communications'
+
+    def __str__(self):
+        return f"{self.communication_type} with {self.company.company_name} - {self.subject}"
+
+    @property
+    def is_follow_up_due(self):
+        if self.follow_up_date:
+            return self.follow_up_date <= timezone.now().date()
+        return False
+    
 
 class Ticket(models.Model):
     ticket_number = models.CharField(max_length=50, unique=True)

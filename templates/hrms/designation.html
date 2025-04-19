@@ -81,7 +81,7 @@
                     <td>
                       <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                          <span class="avatar avatar-sm rounded" style="background-color: #{{ designation.color|default:'f0f0f0' }}">{{ designation.name|slice:":1" }}</span>
+                          <span class="avatar avatar-sm rounded" style="background-color: {{ designation.color|default:'f0f0f0' }}">{{ designation.name|slice:":1" }}</span>
                         </div>
                         <div class="flex-grow-1 ms-2">
                           <div class="font-weight-medium">{{ designation.name }}</div>

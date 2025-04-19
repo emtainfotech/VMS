@@ -1,0 +1,117 @@
+{% extends 'employee/performance-base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">
+                        Communication Details
+                    </h2>
+                    <div class="text-muted mt-1">
+                        {{ communication.company.company_name }} | {{ communication.get_communication_type_display }}
+                    </div>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <a href="{% url 'company_communication_list' communication.company.id %}" class="btn btn-secondary">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Contact Person</label>
+                                    <input type="text" name="contact_person" class="form-control" value="{{ communication.contact_person }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Designation</label>
+                                    <input type="text" name="designation" class="form-control" value="{{ communication.designation }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Contact Email</label>
+                                    <input type="email" name="contact_email" class="form-control" value="{{ communication.contact_email }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Contact Phone</label>
+                                    <input type="text" name="contact_phone" class="form-control" value="{{ communication.contact_phone }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Communication Type</label>
+                                    <select name="communication_type" class="form-select" required>
+                                        {% for type in communication_types %}
+                                        <option value="{{ type.0 }}" {% if type.0 == communication.communication_type %}selected{% endif %}>{{ type.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Date & Time</label>
+                                    <input type="datetime-local" name="communication_date" class="form-control" 
+                                        value="{{ communication.communication_date|date:'Y-m-d\TH:i' }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Priority</label>
+                                    <select name="priority" class="form-select" required>
+                                        {% for priority in priority_choices %}
+                                        <option value="{{ priority.0 }}" {% if priority.0 == communication.priority %}selected{% endif %}>{{ priority.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Follow-up Date</label>
+                                    <input type="date" name="follow_up_date" class="form-control" 
+                                        value="{{ communication.follow_up_date|date:'Y-m-d' }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Subject</label>
+                            <input type="text" name="subject" class="form-control" value="{{ communication.subject }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Details</label>
+                            <textarea name="communication_details" class="form-control" rows="4" required>{{ communication.communication_details }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Outcome</label>
+                            <textarea name="outcome" class="form-control" rows="2">{{ communication.outcome }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Attachment</label>
+                            <input type="file" name="attachment" class="form-control">
+                            {% if communication.attachment %}
+                            <div class="mt-2">
+                                <a href="{{ communication.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-paperclip"></i> View Current Attachment
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary">Update Communication</button>
+                            <a href="{% url 'company_communication_list' communication.company.id %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

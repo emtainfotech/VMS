@@ -53,6 +53,14 @@ urlpatterns = [
     path('export-vendors/', export_vendors_to_excel, name='export_vendors'),
     path('api/companies/', search_companies, name='search_companies'),
     path('employee-vacancy-list/', employee_vacancy_list, name='employee_vacancy_list'),
+    path('candidate/<int:candidate_id>/chats/', candidate_chat_list, name='candidate_chat_list'),
+    path('candidate/chats/<int:pk>/delete/', delete_chat, name='delete_chat'),
+    path('candidate/<int:candidate_id>/interviews/', interview_list, name='interview_list'),
+    path('interview/<int:interview_id>/', interview_detail, name='interview_detail'),
+    path('interview/<int:interview_id>/delete/', delete_interview, name='delete_interview'),
+    path('company/<int:company_id>/communications/', company_communication_list, name='company_communication_list'),
+    path('communication/<int:communication_id>/', company_communication_detail, name='company_communication_detail'),
+    path('communication/<int:communication_id>/delete/', delete_company_communication, name='delete_company_communication'),
     
     path('admin/', admin.site.urls),
 ]
