@@ -315,7 +315,7 @@
                                 {% elif candidate.admin_status == 'Hold' %}bg-danger
                                 {% elif candidate.admin_status == 'In Process' %}bg-primary
                                 {% else %}bg-warning {% endif %} text-white">
-                                {{ candidate.admin_status|default:"Pending" }}
+                                {{ candidate.admin_status|default:"In Process" }}
                             </span>
                           </p>
                             <p class="mb-2">
