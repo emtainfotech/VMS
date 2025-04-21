@@ -94,7 +94,7 @@
                     </div>
                     <div>
                       <div class="font-weight-medium">
-                        <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'employee_evms_candidate_profile' candidate.id %}{% else %}{% url 'employee_candidate_profile' candidate.id %}{% endif %}" class="text-reset">
+                        <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'employee_evms_candidate_profile' candidate.id %}{% else %}{% url 'employee_candidate_profile' candidate.id %}{% endif %}" class="text-reset text-truncate">
                           {{ candidate.candidate_name }}
                         </a>
                       </div>
