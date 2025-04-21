@@ -154,7 +154,7 @@ class Candidate(models.Model):
         if not self.unique_id:
             last_candidate = Candidate.objects.order_by('id').last()
             if last_candidate and last_candidate.unique_id:
-                last_id_number = int(last_candidate.unique_id[4:])  # Extract the number part and convert to int
+                last_id_number = int(last_candidate.unique_id[6:])  # Extract the number part and convert to int
                 new_id_number = last_id_number + 1
             else:
                 new_id_number = 1
