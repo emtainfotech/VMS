@@ -1998,7 +1998,7 @@ def employee_evms_candidate_profile(request,id) :
             'candidate': candidate,
             'employees' : employees
         }
-        return render(request,'employee/evms-candidate-profile.html ',context)
+        return render(request,'employee/evms-candidate-profile.html',context)
     else:
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)

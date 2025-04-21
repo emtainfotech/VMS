@@ -1227,7 +1227,7 @@ def evms_candidate_profile(request,id) :
             'candidate': candidate,
             'employees' : employees
         }
-        return render(request,'crm/evms-candidate-profile.html ',context)
+        return render(request,'crm/evms-candidate-profile.html',context)
     else:
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
