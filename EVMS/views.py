@@ -557,7 +557,7 @@ def vendor_dashboard(request):
     if request.user.is_authenticated:
         try:
             vendor = Vendor.objects.get(user=request.user)
-            referral_link = request.build_absolute_uri('/candidateform/?ref={}'.format(vendor.refer_code))
+            referral_link = request.build_absolute_uri('/applicationform/?ref={}'.format(vendor.refer_code))
             candidates = Candidate.objects.filter(refer_code=vendor.refer_code).order_by('-id')
             num_candidates = candidates.count()
 
