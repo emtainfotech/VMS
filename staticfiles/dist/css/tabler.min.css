@@ -25940,7 +25940,7 @@ a.step-item:hover {
 
 .steps-vertical .step-item:before {
   top: var(--tblr-steps-dot-offset);
-  left: 0;
+  left: -4px;
   transform: translate(0, 0)
 }
 
