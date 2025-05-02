@@ -53,6 +53,9 @@ def home_view(request):
 def sitemap_view(request) :
     return render(request, 'evms/sitemap.xml', {})
 
+def robot_txt_view(request) :
+    return render(request, 'evms/robots.txt', {})
+
 def vendor_signup(request):
     if request.method == 'POST':
         form_type = request.POST.get('form_type')

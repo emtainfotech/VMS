@@ -30,6 +30,7 @@ urlpatterns = [
     path('reset-password/', reset_password_form, name='reset_password_form'),
     path('resend-reset-otp/', resend_reset_otp, name='resend_reset_otp'),
     path('sitemap.xml/', sitemap_view, name='sitemap_view'),
+    path('robots.txt/', robot_txt_view, name='robot_txt_view'),
                
     
     path('admin/', admin.site.urls),
