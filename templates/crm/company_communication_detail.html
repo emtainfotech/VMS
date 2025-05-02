@@ -1,4 +1,4 @@
-{% extends 'employee/performance-base.html' %}
+{% extends 'crm/base.html' %}
 
 {% block content %}
 <div class="page-wrapper">
@@ -14,7 +14,7 @@
                     </div>
                 </div>
                 <div class="col-auto ms-auto d-print-none">
-                    <a href="{% url 'company_communication_list' communication.company.id %}" class="btn btn-secondary">
+                    <a href="{% url 'admin_company_communication_list' communication.company.id %}" class="btn btn-secondary">
                         Back to List
                     </a>
                 </div>
@@ -106,7 +106,7 @@
                         
                         <div class="form-footer">
                             <button type="submit" class="btn btn-primary">Update Communication</button>
-                            <a href="{% url 'company_communication_list' communication.company.id %}" class="btn btn-secondary">Cancel</a>
+                            <a href="{% url 'admin_company_communication_list' communication.company.id %}" class="btn btn-secondary">Cancel</a>
                         </div>
                     </form>
                 </div>

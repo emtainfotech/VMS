@@ -29,6 +29,197 @@
   <body>
     
     <script src="/static/dist/js/demo-theme.min.js?1692870487"></script>
+    <!-- Add this right after your opening <body> tag -->
+<div id="message-container" class="notification-container">
+  {% if messages %}
+      {% for message in messages %}
+          <div class="notification toast show {{ message.tags }}" role="alert" data-autohide="true">
+              <div class="notification-content">
+                  <div class="notification-icon">
+                      {% if message.tags == 'success' %}
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                          </svg>
+                      {% elif message.tags == 'error' %}
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <line x1="15" y1="9" x2="9" y2="15"></line>
+                              <line x1="9" y1="9" x2="15" y2="15"></line>
+                          </svg>
+                      {% else %}
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <line x1="12" y1="8" x2="12" y2="12"></line>
+                              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                          </svg>
+                      {% endif %}
+                  </div>
+                  <div class="notification-message">
+                      <div class="notification-title">
+                          {% if message.tags == 'success' %}Success{% elif message.tags == 'error' %}Error{% else %}Notice{% endif %}
+                      </div>
+                      <div class="notification-text">{{ message }}</div>
+                  </div>
+              </div>
+              <button type="button" class="notification-close" aria-label="Close">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+              </button>
+              <div class="notification-progress"></div>
+          </div>
+      {% endfor %}
+  {% endif %}
+</div>
+
+<style>
+  /* Notification System */
+  .notification-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 350px;
+      max-width: calc(100% - 40px);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+  }
+  
+  .notification {
+      position: relative;
+      padding: 16px;
+      border-radius: 8px;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      transform: translateX(120%);
+      animation: slideIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      transition: all 0.3s ease;
+  }
+  
+  .notification.success {
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+  }
+  
+  .notification.error {
+      background: linear-gradient(135deg, #f87171, #ef4444);
+  }
+  
+  .notification.warning {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  }
+  
+  .notification.info {
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  }
+  
+  .notification-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+  }
+  
+  .notification-icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+  }
+  
+  .notification-message {
+      flex-grow: 1;
+  }
+  
+  .notification-title {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 4px;
+  }
+  
+  .notification-text {
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.4;
+  }
+  
+  .notification-close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: transparent;
+      border: none;
+      color: white;
+      opacity: 0.7;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: opacity 0.2s ease;
+  }
+  
+  .notification-close:hover {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .notification-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.3);
+      transform-origin: left;
+      animation: progressBar 5s linear forwards;
+  }
+  
+  @keyframes slideIn {
+      to { transform: translateX(0); }
+  }
+  
+  @keyframes progressBar {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+  }
+  
+  /* Hide older notifications */
+  .notification-container .notification:not(:last-child) {
+      display: none;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+      const notifications = document.querySelectorAll('.notification');
+      
+      notifications.forEach(notification => {
+          // Auto-dismiss after 5 seconds
+          const autoDismiss = setTimeout(() => {
+              notification.style.transform = 'translateX(120%)';
+              setTimeout(() => notification.remove(), 300);
+          }, 5000);
+          
+          // Manual dismiss
+          const closeBtn = notification.querySelector('.notification-close');
+          if (closeBtn) {
+              closeBtn.addEventListener('click', () => {
+                  clearTimeout(autoDismiss);
+                  notification.style.transform = 'translateX(120%)';
+                  setTimeout(() => notification.remove(), 300);
+              });
+          }
+          
+          // Pause on hover
+          notification.addEventListener('mouseenter', () => {
+              notification.querySelector('.notification-progress').style.animationPlayState = 'paused';
+          });
+          
+          notification.addEventListener('mouseleave', () => {
+              notification.querySelector('.notification-progress').style.animationPlayState = 'running';
+          });
+      });
+  });
+</script>
     <div class="page">
       <!-- Navbar -->
       <header class="navbar navbar-expand-md d-print-none">

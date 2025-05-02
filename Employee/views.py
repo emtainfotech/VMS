@@ -221,7 +221,7 @@ def employee_profile_view(request,id):
                 last_name = request.POST.get('last_name')
                 contact_number = request.POST.get('contact_number')
                 email = request.POST.get('email')
-                joining_date = request.POST.get('joining_date')
+                joining_date = request.POST.get('joining_date') or None
                 employee_photo = request.FILES.get('employee_photo')
 
                 employee.first_name = first_name
@@ -234,7 +234,7 @@ def employee_profile_view(request,id):
                 employee.save()
 
                 # Update EmployeeAdditionalInfo fields
-                date_of_birth = request.POST.get('date_of_birth')
+                date_of_birth = request.POST.get('date_of_birth') or None
                 gender = request.POST.get('gender')
                 department = request.POST.get('department')
                 designation = request.POST.get('designation')
@@ -256,7 +256,7 @@ def employee_profile_view(request,id):
                 member_name = request.POST.get('member_name')
                 relation = request.POST.get('relation')
                 contact_number = request.POST.get('contact_number')
-                date_of_birth = request.POST.get('date_of_birth')
+                date_of_birth = request.POST.get('date_of_birth') or None
 
                 Family_details.objects.create(
                     employee=employee,
@@ -293,8 +293,8 @@ def employee_profile_view(request,id):
                 # Retrieve form data
                 cource_name = request.POST.get('cource_name')
                 institution_name = request.POST.get('institution_name')
-                start_year = request.POST.get('start_year')
-                end_year = request.POST.get('end_year')
+                start_year = request.POST.get('start_year') or None
+                end_year = request.POST.get('end_year') or None
                 grade = request.POST.get('grade')
                 description = request.POST.get('description')
                 education_certificate = request.FILES.get('education_certificate')
@@ -319,8 +319,8 @@ def employee_profile_view(request,id):
                 # Handle Social Media details form submission
                 organization_name = request.POST.get('organization_name')
                 designation_name = request.POST.get('designation_name')
-                start_date = request.POST.get('start_date')
-                end_date = request.POST.get('end_date')
+                start_date = request.POST.get('start_date') or None
+                end_date = request.POST.get('end_date') or None
                 description = request.POST.get('description')
                 experience_certificate = request.FILES.get('experience_certificate')
 
@@ -1535,6 +1535,21 @@ def employee_company_profile(request,id) :
                 company_usp = request.POST.get('company_usp')
                 status_of_incentive = request.POST.get('status_of_incentive')
                 replacement_criteria = request.POST.get('replacement_criteria')
+                
+                # Payment related fields
+                payment_mode = request.POST.get('payment_mode')
+                company_pay_type = request.POST.get('company_pay_type')
+                flat_amount = request.POST.get('flat_amount')
+                percentage_of_ctc = request.POST.get('percentage_of_ctc')
+                pay_per_days = request.POST.get('pay_per_days')
+                salary_transfer_date = request.POST.get('salary_transfer_date') or None
+                expected_payment_date = request.POST.get('expected_payment_date') or None
+                candidate_salary_transfer_date = request.POST.get('candidate_salary_transfer_date') or None
+
+                # Convert numeric fields to appropriate types
+                flat_amount = float(flat_amount) if flat_amount else None
+                percentage_of_ctc = float(percentage_of_ctc) if percentage_of_ctc else None
+                pay_per_days = int(pay_per_days) if pay_per_days else None
 
                 VacancyDetails.objects.create(
                     company=company,
@@ -1562,8 +1577,18 @@ def employee_company_profile(request,id) :
                     company_usp=company_usp,
                     status_of_incentive=status_of_incentive,
                     replacement_criteria=replacement_criteria,
+                    # Payment related fields
+                    payment_mode=payment_mode,
+                    company_pay_type=company_pay_type,
+                    flat_amount=flat_amount,
+                    percentage_of_ctc=percentage_of_ctc,
+                    pay_per_days=pay_per_days,
+                    salary_transfer_date=salary_transfer_date,
+                    expected_payment_date=expected_payment_date,
+                    candidate_salary_transfer_date=candidate_salary_transfer_date,
                 )
                 messages.success(request, 'Vacancy added successfully!')
+
             elif 'edit_vacancy' in request.POST:
                 # Handle vacancy editing
                 vacancy_id = request.POST.get('vacancy_id')
@@ -1574,18 +1599,50 @@ def employee_company_profile(request,id) :
                     vacancy.vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
                     vacancy.vacancy_status = request.POST.get('vacancy_status', 'Pending')
                     vacancy.payroll = request.POST.get('payroll')
+                    vacancy.third_party_name = request.POST.get('third_party_name')
+                    vacancy.job_opening_origin = request.POST.get('job_opening_origin')
                     vacancy.sector_type = request.POST.get('sector_type')
                     vacancy.department_name = request.POST.get('department_name')
-                    vacancy.minimum_salary_range = request.POST.get('minimum_salary_range')
-                    vacancy.maximum_salary_range = request.POST.get('maximum_salary_range')
+                    vacancy.fresher_status = request.POST.get('fresher_status')
+                    vacancy.minimum_age = request.POST.get('minimum_age')
+                    vacancy.maximum_age = request.POST.get('maximum_age')
+                    vacancy.gender = request.POST.get('gender')
                     vacancy.minimum_experience = request.POST.get('minimum_experience')
                     vacancy.maximum_experience = request.POST.get('maximum_experience')
-                    vacancy.special_instruction = request.POST.get('special_instruction')
+                    vacancy.minimum_education_qualification = request.POST.get('minimum_education_qualification')
+                    vacancy.specialization = request.POST.get('specialization')
+                    vacancy.minimum_salary_range = request.POST.get('minimum_salary_range')
+                    vacancy.maximum_salary_range = request.POST.get('maximum_salary_range')
                     vacancy.vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
+                    vacancy.special_instruction = request.POST.get('special_instruction')
+                    vacancy.company_usp = request.POST.get('company_usp')
+                    vacancy.status_of_incentive = request.POST.get('status_of_incentive')
+                    vacancy.replacement_criteria = request.POST.get('replacement_criteria')
+                    
+                    # Payment related fields
+                    vacancy.payment_mode = request.POST.get('payment_mode')
+                    vacancy.company_pay_type = request.POST.get('company_pay_type')
+                    
+                    # Convert and set numeric fields
+                    # flat_amount = 
+                    vacancy.flat_amount = request.POST.get('flat_amount') or None
+                    
+                    percentage_of_ctc = request.POST.get('percentage_of_ctc')
+                    vacancy.percentage_of_ctc = float(percentage_of_ctc) if percentage_of_ctc else None
+                    
+                    pay_per_days = request.POST.get('pay_per_days')
+                    vacancy.pay_per_days = int(pay_per_days) if pay_per_days else None
+                    
+                    vacancy.salary_transfer_date = request.POST.get('salary_transfer_date') or None
+                    vacancy.expected_payment_date = request.POST.get('expected_payment_date') or None
+                    vacancy.candidate_salary_transfer_date = request.POST.get('candidate_salary_transfer_date') or None
+                    
                     vacancy.save()
                     messages.success(request, 'Vacancy updated successfully!')
                 except VacancyDetails.DoesNotExist:
                     messages.error(request, 'Vacancy not found!')
+                except ValueError as e:
+                    messages.error(request, f'Invalid input format: {str(e)}')
                     
             elif 'delete_vacancy' in request.POST:
                 # Handle vacancy deletion
@@ -2268,26 +2325,238 @@ def ticket_view(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
-def employee_performance_dashboard(request) :
-    if request.user.is_authenticated:
-        today = now().date()
-        leads = Candidate_registration.objects.filter(lead_generate='Yes').order_by('-id')
-        follow_ups = Candidate_registration.objects.filter(next_follow_up_date=today).order_by('-id')
-        interviews = Candidate_registration.objects.filter(send_for_interview='Yes',selection_status='Pending').order_by('-id')
-        placements = Candidate_registration.objects.filter(selection_status='Selected',selection_date = today).order_by('-id')
-        
-        context = {
-            'leads': leads,
-            'follow_ups': follow_ups,
-            'interviews': interviews,
-            'placements': placements
-        }
-        return render(request,'employee/employee-performance-dashboard.html',context)
-    else:
-        # If the user is not an admin, show a 404 page
-        return render(request, 'employee/404.html', status=404)
 
+
+def employee_performance_dashboard(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    # Get time period filter (default to week)
+    period = request.GET.get('period', 'week')
+    
+    # Get the logged-in employee's name
+    logged_in_employee = Employee.objects.get(user=request.user)
+    today = datetime.now().date()
+    
+    # Calculate date ranges based on period
+    if period == 'today':
+        start_date = today
+        end_date = today
+        previous_start = today - timedelta(days=1)
+        previous_end = today - timedelta(days=1)
+        trend_interval = 'hourly'
+    elif period == 'week':
+        start_date = today - timedelta(days=today.weekday())
+        end_date = start_date + timedelta(days=6)
+        previous_start = start_date - timedelta(weeks=1)
+        previous_end = start_date - timedelta(days=1)
+        trend_interval = 'daily'
+    elif period == 'month':
+        start_date = today.replace(day=1)
+        end_date = (start_date.replace(month=start_date.month+1) - timedelta(days=1)
+                   if start_date.month < 12 
+                   else start_date.replace(year=start_date.year+1, month=1) - timedelta(days=1))
+        previous_start = (start_date - timedelta(days=1)).replace(day=1)
+        previous_end = start_date - timedelta(days=1)
+        trend_interval = 'weekly'
+    elif period == 'year':
+        start_date = today.replace(month=1, day=1)
+        end_date = start_date.replace(year=start_date.year+1) - timedelta(days=1)
+        previous_start = start_date.replace(year=start_date.year-1)
+        previous_end = start_date - timedelta(days=1)
+        trend_interval = 'monthly'
+    
+    # Base queryset for this employee
+    current_qs = Candidate_registration.objects.filter(
+        employee_name=logged_in_employee,
+        register_time__date__range=[start_date, end_date]
+    )
+    previous_qs = Candidate_registration.objects.filter(
+        employee_name=logged_in_employee,
+        register_time__date__range=[previous_start, previous_end]
+    )
+    
+    # Calculate trend data based on period
+    trend_data = []
+    trend_labels = []
+    
+    if trend_interval == 'hourly':
+        for hour in range(0, 24):
+            trend_labels.append(f"{hour}:00")
+            trend_data.append(
+                current_qs.filter(
+                    register_time__hour=hour
+                ).count()
+            )
+    elif trend_interval == 'daily':
+        trend_dates = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
+        trend_labels = [date.strftime('%a %d') for date in trend_dates]
+        trend_data = [
+            current_qs.filter(register_time__date=date).count()
+            for date in trend_dates
+        ]
+    elif trend_interval == 'weekly':
+        weeks_in_month = 5  # Maximum weeks to show
+        for i in range(weeks_in_month):
+            week_start = start_date + timedelta(weeks=i)
+            week_end = week_start + timedelta(days=6)
+            if week_start.month != start_date.month:
+                break
+            trend_labels.append(f"Week {i+1}")
+            trend_data.append(
+                current_qs.filter(
+                    register_time__date__range=[week_start, week_end]
+                ).count()
+            )
+    elif trend_interval == 'monthly':
+        for month in range(1, 13):  # Fixed: Only loop through valid months 1-12
+            month_start = start_date.replace(month=month, day=1)
+            # Handle December -> January transition
+            if month == 12:
+                month_end = month_start.replace(year=month_start.year+1, month=1) - timedelta(days=1)
+            else:
+                month_end = month_start.replace(month=month+1) - timedelta(days=1)
+            
+            # Ensure we don't go beyond current date
+            if month_start > today:
+                break
+                
+            if month_end > today:
+                month_end = today
+                
+            trend_labels.append(month_start.strftime('%b'))
+            trend_data.append(
+                current_qs.filter(
+                    register_time__date__range=[month_start, month_end]
+                ).count()
+            )
+    
+    # Performance metrics
+    total_current = current_qs.count()
+    total_previous = previous_qs.count()
+    
+    metrics = {
+        'period': period,
+        'total_candidates': total_current,
+        'total_change': calculate_change(total_current, total_previous),
+        
+        'selected_candidates': current_qs.filter(selection_status='Selected').count(),
+        'selection_rate': calculate_percentage(
+            current_qs.filter(selection_status='Selected').count(),
+            total_current
+        ),
+        'selection_change': calculate_change(
+            current_qs.filter(selection_status='Selected').count(),
+            previous_qs.filter(selection_status='Selected').count()
+        ),
+        
+        'interview_candidates': current_qs.filter(send_for_interview='Yes').count(),
+        'interview_rate': calculate_percentage(
+            current_qs.filter(send_for_interview='Yes').count(),
+            total_current
+        ),
+        'interview_change': calculate_change(
+            current_qs.filter(send_for_interview='Yes').count(),
+            previous_qs.filter(send_for_interview='Yes').count()
+        ),
+        
+        'lead_generation': current_qs.filter(lead_generate='Yes').count(),
+        'lead_change': calculate_change(
+            current_qs.filter(lead_generate='Yes').count(),
+            previous_qs.filter(lead_generate='Yes').count()
+        ),
+        
+        'today_candidates': Candidate_registration.objects.filter(
+            employee_name=logged_in_employee,
+            register_time__date=today
+        ).count(),
+    }
+    
+    # Status distribution
+    status_counts = current_qs.values('selection_status').annotate(
+        count=Count('id')
+    ).order_by('-count')
+    
+    status_distribution = []
+    for status in status_counts:
+        status_distribution.append({
+            'status': status['selection_status'],
+            'count': status['count'],
+            'percentage': calculate_percentage(status['count'], total_current)
+        })
+    
+    # Call connection stats
+    call_stats = {
+        'connected': current_qs.filter(call_connection='Yes').count(),
+        'failed': current_qs.exclude(call_connection='Yes').exclude(call_connection__isnull=True).count(),
+        'connect_rate': calculate_percentage(
+            current_qs.filter(call_connection='Yes').count(),
+            current_qs.exclude(call_connection__isnull=True).count()
+        ),
+        'fail_rate': calculate_percentage(
+            current_qs.exclude(call_connection='Yes').exclude(call_connection__isnull=True).count(),
+            current_qs.exclude(call_connection__isnull=True).count()
+        ),
+        'breakdown': get_call_breakdown(current_qs, previous_qs)
+    }
+    
+    # Recent candidates (last 5)
+    recent_candidates = current_qs.order_by('-register_time')[:5]
+    
+    # Today's candidates (for today view)
+    today_candidates = Candidate_registration.objects.filter(
+        employee_name=logged_in_employee,
+        register_time__date=today
+    ).order_by('-register_time')
+    
+    # Prepare chart data
+    chart_data = {
+        'trend_data': trend_data,
+        'trend_labels': trend_labels,
+        'status_series': [s['count'] for s in status_distribution],
+        'status_labels': [s['status'] for s in status_distribution]
+    }
+    
+    return render(request, 'employee/employee-performance-dashboard.html', {
+        'metrics': metrics,
+        'status_distribution': status_distribution,
+        'call_stats': call_stats,
+        'recent_candidates': recent_candidates,
+        'today_candidates': today_candidates,
+        'trend_data': chart_data['trend_data'],
+        'trend_labels': chart_data['trend_labels'],
+        'status_series': chart_data['status_series'],
+        'status_labels': chart_data['status_labels'],
+        'period': period,
+        'today': today,
+    })
+
+def calculate_percentage(part, whole):
+    return round((part / whole) * 100, 1) if whole > 0 else 0
+
+def calculate_change(current, previous):
+    return round(((current - previous) / previous * 100), 1) if previous > 0 else 0
+
+def get_call_breakdown(current_qs, previous_qs):
+    statuses = ['Yes', 'No', 'Busy', 'Not Reachable', 'Wrong Number']
+    breakdown = []
+    
+    for status in statuses:
+        current_count = current_qs.filter(call_connection=status).count()
+        previous_count = previous_qs.filter(call_connection=status).count()
+        
+        breakdown.append({
+            'status': status,
+            'count': current_count,
+            'percentage': calculate_percentage(
+                current_count,
+                current_qs.exclude(call_connection__isnull=True).count()
+            ),
+            'trend': calculate_change(current_count, previous_count)
+        })
+    
+    return breakdown
+    
 @login_required
 def employee_chart_data(request):
     if request.user.is_authenticated:
@@ -2630,7 +2899,6 @@ def calculate_work_hours(sessions):
     """Calculate total working hours from employee sessions."""
     return sum((session.total_time for session in sessions if session.total_time), timedelta())
 
-@login_required
 def work_hours_summary(request):
     if request.user.is_authenticated:
         user = request.user
@@ -3214,4 +3482,107 @@ def send_communication_email(request, communication):
     # Send email
     email.send()
     
+@login_required
+def company_contacts_list(request, company_id):
+    company = get_object_or_404(Company_registration, id=company_id)
     
+    if request.method == 'POST':
+        if 'send_email' in request.POST:
+            # Handle email sending
+            contact_id = request.POST.get('contact_id')
+            contact = get_object_or_404(Company_spoke_person, id=contact_id)
+            # Add your email sending logic here
+            messages.success(request, f'Email sent to {contact.name} successfully!')
+            return redirect('company_contacts_list', company_id=company_id)
+        
+        # Handle form submission
+        contact = Company_spoke_person(
+            company=company,
+            name=request.POST.get('name'),
+            designation=request.POST.get('designation'),
+            department=request.POST.get('department'),
+            email=request.POST.get('email'),
+            phone=request.POST.get('phone'),
+            location=request.POST.get('location'),
+            is_primary=request.POST.get('is_primary') == 'on',
+            priority=request.POST.get('priority', 'medium'),
+            status=request.POST.get('status', 'active'),
+            notes=request.POST.get('notes'),
+            last_contact_date=request.POST.get('last_contact_date') or None,
+            next_followup=request.POST.get('next_followup') or None,
+            created_by=request.user,
+            updated_by=request.user
+        )
+        contact.save()
+        messages.success(request, 'Contact person added successfully!')
+        return redirect('company_contacts_list', company_id=company_id)
+    
+    # Filter contacts
+    status_filter = request.GET.get('status', 'all')
+    priority_filter = request.GET.get('priority', 'all')
+    is_primary_filter = request.GET.get('is_primary', 'all')
+    
+    contacts = Company_spoke_person.objects.filter(company=company)
+    
+    if status_filter != 'all':
+        contacts = contacts.filter(status=status_filter)
+    if priority_filter != 'all':
+        contacts = contacts.filter(priority=priority_filter)
+    if is_primary_filter != 'all':
+        contacts = contacts.filter(is_primary=(is_primary_filter == 'true'))
+    
+    # Pagination
+    paginator = Paginator(contacts.order_by('-is_primary', '-priority', 'name'), 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'company': company,
+        'contacts': page_obj,
+        'status_filter': status_filter,
+        'priority_filter': priority_filter,
+        'is_primary_filter': is_primary_filter,
+        'status_choices': Company_spoke_person.STATUS_CHOICES,
+        'priority_choices': Company_spoke_person.PRIORITY_CHOICES,
+    }
+    return render(request, 'employee/contacts_list.html', context)
+
+@login_required
+def company_contact_detail(request, contact_id):
+    contact = get_object_or_404(Company_spoke_person, id=contact_id)
+    
+    if request.method == 'POST':
+        # Handle update
+        contact.name = request.POST.get('name')
+        contact.designation = request.POST.get('designation')
+        contact.department = request.POST.get('department')
+        contact.email = request.POST.get('email')
+        contact.phone = request.POST.get('phone')
+        contact.location = request.POST.get('location')
+        contact.is_primary = request.POST.get('is_primary') == 'on'
+        contact.priority = request.POST.get('priority', 'medium')
+        contact.status = request.POST.get('status', 'active')
+        contact.notes = request.POST.get('notes')
+        contact.last_contact_date = request.POST.get('last_contact_date') or None
+        contact.next_followup = request.POST.get('next_followup') or None
+        contact.updated_by = request.user
+        contact.save()
+        
+        messages.success(request, 'Contact person updated successfully!')
+        return redirect('company_contact_detail', contact_id=contact.id)
+    
+    context = {
+        'contact': contact,
+        'status_choices': Company_spoke_person.STATUS_CHOICES,
+        'priority_choices': Company_spoke_person.PRIORITY_CHOICES,
+    }
+    return render(request, 'employee/contact_detail.html', context)
+
+@login_required
+def delete_company_contact(request, contact_id):
+    contact = get_object_or_404(Company_spoke_person, id=contact_id)
+    company_id = contact.company.id
+    contact.delete()
+    messages.success(request, 'Contact person deleted successfully!')
+    return redirect('company_contacts_list', company_id=company_id)
+

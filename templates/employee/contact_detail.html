@@ -1,0 +1,146 @@
+{% extends 'crm/base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">
+                        Contact Person Details
+                    </h2>
+                    <div class="text-muted mt-1">
+                        {{ contact.company.company_name }} | {{ contact.designation }}
+                    </div>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <a href="{% url 'admin_company_contacts_list' contact.company.id %}" class="btn btn-secondary">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Full Name*</label>
+                                    <input type="text" name="name" class="form-control" value="{{ contact.name }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Designation*</label>
+                                    <input type="text" name="designation" class="form-control" value="{{ contact.designation }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Department</label>
+                                    <input type="text" name="department" class="form-control" value="{{ contact.department|default:'' }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email*</label>
+                                    <input type="email" name="email" class="form-control" value="{{ contact.email }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Phone*</label>
+                                    <input type="text" name="phone" class="form-control" value="{{ contact.phone }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Location*</label>
+                                    <input type="text" name="location" class="form-control" value="{{ contact.location }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Priority</label>
+                                    <select name="priority" class="form-select" required>
+                                        {% for priority in priority_choices %}
+                                        <option value="{{ priority.0 }}" {% if priority.0 == contact.priority %}selected{% endif %}>{{ priority.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Status</label>
+                                    <select name="status" class="form-select" required>
+                                        {% for status in status_choices %}
+                                        <option value="{{ status.0 }}" {% if status.0 == contact.status %}selected{% endif %}>{{ status.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Last Contact Date</label>
+                                    <input type="date" name="last_contact_date" class="form-control" 
+                                           value="{{ contact.last_contact_date|date:'Y-m-d'|default:'Not Specify' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Next Follow-up Date</label>
+                                    <input type="date" name="next_followup" class="form-control" 
+                                           value="{{ contact.next_followup|date:'Y-m-d'|default:'Not Specify' }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_primary" name="is_primary" 
+                                       {% if contact.is_primary %}checked{% endif %}>
+                                <label class="form-check-label" for="is_primary">
+                                    Primary Contact Person
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea name="notes" class="form-control" rows="3">{{ contact.notes|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary">Update Contact</button>
+                            <a href="{% url 'company_contacts_list' contact.company.id %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3 class="card-title">Activity Log</h3>
+                </div>
+                <div class="card-body">
+                    <div class="datagrid">
+                        <div class="datagrid-item">
+                            <div class="datagrid-title">Created By</div>
+                            <div class="datagrid-content">{{ contact.created_by.get_full_name|default:contact.created_by.username }}</div>
+                        </div>
+                        <div class="datagrid-item">
+                            <div class="datagrid-title">Created At</div>
+                            <div class="datagrid-content">{{ contact.created_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                        <div class="datagrid-item">
+                            <div class="datagrid-title">Last Updated By</div>
+                            <div class="datagrid-content">{{ contact.updated_by.get_full_name|default:contact.updated_by.username }}</div>
+                        </div>
+                        <div class="datagrid-item">
+                            <div class="datagrid-title">Last Updated At</div>
+                            <div class="datagrid-content">{{ contact.updated_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

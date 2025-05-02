@@ -43,7 +43,7 @@
     <h4>Company Details</h4>
     <div>
         <a href="{% url 'admin_company_communication_list' company.id %}" class="btn btn-sm btn-outline-primary">Communication Record</a>
-        {% comment %} <a href="{% url 'interview_list' candidate.id %}" class="btn btn-sm btn-outline-primary">Interview Record</a> {% endcomment %}
+        <a href="{% url 'admin_company_contacts_list' company.id %}" class="btn btn-sm btn-outline-primary">Employee Details</a>
     </div>
 </div>
     <div class="row g-4">
@@ -223,242 +223,534 @@
                                 </td>
                             </tr>
     
-                            <!-- View Vacancy Modal -->
+                            
+<!-- View Vacancy Modal -->
 <div class="modal fade" id="viewVacancyModal{{ vacancy.id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-gradient-primary text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-briefcase me-2"></i>Vacancy Details: {{ vacancy.job_profile }}
+          <span class="badge bg-white text-primary ms-2">{{ vacancy.company_vacancy_unique_code }}</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Basic Information Card -->
+        <div class="card mb-4 border-0 shadow-sm">
+          <div class="card-header bg-light-primary d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 text-primary">
+              <i class="fas fa-info-circle me-2"></i>Basic Information
+            </h6>
+            <span class="badge text-white {% if vacancy.vacancy_status == 'Active' %}bg-success{% elif vacancy.vacancy_status == 'Closed' %}bg-danger{% else %}bg-warning{% endif %}">
+              {{ vacancy.vacancy_status }}
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-building me-2 text-muted"></i>Department:</span>
+                  <span class="info-value">{{ vacancy.department_name }}</span>
+                </div>
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-industry me-2 text-muted"></i>Sector:</span>
+                  <span class="info-value">{{ vacancy.sector_type }}</span>
+                </div>
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-user-tie me-2 text-muted"></i>Payroll:</span>
+                  <span class="info-value">{{ vacancy.payroll }}</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-calendar-plus me-2 text-muted"></i>Opening Date:</span>
+                  <span class="info-value">{{ vacancy.vacancy_opening_date|date:"d M Y" }}</span>
+                </div>
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-calendar-times me-2 text-muted"></i>Closing Date:</span>
+                  <span class="info-value">{{ vacancy.vacancy_closing_date|date:"d M Y"|default:"-" }}</span>
+                </div>
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-user-clock me-2 text-muted"></i>Fresher Status:</span>
+                  <span class="info-value">{{ vacancy.fresher_status }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Salary and Experience Card -->
+        <div class="card mb-4 border-0 shadow-sm">
+          <div class="card-header bg-light-primary">
+            <h6 class="mb-0 text-primary">
+              <i class="fas fa-money-bill-wave me-2"></i>Salary & Experience
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-rupee-sign me-2 text-muted"></i>Salary Range:</span>
+                  <span class="info-value">₹{{ vacancy.minimum_salary_range }} - ₹{{ vacancy.maximum_salary_range }}</span>
+                </div>
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-graduation-cap me-2 text-muted"></i>Education:</span>
+                  <span class="info-value">
+                    {{ vacancy.minimum_education_qualification }}
+                    {% if vacancy.specialization %}({{ vacancy.specialization }}){% endif %}
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-briefcase me-2 text-muted"></i>Experience:</span>
+                  <span class="info-value">
+                    {{ vacancy.minimum_experience|default:"0" }} - {{ vacancy.maximum_experience }} years
+                  </span>
+                </div>
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-venus-mars me-2 text-muted"></i>Gender:</span>
+                  <span class="info-value">{{ vacancy.gender }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-birthday-cake me-2 text-muted"></i>Age Range:</span>
+                  <span class="info-value">
+                    {{ vacancy.minimum_age|default:"-" }} - {{ vacancy.maximum_age|default:"-" }} years
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-gift me-2 text-muted"></i>Incentive:</span>
+                  <span class="info-value">
+                    {{ vacancy.status_of_incentive }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Details Card -->
+        <div class="card mb-4 border-0 shadow-sm">
+          <div class="card-header bg-light-primary">
+            <h6 class="mb-0 text-primary">
+              <i class="fas fa-credit-card me-2"></i>Payment Details
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="info-item mb-3">
+                  <span class="info-label"><i class="fas fa-money-check-alt me-2 text-muted"></i>Payment Mode:</span>
+                  <span class="info-value">
+                    {% if vacancy.payment_mode %}
+                      <span class="badge bg-primary text-white">{{ vacancy.payment_mode }}</span>
+                    {% else %}
+                      Not specified
+                    {% endif %}
+                  </span>
+                </div>
+                
+                {% if vacancy.payment_mode == 'Company Pay' %}
+                  <div class="info-item mb-3">
+                    <span class="info-label"><i class="fas fa-tag me-2 text-muted"></i>Payment Type:</span>
+                    <span class="info-value">{{ vacancy.company_pay_type }}</span>
+                  </div>
+                  
+                  {% if vacancy.company_pay_type == 'Flat' %}
+                    <div class="info-item mb-3">
+                      <span class="info-label"><i class="fas fa-rupee-sign me-2 text-muted"></i>Flat Amount:</span>
+                      <span class="info-value">₹{{ vacancy.flat_amount | default:'not decided' }}</span>
+                    </div>
+                  {% elif vacancy.company_pay_type == 'Percentage of CTC' %}
+                    <div class="info-item mb-3">
+                      <span class="info-label"><i class="fas fa-percent me-2 text-muted"></i>Percentage of CTC:</span>
+                      <span class="info-value">{{ vacancy.percentage_of_ctc }}%</span>
+                    </div>
+                  {% elif vacancy.company_pay_type == 'Pay as per days' %}
+                    <div class="info-item mb-3">
+                      <span class="info-label"><i class="fas fa-calendar-day me-2 text-muted"></i>Pay per Days:</span>
+                      <span class="info-value">{{ vacancy.pay_per_days }} days</span>
+                    </div>
+                  {% endif %}
+                {% endif %}
+              </div>
+              
+              <div class="col-md-6">
+                {% if vacancy.payment_mode == 'Salary Deduction' %}
+                  <div class="info-item mb-3">
+                    <span class="info-label"><i class="fas fa-calendar-check me-2 text-muted"></i>Salary Transfer Date:</span>
+                    <span class="info-value">{{ vacancy.salary_transfer_date|date:"d M Y"|default:"-" }}</span>
+                  </div>
+                  <div class="info-item mb-3">
+                    <span class="info-label"><i class="fas fa-calendar-alt me-2 text-muted"></i>Expected Payment Date:</span>
+                    <span class="info-value">{{ vacancy.expected_payment_date|date:"d M Y"|default:"-" }}</span>
+                  </div>
+                {% elif vacancy.payment_mode == 'SPDC/Candidate Pay' %}
+                  <div class="info-item mb-3">
+                    <span class="info-label"><i class="fas fa-calendar-check me-2 text-muted"></i>Salary Transfer Date:</span>
+                    <span class="info-value">{{ vacancy.candidate_salary_transfer_date|date:"d M Y"|default:"-" }}</span>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Information Card -->
+        <div class="card mb-3 border-0 shadow-sm">
+          <div class="card-header bg-light-primary">
+            <h6 class="mb-0 text-primary">
+              <i class="fas fa-clipboard-list me-2"></i>Additional Information
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <h6 class="d-flex align-items-center mb-3">
+                <i class="fas fa-exclamation-circle me-2 text-primary"></i>
+                <strong>Special Instructions</strong>
+              </h6>
+              <div class="p-3 rounded">
+                {{ vacancy.special_instruction|default:"No special instructions provided"|linebreaks }}
+              </div>
+            </div>
+            
+            {% if vacancy.company_usp %}
+            <div class="mb-3">
+              <h6 class="d-flex align-items-center mb-2">
+                <i class="fas fa-star me-2 text-primary"></i>
+                <strong>Company USP</strong>
+              </h6>
+              <p class="ps-4">{{ vacancy.company_usp }}</p>
+            </div>
+            {% endif %}
+            
+            {% if vacancy.replacement_criteria %}
+            <div class="mb-3">
+              <h6 class="d-flex align-items-center mb-2">
+                <i class="fas fa-exchange-alt me-2 text-primary"></i>
+                <strong>Replacement Criteria</strong>
+              </h6>
+              <p class="ps-4">{{ vacancy.replacement_criteria|linebreaks }}</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i> Close
+        </button>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editVacancyModal{{ vacancy.id }}" data-bs-dismiss="modal">
+          <i class="fas fa-edit me-1"></i> Edit
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .bg-light-primary {
+    background-color: #e3f2fd;
+  }
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, #1976d2, #2196f3);
+  }
+  .info-item {
+    display: flex;
+    align-items: flex-start;
+  }
+  .info-label {
+    width: 180px;
+    color: #616161;
+    font-weight: 500;
+  }
+  {% comment %} .info-value {
+    flex: 1;
+    color: #212121;
+    font-weight: 400;
+  } {% endcomment %}
+  .card {
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .card-header {
+    border-bottom: none;
+    padding: 1rem 1.25rem;
+  }
+</style>
+    
+                            <!-- Edit Vacancy Modal -->
+<div class="modal fade" id="editVacancyModal{{ vacancy.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
       <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
-              <h5 class="modal-title">
-                  <i class="fas fa-briefcase me-2"></i>Vacancy Details: {{ vacancy.job_profile }}
-              </h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-              <!-- Basic Information Card -->
-              <div class="card mb-4">
-                  <div class="card-header bg-light">
-                      <h6 class="mb-0">
-                          <i class="fas fa-info-circle me-2"></i>Basic Information
-                      </h6>
+          <form method="post" action="{% url 'admin_company_profile' company.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="vacancy_id" value="{{ vacancy.id }}">
+              <div class="modal-header">
+                  <h5 class="modal-title">Edit Vacancy</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                  <div class="row">
+                      <div class="col-md-6 mb-3">
+                          <label class="form-label">Job Profile</label>
+                          <input type="text" class="form-control" name="job_profile" value="{{ vacancy.job_profile }}" required>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                          <label class="form-label">Vacancy Code</label>
+                          <input type="text" class="form-control" name="company_vacancy_unique_code" value="{{ vacancy.company_vacancy_unique_code }}" required>
+                      </div>
                   </div>
-                  <div class="card-body">
-                      <div class="row">
-                          <div class="col-md-6">
-                              <div class="d-flex mb-3">
-                                  <div style="width: 150px;"><strong>Vacancy Code:</strong></div>
-                                  <div>{{ vacancy.company_vacancy_unique_code }}</div>
-                              </div>
-                              <div class="d-flex mb-3">
-                                  <div style="width: 150px;"><strong>Status:</strong></div>
-                                  <div>
-                                      <span class="badge text-white {% if vacancy.vacancy_status == 'Active' %}bg-success{% elif vacancy.vacancy_status == 'Closed' %}bg-danger{% else %}bg-warning{% endif %}">
-                                          {{ vacancy.vacancy_status }}
-                                      </span>
+                  
+                  <div class="row">
+                      <div class="col-md-6 mb-3">
+                          <label class="form-label">Payroll</label>
+                          <input type="text" class="form-control" name="payroll" value="{{ vacancy.payroll }}">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                          <label class="form-label">Status</label>
+                          <select class="form-select" name="vacancy_status">
+                              <option value="Active" {% if vacancy.vacancy_status == 'Active' %}selected{% endif %}>Active</option>
+                              <option value="Pending" {% if vacancy.vacancy_status == 'Pending' %}selected{% endif %}>Pending</option>
+                              <option value="Closed" {% if vacancy.vacancy_status == 'Closed' %}selected{% endif %}>Closed</option>
+                          </select>
+                      </div>
+                  </div>
+                  
+                  <div class="row">
+                      <div class="col-md-6 mb-3">
+                          <label class="form-label">Opening Date</label>
+                          <input type="date" class="form-control" name="vacancy_opening_date" value="{{ vacancy.vacancy_opening_date|date:'Y-m-d' }}">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                          <label class="form-label">Closing Date</label>
+                          <input type="date" class="form-control" name="vacancy_closing_date" value="{{ vacancy.vacancy_closing_date|date:'Y-m-d'|default:'' }}">
+                      </div>
+                  </div>
+                  
+                  <div class="row">
+                      <div class="col-md-6 mb-3">
+                          <label class="form-label">Sector Type</label>
+                          <select class="form-select" name="sector_type">
+                              {% for sector in job_sectors %}
+                              <option value="{{ sector }}" {% if vacancy.sector_type == sector %}selected{% endif %}>{{ sector }}</option>
+                              {% endfor %}
+                          </select>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                          <label class="form-label">Department</label>
+                          <select class="form-select" name="department_name">
+                              {% for dept in departments %}
+                              <option value="{{ dept }}" {% if vacancy.department_name == dept %}selected{% endif %}>{{ dept }}</option>
+                              {% endfor %}
+                          </select>
+                      </div>
+                  </div>
+                  
+                  <div class="row">
+                      <div class="col-md-6 mb-3">
+                          <label class="form-label">Minimum Salary</label>
+                          <input type="number" class="form-control" name="minimum_salary_range" value="{{ vacancy.minimum_salary_range }}" step="0.1">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                          <label class="form-label">Maximum Salary</label>
+                          <input type="number" class="form-control" name="maximum_salary_range" value="{{ vacancy.maximum_salary_range }}" step="0.1">
+                      </div>
+                  </div>
+                  
+                  <div class="row">
+                      <div class="col-md-6 mb-3">
+                          <label class="form-label">Minimum Experience (years)</label>
+                          <input type="number" class="form-control" name="minimum_experience" value="{{ vacancy.minimum_experience }}" step="0.1">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                          <label class="form-label">Maximum Experience (years)</label>
+                          <input type="number" class="form-control" name="maximum_experience" value="{{ vacancy.maximum_experience }}" step="0.1">
+                      </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                      <label class="form-label">Special Instructions</label>
+                      <textarea class="form-control" name="special_instruction" rows="3">{{ vacancy.special_instruction }}</textarea>
+                  </div>
+                  
+                  <!-- Payment Section -->
+                  <div class="card mt-4">
+                      <div class="card-header bg-primary text-white">
+                          <h5 class="mb-0">Payment Details</h5>
+                      </div>
+                      <div class="card-body">
+                          <div class="row">
+                              <div class="col-md-6">
+                                  <div class="mb-3">
+                                      <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+                                      <select name="payment_mode" class="form-select" id="paymentModeSelectEdit{{ vacancy.id }}" required>
+                                          <option value="">Select Payment Mode</option>
+                                          <option value="Company Pay" {% if vacancy.payment_mode == 'Company Pay' %}selected{% endif %}>Company Pay</option>
+                                          <option value="Salary Deduction" {% if vacancy.payment_mode == 'Salary Deduction' %}selected{% endif %}>Salary Deduction</option>
+                                          <option value="SPDC/Candidate Pay" {% if vacancy.payment_mode == 'SPDC/Candidate Pay' %}selected{% endif %}>SPDC/Candidate Pay</option>
+                                      </select>
                                   </div>
                               </div>
-                              <div class="d-flex mb-3">
-                                  <div style="width: 150px;"><strong>Department:</strong></div>
-                                  <div>{{ vacancy.department_name }}</div>
+                          </div>
+                          
+                          <!-- Company Pay Fields -->
+                          <div id="companyPayFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'Company Pay' %}block{% else %}none{% endif %};">
+                              <div class="row">
+                                  <div class="col-md-6">
+                                      <div class="mb-3">
+                                          <label class="form-label">Payment Type <span class="text-danger">*</span></label>
+                                          <select name="company_pay_type" class="form-select" id="companyPayTypeSelectEdit{{ vacancy.id }}" {% if vacancy.payment_mode == 'Company Pay' %}required{% endif %}>
+                                              <option value="">Select Type</option>
+                                              <option value="Flat" {% if vacancy.company_pay_type == 'Flat' %}selected{% endif %}>Flat</option>
+                                              <option value="Percentage of CTC" {% if vacancy.company_pay_type == 'Percentage of CTC' %}selected{% endif %}>% of CTC</option>
+                                              <option value="Pay as per days" {% if vacancy.company_pay_type == 'Pay as per days' %}selected{% endif %}>Pay as per days</option>
+                                          </select>
+                                      </div>
+                                  </div>
+                              </div>
+                              
+                              <!-- Flat Amount Field -->
+                              <div class="row" id="flatAmountFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Flat' %}block{% else %}none{% endif %};">
+                                  <div class="col-md-6">
+                                      <div class="mb-3">
+                                          <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
+                                          <input type="text" name="flat_amount" class="form-control"  
+                                                 value="{{ vacancy.flat_amount|default:'' }}" {% if vacancy.company_pay_type == 'Flat' %}required{% endif %}>
+                                      </div>
+                                  </div>
+                              </div>
+                              
+                              <!-- Percentage of CTC Field -->
+                              <div class="row" id="percentageCtcFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Percentage of CTC' %}block{% else %}none{% endif %};">
+                                  <div class="col-md-6">
+                                      <div class="mb-3">
+                                          <label class="form-label">Percentage of CTC <span class="text-danger">*</span></label>
+                                          <input type="number" name="percentage_of_ctc" class="form-control" min="0" max="100" step="0.01" 
+                                                 value="{{ vacancy.percentage_of_ctc|default:'' }}" {% if vacancy.company_pay_type == 'Percentage of CTC' %}required{% endif %}>
+                                          <small class="text-muted">Enter percentage value (e.g., 10 for 10%)</small>
+                                      </div>
+                                  </div>
+                              </div>
+                              
+                              <!-- Pay per Days Field -->
+                              <div class="row" id="payPerDaysFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Pay as per days' %}block{% else %}none{% endif %};">
+                                  <div class="col-md-6">
+                                      <div class="mb-3">
+                                          <label class="form-label">Number of Days <span class="text-danger">*</span></label>
+                                          <input type="number" name="pay_per_days" class="form-control" min="1" 
+                                                 value="{{ vacancy.pay_per_days|default:'' }}" {% if vacancy.company_pay_type == 'Pay as per days' %}required{% endif %}>
+                                      </div>
+                                  </div>
                               </div>
                           </div>
-                          <div class="col-md-6">
-                              <div class="d-flex mb-3">
-                                  <div style="width: 150px;"><strong>Opening Date:</strong></div>
-                                  <div>{{ vacancy.vacancy_opening_date|date:"d M Y" }}</div>
+                          
+                          <!-- Salary Deduction Fields -->
+                          <div class="row" id="salaryDeductionFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'Salary Deduction' %}block{% else %}none{% endif %};">
+                              <div class="col-md-6">
+                                  <div class="mb-3">
+                                      <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
+                                      <input type="date" name="salary_transfer_date" class="form-control" 
+                                             value="{{ vacancy.salary_transfer_date|date:'Y-m-d'|default:'' }}" {% if vacancy.payment_mode == 'Salary Deduction' %}required{% endif %}>
+                                  </div>
                               </div>
-                              <div class="d-flex mb-3">
-                                  <div style="width: 150px;"><strong>Closing Date:</strong></div>
-                                  <div>{{ vacancy.vacancy_closing_date|date:"d M Y"|default:"-" }}</div>
+                              <div class="col-md-6">
+                                  <div class="mb-3">
+                                      <label class="form-label">Expected Payment Date <span class="text-danger">*</span></label>
+                                      <input type="date" name="expected_payment_date" class="form-control" 
+                                             value="{{ vacancy.expected_payment_date|date:'Y-m-d'|default:'' }}" {% if vacancy.payment_mode == 'Salary Deduction' %}required{% endif %}>
+                                  </div>
                               </div>
-                              <div class="d-flex mb-3">
-                                  <div style="width: 150px;"><strong>Payroll:</strong></div>
-                                  <div>{{ vacancy.payroll }}</div>
+                          </div>
+                          
+                          <!-- SPDC/Candidate Pay Fields -->
+                          <div class="row" id="spdcFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'SPDC/Candidate Pay' %}block{% else %}none{% endif %};">
+                              <div class="col-md-6">
+                                  <div class="mb-3">
+                                      <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
+                                      <input type="date" name="candidate_salary_transfer_date" class="form-control" 
+                                             value="{{ vacancy.candidate_salary_transfer_date|date:'Y-m-d'|default:'' }}" {% if vacancy.payment_mode == 'SPDC/Candidate Pay' %}required{% endif %}>
+                                  </div>
                               </div>
                           </div>
                       </div>
                   </div>
               </div>
-
-              <!-- Salary and Experience Card -->
-              <div class="card mb-4">
-                  <div class="card-header bg-light">
-                      <h6 class="mb-0">
-                          <i class="fas fa-money-bill-wave me-2"></i>Salary & Experience
-                      </h6>
-                  </div>
-                  <div class="card-body">
-                      <div class="row">
-                          <div class="col-md-6">
-                              <div class="d-flex mb-3">
-                                  <div style="width: 180px;"><strong>Salary Range:</strong></div>
-                                  <div>
-                                      ₹{{ vacancy.minimum_salary_range }} - ₹{{ vacancy.maximum_salary_range }}
-                                  </div>
-                              </div>
-                              <div class="d-flex mb-3">
-                                  <div style="width: 180px;"><strong>Sector Type:</strong></div>
-                                  <div>{{ vacancy.sector_type }}</div>
-                              </div>
-                          </div>
-                          <div class="col-md-6">
-                              <div class="d-flex mb-3">
-                                  <div style="width: 180px;"><strong>Experience Required:</strong></div>
-                                  <div>
-                                      {{ vacancy.minimum_experience|default:"0" }} - {{ vacancy.maximum_experience }} years
-                                  </div>
-                              </div>
-                              <div class="d-flex mb-3">
-                                  <div style="width: 180px;"><strong>Education:</strong></div>
-                                  <div>
-                                      {{ vacancy.minimum_education_qualification }}
-                                      {% if vacancy.specialization %}
-                                          ({{ vacancy.specialization }})
-                                      {% endif %}
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="submit" class="btn btn-primary" name="edit_vacancy">Save changes</button>
               </div>
-
-              <!-- Additional Information Card -->
-              <div class="card mb-3">
-                  <div class="card-header bg-light">
-                      <h6 class="mb-0">
-                          <i class="fas fa-clipboard-list me-2"></i>Additional Information
-                      </h6>
-                  </div>
-                  <div class="card-body">
-                      <div class="mb-3">
-                          <h6 class="mb-2"><strong>Special Instructions:</strong></h6>
-                          <div class="p-3 bg-light rounded">
-                              {{ vacancy.special_instruction|default:"No special instructions provided"|linebreaks }}
-                          </div>
-                      </div>
-                      {% if vacancy.company_usp %}
-                      <div class="mb-3">
-                          <h6 class="mb-2"><strong>Company USP:</strong></h6>
-                          <p>{{ vacancy.company_usp }}</p>
-                      </div>
-                      {% endif %}
-                  </div>
-              </div>
-          </div>
-          <div class="modal-footer">
-              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                  <i class="fas fa-times me-1"></i> Close
-              </button>
-              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editVacancyModal{{ vacancy.id }}" data-bs-dismiss="modal">
-                  <i class="fas fa-edit me-1"></i> Edit
-              </button>
-          </div>
+          </form>
       </div>
   </div>
 </div>
-    
-                            <!-- Edit Vacancy Modal -->
-                            <div class="modal fade" id="editVacancyModal{{ vacancy.id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <form method="post" action="{% url 'admin_company_profile' company.id %}">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="vacancy_id" value="{{ vacancy.id }}">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Edit Vacancy</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Job Profile</label>
-                                                        <input type="text" class="form-control" name="job_profile" value="{{ vacancy.job_profile }}" required>
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Vacancy Code</label>
-                                                        <input type="text" class="form-control" name="company_vacancy_unique_code" value="{{ vacancy.company_vacancy_unique_code }}" required>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Status</label>
-                                                        <select class="form-select" name="vacancy_status">
-                                                            <option value="Active" {% if vacancy.vacancy_status == 'Active' %}selected{% endif %}>Active</option>
-                                                            <option value="Pending" {% if vacancy.vacancy_status == 'Pending' %}selected{% endif %}>Pending</option>
-                                                            <option value="Closed" {% if vacancy.vacancy_status == 'Closed' %}selected{% endif %}>Closed</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Payroll</label>
-                                                        <input type="text" class="form-control" name="payroll" value="{{ vacancy.payroll }}">
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Opening Date</label>
-                                                        <input type="date" class="form-control" name="vacancy_opening_date" value="{{ vacancy.vacancy_opening_date|date:'Y-m-d' }}">
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Closing Date</label>
-                                                        <input type="date" class="form-control" name="vacancy_closing_date" value="{{ vacancy.vacancy_closing_date|date:'Y-m-d'|default:'' }}">
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Sector Type</label>
-                                                        <select class="form-select" name="sector_type">
-                                                            {% for sector in job_sectors %}
-                                                            <option value="{{ sector }}" {% if vacancy.sector_type == sector %}selected{% endif %}>{{ sector }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Department</label>
-                                                        <select class="form-select" name="department_name">
-                                                            {% for dept in departments %}
-                                                            <option value="{{ dept }}" {% if vacancy.department_name == dept %}selected{% endif %}>{{ dept }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Minimum Salary</label>
-                                                        <input type="number" class="form-control" name="minimum_salary_range" value="{{ vacancy.minimum_salary_range }}" step="0.1">
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Maximum Salary</label>
-                                                        <input type="number" class="form-control" name="maximum_salary_range" value="{{ vacancy.maximum_salary_range }}" step="0.1">
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Minimum Experience (years)</label>
-                                                        <input type="number" class="form-control" name="minimum_experience" value="{{ vacancy.minimum_experience }}" step="0.1">
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Maximum Experience (years)</label>
-                                                        <input type="number" class="form-control" name="maximum_experience" value="{{ vacancy.maximum_experience }}" step="0.1">
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="mb-3">
-                                                    <label class="form-label">Special Instructions</label>
-                                                    <textarea class="form-control" name="special_instruction" rows="3">{{ vacancy.special_instruction }}</textarea>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary" name="edit_vacancy">Save changes</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Payment mode change handler for edit modal
+  const paymentModeSelectEdit = document.getElementById('paymentModeSelectEdit{{ vacancy.id }}');
+  const companyPayFieldsEdit = document.getElementById('companyPayFieldsEdit{{ vacancy.id }}');
+  const salaryDeductionFieldsEdit = document.getElementById('salaryDeductionFieldsEdit{{ vacancy.id }}');
+  const spdcFieldsEdit = document.getElementById('spdcFieldsEdit{{ vacancy.id }}');
+  
+  if (paymentModeSelectEdit) {
+      paymentModeSelectEdit.addEventListener('change', function() {
+          // Hide all fields first
+          companyPayFieldsEdit.style.display = 'none';
+          salaryDeductionFieldsEdit.style.display = 'none';
+          spdcFieldsEdit.style.display = 'none';
+          
+          // Reset company pay type fields
+          document.getElementById('companyPayTypeSelectEdit{{ vacancy.id }}').value = '';
+          document.getElementById('flatAmountFieldEdit{{ vacancy.id }}').style.display = 'none';
+          document.getElementById('percentageCtcFieldEdit{{ vacancy.id }}').style.display = 'none';
+          document.getElementById('payPerDaysFieldEdit{{ vacancy.id }}').style.display = 'none';
+          
+          // Show relevant fields based on selection
+          if (this.value === 'Company Pay') {
+              companyPayFieldsEdit.style.display = 'block';
+          } else if (this.value === 'Salary Deduction') {
+              salaryDeductionFieldsEdit.style.display = 'block';
+          } else if (this.value === 'SPDC/Candidate Pay') {
+              spdcFieldsEdit.style.display = 'block';
+          }
+      });
+  }
+  
+  // Company pay type change handler for edit modal
+  const companyPayTypeSelectEdit = document.getElementById('companyPayTypeSelectEdit{{ vacancy.id }}');
+  if (companyPayTypeSelectEdit) {
+      companyPayTypeSelectEdit.addEventListener('change', function() {
+          // Hide all fields first
+          document.getElementById('flatAmountFieldEdit{{ vacancy.id }}').style.display = 'none';
+          document.getElementById('percentageCtcFieldEdit{{ vacancy.id }}').style.display = 'none';
+          document.getElementById('payPerDaysFieldEdit{{ vacancy.id }}').style.display = 'none';
+          
+          // Show relevant field based on selection
+          if (this.value === 'Flat') {
+              document.getElementById('flatAmountFieldEdit{{ vacancy.id }}').style.display = 'block';
+          } else if (this.value === 'Percentage of CTC') {
+              document.getElementById('percentageCtcFieldEdit{{ vacancy.id }}').style.display = 'block';
+          } else if (this.value === 'Pay as per days') {
+              document.getElementById('payPerDaysFieldEdit{{ vacancy.id }}').style.display = 'block';
+          }
+      });
+  }
+  
+  // Date validation for salary transfer and expected payment dates
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelector('[name="salary_transfer_date"]')?.setAttribute('min', today);
+  document.querySelector('[name="expected_payment_date"]')?.setAttribute('min', today);
+  document.querySelector('[name="candidate_salary_transfer_date"]')?.setAttribute('min', today);
+});
+</script>
     
                             <!-- Delete Vacancy Modal -->
                             <div class="modal fade" id="deleteVacancyModal{{ vacancy.id }}" tabindex="-1" aria-hidden="true">
@@ -920,6 +1212,103 @@
               </div>
             </div>
           </div>
+
+          <!-- New Payment Section -->
+          <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Payment Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+                            <select name="payment_mode" class="form-select" id="paymentModeSelect" required>
+                                <option value="">Select Payment Mode</option>
+                                <option value="Company Pay">Company Pay</option>
+                                <option value="Salary Deduction">Salary Deduction</option>
+                                <option value="SPDC/Candidate Pay">SPDC/Candidate Pay</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Company Pay Fields -->
+                <div id="companyPayFields" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Payment Type <span class="text-danger">*</span></label>
+                                <select name="company_pay_type" class="form-select" id="companyPayTypeSelect" required>
+                                    <option value="">Select Type</option>
+                                    <option value="Flat">Flat</option>
+                                    <option value="Percentage of CTC">% of CTC</option>
+                                    <option value="Pay as per days">Pay as per days</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Flat Amount Field -->
+                    <div class="row" id="flatAmountField" style="display: none;">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
+                                <input type="text" name="flat_amount" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Percentage of CTC Field -->
+                    <div class="row" id="percentageCtcField" style="display: none;">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Percentage of CTC <span class="text-danger">*</span></label>
+                                <input type="number" name="percentage_of_ctc" class="form-control" min="0" max="100" step="0.01">
+                                <small class="text-muted">Enter percentage value (e.g., 10 for 10%)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pay per Days Field -->
+                    <div class="row" id="payPerDaysField" style="display: none;">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Number of Days <span class="text-danger">*</span></label>
+                                <input type="number" name="pay_per_days" class="form-control" min="1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Salary Deduction Fields -->
+                <div class="row" id="salaryDeductionFields" style="display: none;">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
+                            <input type="date" name="salary_transfer_date" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Expected Payment Date <span class="text-danger">*</span></label>
+                            <input type="date" name="expected_payment_date" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- SPDC/Candidate Pay Fields -->
+                <div class="row" id="spdcFields" style="display: none;">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
+                            <input type="date" name="candidate_salary_transfer_date" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button type="submit" class="btn btn-primary">Add Vacancy</button>
@@ -929,68 +1318,6 @@
     </div>
   </div>
 
-  {% comment %} {% for vacancy in company.vacancies.all %}
-  <div class="modal fade" id="editVacancyModal{{ vacancy.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Vacancy</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <form method="POST">
-          {% csrf_token %}
-          <input type="hidden" name="vacancy_id" value="{{ vacancy.id }}">
-          <input type="hidden" name="update_vacancy" value="true">
-          
-          <div class="modal-body">
-            <div class="row">
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label class="form-label">Job Profile</label>
-                  <input type="text" class="form-control" name="job_profile" value="{{ vacancy.job_profile }}" required>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label class="form-label">Vacancy Code</label>
-                  <input type="text" class="form-control" name="company_vacancy_unique_code" value="{{ vacancy.company_vacancy_unique_code }}" required>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="mb-3">
-                  <label class="form-label">Opening Date</label>
-                  <input type="date" class="form-control" name="vacancy_opening_date" 
-                         value="{{ vacancy.vacancy_opening_date|date:'Y-m-d' }}" required>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="mb-3">
-                  <label class="form-label">Closing Date</label>
-                  <input type="date" class="form-control" name="vacancy_closing_date" 
-                         value="{{ vacancy.vacancy_closing_date|date:'Y-m-d'|default:'' }}">
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="mb-3">
-                  <label class="form-label">Status</label>
-                  <select name="vacancy_status" class="form-select" required>
-                    <option value="Pending" {% if vacancy.vacancy_status == 'Pending' %}selected{% endif %}>Pending</option>
-                    <option value="Active" {% if vacancy.vacancy_status == 'Active' %}selected{% endif %}>Active</option>
-                    <option value="Closed" {% if vacancy.vacancy_status == 'Closed' %}selected{% endif %}>Closed</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary">Update Vacancy</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-  {% endfor %} {% endcomment %}
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -1064,5 +1391,114 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 </script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+      // Payment mode change handler
+      const paymentModeSelect = document.getElementById('paymentModeSelect');
+      const companyPayFields = document.getElementById('companyPayFields');
+      const salaryDeductionFields = document.getElementById('salaryDeductionFields');
+      const spdcFields = document.getElementById('spdcFields');
+      
+      paymentModeSelect.addEventListener('change', function() {
+          // Hide all fields first
+          companyPayFields.style.display = 'none';
+          salaryDeductionFields.style.display = 'none';
+          spdcFields.style.display = 'none';
+          
+          // Reset company pay type fields
+          document.getElementById('companyPayTypeSelect').value = '';
+          document.getElementById('flatAmountField').style.display = 'none';
+          document.getElementById('percentageCtcField').style.display = 'none';
+          document.getElementById('payPerDaysField').style.display = 'none';
+          
+          // Show relevant fields based on selection
+          if (this.value === 'Company Pay') {
+              companyPayFields.style.display = 'block';
+          } else if (this.value === 'Salary Deduction') {
+              salaryDeductionFields.style.display = 'block';
+          } else if (this.value === 'SPDC/Candidate Pay') {
+              spdcFields.style.display = 'block';
+          }
+      });
+      
+      // Company pay type change handler
+      const companyPayTypeSelect = document.getElementById('companyPayTypeSelect');
+      companyPayTypeSelect.addEventListener('change', function() {
+          // Hide all fields first
+          document.getElementById('flatAmountField').style.display = 'none';
+          document.getElementById('percentageCtcField').style.display = 'none';
+          document.getElementById('payPerDaysField').style.display = 'none';
+          
+          // Show relevant field based on selection
+          if (this.value === 'Flat') {
+              document.getElementById('flatAmountField').style.display = 'block';
+          } else if (this.value === 'Percentage of CTC') {
+              document.getElementById('percentageCtcField').style.display = 'block';
+          } else if (this.value === 'Pay as per days') {
+              document.getElementById('payPerDaysField').style.display = 'block';
+          }
+      });
+      
+      // Form validation
+      document.getElementById('vacancyForm').addEventListener('submit', function(e) {
+          const paymentMode = paymentModeSelect.value;
+          const companyPayType = document.getElementById('companyPayTypeSelect').value;
+          
+          // Validate payment mode selection
+          if (!paymentMode) {
+              alert('Please select a payment mode');
+              e.preventDefault();
+              return;
+          }
+          
+          // Validate fields based on payment mode
+          if (paymentMode === 'Company Pay') {
+              if (!companyPayType) {
+                  alert('Please select a company pay type');
+                  e.preventDefault();
+                  return;
+              }
+              
+              if (companyPayType === 'Flat' && !document.querySelector('[name="flat_amount"]').value) {
+                  alert('Please enter flat amount');
+                  e.preventDefault();
+                  return;
+              }
+              
+              if (companyPayType === 'Percentage of CTC' && !document.querySelector('[name="percentage_of_ctc"]').value) {
+                  alert('Please enter percentage of CTC');
+                  e.preventDefault();
+                  return;
+              }
+              
+              if (companyPayType === 'Pay as per days' && !document.querySelector('[name="pay_per_days"]').value) {
+                  alert('Please enter number of days');
+                  e.preventDefault();
+                  return;
+              }
+          } else if (paymentMode === 'Salary Deduction') {
+              if (!document.querySelector('[name="salary_transfer_date"]').value || 
+                  !document.querySelector('[name="expected_payment_date"]').value) {
+                  alert('Please fill all required fields for Salary Deduction');
+                  e.preventDefault();
+                  return;
+              }
+          } else if (paymentMode === 'SPDC/Candidate Pay') {
+              if (!document.querySelector('[name="candidate_salary_transfer_date"]').value) {
+                  alert('Please enter salary transfer date');
+                  e.preventDefault();
+                  return;
+              }
+          }
+      });
+      
+      // Date validation for salary transfer and expected payment dates
+      const today = new Date().toISOString().split('T')[0];
+      document.querySelector('[name="salary_transfer_date"]').min = today;
+      document.querySelector('[name="expected_payment_date"]').min = today;
+      document.querySelector('[name="candidate_salary_transfer_date"]').min = today;
+  });
+  </script>
 
 {% endblock content %}

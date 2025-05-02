@@ -103,11 +103,11 @@
                     <td>{{ meeting.location }}</td>
                     <td>
                       {% if meeting.is_completed %}
-                        <span class="badge bg-success">Completed</span>
+                        <span class="badge bg-success text-white">Completed</span>
                       {% elif meeting.date < today %}
-                        <span class="badge bg-secondary">Expired</span>
+                        <span class="badge bg-secondary text-white">Expired</span>
                       {% else %}
-                        <span class="badge bg-orange">Upcoming</span>
+                        <span class="badge bg-orange text-white">Upcoming</span>
                       {% endif %}
                     </td>
                     <td class="text-center">

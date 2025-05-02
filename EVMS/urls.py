@@ -29,6 +29,7 @@ urlpatterns = [
     path('reset-password-otp/', reset_password_otp, name='reset_password_otp'),
     path('reset-password/', reset_password_form, name='reset_password_form'),
     path('resend-reset-otp/', resend_reset_otp, name='resend_reset_otp'),
+    path('sitemap.xml/', sitemap_view, name='sitemap_view'),
                
     
     path('admin/', admin.site.urls),

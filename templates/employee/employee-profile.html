@@ -16,7 +16,7 @@
     }
     .card-body .btn {
       background-color: #6c63ff;
-      color: #fff;
+      color: #fff; 
       font-weight: 500;
     }
     .card-body .btn:hover {
@@ -423,47 +423,63 @@ document.addEventListener('DOMContentLoaded', function() {
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="POST" enctype="multipart/form-data">
+          <form method="POST" enctype="multipart/form-data" id="profileForm" novalidate>
             {% csrf_token %}
             <div class="row">
               <!-- Employee Fields -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">First Name <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="first_name" value="{{ employee.first_name }}" required />
+                <input type="text" class="form-control" name="first_name" value="{{ employee.first_name }}" 
+                       pattern="[A-Za-z ]+" title="Only letters and spaces allowed" required />
+                <div class="invalid-feedback">Please provide a valid first name (letters only).</div>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="last_name" value="{{ employee.last_name }}" required />
+                <input type="text" class="form-control" name="last_name" value="{{ employee.last_name }}" 
+                       pattern="[A-Za-z ]+" title="Only letters and spaces allowed" required />
+                <div class="invalid-feedback">Please provide a valid last name (letters only).</div>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="contact_number" value="{{ employee.contact_number }}" required />
+                <input type="tel" class="form-control" name="contact_number" value="{{ employee.contact_number }}" 
+                       pattern="[0-9]{10,15}" title="10-15 digit phone number" required />
+                <div class="invalid-feedback">Please provide a valid phone number (10-15 digits).</div>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Email <span class="text-danger">*</span></label>
                 <input type="email" class="form-control" name="email" value="{{ employee.user.email }}" required />
+                <div class="invalid-feedback">Please provide a valid email address.</div>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Joining Date <span class="text-danger">*</span></label>
-                <input type="date" class="form-control" name="joining_date" value="{{ employee.joining_date|date:'Y-m-d' }}" required />
+                <input type="date" class="form-control" name="joining_date" 
+                       value="{{ employee.joining_date|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" required />
+                <div class="invalid-feedback">Please select a valid joining date (not in the future).</div>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Employee Photo <span class="text-danger">*</span></label>
-                <input type="file" class="form-control" name="employee_photo" />
+                <input type="file" class="form-control" name="employee_photo" 
+                       accept="image/*" {% if not employee.employee_photo %}required{% endif %} />
+                <div class="invalid-feedback">Please upload a valid image file.</div>
               </div>
           
               <!-- EmployeeAdditionalInfo Fields -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Date Of Birth <span class="text-danger">*</span></label>
-                <input type="date" class="form-control" name="date_of_birth" value="{{ additional_info.date_of_birth|date:'Y-m-d' }}" required/>
+                <input type="date" class="form-control" name="date_of_birth" 
+                       value="{{ additional_info.date_of_birth|date:'Y-m-d' }}" 
+                       max="{{ min_birth_date|date:'Y-m-d' }}" required />
+                <div class="invalid-feedback">Please select a valid date of birth.</div>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Gender</label>
-                <select class="form-select" name="gender">
+                <select class="form-select" name="gender" required>
+                  <option value="">Select Gender</option>
                   <option value="Male" {% if additional_info.gender == "Male" %}selected{% endif %}>Male</option>
                   <option value="Female" {% if additional_info.gender == "Female" %}selected{% endif %}>Female</option>
                   <option value="Other" {% if additional_info.gender == "Other" %}selected{% endif %}>Other</option>
                 </select>
+                <div class="invalid-feedback">Please select a gender.</div>
               </div>
             </div>
           
@@ -472,9 +488,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <button type="submit" name="submit_employee_details" class="btn btn-primary">Save Changes</button>
             </div>
           </form>
-          
         </div>
-        
       </div>
     </div>
   </div>
@@ -489,51 +503,58 @@ document.addEventListener('DOMContentLoaded', function() {
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="post">
+          <form method="post" id="addressForm" novalidate>
             {% csrf_token %}
             <div class="row">
-            <div class="col-md-6 mb-3">
+              <div class="col-md-6 mb-3">
                 <label class="form-label">Permanent Address <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="permanent_address" 
-                       value="{{ address_details.permanent_address }}" required>
-            </div>
-            <div class="col-md-6 mb-3">
+                       value="{{ address_details.permanent_address }}" minlength="10" required>
+                <div class="invalid-feedback">Please provide a valid permanent address (at least 10 characters).</div>
+              </div>
+              <div class="col-md-6 mb-3">
                 <label class="form-label">Present Address <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="present_address" 
-                       value="{{ address_details.present_address }}" required>
-            </div>
-            <div class="col-md-6 mb-3">
+                       value="{{ address_details.present_address }}" minlength="10" required>
+                <div class="invalid-feedback">Please provide a valid present address (at least 10 characters).</div>
+              </div>
+              <div class="col-md-6 mb-3">
                 <label class="form-label">City<span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="city" 
-                       value="{{ address_details.city }}" required>
-            </div>
-            <div class="col-md-6 mb-3">
+                       value="{{ address_details.city }}" pattern="[A-Za-z ]+" required>
+                <div class="invalid-feedback">Please provide a valid city name (letters only).</div>
+              </div>
+              <div class="col-md-6 mb-3">
                 <label class="form-label">State<span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="state" 
-                       value="{{ address_details.state }}">
-            </div>
-            <div class="col-md-6 mb-3">
+                       value="{{ address_details.state }}" pattern="[A-Za-z ]+" required>
+                <div class="invalid-feedback">Please provide a valid state name (letters only).</div>
+              </div>
+              <div class="col-md-6 mb-3">
                 <label class="form-label">Country<span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="country" 
-                       value="{{ address_details.country }}" >
-            </div>
-            <div class="col-md-6 mb-3">
+                       value="{{ address_details.country }}" pattern="[A-Za-z ]+" required>
+                <div class="invalid-feedback">Please provide a valid country name (letters only).</div>
+              </div>
+              <div class="col-md-6 mb-3">
                 <label class="form-label">ZIP Code <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="zip_code" 
-                       value="{{ address_details.zip_code }}" >
+                       value="{{ address_details.zip_code }}" pattern="[0-9]{5,10}" required>
+                <div class="invalid-feedback">Please provide a valid ZIP code (5-10 digits).</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Nationality<span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="nationality" 
+                       value="{{ address_details.nationality }}" pattern="[A-Za-z ]+" required>
+                <div class="invalid-feedback">Please provide a valid nationality (letters only).</div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" name="submit_address_details" class="btn btn-primary">Save Changes</button>
+              </div>
             </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Nationality<span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="nationality" 
-                     value="{{ address_details.nationality }}" >
-          </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" name="submit_address_details" class="btn btn-primary">Save Changes</button>
-            </div>
-        </form>
+          </form>
         </div>
-      </div>
       </div>
     </div>
   </div>
@@ -547,27 +568,38 @@ document.addEventListener('DOMContentLoaded', function() {
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
+          <form method="post" enctype="multipart/form-data" id="documentForm" novalidate>
             {% csrf_token %}
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Document Type</label>
-                    <input type="text" name="document_type" class="form-control" >
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Document Number</label>
-                    <input type="text" name="document_number" class="form-control" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Attech Certificate</label>
-                    <input type="file" name="document_file" class="form-control" >
-                </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Document Type <span class="text-danger">*</span></label>
+                <select class="form-select" name="document_type" required>
+                  <option value="">Select Document Type</option>
+                  <option value="Aadhar">Aadhar</option>
+                  <option value="PAN">PAN</option>
+                  <option value="Passport">Passport</option>
+                  <option value="Driving License">Driving License</option>
+                  <option value="Other">Other</option>
+                </select>
+                <div class="invalid-feedback">Please select a document type.</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Document Number <span class="text-danger">*</span></label>
+                <input type="text" name="document_number" class="form-control" required>
+                <div class="invalid-feedback">Please provide a document number.</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Attach Certificate <span class="text-danger">*</span></label>
+                <input type="file" name="document_file" class="form-control" 
+                       accept=".pdf,.jpg,.jpeg,.png" required>
+                <div class="invalid-feedback">Please upload a valid document (PDF, JPG, PNG).</div>
+              </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
               <button type="submit" name="submit_documents_details" class="btn btn-primary">Save Changes</button>
             </div>
-        </form>
+          </form>
         </div>
       </div>
     </div>
@@ -583,47 +615,58 @@ document.addEventListener('DOMContentLoaded', function() {
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="post">
+          <form method="post" id="bankForm" novalidate>
             {% csrf_token %}
             <div class="row">
-                <!-- Account Holder Name & Bank Name -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Account Holder Name<span class="text-danger">*</span></label>
-                    <input type="text" name="account_holder_name" class="form-control" value="{{ bank_details.account_holder_name }}" required />
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Bank Name <span class="text-danger">*</span></label>
-                    <input type="text" name="bank_name" class="form-control" value="{{ bank_details.bank_name }}" required />
-                </div>
-        
-                <!-- Account Number & Confirm Account Number -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Account Number<span class="text-danger">*</span></label>
-                    <input type="text" name="account_number" class="form-control" value="{{ bank_details.account_number }}" required />
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Confirm Account Number <span class="text-danger">*</span></label>
-                    <input type="text" name="confirm_account_number" class="form-control" value="{{ bank_details.confirm_account_number }}" required />
-                </div>
-        
-                <!-- Branch Name & IFSC Code -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Branch Name<span class="text-danger">*</span></label>
-                    <input type="text" name="branch_name" class="form-control" value="{{ bank_details.branch_name }}" required />
-                </div>
-        
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">IFSC Code <span class="text-danger">*</span></label>
-                    <input type="text" name="ifsc_code" class="form-control" value="{{ bank_details.ifsc_code }}" required />
-                </div>
-        
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" name="submit_bank_account" class="btn btn-primary">Submit</button>
-                </div>
+              <!-- Account Holder Name & Bank Name -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Account Holder Name<span class="text-danger">*</span></label>
+                <input type="text" name="account_holder_name" class="form-control" 
+                       value="{{ bank_details.account_holder_name }}" pattern="[A-Za-z ]+" required />
+                <div class="invalid-feedback">Please provide a valid account holder name (letters only).</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+                <input type="text" name="bank_name" class="form-control" 
+                       value="{{ bank_details.bank_name }}" pattern="[A-Za-z ]+" required />
+                <div class="invalid-feedback">Please provide a valid bank name.</div>
+              </div>
+      
+              <!-- Account Number & Confirm Account Number -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Account Number<span class="text-danger">*</span></label>
+                <input type="text" name="account_number" class="form-control" 
+                       value="{{ bank_details.account_number }}" pattern="[0-9]{9,18}" required />
+                <div class="invalid-feedback">Please provide a valid account number (9-18 digits).</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Confirm Account Number <span class="text-danger">*</span></label>
+                <input type="text" name="confirm_account_number" class="form-control" 
+                       value="{{ bank_details.confirm_account_number }}" pattern="[0-9]{9,18}" required />
+                <div class="invalid-feedback">Please confirm your account number.</div>
+              </div>
+      
+              <!-- Branch Name & IFSC Code -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Branch Name<span class="text-danger">*</span></label>
+                <input type="text" name="branch_name" class="form-control" 
+                       value="{{ bank_details.branch_name }}" required />
+                <div class="invalid-feedback">Please provide a branch name.</div>
+              </div>
+      
+              <div class="col-md-6 mb-3">
+                <label class="form-label">IFSC Code <span class="text-danger">*</span></label>
+                <input type="text" name="ifsc_code" class="form-control" 
+                       value="{{ bank_details.ifsc_code }}" pattern="^[A-Za-z]{4}0[A-Za-z0-9]{6}$" required />
+                <div class="invalid-feedback">Please provide a valid IFSC code (e.g., ABCD0123456).</div>
+              </div>
+      
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" name="submit_bank_account" class="btn btn-primary">Submit</button>
+              </div>
             </div>
-        </form>
-        
+          </form>
         </div>
       </div>
     </div>
@@ -633,49 +676,58 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Add Document Details</h5>
+          <h5 class="modal-title">Add Education Details</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
+          <form method="post" enctype="multipart/form-data" id="educationForm" novalidate>
             {% csrf_token %}
             <div class="row">
-            <div class="col-md-6 mb-3">
+              <div class="col-md-6 mb-3">
                 <label class="form-label">Course Name <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="cource_name"  required>
-            </div>
-            <div class="col-md-6 mb-3">
+                <input type="text" class="form-control" name="cource_name" required>
+                <div class="invalid-feedback">Please provide a course name.</div>
+              </div>
+              <div class="col-md-6 mb-3">
                 <label class="form-label">Institution Name<span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="institution_name" >
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Start Year<span class="text-danger">*</span></label>
-              <input type="number" class="form-control" name="start_year" min="1900" max="2100" required>
-          </div>
-          <div class="col-md-6 mb-3">
-              <label class="form-label">End Year<span class="text-danger">*</span></label>
-              <input type="number" class="form-control" name="end_year" min="1900" max="2100">
-          </div>
-          
-            <div class="col-md-6 mb-3">
+                <input type="text" class="form-control" name="institution_name" required>
+                <div class="invalid-feedback">Please provide an institution name.</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Start Year<span class="text-danger">*</span></label>
+                <input type="number" class="form-control" name="start_year" 
+                       min="1900" max="{% now 'Y' %}" required>
+                <div class="invalid-feedback">Please provide a valid start year (1900-{% now 'Y'}).</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">End Year<span class="text-danger">*</span></label>
+                <input type="number" class="form-control" name="end_year" 
+                       min="1900" max="{% now 'Y' %}" required>
+                <div class="invalid-feedback">Please provide a valid end year (1900-{% now 'Y'}).</div>
+              </div>
+              <div class="col-md-6 mb-3">
                 <label class="form-label">Grade<span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="grade"  >
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Certificate<span class="text-danger">*</span></label>
-              <input type="file" class="form-control" name="education_certificate" >
-          </div>
-            <div class="col-md-6 mb-3">
+                <input type="text" class="form-control" name="grade" required>
+                <div class="invalid-feedback">Please provide a grade.</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Certificate<span class="text-danger">*</span></label>
+                <input type="file" class="form-control" name="education_certificate" 
+                       accept=".pdf,.jpg,.jpeg,.png" required>
+                <div class="invalid-feedback">Please upload a valid certificate (PDF, JPG, PNG).</div>
+              </div>
+              <div class="col-md-12 mb-3">
                 <label class="form-label">Description <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="description"  >
+                <textarea class="form-control" name="description" rows="3" required></textarea>
+                <div class="invalid-feedback">Please provide a description.</div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" name="submit_education_details" class="btn btn-primary">Save Changes</button>
+              </div>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" name="submit_education_details" class="btn btn-primary">Save Changes</button>
-            </div>
-        </form>
+          </form>
         </div>
-      </div>
       </div>
     </div>
   </div>
@@ -688,49 +740,55 @@ document.addEventListener('DOMContentLoaded', function() {
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
+          <form method="post" enctype="multipart/form-data" id="experienceForm" novalidate>
             {% csrf_token %}
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Organization Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="organization_name" required>
-                </div>
-        
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Designation <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="designation_name" required>
-                </div>
-        
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Start Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" name="start_date" required>
-                </div>
-        
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">End Date</label>
-                    <input type="date" class="form-control" name="end_date">
-                </div>
-        
-                
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Experience Certificate</label>
-                  <input type="file" class="form-control" name="experience_certificate">
-                </div>
-                
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Description <span class="text-danger">*</span></label>
-                    <textarea class="form-control" name="description" rows="3" required></textarea>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" name="submit_experience_details" class="btn btn-primary">Save Changes</button>
-                </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Organization Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="organization_name" required>
+                <div class="invalid-feedback">Please provide an organization name.</div>
+              </div>
+      
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Designation <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="designation_name" required>
+                <div class="invalid-feedback">Please provide a designation.</div>
+              </div>
+      
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="start_date" 
+                       max="{% now 'Y-m-d' %}" required>
+                <div class="invalid-feedback">Please select a valid start date (not in the future).</div>
+              </div>
+      
+              <div class="col-md-6 mb-3">
+                <label class="form-label">End Date</label>
+                <input type="date" class="form-control" name="end_date" 
+                       max="{% now 'Y-m-d' %}">
+                <div class="invalid-feedback">Please select a valid end date (not in the future).</div>
+              </div>
+      
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Experience Certificate</label>
+                <input type="file" class="form-control" name="experience_certificate" 
+                       accept=".pdf,.jpg,.jpeg,.png">
+                <div class="invalid-feedback">Please upload a valid certificate (PDF, JPG, PNG).</div>
+              </div>
+              
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea class="form-control" name="description" rows="3" required></textarea>
+                <div class="invalid-feedback">Please provide a description.</div>
+              </div>
+  
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" name="submit_experience_details" class="btn btn-primary">Save Changes</button>
+              </div>
             </div>
-        </form>
-        
+          </form>
         </div>
-      </div>
       </div>
     </div>
   </div>
@@ -743,38 +801,51 @@ document.addEventListener('DOMContentLoaded', function() {
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
+          <form method="post" enctype="multipart/form-data" id="familyForm" novalidate>
             {% csrf_token %}
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Member Name<span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="member_name" required>
-                </div>
-        
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Relation<span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="relation" required>
-                </div>
-        
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Contact Number<span class="text-danger">*</span></label>
-                    <input type="tel" class="form-control" name="contact_number" required>
-                </div>
-        
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Date of Birth</label>
-                    <input type="date" class="form-control" name="date_of_birth">
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" name="sumbit_family_details" class="btn btn-primary">Save Changes</button>
-                </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Member Name<span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="member_name" 
+                       pattern="[A-Za-z ]+" required>
+                <div class="invalid-feedback">Please provide a valid member name (letters only).</div>
+              </div>
+      
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Relation<span class="text-danger">*</span></label>
+                <select class="form-select" name="relation" required>
+                  <option value="">Select Relation</option>
+                  <option value="Father">Father</option>
+                  <option value="Mother">Mother</option>
+                  <option value="Spouse">Spouse</option>
+                  <option value="Son">Son</option>
+                  <option value="Daughter">Daughter</option>
+                  <option value="Other">Other</option>
+                </select>
+                <div class="invalid-feedback">Please select a relation.</div>
+              </div>
+      
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Contact Number<span class="text-danger">*</span></label>
+                <input type="tel" class="form-control" name="contact_number" 
+                       pattern="[0-9]{10,15}" required>
+                <div class="invalid-feedback">Please provide a valid contact number (10-15 digits).</div>
+              </div>
+      
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Date of Birth</label>
+                <input type="date" class="form-control" name="date_of_birth" 
+                       max="{% now 'Y-m-d' %}">
+                <div class="invalid-feedback">Please select a valid date of birth (not in the future).</div>
+              </div>
+  
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" name="sumbit_family_details" class="btn btn-primary">Save Changes</button>
+              </div>
             </div>
-        </form>
-        
+          </form>
         </div>
-      </div>
       </div>
     </div>
   </div>
@@ -809,5 +880,110 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    </script>
+</script>
+
+<script>
+    // Form validation for all forms
+    document.addEventListener('DOMContentLoaded', function() {
+      // Validate all forms with needs-validation class
+      const forms = document.querySelectorAll('form[id$="Form"]');
+      
+      Array.prototype.slice.call(forms).forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          
+          form.classList.add('was-validated');
+        }, false);
+      });
+  
+      // Account number matching validation
+      const bankForm = document.getElementById('bankForm');
+      if (bankForm) {
+        const accountNumber = bankForm.querySelector('input[name="account_number"]');
+        const confirmAccountNumber = bankForm.querySelector('input[name="confirm_account_number"]');
+        
+        function validateAccountMatch() {
+          if (accountNumber.value !== confirmAccountNumber.value) {
+            confirmAccountNumber.setCustomValidity('Account numbers must match');
+          } else {
+            confirmAccountNumber.setCustomValidity('');
+          }
+        }
+        
+        accountNumber.addEventListener('input', validateAccountMatch);
+        confirmAccountNumber.addEventListener('input', validateAccountMatch);
+      }
+  
+      // Date validation for education form
+      const educationForm = document.getElementById('educationForm');
+      if (educationForm) {
+        const startYear = educationForm.querySelector('input[name="start_year"]');
+        const endYear = educationForm.querySelector('input[name="end_year"]');
+        
+        function validateEducationYears() {
+          if (parseInt(startYear.value) > parseInt(endYear.value)) {
+            endYear.setCustomValidity('End year must be after start year');
+          } else {
+            endYear.setCustomValidity('');
+          }
+        }
+        
+        startYear.addEventListener('input', validateEducationYears);
+        endYear.addEventListener('input', validateEducationYears);
+      }
+  
+      // Date validation for experience form
+      const experienceForm = document.getElementById('experienceForm');
+      if (experienceForm) {
+        const startDate = experienceForm.querySelector('input[name="start_date"]');
+        const endDate = experienceForm.querySelector('input[name="end_date"]');
+        
+        function validateExperienceDates() {
+          if (endDate.value && new Date(startDate.value) > new Date(endDate.value)) {
+            endDate.setCustomValidity('End date must be after start date');
+          } else {
+            endDate.setCustomValidity('');
+          }
+        }
+        
+        startDate.addEventListener('input', validateExperienceDates);
+        endDate.addEventListener('input', validateExperienceDates);
+      }
+    });
+  
+    // Experience duration calculation (your existing code)
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll("tr").forEach(row => {
+        let startTd = row.querySelector(".experience-duration");
+        let experienceTd = row.querySelector(".total-experience");
+  
+        if (startTd && experienceTd) {
+          let startDate = new Date(startTd.dataset.start);
+          let endDate = startTd.dataset.end ? new Date(startTd.dataset.end) : new Date();
+  
+          if (!isNaN(startDate) && !isNaN(endDate)) {
+            let years = endDate.getFullYear() - startDate.getFullYear();
+            let months = endDate.getMonth() - startDate.getMonth();
+            let days = endDate.getDate() - startDate.getDate();
+  
+            if (days < 0) {
+              months -= 1;
+              days += new Date(endDate.getFullYear(), endDate.getMonth(), 0).getDate();
+            }
+            if (months < 0) {
+              years -= 1;
+              months += 12;
+            }
+  
+            experienceTd.innerText = `${years} years, ${months} months, ${days} days`;
+          } else {
+            experienceTd.innerText = "Invalid dates";
+          }
+        }
+      });
+    });
+  </script>
 {% endblock %}

@@ -3,6 +3,11 @@ from django.contrib.auth.models import User
 from datetime import timedelta, time, datetime
 import pytz
 from django.utils.timezone import now
+from django.contrib.auth import get_user_model
+
+# Helper function to get current user
+def get_current_user():
+    return get_user_model().objects.get(username='admin').id  # Default fallback user
 
 class Employee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -17,11 +22,23 @@ class Employee(models.Model):
     joining_date = models.DateField()
     employee_photo = models.ImageField(upload_to='avatars/', null=True, blank=True)
     salary_ammount = models.CharField(max_length=100, null=True, blank=True)
+    created_by = models.ForeignKey(User, related_name='employee_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='employee_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.employee_id})"
     
-class Employee_address(models.Model) :
+class Employee_address(models.Model):
     employee = models.OneToOneField('Employee', on_delete=models.CASCADE, related_name='employee_address')
     permanent_address = models.CharField(max_length=100, null=True, blank=True)
     present_address = models.CharField(max_length=100, null=True, blank=True)
@@ -30,6 +47,18 @@ class Employee_address(models.Model) :
     country = models.CharField(max_length=100, null=True, blank=True)
     zip_code = models.CharField(max_length=100, null=True, blank=True)
     nationality = models.CharField(max_length=100, null=True, blank=True)
+    created_by = models.ForeignKey(User, related_name='employee_address_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='employee_address_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
 
 class EmployeeAdditionalInfo(models.Model):
@@ -43,6 +72,18 @@ class EmployeeAdditionalInfo(models.Model):
     gender = models.CharField(max_length=10, choices=gender_choices)
     blood_group = models.CharField(max_length=100, null=True, blank=True)
     reporting_to = models.CharField(max_length=100, null=True, blank=True)
+    created_by = models.ForeignKey(User, related_name='employee_additional_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='employee_additional_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Additional Info for {self.employee.first_name} {self.employee.last_name}"
@@ -53,6 +94,18 @@ class Family_details(models.Model):
     relation = models.CharField(max_length=100, blank=True)
     contact_number = models.CharField(max_length=100, blank=True)
     date_of_birth = models.CharField(max_length=100, blank=True)
+    created_by = models.ForeignKey(User, related_name='family_details_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='family_details_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
     
 class Education_details(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='education_details')
@@ -63,6 +116,18 @@ class Education_details(models.Model):
     grade = models.CharField(max_length=20, blank=True)
     description = models.CharField(max_length=200, blank=True)
     education_certificate = models.FileField(upload_to='Education-Certificate/', null=True, blank=True)
+    created_by = models.ForeignKey(User, related_name='education_details_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='education_details_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     
 class EmployeeBankDetails(models.Model):
@@ -73,6 +138,18 @@ class EmployeeBankDetails(models.Model):
     confirm_account_number = models.CharField(max_length=20)
     branch_name = models.CharField(max_length=255)
     ifsc_code = models.CharField(max_length=11)
+    created_by = models.ForeignKey(User, related_name='bank_details_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='bank_details_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Bank Details of {self.employee.first_name} {self.employee.last_name}"
@@ -85,13 +162,38 @@ class Experience_details(models.Model):
     end_date = models.DateField(null=True, blank=True)
     description = models.CharField(max_length=200, blank=True)
     experience_certificate = models.FileField(upload_to='Experience-Certificate/', null=True)
+    created_by = models.ForeignKey(User, related_name='experience_details_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='experience_details_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     
 class Documents_details(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='documents_details')
     document_number = models.CharField(max_length=200, blank=True)
     document_type = models.CharField(max_length=200, blank=True)
+    other_document_type = models.CharField(max_length=255, blank=True, null=True)
     document_file = models.FileField(upload_to='Employee-Documents/', null=True)
+    created_by = models.ForeignKey(User, related_name='documents_details_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='documents_details_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     
 
@@ -105,6 +207,18 @@ class EmployeeSession(models.Model):
     total_time = models.DurationField(default=timedelta(0), null=True, blank=True)
     last_activity = models.DateTimeField(default=now)
     punch_out_reason = models.CharField(max_length=255)
+    created_by = models.ForeignKey(User, related_name='employee_session_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='employee_session_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     
 
@@ -115,6 +229,18 @@ class Meeting(models.Model):
     location = models.CharField(max_length=255)
     department = models.CharField(max_length=255)
     description = models.TextField()
+    created_by = models.ForeignKey(User, related_name='meeting_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='meeting_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
@@ -125,6 +251,18 @@ class Designation(models.Model):
     department = models.CharField(max_length=100)  # Department selection
     description = models.TextField(blank=True, null=True)
     color = models.CharField(max_length=30, blank=True, null=True)
+    created_by = models.ForeignKey(User, related_name='designation_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='designation_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -142,6 +280,18 @@ class Attendance(models.Model):
     employee = models.ForeignKey(User, on_delete=models.CASCADE)
     date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='present')
+    created_by = models.ForeignKey(User, related_name='attendance_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='attendance_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.employee.username} - {self.date} - {self.status}"
@@ -154,6 +304,18 @@ class MonthlyAttendance(models.Model):
     total_absent = models.PositiveIntegerField(default=0)
     total_half_day = models.PositiveIntegerField(default=0)
     remarks = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(User, related_name='monthly_attendance_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='monthly_attendance_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.employee.username} - {self.month}/{self.year}"
@@ -167,6 +329,17 @@ class LeaveRequest(models.Model):
     end_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=15)
+    created_by = models.ForeignKey(User, related_name='leave_request_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='leave_request_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.employee.username}'s Leave Request from {self.start_date} to {self.end_date}"
@@ -176,13 +349,23 @@ class Holiday(models.Model):
     date = models.DateField()
     day = models.CharField(max_length=15)
     name = models.CharField(max_length=255)
+    created_by = models.ForeignKey(User, related_name='holiday_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='holiday_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} ({self.get_day_display()}) on {self.date}"
     
 
-
-from django.contrib.auth.models import User
 
 class Salary(models.Model):
     STATUS_CHOICES = [
@@ -192,7 +375,7 @@ class Salary(models.Model):
     ]
     
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    month = models.TextField(blank=True, null=True)  # This field must exist
+    month = models.CharField(max_length=100, blank=True, null=True)  
     year = models.TextField(blank=True, null=True)
     basic_salary = models.DecimalField(max_digits=12, decimal_places=2)
     hra = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -215,6 +398,16 @@ class Salary(models.Model):
     payment_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, related_name='salary_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='salary_updated', on_delete=models.SET_NULL, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     class Meta:
         unique_together = ('employee', 'month', 'year')
@@ -246,6 +439,18 @@ class OfficeExpense(models.Model):
     paid_status = models.CharField(max_length=20,  default='Unpaid')
     description = models.CharField(max_length=255, blank=True)
     attech = models.FileField(upload_to='office_expense_attachments/', null=True)
+    created_by = models.ForeignKey(User, related_name='office_expense_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='office_expense_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.item_name} - {self.employee_name}"
@@ -253,26 +458,58 @@ class OfficeExpense(models.Model):
 class MonthlyExpense(models.Model):
     month = models.DateField(unique=True)  # Stores the month (e.g., 2024-12-01)
     total_expense = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Default set to 0
+    created_by = models.ForeignKey(User, related_name='monthly_expense_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='monthly_expense_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.month.strftime('%B %Y')}: {self.total_expense}"
     
     
-from django.utils import timezone    
 class Incentive(models.Model):
     employee_name = models.ForeignKey(Employee, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     reason = models.TextField()
     status = models.CharField(max_length=20, default="Pending")
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, related_name='incentive_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='incentive_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
     
 class Bonus(models.Model):
-    
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     reason = models.CharField(max_length=255)
     status = models.CharField(max_length=10)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, related_name='bonus_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='bonus_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return f'{self.amount} for {self.employee.name}'
@@ -280,12 +517,23 @@ class Bonus(models.Model):
 
 
 class Resignation(models.Model):
-
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     status = models.CharField(max_length=10, )
     resignation_date = models.DateField()
     last_working_day = models.DateField()
     description = models.TextField()
+    created_by = models.ForeignKey(User, related_name='resignation_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='resignation_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user.username} - Resignation"
@@ -297,6 +545,18 @@ class Promotion(models.Model):
     new_designation = models.CharField(max_length=100)
     promotion_date = models.DateField()
     description = models.TextField()
+    created_by = models.ForeignKey(User, related_name='promotion_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='promotion_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.employee} - {self.promotion_title}"
@@ -309,6 +569,18 @@ class Termination(models.Model):
     termination_date = models.DateField()
     description = models.TextField()
     status = models.CharField(max_length=20, default='Pending')
+    created_by = models.ForeignKey(User, related_name='termination_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='termination_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Termination of {self.employee} ({self.termination_type})"
@@ -319,12 +591,22 @@ class Announcement(models.Model):
     end_date = models.DateField()
     description = models.TextField()
     announcements_image = models.FileField(upload_to='Announcement-image/')
+    created_by = models.ForeignKey(User, related_name='announcement_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='announcement_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
     
-
-from django.contrib.auth.models import User
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE) # User who will receive the notification
@@ -332,6 +614,17 @@ class Notification(models.Model):
     message = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
+    created_by = models.ForeignKey(User, related_name='notification_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='notification_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.notification_type} - {self.message}"
@@ -342,6 +635,18 @@ class Award(models.Model):
     award_date = models.DateField()
     gift = models.CharField(max_length=255)
     description = models.TextField()
+    created_by = models.ForeignKey(User, related_name='award_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='award_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Award for {self.employee.name} - {self.award_type}"
@@ -353,6 +658,18 @@ class OfficeActivity(models.Model):
     owner_name = models.CharField(max_length=100)
     start_date = models.DateField()
     deadline = models.DateField()
+    created_by = models.ForeignKey(User, related_name='office_activity_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='office_activity_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
@@ -362,6 +679,18 @@ class Warning(models.Model):
     subject = models.CharField(max_length=255)
     warning_date = models.DateField()
     description = models.TextField()
+    created_by = models.ForeignKey(User, related_name='warning_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='warning_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.employee.name} - {self.subject}"
@@ -374,6 +703,18 @@ class Task(models.Model):
     priority = models.CharField(max_length=50)
     due_date = models.DateField()
     status = models.CharField(max_length=20, default='Pending')
+    created_by = models.ForeignKey(User, related_name='task_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='task_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
@@ -385,7 +726,7 @@ class Candidate_registration(models.Model):
     candidate_mobile_number = models.CharField(max_length=15)
     candidate_alternate_mobile_number = models.CharField(max_length=15, blank=True, null=True)
     candidate_email_address = models.EmailField(blank=True, null=True)
-    gender = models.CharField(max_length=10)
+    gender = models.CharField(max_length=10, blank=True, null=True)
     lead_source = models.CharField(max_length=255)
     preferred_location = models.CharField(max_length=255, blank=True, null=True)
     origin_location = models.CharField(max_length=255, blank=True, null=True)
@@ -408,7 +749,7 @@ class Candidate_registration(models.Model):
     candidate_resume = models.FileField(upload_to='candidate-resume/')
     remark = models.CharField(max_length=255,blank=True, null=True)
     register_time = models.DateTimeField(default=now)
-    submit_by = models.CharField(max_length=100)
+    submit_by = models.CharField(max_length=100, blank=True, null=True)
     selection_status = models.CharField(max_length=10, default='Pending')
     company_name = models.CharField(max_length=10, blank=True, null=True)
     offered_salary = models.CharField(max_length=255, blank=True, null=True)
@@ -416,6 +757,18 @@ class Candidate_registration(models.Model):
     candidate_joining_date = models.DateField(blank=True, null=True)
     emta_commission = models.CharField(max_length=255, blank=True, null=True)
     payout_date = models.DateField(blank=True, null=True)
+    created_by = models.ForeignKey(Employee, related_name='candidate_registration_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(Employee, related_name='candidate_registration_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.candidate_name
@@ -433,6 +786,18 @@ class Candidate_chat(models.Model):
     is_important = models.BooleanField(default=False)
     next_followup = models.DateTimeField(null=True, blank=True)
     attachment = models.FileField(upload_to='chat_attachments/', null=True, blank=True)
+    created_by = models.ForeignKey(User, related_name='candidate_chat_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='candidate_chat_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-chat_date']
@@ -489,6 +854,16 @@ class Candidate_Interview(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     attachment = models.FileField(upload_to='interview_docs/', blank=True, null=True)
+    created_by = models.ForeignKey(User, related_name='candidate_interview_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='candidate_interview_updated', on_delete=models.SET_NULL, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-interview_date', '-interview_time']
@@ -507,12 +882,6 @@ class Candidate_Interview(models.Model):
     def get_interview_datetime(self):
         return datetime.combine(self.interview_date, self.interview_time)
 
-    # def is_upcoming(self):
-    #     interview_datetime = datetime.datetime.combine(self.interview_date, self.interview_time)
-    #     interview_datetime = timezone.make_aware(interview_datetime)
-    #     return interview_datetime > timezone.now()
-
-
 class Company_registration(models.Model):
     employee_name = models.CharField(max_length=50, blank=True, null=True)
     company_name = models.CharField(max_length=255, blank=True, null=True)
@@ -529,11 +898,24 @@ class Company_registration(models.Model):
     payout_date = models.CharField(max_length=10, blank=True, null=True)
     payment_condiation = models.CharField(max_length=255, blank=True, null=True)
     remark = models.CharField(max_length=255, blank=True, null=True)
+    created_by = models.ForeignKey(User, related_name='company_registration_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='company_registration_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
    
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.company_name
 
 class VacancyDetails(models.Model):
+    # Existing fields
     company = models.ForeignKey(Company_registration, on_delete=models.CASCADE, related_name='vacancies')
     job_profile = models.CharField(max_length=255, blank=True, null=True)
     company_vacancy_unique_code = models.CharField(max_length=15)
@@ -559,9 +941,99 @@ class VacancyDetails(models.Model):
     company_usp = models.CharField(max_length=255,blank=True, null=True)
     status_of_incentive = models.CharField(max_length=255, blank=True, null=True)
     replacement_criteria = models.CharField(max_length=255, blank=True, null=True)
+    
+    # New payment-related fields
+    PAYMENT_MODE_CHOICES = [
+        ('Company Pay', 'Company Pay'),
+        ('Salary Deduction', 'Salary Deduction'),
+        ('SPDC/Candidate Pay', 'SPDC/Candidate Pay'),
+    ]
+    payment_mode = models.CharField(max_length=50, choices=PAYMENT_MODE_CHOICES, blank=True, null=True)
+    
+    # Company Pay fields
+    COMPANY_PAY_TYPE_CHOICES = [
+        ('Flat', 'Flat'),
+        ('Percentage of CTC', 'Percentage of CTC'),
+        ('Pay as per days', 'Pay as per days'),
+    ]
+    company_pay_type = models.CharField(max_length=50, choices=COMPANY_PAY_TYPE_CHOICES, blank=True, null=True)
+    flat_amount = models.CharField(max_length=10, blank=True, null=True)
+    percentage_of_ctc = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    pay_per_days = models.PositiveIntegerField(blank=True, null=True)
+    
+    # Salary Deduction fields
+    salary_transfer_date = models.DateField(blank=True, null=True)
+    expected_payment_date = models.DateField(blank=True, null=True)
+    
+    # SPDC/Candidate Pay fields
+    candidate_salary_transfer_date = models.DateField(blank=True, null=True)
+    created_by = models.ForeignKey(User, related_name='vacancy_details_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='vacancy_details_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.job_profile} at {self.company.company_name}"
+    
+class Company_spoke_person(models.Model):
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('left', 'Left Company'),
+    ]
+    
+    company = models.ForeignKey(Company_registration, on_delete=models.CASCADE, related_name='spoke_persons')
+    name = models.CharField(max_length=100)
+    designation = models.CharField(max_length=100)
+    department = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    location = models.CharField(max_length=100)
+    is_primary = models.BooleanField(default=False)
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
+    notes = models.TextField(blank=True, null=True)
+    last_contact_date = models.DateField(blank=True, null=True)
+    next_followup = models.DateField(blank=True, null=True)
+    created_by = models.ForeignKey(User, related_name='company_spoke_person_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='company_spoke_person_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Company Contact Person"
+        verbose_name_plural = "Company Contact Persons"
+        ordering = ['-is_primary', '-priority', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.designation})"
+    
+    # @property
+    # def is_followup_due(self):
+    #     return self.next_followup and self.next_followup <= timezone.now().date()
     
     
 class company_communication(models.Model):
@@ -598,6 +1070,16 @@ class company_communication(models.Model):
     attachment = models.FileField(upload_to='communication_attachments/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, related_name='company_communication_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='company_communication_updated', on_delete=models.SET_NULL, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-communication_date']
@@ -607,11 +1089,11 @@ class company_communication(models.Model):
     def __str__(self):
         return f"{self.communication_type} with {self.company.company_name} - {self.subject}"
 
-    @property
-    def is_follow_up_due(self):
-        if self.follow_up_date:
-            return self.follow_up_date <= timezone.now().date()
-        return False
+    # @property
+    # def is_follow_up_due(self):
+    #     if self.follow_up_date:
+    #         return self.follow_up_date <= timezone.now().date()
+    #     return False
     
 
 class Ticket(models.Model):
@@ -634,6 +1116,18 @@ class Ticket(models.Model):
     ticket_created_date = models.DateTimeField(auto_now_add=True)
     ticket_closed_date = models.DateTimeField(blank=True, null=True)
     ticket_remark = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(User, related_name='ticket_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(User, related_name='ticket_updated', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        if user and not self.pk:
+            self.created_by = user
+        if user:
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.ticket_number} - {self.ticket_name}"

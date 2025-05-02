@@ -1,0 +1,255 @@
+<div class="modal-vendor-details">
+    <!-- Header with vendor avatar and basic info -->
+    <div class="vendor-header mb-4">
+        <div class="d-flex align-items-center">
+            <div class="avatar avatar-xl me-3">
+                {% if vendor.user.profile_picture %}
+                <img src="{{ vendor.user.profile_picture.url }}" class="avatar-img" alt="{{ vendor.user.get_full_name }}">
+                {% else %}
+                <span class="avatar-initials bg-primary text-white">
+                    {{ vendor.user.get_full_name|slice:":1" }}
+                </span>
+                {% endif %}
+            </div>
+            <div>
+                <h2 class="mb-1">{{ vendor.user.get_full_name }}</h2>
+                <div class="text-muted">
+                    <span class="badge bg-blue-lt me-2">Vendor ID: {{ vendor.refer_code }}</span>
+                    <span class="text-secondary">Since {{ vendor.user.date_joined|date:"M Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two-column layout with cards -->
+    <div class="row g-4">
+        <!-- Vendor Information Card -->
+        <div class="col-lg-6">
+            <div class="card card-borderless shadow-sm">
+                <div class="card-header bg-light-blue">
+                    <h3 class="card-title text-blue">
+                        <i class="fas fa-user-tie me-2"></i> Vendor Information
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="vendor-info-item">
+                        <div class="info-label">Contact Email</div>
+                        <div class="info-value">
+                            <a href="mailto:{{ vendor.user.email }}" class="text-reset">{{ vendor.user.email }}</a>
+                        </div>
+                    </div>
+                    
+                    <div class="vendor-info-item">
+                        <div class="info-label">Phone Number</div>
+                        <div class="info-value">
+                            <a href="tel:{{ vendor.phone_number }}" class="text-reset">{{ vendor.phone_number|default:"Not provided" }}</a>
+                        </div>
+                    </div>
+                    
+                    <div class="vendor-info-item">
+                        <div class="info-label">Preferred Payout Date</div>
+                        <div class="info-value">
+                            <span class="badge bg-green-lt">
+                                {{ bank_details.preffered_payout_date|default:"Flexible" }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="vendor-info-item">
+                        <div class="info-label">Total Candidates</div>
+                        <div class="info-value">
+                            {{ candidate_count|default:"0" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bank Details Card -->
+        <div class="col-lg-6">
+            <div class="card card-borderless shadow-sm">
+                <div class="card-header bg-light-green">
+                    <h3 class="card-title text-green">
+                        <i class="fas fa-university me-2"></i> Bank Details
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="bank-detail-item">
+                        <div class="detail-label">Account Holder</div>
+                        <div class="detail-value">
+                            <i class="fas fa-user-circle me-2 text-muted"></i>
+                            {{ bank_details.account_holder_name }}
+                        </div>
+                    </div>
+                    
+                    <div class="bank-detail-item">
+                        <div class="detail-label">Account Number</div>
+                        <div class="detail-value">
+                            <i class="fas fa-credit-card me-2 text-muted"></i>
+                            <span class="font-monospace">{{ bank_details.account_number }}</span>
+                            <button class="btn btn-sm btn-icon btn-ghost-secondary copy-btn ms-2" data-clipboard-text="{{ bank_details.account_number }}">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bank-detail-item">
+                        <div class="detail-label">Bank Name</div>
+                        <div class="detail-value">
+                            <i class="fas fa-landmark me-2 text-muted"></i>
+                            {{ bank_details.bank_name }}
+                        </div>
+                    </div>
+                    
+                    <div class="bank-detail-item">
+                        <div class="detail-label">IFSC Code</div>
+                        <div class="detail-value">
+                            <i class="fas fa-code me-2 text-muted"></i>
+                            <span class="font-monospace">{{ bank_details.ifs_code }}</span>
+                            <button class="btn btn-sm btn-icon btn-ghost-secondary copy-btn ms-2" data-clipboard-text="{{ bank_details.ifs_code }}">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {% if bank_details.bank_document %}
+                    <div class="bank-detail-item">
+                        <div class="detail-label">Bank Proof</div>
+                        <div class="detail-value">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file-pdf me-2 text-danger"></i>
+                                <a href="{{ bank_details.bank_document.url }}" target="_blank" class="text-reset me-3">
+                                    View Document
+                                </a>
+                                <button class="btn btn-sm btn-icon btn-ghost-secondary copy-btn" data-clipboard-text="{{ bank_details.bank_document.url }}">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Status -->
+    <div class="verification-status mt-4">
+        <div class="alert alert-{% if bank_details.verified %}success{% else %}warning{% endif %}">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="fas fa-{% if bank_details.verified %}check-circle{% else %}exclamation-triangle{% endif %} fa-2x"></i>
+                </div>
+                <div>
+                    <h4 class="alert-title">
+                        Bank Details {% if bank_details.verified %}Verified{% else %}Pending Verification{% endif %}
+                    </h4>
+                    <div class="text-muted">
+                        {% if bank_details.verified %}
+                        Verified on {{ bank_details.verified_at|date:"M d, Y" }} by {{ bank_details.verified_by.get_full_name }}
+                        {% else %}
+                        These details have not been formally verified yet
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modal-vendor-details {
+        padding: 1.5rem;
+    }
+    
+    .vendor-header {
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1.5rem;
+    }
+    
+    .avatar-initials {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+    
+    .card-borderless {
+        border: none;
+        border-radius: 0.5rem;
+    }
+    
+    .bg-light-blue {
+        background-color: #f0f7ff;
+    }
+    
+    .bg-light-green {
+        background-color: #f0fff4;
+    }
+    
+    .text-blue {
+        color: #206bc4;
+    }
+    
+    .text-green {
+        color: #2fb344;
+    }
+    
+    .vendor-info-item,
+    .bank-detail-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f2f5;
+    }
+    
+    .vendor-info-item:last-child,
+    .bank-detail-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label,
+    .detail-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value,
+    .detail-value {
+        font-size: 0.9375rem;
+        font-weight: 500;
+    }
+    
+    .copy-btn {
+        opacity: 0.5;
+        transition: opacity 0.2s;
+    }
+    
+    .copy-btn:hover {
+        opacity: 1;
+    }
+    
+    .font-monospace {
+        font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize clipboard.js for copy buttons
+    new ClipboardJS('.copy-btn');
+    
+    // Show tooltip when copied
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tooltip = new bootstrap.Tooltip(this, {
+                title: 'Copied!',
+                trigger: 'manual'
+            });
+            tooltip.show();
+            setTimeout(() => tooltip.hide(), 1000);
+        });
+    });
+});
+</script>

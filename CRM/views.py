@@ -36,6 +36,10 @@ from django.core.paginator import Paginator
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.conf import settings
+import csv
+from django.db.models.functions import ExtractMonth, ExtractYear
+from django.db.models import Q
+
 
 # Create your views here.
 
@@ -58,7 +62,151 @@ def crm_admin_logout(request):
 @login_required
 def crm_dashboard(request):
     if request.user.is_staff or request.user.is_superuser:
-        return render(request, "crm/crm-dashboard.html")
+       # Time period filter
+        period = request.GET.get('period', 'month')
+        custom_start = request.GET.get('start_date')
+        custom_end = request.GET.get('end_date')
+        
+        # Initialize date ranges
+        today = datetime.now().date()
+        start_date = None
+        end_date = None
+        
+        # Handle custom date range
+        if custom_start and custom_end:
+            try:
+                start_date = datetime.strptime(custom_start, '%Y-%m-%d').date()
+                end_date = datetime.strptime(custom_end, '%Y-%m-%d').date()
+                period = 'custom'
+            except ValueError:
+                pass
+        else:
+            # Calculate standard period date ranges
+            if period == 'day':
+                start_date = today
+                end_date = today + timedelta(days=1)
+            elif period == 'week':
+                start_date = today - timedelta(days=today.weekday())
+                end_date = start_date + timedelta(days=7)
+            elif period == 'month':
+                start_date = today.replace(day=1)
+                end_date = (start_date.replace(month=start_date.month+1) 
+                        if start_date.month < 12 
+                        else start_date.replace(year=start_date.year+1, month=1))
+            elif period == 'year':
+                start_date = today.replace(month=1, day=1)
+                end_date = start_date.replace(year=start_date.year+1)
+        
+        # Base queryset
+        current_qs = Candidate_registration.objects.all()
+        if start_date and end_date:
+            current_qs = current_qs.filter(register_time__date__range=[start_date, end_date - timedelta(days=1)])
+        
+        # Calculate previous period date ranges for comparison
+        prev_day = today - timedelta(days=1)
+        prev_week_start = (today - timedelta(days=today.weekday() + 7))
+        prev_month_start = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
+        prev_year_start = today.replace(year=today.year-1, month=1, day=1)
+        
+        # Base querysets
+        current_qs = Candidate_registration.objects.all()
+        if start_date and end_date:
+            current_qs = current_qs.filter(register_time__date__range=[start_date, end_date - timedelta(days=1)])
+        
+        # Previous period querysets
+        prev_day_qs = Candidate_registration.objects.filter(
+            register_time__date=prev_day)
+        prev_week_qs = Candidate_registration.objects.filter(
+            register_time__date__range=[prev_week_start, prev_week_start + timedelta(days=6)])
+        prev_month_qs = Candidate_registration.objects.filter(
+            register_time__date__range=[prev_month_start, 
+                                    (prev_month_start.replace(month=prev_month_start.month+1) 
+                                        if prev_month_start.month < 12 
+                                        else prev_month_start.replace(year=prev_month_start.year+1, month=1)) - timedelta(days=1)])
+        prev_year_qs = Candidate_registration.objects.filter(
+            register_time__date__range=[prev_year_start, prev_year_start.replace(year=prev_year_start.year+1) - timedelta(days=1)])
+        
+        # Employee performance metrics
+        employee_performance = current_qs.values('employee_name').annotate(
+            total_candidates=Count('id'),
+            selected_candidates=Count('id', filter=Q(selection_status='Selected')),
+            pending_candidates=Count('id', filter=Q(selection_status='Pending')),
+            rejected_candidates=Count('id', filter=Q(selection_status='Rejected'))
+        ).order_by('-total_candidates')
+        
+        # Lead generation by employee (where lead_generate='Yes')
+        lead_generation = current_qs.filter(lead_generate='Yes').values('employee_name').annotate(
+            lead_count=Count('id')
+        ).order_by('-lead_count')
+        
+        # Call connection status by employee
+        call_connection = current_qs.exclude(call_connection__isnull=True).exclude(call_connection__exact='').values(
+            'employee_name', 'call_connection'
+        ).annotate(
+            count=Count('id')
+        ).order_by('employee_name', '-count')
+        
+        # Interview status (send_for_interview='Yes')
+        interview_candidates = current_qs.filter(send_for_interview='Yes').count()
+        
+        # Status counts with comparison percentages
+        def get_status_comparison(current, previous):
+            if previous > 0:
+                change = ((current - previous) / previous) * 100
+                return f"{change:+.1f}%"
+            elif current > 0:
+                return "+100%"
+            else:
+                return "0%"
+        
+        current_status = current_qs.values('selection_status').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        status_comparison = {
+            'day': get_status_comparison(
+                current_qs.count(), 
+                prev_day_qs.count()
+            ),
+            'week': get_status_comparison(
+                current_qs.count(), 
+                prev_week_qs.count()
+            ),
+            'month': get_status_comparison(
+                current_qs.count(), 
+                prev_month_qs.count()
+            ),
+            'year': get_status_comparison(
+                current_qs.count(), 
+                prev_year_qs.count()
+            ),
+        }
+        
+        context = {
+            'employee_performance': employee_performance,
+            'lead_generation': lead_generation,
+            'call_connection': call_connection,
+            'interview_candidates': interview_candidates,
+            'current_status': current_status,
+            'status_comparison': status_comparison,
+            'period': period,
+            'start_date': start_date,
+            'end_date': end_date - timedelta(days=1) if end_date else None,
+            'total_candidates': current_qs.count(),
+            'selected_candidates': current_qs.filter(selection_status='Selected').count(),
+            'pending_candidates': current_qs.filter(selection_status='Pending').count(),
+            'rejected_candidates': current_qs.filter(selection_status='Rejected').count(),
+            'prev_day_count': prev_day_qs.count(),
+            'prev_week_count': prev_week_qs.count(),
+            'prev_month_count': prev_month_qs.count(),
+            'prev_year_count': prev_year_qs.count(),
+            'period': period,
+            'start_date': start_date,
+            'end_date': end_date - timedelta(days=1) if end_date else None,
+            'custom_start': custom_start,
+            'custom_end': custom_end,
+        }
+        return render(request, 'crm/crm-dashboard.html', context)
     else:
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
@@ -67,6 +215,7 @@ def crm_dashboard(request):
 def admin_candidate_profile(request,id) :
     if request.user.is_staff or request.user.is_superuser:
         candidate = get_object_or_404(Candidate_registration, id=id)
+        logged_in_employee = Employee.objects.get(user=request.user)
 
         if request.method == 'POST':
             if 'candidate_personal_information' in request.POST:
@@ -78,14 +227,13 @@ def admin_candidate_profile(request,id) :
                 lead_source = request.POST.get('lead_source')
                 candidate_photo = request.FILES.get('candidate_photo')
                 candidate_resume = request.FILES.get('candidate_resume')
-                submit_by = request.POST.get('submit_by')
                 
                 candidate.candidate_name = candidate_name
                 candidate.candidate_mobile_number = candidate_mobile_number
                 candidate.candidate_email_address = candidate_email_address
                 candidate.gender = gender
                 candidate.lead_source = lead_source
-                submit_by=submit_by
+                candidate.updated_by=logged_in_employee
                 if candidate_photo:
                     candidate.candidate_photo = candidate_photo
                 if candidate_resume:
@@ -125,7 +273,7 @@ def admin_candidate_profile(request,id) :
                 candidate.current_working_status = current_working_status
                 candidate.current_salary = current_salary
                 candidate.expected_salary = expected_salary
-                submit_by=submit_by
+                candidate.updated_by=logged_in_employee
                 candidate.save()
 
                 messages.success(request, 'Candidate details updated successfully!')
@@ -145,6 +293,7 @@ def admin_candidate_profile(request,id) :
                 candidate.send_for_interview = send_for_interview
                 candidate.next_follow_up_date = next_follow_up_date
                 candidate.submit_by = submit_by
+                candidate.updated_by=logged_in_employee
                 candidate.save()
                 
                 messages.success(request, 'Candidate Calling details updated successfully!')
@@ -167,6 +316,8 @@ def admin_candidate_profile(request,id) :
                 candidate.candidate_joining_date = candidate_joining_date
                 candidate.emta_commission = emta_commission
                 candidate.payout_date = payout_date
+
+                candidate.updated_by=logged_in_employee
                 candidate.save()
 
                 messages.success(request, 'Secection details updated successfully!')
@@ -250,7 +401,8 @@ def admin_candidate_registration(request) :
                 candidate_photo=candidate_photo,
                 candidate_resume=candidate_resume,
                 remark=remark,
-                submit_by=submit_by
+                created_by=request.user,
+                updated_by=request.user
                 
             )
         
@@ -601,6 +753,7 @@ def admin_company_profile(request,id) :
                 company.job_profile = job_profile
                 company.company_vacancy_unique_code = company_vacancy_unique_code
                 company_email_address=company_email_address
+                company.updated_by=request.user
                 if company_logo:
                     company.company_logo = company_logo
                 company.vacancy_opening_date = vacancy_opening_date
@@ -651,6 +804,7 @@ def admin_company_profile(request,id) :
                 company.minimum_education_qualification = minimum_education_qualification
                 company.specialization = specialization
                 company.vacancy_closing_date = vacancy_closing_date
+                company.updated_by=request.user
                 company.save()
 
                 messages.success(request, 'company details updated successfully!')
@@ -678,6 +832,7 @@ def admin_company_profile(request,id) :
                 company.remark = remark
                 company.specialization = specialization
                 company.vacancy_closing_date = vacancy_closing_date
+                company.updated_by=request.user
                 company.save()
                 
                 messages.success(request, 'company Calling details updated successfully!')
@@ -708,6 +863,21 @@ def admin_company_profile(request,id) :
                 company_usp = request.POST.get('company_usp')
                 status_of_incentive = request.POST.get('status_of_incentive')
                 replacement_criteria = request.POST.get('replacement_criteria')
+                
+                # Payment related fields
+                payment_mode = request.POST.get('payment_mode')
+                company_pay_type = request.POST.get('company_pay_type')
+                flat_amount = request.POST.get('flat_amount')
+                percentage_of_ctc = request.POST.get('percentage_of_ctc')
+                pay_per_days = request.POST.get('pay_per_days')
+                salary_transfer_date = request.POST.get('salary_transfer_date') or None
+                expected_payment_date = request.POST.get('expected_payment_date') or None
+                candidate_salary_transfer_date = request.POST.get('candidate_salary_transfer_date') or None
+
+                # Convert numeric fields to appropriate types
+                flat_amount = float(flat_amount) if flat_amount else None
+                percentage_of_ctc = float(percentage_of_ctc) if percentage_of_ctc else None
+                pay_per_days = int(pay_per_days) if pay_per_days else None
 
                 VacancyDetails.objects.create(
                     company=company,
@@ -735,9 +905,20 @@ def admin_company_profile(request,id) :
                     company_usp=company_usp,
                     status_of_incentive=status_of_incentive,
                     replacement_criteria=replacement_criteria,
+                    # Payment related fields
+                    payment_mode=payment_mode,
+                    company_pay_type=company_pay_type,
+                    flat_amount=flat_amount,
+                    percentage_of_ctc=percentage_of_ctc,
+                    pay_per_days=pay_per_days,
+                    salary_transfer_date=salary_transfer_date,
+                    expected_payment_date=expected_payment_date,
+                    candidate_salary_transfer_date=candidate_salary_transfer_date,
+                    created_by=request.user
+                    
                 )
                 messages.success(request, 'Vacancy added successfully!')
-                
+
             elif 'edit_vacancy' in request.POST:
                 # Handle vacancy editing
                 vacancy_id = request.POST.get('vacancy_id')
@@ -748,18 +929,52 @@ def admin_company_profile(request,id) :
                     vacancy.vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
                     vacancy.vacancy_status = request.POST.get('vacancy_status', 'Pending')
                     vacancy.payroll = request.POST.get('payroll')
+                    vacancy.third_party_name = request.POST.get('third_party_name')
+                    vacancy.job_opening_origin = request.POST.get('job_opening_origin')
                     vacancy.sector_type = request.POST.get('sector_type')
                     vacancy.department_name = request.POST.get('department_name')
-                    vacancy.minimum_salary_range = request.POST.get('minimum_salary_range')
-                    vacancy.maximum_salary_range = request.POST.get('maximum_salary_range')
+                    vacancy.fresher_status = request.POST.get('fresher_status')
+                    vacancy.minimum_age = request.POST.get('minimum_age')
+                    vacancy.maximum_age = request.POST.get('maximum_age')
+                    vacancy.gender = request.POST.get('gender')
                     vacancy.minimum_experience = request.POST.get('minimum_experience')
                     vacancy.maximum_experience = request.POST.get('maximum_experience')
-                    vacancy.special_instruction = request.POST.get('special_instruction')
+                    vacancy.minimum_education_qualification = request.POST.get('minimum_education_qualification')
+                    vacancy.specialization = request.POST.get('specialization')
+                    vacancy.minimum_salary_range = request.POST.get('minimum_salary_range')
+                    vacancy.maximum_salary_range = request.POST.get('maximum_salary_range')
                     vacancy.vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
+                    vacancy.special_instruction = request.POST.get('special_instruction')
+                    vacancy.company_usp = request.POST.get('company_usp')
+                    vacancy.status_of_incentive = request.POST.get('status_of_incentive')
+                    vacancy.replacement_criteria = request.POST.get('replacement_criteria')
+                    vacancy.updated_by=request.user
+                    
+                    # Payment related fields
+                    vacancy.payment_mode = request.POST.get('payment_mode')
+                    vacancy.company_pay_type = request.POST.get('company_pay_type')
+                    
+                    # Convert and set numeric fields
+                    # flat_amount = 
+                    vacancy.flat_amount = request.POST.get('flat_amount') or None
+                    
+                    percentage_of_ctc = request.POST.get('percentage_of_ctc')
+                    vacancy.percentage_of_ctc = float(percentage_of_ctc) if percentage_of_ctc else None
+                    
+                    pay_per_days = request.POST.get('pay_per_days')
+                    vacancy.pay_per_days = int(pay_per_days) if pay_per_days else None
+                    
+                    vacancy.salary_transfer_date = request.POST.get('salary_transfer_date') or None
+                    vacancy.expected_payment_date = request.POST.get('expected_payment_date') or None
+                    vacancy.candidate_salary_transfer_date = request.POST.get('candidate_salary_transfer_date') or None
+                    
                     vacancy.save()
                     messages.success(request, 'Vacancy updated successfully!')
                 except VacancyDetails.DoesNotExist:
                     messages.error(request, 'Vacancy not found!')
+                except ValueError as e:
+                    messages.error(request, f'Invalid input format: {str(e)}')
+                   
                     
             elif 'delete_vacancy' in request.POST:
                 # Handle vacancy deletion
@@ -1099,7 +1314,6 @@ def evms_candidate_profile(request,id) :
                 lead_source = request.POST.get('lead_source')
                 candidate_photo = request.FILES.get('candidate_photo')
                 candidate_resume = request.FILES.get('candidate_resume')
-                submit_by = request.POST.get('submit_by')
                 
                 candidate.candidate_name = candidate_name
                 candidate.employee_name = employee_name
@@ -1107,7 +1321,7 @@ def evms_candidate_profile(request,id) :
                 candidate.candidate_email_address = candidate_email_address
                 candidate.gender = gender
                 candidate.lead_source = lead_source
-                submit_by=submit_by
+                candidate.updated_by=request.user
                 if candidate_photo:
                     candidate.candidate_photo = candidate_photo
                 if candidate_resume:
@@ -1131,7 +1345,6 @@ def evms_candidate_profile(request,id) :
                 current_working_status = request.POST.get('current_working_status')
                 current_salary = request.POST.get('current_salary')
                 expected_salary = request.POST.get('expected_salary')
-                submit_by = request.POST.get('submit_by')
 
                 # Update EmergencyContact fields
                 candidate.candidate_alternate_mobile_number = candidate_alternate_mobile_number
@@ -1147,7 +1360,7 @@ def evms_candidate_profile(request,id) :
                 candidate.current_working_status = current_working_status
                 candidate.current_salary = current_salary
                 candidate.expected_salary = expected_salary
-                submit_by=submit_by
+                candidate.updated_by=request.user
                 candidate.save()
 
                 messages.success(request, 'Candidate details updated successfully!')
@@ -1159,14 +1372,13 @@ def evms_candidate_profile(request,id) :
                 lead_generate = request.POST.get('lead_generate')
                 send_for_interview = request.POST.get('send_for_interview')
                 next_follow_up_date = request.POST.get('next_follow_up_date')
-                submit_by = request.POST.get('submit_by')
 
                 candidate.call_connection = call_connection
                 candidate.calling_remark = calling_remark
                 candidate.lead_generate = lead_generate
                 candidate.send_for_interview = send_for_interview
                 candidate.next_follow_up_date = next_follow_up_date
-                candidate.submit_by = submit_by
+                candidate.updated_by=request.user
                 candidate.save()
                 
                 messages.success(request, 'Candidate Calling details updated successfully!')
@@ -1189,6 +1401,7 @@ def evms_candidate_profile(request,id) :
                 candidate.candidate_joining_date = candidate_joining_date
                 candidate.emta_commission = emta_commission
                 candidate.payout_date = payout_date
+                candidate.updated_by=request.user
                 candidate.save()
 
                 messages.success(request, 'Secection details updated successfully!')
@@ -1216,6 +1429,7 @@ def evms_candidate_profile(request,id) :
                 candidate.payment_done_by = payment_done_by
                 candidate.payment_done_by_date = payment_done_by_date
                 candidate.submit_recipt = submit_recipt
+                candidate.updated_by=request.user 
                 candidate.save()
 
                 messages.success(request, 'Vendor releted details updated successfully!')
@@ -1460,6 +1674,7 @@ def admin_company_registration(request):
             # Create or update company
             company, created = Company_registration.objects.get_or_create(
                 company_unique_code=company_unique_code,
+                created_by = request.user,
                 defaults={
                     'employee_name': employee_name,
                     'company_name': company_name,
@@ -1475,6 +1690,7 @@ def admin_company_registration(request):
                     'payout_date': payout_date,
                     'payment_condiation': payment_condiation,
                     'remark': remark,
+                    
                 }
             )
 
@@ -1666,6 +1882,7 @@ def admin_vendor_profile(request, id):
                 vendor_profile_detail.adhar_card_number = request.POST.get('adhar_card_number')
                 vendor_profile_detail.pan_card_number = request.POST.get('pan_card_number')
                 vendor_profile_detail.location = request.POST.get('location')
+                vendor_profile_detail.updated_by=request.user
                 
                 if 'adhar_card_image' in request.FILES:
                     vendor_profile_detail.adhar_card_image = request.FILES['adhar_card_image']
@@ -1783,7 +2000,7 @@ def admin_evms_vendor_transaction_history(request):
     
         # Filter candidates with refer_code, pending commission, and payout date in current month
         remaining_pays = Candidate.objects.filter(
-            vendor_commission_status__in=['Complete', 'Failed'],
+            vendor_commission_status__in=['Paid', 'Failed'],
             selection_status='Selected',
             refer_code__isnull=False,
         ).order_by('-id')
@@ -1968,6 +2185,7 @@ def crm_admin_profile(request,id):
                 employee.contact_number = contact_number
                 employee.email = email
                 employee.joining_date = joining_date
+                employee.updated_by=request.user
                 if employee_photo:
                     employee.employee_photo = employee_photo
                 employee.save()
@@ -1986,6 +2204,7 @@ def crm_admin_profile(request,id):
                 employee.designation = designation
                 additional_info.blood_group = blood_group
                 additional_info.reporting_to = reporting_to
+                additional_info.updated_by=request.user
                 additional_info.save()
 
                 messages.success(request, 'Employee details updated successfully!')
@@ -2002,7 +2221,8 @@ def crm_admin_profile(request,id):
                     member_name=member_name,
                     relation=relation,
                     contact_number=contact_number,
-                    date_of_birth=date_of_birth
+                    date_of_birth=date_of_birth,
+                    updated_by=request.user
                 )
 
                 messages.success(request, 'Emergency contact details updated successfully!')
@@ -2024,6 +2244,7 @@ def crm_admin_profile(request,id):
                 address_details.country = country
                 address_details.zip_code = zip_code
                 address_details.nationality = nationality
+                address_details.updated_by=request.user
                 address_details.save()
                 
                 messages.success(request, 'Address details updated successfully!')
@@ -2047,7 +2268,8 @@ def crm_admin_profile(request,id):
                     end_year=end_year,
                     grade=grade,
                     description=description,
-                    education_certificate=education_certificate
+                    education_certificate=education_certificate,
+                    updated_by=request.user
                 )
 
                 # Add a success message
@@ -2070,7 +2292,8 @@ def crm_admin_profile(request,id):
                     start_date = start_date,
                     end_date = end_date,
                     description = description,
-                    experience_certificate = experience_certificate
+                    experience_certificate = experience_certificate,
+                    updated_by=request.user
                 )
                 
                 messages.success(request, 'Experience details updated successfully!')
@@ -2085,7 +2308,8 @@ def crm_admin_profile(request,id):
                     employee=employee,  # Use the employee fetched at the start of the view
                     document_type=document_type,
                     document_number=document_number,
-                    document_file=document_file
+                    document_file=document_file,
+                    updated_by=request.user
                 )
 
                 messages.success(request, 'Document details added successfully!')
@@ -2112,6 +2336,7 @@ def crm_admin_profile(request,id):
                 bank_details.confirm_account_number = confirm_account_number
                 bank_details.branch_name = branch_name
                 bank_details.ifsc_code = ifsc_code
+                bank_details.updated_by=request.user
                 bank_details.save()
 
                 messages.success(request, 'Bank details updated successfully!')
@@ -2161,7 +2386,8 @@ def admin_candidate_chat_list(request, candidate_id):
             chat_type=chat_type,
             is_important=is_important,
             next_followup=next_followup,
-            attachment=attachment
+            attachment=attachment,
+            created_by=request.user
         )
         messages.success(request, 'Chat record added successfully!')
         return redirect('admin_candidate_chat_list', candidate_id=candidate_id)
@@ -2237,7 +2463,8 @@ def admin_interview_list(request, candidate_id):
             is_technical=request.POST.get('is_technical') == 'on',
             duration=request.POST.get('duration', 60),
             requirements=request.POST.get('requirements'),
-            attachment=request.FILES.get('attachment')
+            attachment=request.FILES.get('attachment'),
+            created_by=request.user
         )
         interview.save()
         messages.success(request, 'Interview scheduled successfully!')
@@ -2318,6 +2545,7 @@ def admin_interview_detail(request, interview_id):
         interview.is_technical = request.POST.get('is_technical') == 'on'
         interview.duration = request.POST.get('duration', 60)
         interview.requirements = request.POST.get('requirements')
+        interview.updated_by=request.user
         
         if 'attachment' in request.FILES:
             interview.attachment = request.FILES['attachment']
@@ -2370,7 +2598,8 @@ def admin_company_communication_list(request, company_id):
             priority=request.POST.get('priority', 'medium'),
             outcome=request.POST.get('outcome'),
             employee_name=request.user.get_full_name() or request.user.username,
-            attachment=request.FILES.get('attachment')
+            attachment=request.FILES.get('attachment'),
+            created_by = request.user
         )
         communication.save()
         messages.success(request, 'Communication record added successfully!')
@@ -2419,6 +2648,7 @@ def admin_company_communication_detail(request, communication_id):
         communication.follow_up_date = request.POST.get('follow_up_date') or None
         communication.priority = request.POST.get('priority', 'medium')
         communication.outcome = request.POST.get('outcome')
+        communication.updated_by=request.user
         
         if 'attachment' in request.FILES:
             communication.attachment = request.FILES['attachment']
@@ -2476,5 +2706,242 @@ def admin_send_communication_email(request, communication):
     # Send email
     email.send()
     
+@login_required
+def admin_company_contacts_list(request, company_id):
+    company = get_object_or_404(Company_registration, id=company_id)
     
+    if request.method == 'POST':
+        if 'send_email' in request.POST:
+            # Handle email sending
+            contact_id = request.POST.get('contact_id')
+            contact = get_object_or_404(Company_spoke_person, id=contact_id)
+            # Add your email sending logic here
+            messages.success(request, f'Email sent to {contact.name} successfully!')
+            return redirect('admin_company_contacts_list', company_id=company_id)
+        
+        # Handle form submission
+        contact = Company_spoke_person(
+            company=company,
+            name=request.POST.get('name'),
+            designation=request.POST.get('designation'),
+            department=request.POST.get('department'),
+            email=request.POST.get('email'),
+            phone=request.POST.get('phone'),
+            location=request.POST.get('location'),
+            is_primary=request.POST.get('is_primary') == 'on',
+            priority=request.POST.get('priority', 'medium'),
+            status=request.POST.get('status', 'active'),
+            notes=request.POST.get('notes'),
+            last_contact_date=request.POST.get('last_contact_date') or None,
+            next_followup=request.POST.get('next_followup') or None,
+            created_by=request.user
+        )
+        contact.save()
+        messages.success(request, 'Contact person added successfully!')
+        return redirect('admin_company_contacts_list', company_id=company_id)
     
+    # Filter contacts
+    status_filter = request.GET.get('status', 'all')
+    priority_filter = request.GET.get('priority', 'all')
+    is_primary_filter = request.GET.get('is_primary', 'all')
+    
+    contacts = Company_spoke_person.objects.filter(company=company)
+    
+    if status_filter != 'all':
+        contacts = contacts.filter(status=status_filter)
+    if priority_filter != 'all':
+        contacts = contacts.filter(priority=priority_filter)
+    if is_primary_filter != 'all':
+        contacts = contacts.filter(is_primary=(is_primary_filter == 'true'))
+    
+    # Pagination
+    paginator = Paginator(contacts.order_by('-is_primary', '-priority', 'name'), 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'company': company,
+        'contacts': page_obj,
+        'status_filter': status_filter,
+        'priority_filter': priority_filter,
+        'is_primary_filter': is_primary_filter,
+        'status_choices': Company_spoke_person.STATUS_CHOICES,
+        'priority_choices': Company_spoke_person.PRIORITY_CHOICES,
+    }
+    return render(request, 'crm/contacts_list.html', context)
+
+@login_required
+def admin_company_contact_detail(request, contact_id):
+    contact = get_object_or_404(Company_spoke_person, id=contact_id)
+    
+    if request.method == 'POST':
+        # Handle update
+        contact.name = request.POST.get('name')
+        contact.designation = request.POST.get('designation')
+        contact.department = request.POST.get('department')
+        contact.email = request.POST.get('email')
+        contact.phone = request.POST.get('phone')
+        contact.location = request.POST.get('location')
+        contact.is_primary = request.POST.get('is_primary') == 'on'
+        contact.priority = request.POST.get('priority', 'medium')
+        contact.status = request.POST.get('status', 'active')
+        contact.notes = request.POST.get('notes')
+        contact.last_contact_date = request.POST.get('last_contact_date') or None
+        contact.next_followup = request.POST.get('next_followup') or None
+        contact.updated_by = request.user
+        contact.save()
+        
+        messages.success(request, 'Contact person updated successfully!')
+        return redirect('admin_company_contact_detail', contact_id=contact.id)
+    
+    context = {
+        'contact': contact,
+        'status_choices': Company_spoke_person.STATUS_CHOICES,
+        'priority_choices': Company_spoke_person.PRIORITY_CHOICES,
+    }
+    return render(request, 'crm/contact_detail.html', context)
+
+@login_required
+def admin_delete_company_contact(request, contact_id):
+    contact = get_object_or_404(Company_spoke_person, id=contact_id)
+    company_id = contact.company.id
+    contact.delete()
+    messages.success(request, 'Contact person deleted successfully!')
+    return redirect('admin_company_contacts_list', company_id=company_id)
+
+@login_required
+def download_candidate_details(request):
+    # Create the HttpResponse object with CSV header
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="candidate_registrations.csv"'
+
+    writer = csv.writer(response)
+    
+    # Write CSV header
+    writer.writerow([
+        'Employee Name', 'Candidate Name', 'Unique Code', 'Mobile Number', 
+        'Alternate Mobile', 'Email', 'Gender', 'Lead Source', 'Preferred Location',
+        'Origin Location', 'Qualification', 'Diploma', 'Sector', 'Department',
+        'Experience Year', 'Experience Month', 'Current Company', 'Working Status',
+        'Current Salary', 'Expected Salary', 'Call Connection', 'Calling Remark',
+        'Lead Generate', 'Send for Interview', 'Next Follow Up Date', 'Candidate Photo',
+        'Candidate Resume', 'Remark', 'Registration Time', 'Submitted By',
+        'Selection Status', 'Company Name', 'Offered Salary', 'Selection Date',
+        'Joining Date', 'EMTA Commission', 'Payout Date'
+    ])
+
+    # Get all candidates
+    candidates = Candidate_registration.objects.all()
+
+    # Write data rows
+    for obj in candidates:
+        writer.writerow([
+            obj.employee_name,
+            obj.candidate_name,
+            obj.unique_code,
+            obj.candidate_mobile_number,
+            obj.candidate_alternate_mobile_number or '',
+            obj.candidate_email_address or '',
+            obj.gender or '',
+            obj.lead_source,
+            obj.preferred_location or '',
+            obj.origin_location or '',
+            obj.qualification or '',
+            obj.diploma or '',
+            obj.sector or '',
+            obj.department or '',
+            obj.experience_year or '',
+            obj.experience_month or '',
+            obj.current_company or '',
+            obj.current_working_status,
+            obj.current_salary or '',
+            obj.expected_salary or '',
+            obj.call_connection or '',
+            obj.calling_remark or '',
+            obj.lead_generate or '',
+            obj.send_for_interview or '',
+            obj.next_follow_up_date or '',
+            str(obj.candidate_photo) if obj.candidate_photo else '',  # File path/name
+            str(obj.candidate_resume) if obj.candidate_resume else '',  # File path/name
+            obj.remark or '',
+            obj.register_time.strftime("%Y-%m-%d %H:%M:%S"),
+            obj.submit_by or '',
+            obj.selection_status,
+            obj.company_name or '',
+            obj.offered_salary or '',
+            obj.selection_date or '',
+            obj.candidate_joining_date or '',
+            obj.emta_commission or '',
+            obj.payout_date or '',
+        ])
+
+    return response
+
+
+@login_required
+def vendor_bank_details(request, vendor_code):
+    try:
+        vendor = Vendor.objects.get(refer_code=vendor_code)
+        bank_details = Vendor_bank_details.objects.get(vendor=vendor)
+        candidate_count = Candidate.objects.filter(refer_code=vendor_code).count()
+        
+        context = {
+            'vendor': vendor,
+            'bank_details': bank_details,
+            'candidate_count' : candidate_count
+        }
+        return render(request, 'crm/vendor_bank_details.html', context)
+        
+    except Vendor.DoesNotExist:
+        return HttpResponse("Vendor not found", status=404)
+    except Vendor_bank_details.DoesNotExist:
+        return HttpResponse("Bank details not found for this vendor", status=404)
+    
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
+# from .models import Vendor, Candidate
+
+@login_required
+@require_POST
+@csrf_exempt
+def process_payment(request, vendor_code):
+    try:
+        # Verify user has permission to process payments
+        if not (request.user.is_staff or request.user.is_superuser):
+            return JsonResponse({
+                'success': False,
+                'message': 'Permission denied'
+            }, status=403)
+        
+        vendor = get_object_or_404(Vendor, refer_code=vendor_code)
+        
+        # Get all pending payments for this vendor
+        pending_payments = Candidate.objects.filter(
+            refer_code=vendor_code,
+            vendor_commission_status='Pending',
+            selection_status='Selected'
+        )
+        
+        # Process each payment
+        for candidate in pending_payments:
+            # Your payment processing logic here
+            candidate.vendor_commission_status = 'Paid'
+            candidate.vendor_payout_date = timezone.now()
+            candidate.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully processed {pending_payments.count()} payments',
+            'payment_count': pending_payments.count()
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)    
+

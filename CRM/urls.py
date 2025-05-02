@@ -37,7 +37,13 @@ urlpatterns = [
     path('company/<int:company_id>/communications/', admin_company_communication_list, name='admin_company_communication_list'),
     path('communication/<int:communication_id>/', admin_company_communication_detail, name='admin_company_communication_detail'),
     path('communication/<int:communication_id>/delete/', admin_delete_company_communication, name='admin_delete_company_communication'),
-    
+    path('company/<int:company_id>/contacts/', admin_company_contacts_list, name='admin_company_contacts_list'),
+    path('company/<int:company_id>/contacts/add/', admin_company_contacts_list, name='admin_company_contact_create'),
+    path('contacts/<int:contact_id>/', admin_company_contact_detail, name='admin_company_contact_detail'),
+    path('contacts/<int:contact_id>/delete/', admin_delete_company_contact, name='admin_delete_company_contact'),
+    path('download-candidates/', download_candidate_details, name='download_candidates'),
+    path('vendor/bank-details/<str:vendor_code>/', vendor_bank_details, name='vendor_bank_details'),
+    path('vendor/process-payment/<str:vendor_code>/', process_payment, name='process_payment'),
     
     
     path('admin/', admin.site.urls),

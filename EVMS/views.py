@@ -50,6 +50,9 @@ from .models import Vendor
 def home_view(request):
     return render(request, 'evms/home.html', {})
 
+def sitemap_view(request) :
+    return render(request, 'evms/sitemap.xml', {})
+
 def vendor_signup(request):
     if request.method == 'POST':
         form_type = request.POST.get('form_type')

@@ -621,6 +621,7 @@ def employee_details_view(request, id):
             elif 'submit_documents_details' in request.POST:
                 document_number = request.POST.get('document_number')
                 document_type = request.POST.get('document_type')
+                other_document_type = request.POST.get('other_document_type')
                 document_file = request.FILES.get('document_file')
 
                 # Create a new document record for the employee
@@ -628,7 +629,8 @@ def employee_details_view(request, id):
                     employee=employee,  # Use the employee fetched at the start of the view
                     document_type=document_type,
                     document_number=document_number,
-                    document_file=document_file
+                    document_file=document_file,
+                    other_document_type=other_document_type
                 )
 
                 messages.success(request, 'Document details added successfully!')
@@ -1742,7 +1744,7 @@ def office_expense_view(request):
             purchase_date = request.POST.get('purchase_date')
             amount = request.POST.get('amount')
             paid_status = request.POST.get('paid_status', 'Unpaid')
-            attachment = request.FILES.get('attachment')
+            attachment = request.FILES.get('attachment') or None
 
             if expense_id:  # Edit existing expense
                 expense = get_object_or_404(OfficeExpense, id=expense_id)
@@ -1761,8 +1763,7 @@ def office_expense_view(request):
                     item_name=item_name,
                     purchase_date=purchase_date,
                     amount=amount,
-                    paid_status=paid_status,
-                    attachment=attachment
+                    paid_status=paid_status
                 )
                 messages.success(request, 'Expense created successfully!')
 
@@ -1843,6 +1844,7 @@ def incentive_view(request):
                     reason=reason,
                     status=status
                 )
+                messages.success(request, 'Incentive added successfully!')
                 return redirect('incentive_view')
             except Employee.DoesNotExist:
                 return render(request, 'hrms/incentive.html', {'error': 'Employee not found'})
@@ -1881,12 +1883,14 @@ def update_incentive_status(request, incentive_id):
         incentive.reason = request.POST.get('reason')
         incentive.status = request.POST.get('status')
         incentive.save()
+        messages.success(request, 'Incentive Status updated successfully!')
     return redirect('incentive_view')
 
 @login_required
 def delete_incentive(request, incentive_id):
     incentive = get_object_or_404(Incentive, id=incentive_id)
     incentive.delete()
+    messages.success(request, 'Incentive Deleted successfully!')
     return redirect('incentive_view')
 
 @login_required
@@ -2069,13 +2073,6 @@ def promotion_view(request):
                     promotion_date=promotion_date,
                     description=description
                 )
-
-                # Create notification
-                Notification.objects.create(
-                    user=employee.user,
-                    notification_type='Promotion',
-                    message=f"You're promoted from {employee.designation} to {new_designation.name} on {promotion_date}. Details: {description}",
-                )
                 
                 # Update employee's designation if promotion date is today or earlier
                 if promotion_date <= timezone.now().date().isoformat():
@@ -2191,13 +2188,6 @@ def termination_view(request):
                 status=status
             )
 
-            # Create a notification for the employee about the termination
-            Notification.objects.create(
-                user=employee.user,
-                notification_type='termination',
-                message=f'{employee} employment has been terminated. Termination type: {termination_type}.',
-            )
-
             # Send email notification
             subject = f'Termination Notice - {employee.first_name} {employee.last_name}'
             message = f"""
@@ -2225,7 +2215,7 @@ def termination_view(request):
                 [employee.user.email],
                 fail_silently=False,
             )
-
+            messages.success(request, f'{employee} Termination Added successfully!')
             return redirect('termination_view')
 
         return render(request, 'hrms/termination.html', {
@@ -2249,12 +2239,6 @@ def edit_termination(request, termination_id):
             termination.status = request.POST.get('status')
             termination.save()
 
-            # Create a notification for the employee about the update
-            Notification.objects.create(
-                user=termination.employee.user,
-                notification_type='termination_update',
-                message=f'Your termination details have been updated. New status: {termination.status}.',
-            )
 
             # Send email notification about the update
             subject = f'Termination Update - {termination.employee.first_name} {termination.employee.last_name}'
@@ -2283,8 +2267,9 @@ def edit_termination(request, termination_id):
                 [termination.employee.user.email],
                 fail_silently=False,
             )
-
+            messages.success(request, 'Termination updated successfully!')
             return redirect('termination_view')
+        
 
         return redirect('termination_view')
     else:
@@ -2303,15 +2288,9 @@ def delete_termination(request, termination_id):
             'termination_date': termination.termination_date,
             'description': termination.description
         }
-        
+        messages.success(request, 'Termination Delete successfully!')
         termination.delete()
 
-        # Create a notification for the employee about the deletion
-        Notification.objects.create(
-            user=employee.user,
-            notification_type='termination_cancel',
-            message='Your termination record has been cancelled.',
-        )
 
         # Send email notification about the deletion
         subject = f'Termination Cancelled - {employee.first_name} {employee.last_name}'
@@ -2450,27 +2429,6 @@ def team_meeting_view(request):
                         description=description
                     )
                     
-                    # Send email notifications (in production you'd want to use Celery for this)
-                    send_mail(
-                        subject=f'New Meeting Scheduled: {title}',
-                        message=f'''
-                        Meeting Details:
-                        Title: {title}
-                        Department: {department}
-                        Date: {date}
-                        Time: {time}
-                        Location: {location}
-                        
-                        Description:
-                        {description}
-                        
-                        Please mark your calendar.
-                        ''',
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[request.user.email],  # In real app, send to all participants
-                        fail_silently=True,
-                    )
-                    
                     messages.success(request, 'Meeting successfully scheduled!')
                     return redirect('team_meeting_view')
                     
@@ -2503,11 +2461,6 @@ def edit_meeting(request, meeting_id):
             meeting.is_completed = request.POST.get('is_completed') == 'true'
             meeting.save()
             
-            # Create notification
-            Notification.objects.create(
-                notification_type='Meeting Update',
-                message=f'Meeting "{meeting.title}" has been updated. New date: {meeting.date} at {meeting.time}.',
-            )
             
             messages.success(request, 'Meeting successfully updated!')
             return redirect('team_meeting_view')
@@ -2553,12 +2506,6 @@ def awards_view(request):
                     award_date=award_date,
                     gift=gift,
                     description=description
-                )
-                
-                Notification.objects.create(
-                    user=employee.user,
-                    notification_type='Award',
-                    message=f'You received {award_type} on {award_date}.',
                 )
                 messages.success(request, "Award created successfully")
             except Employee.DoesNotExist:
@@ -2621,7 +2568,7 @@ def office_activity_view(request):
                 start_date=start_date,
                 deadline=deadline
             )
-
+            messages.success(request, 'Activity successfully Added!')
             return redirect('office_activity_view')
 
         # Fetch all office activities to display
@@ -2635,6 +2582,7 @@ def office_activity_view(request):
 def delete_activity(request, officeactivity_id):
     activity = get_object_or_404(OfficeActivity, id=officeactivity_id)
     activity.delete()
+    messages.success(request, 'Meeting successfully Deleted!')
     return redirect('office_activity_view')
 
 @login_required
@@ -2678,14 +2626,6 @@ def warning_view(request):
                     is_update=True
                 )
                 
-                # Update notification
-                Notification.objects.filter(
-                    notification_type='Warning',
-                    message__contains=f"Warning for {warning.subject}"
-                ).update(
-                    message=f"{warning.employee} Warning for {warning.subject} on {warning.warning_date}."
-                )
-                
             except Exception as e:
                 messages.error(request, f'Error updating warning: {str(e)}')
         else:
@@ -2706,13 +2646,6 @@ def warning_view(request):
                     description=description
                 )
 
-                # Create notification
-                Notification.objects.create(
-                    user=employee.user,
-                    notification_type='Warning',
-                    message=f"{employee} Warning for {subject} on {warning_date}.",
-                )
-                
                 messages.success(request, 'Warning created successfully!')
                 
                 # Send notification email
@@ -2766,12 +2699,6 @@ def delete_warning(request, warning_id):
     
     try:
         warning = get_object_or_404(Warning, id=warning_id)
-        
-        # Delete associated notification
-        Notification.objects.filter(
-            notification_type='Warning',
-            message__contains=f"Warning for {warning.subject}"
-        ).delete()
         
         warning.delete()
         messages.success(request, 'Warning deleted successfully!')
@@ -3638,11 +3565,6 @@ def assign_task(request):
                 priority=priority
             )
             
-            Notification.objects.create(
-                user=assigned_to.user,
-                notification_type='Task',
-                message=f'You have been assigned a new task: {title}, Due Date: {due_date}',
-            )
             
             messages.success(request, 'Task assigned successfully!')
             return redirect('assign_task')
@@ -3915,3 +3837,4 @@ def admin_profile(request,id):
         return render(request, 'hrms/admin-profile.html', context)
     else:
         return render(request, 'employee/login.html', {'error': 'User not authenticated'})
+

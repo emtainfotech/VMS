@@ -100,9 +100,9 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{% url 'company_communication_detail' comm.id %}" class="btn btn-sm btn-primary">View</a>
-                                        <a href="{% url 'delete_company_communication' comm.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">Delete</a>
-                                        <form method="post" action="{% url 'company_communication_list' company.id %}" style="display: inline;">
+                                        <a href="{% url 'admin_company_communication_detail' comm.id %}" class="btn btn-sm btn-primary">View</a>
+                                        <a href="{% url 'admin_delete_company_communication' comm.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">Delete</a>
+                                        <form method="post" action="{% url 'admin_company_communication_list' company.id %}" style="display: inline;">
                                             {% csrf_token %}
                                             <input type="hidden" name="communication_id" value="{{ comm.id }}">
                                             <button type="submit" name="send_email" class="btn btn-sm btn-success mt-1">

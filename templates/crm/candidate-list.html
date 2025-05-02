@@ -14,28 +14,48 @@
         </div>
         <div class="col-auto ms-auto d-print-none">
           <div class="btn-list">
+            <!-- Add New Candidate -->
             <a href="{% url 'admin_candidate_registration' %}" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M12 5l0 14" />
-                <path d="M5 12l14 0" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M12 7v4m0 0v4m0-4h4m-4 0H8" />
+                <path d="M16 21v-2a4 4 0 0 0 -8 0v2" />
+                <circle cx="12" cy="7" r="4" />
               </svg>
               Add New Candidate
             </a>
+        
+            <!-- Download Candidate Data -->
+            <a href="{% url 'download_candidates' %}" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                <path d="M7 11l5 5l5 -5" />
+                <path d="M12 4v12" />
+              </svg>
+              Download Candidate Data
+            </a>
           </div>
         </div>
+        
         <div class="col-auto ms-auto d-print-none">
           <div class="btn-list">
+            <!-- Bulk Upload Candidates -->
             <a href="{% url 'admin_candidate_bulk_upload' %}" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M12 5l0 14" />
-                <path d="M5 12l14 0" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                <path d="M7 11l5 -5l5 5" />
+                <path d="M12 6v12" />
               </svg>
               Bulk Upload Candidates
             </a>
           </div>
         </div>
+        
       </div>
     </div>
   </div>
@@ -273,75 +293,108 @@
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  // Initialize tooltips
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-
-  // Search functionality
-  const searchInput = document.getElementById('searchInput');
-  const statusFilter = document.getElementById('statusFilter');
-  const candidatesTable = document.getElementById('candidatesTable');
-  const rows = candidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-  const totalCountEl = document.getElementById('totalCount');
-  const showingFromEl = document.getElementById('showingFrom');
-  const showingToEl = document.getElementById('showingTo');
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
   
-  function filterCandidates() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const statusFilterValue = statusFilter.value.toLowerCase();
-    let visibleCount = 0;
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const candidatesTable = document.getElementById('candidatesTable');
+    const rows = candidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    const totalCountEl = document.getElementById('totalCount');
+    const showingFromEl = document.getElementById('showingFrom');
+    const showingToEl = document.getElementById('showingTo');
     
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const searchContent = row.getAttribute('data-search');
-      const rowStatus = row.getAttribute('data-status');
+    // Function to collect all text content from a row (including hidden/child elements)
+    function getRowTextContent(row) {
+      let textContent = '';
+      const cells = row.getElementsByTagName('td');
       
-      const matchesSearch = searchContent.includes(searchTerm);
-      const matchesStatus = statusFilterValue === '' || rowStatus === statusFilterValue;
+      for (let cell of cells) {
+        // Skip action cells if they have a specific class
+        if (!cell.classList.contains('actions-cell')) {
+          // Get text content, including hidden spans or child elements
+          textContent += ' ' + (cell.textContent || cell.innerText);
+        }
+      }
       
-      if (matchesSearch && matchesStatus) {
-        row.style.display = '';
-        visibleCount++;
-      } else {
-        row.style.display = 'none';
+      return textContent.toLowerCase().trim();
+    }
+    
+    function filterCandidates() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const statusFilterValue = statusFilter.value.toLowerCase();
+      let visibleCount = 0;
+      
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const rowText = getRowTextContent(row);
+        const rowStatus = row.getAttribute('data-status') || '';
+        
+        const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
+        const matchesStatus = statusFilterValue === '' || rowStatus.toLowerCase() === statusFilterValue;
+        
+        if (matchesSearch && matchesStatus) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      }
+      
+      // Update counters
+      showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
+      showingToEl.textContent = visibleCount;
+      if (totalCountEl) {
+        totalCountEl.textContent = rows.length;
+      }
+      if (document.getElementById('total-candidates')) {
+        document.getElementById('total-candidates').textContent = visibleCount;
       }
     }
     
-    // Update counters
-    showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
-    showingToEl.textContent = visibleCount;
-    document.getElementById('total-candidates').textContent = visibleCount;
-  }
-  
-  // Event listeners
-  searchInput.addEventListener('input', filterCandidates);
-  statusFilter.addEventListener('change', filterCandidates);
-  
-  // Initial filter
-  filterCandidates();
-  
-  // Make table rows clickable (except when clicking on buttons)
-  document.querySelectorAll('#candidatesTable tbody tr').forEach(row => {
-    row.addEventListener('click', (e) => {
-      // Check if the click was on a button or link
-      if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-        return;
-      }
-      
-      // Find the profile link in the row and navigate to it
-      const profileLink = row.querySelector('td:nth-child(2) a');
-      if (profileLink) {
-        window.location.href = profileLink.href;
-      }
+    // Event listeners
+    searchInput.addEventListener('input', filterCandidates);
+    statusFilter.addEventListener('change', filterCandidates);
+    
+    // Debounce the search input for better performance
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(filterCandidates, 300);
     });
     
-    // Change cursor on hover
-    row.style.cursor = 'pointer';
+    // Initial filter
+    filterCandidates();
+    
+    // Make table rows clickable (except when clicking on buttons/links)
+    document.querySelectorAll('#candidatesTable tbody tr').forEach(row => {
+      row.addEventListener('click', (e) => {
+        // Check if the click was on a button, link, or input
+        if (e.target.tagName === 'A' || 
+            e.target.closest('a') || 
+            e.target.tagName === 'BUTTON' || 
+            e.target.closest('button') ||
+            e.target.tagName === 'INPUT' ||
+            e.target.closest('input')) {
+          return;
+        }
+        
+        // Find the profile link in the row and navigate to it
+        const profileLink = row.querySelector('td a.profile-link');
+        if (profileLink) {
+          window.location.href = profileLink.href;
+        }
+      });
+      
+      // Change cursor on hover
+      row.style.cursor = 'pointer';
+    });
   });
-});
 </script>
 
 {% endblock %}
