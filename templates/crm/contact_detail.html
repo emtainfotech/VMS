@@ -15,7 +15,7 @@
                 </div>
                 <div class="col-auto ms-auto d-print-none">
                     <a href="{% url 'admin_company_contacts_list' contact.company.id %}" class="btn btn-secondary">
-                        Back to List
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
                     </a>
                 </div>
             </div>
@@ -25,52 +25,93 @@
     <div class="page-body">
         <div class="container-xl">
             <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Edit Contact Person</h3>
+                </div>
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Full Name*</label>
-                                    <input type="text" name="name" class="form-control" value="{{ contact.name }}" required>
+                                    <label class="form-label required">Full Name</label>
+                                    <input type="text" name="name" class="form-control" 
+                                           value="{{ contact.name }}" 
+                                           required minlength="2" maxlength="100"
+                                           pattern="^[a-zA-Z\s\.'-]+$">
+                                    <div class="invalid-feedback">
+                                        Please provide a valid name (2-100 characters, letters only).
+                                    </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Designation*</label>
-                                    <input type="text" name="designation" class="form-control" value="{{ contact.designation }}" required>
+                                    <label class="form-label required">Designation</label>
+                                    <input type="text" name="designation" class="form-control" 
+                                           value="{{ contact.designation }}" 
+                                           required minlength="2" maxlength="100">
+                                    <div class="invalid-feedback">
+                                        Please provide a valid designation (2-100 characters).
+                                    </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Department</label>
-                                    <input type="text" name="department" class="form-control" value="{{ contact.department|default:'' }}">
+                                    <input type="text" name="department" class="form-control" 
+                                           value="{{ contact.department|default:'' }}" 
+                                           maxlength="100">
+                                    <div class="invalid-feedback">
+                                        Maximum 100 characters allowed.
+                                    </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Email*</label>
-                                    <input type="email" name="email" class="form-control" value="{{ contact.email }}" required>
+                                    <label class="form-label required">Email</label>
+                                    <input type="email" name="email" class="form-control" 
+                                           value="{{ contact.email }}" 
+                                           required pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$">
+                                    <div class="invalid-feedback">
+                                        Please provide a valid email address.
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Phone*</label>
-                                    <input type="text" name="phone" class="form-control" value="{{ contact.phone }}" required>
+                                    <label class="form-label required">Phone</label>
+                                    <input type="tel" name="phone" class="form-control" 
+                                           value="{{ contact.phone }}" 
+                                           required pattern="[0-9]{10}"
+                                           title="10 digit phone number">
+                                    <div class="invalid-feedback">
+                                        Please provide a valid 10-digit phone number.
+                                    </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Location*</label>
-                                    <input type="text" name="location" class="form-control" value="{{ contact.location }}" required>
+                                    <label class="form-label required">Location</label>
+                                    <input type="text" name="location" class="form-control" 
+                                           value="{{ contact.location }}" 
+                                           required minlength="2" maxlength="100">
+                                    <div class="invalid-feedback">
+                                        Please provide a valid location (2-100 characters).
+                                    </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Priority</label>
+                                    <label class="form-label required">Priority</label>
                                     <select name="priority" class="form-select" required>
                                         {% for priority in priority_choices %}
                                         <option value="{{ priority.0 }}" {% if priority.0 == contact.priority %}selected{% endif %}>{{ priority.1 }}</option>
                                         {% endfor %}
                                     </select>
+                                    <div class="invalid-feedback">
+                                        Please select a priority.
+                                    </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Status</label>
+                                    <label class="form-label required">Status</label>
                                     <select name="status" class="form-select" required>
                                         {% for status in status_choices %}
                                         <option value="{{ status.0 }}" {% if status.0 == contact.status %}selected{% endif %}>{{ status.1 }}</option>
                                         {% endfor %}
                                     </select>
+                                    <div class="invalid-feedback">
+                                        Please select a status.
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -80,14 +121,22 @@
                                 <div class="mb-3">
                                     <label class="form-label">Last Contact Date</label>
                                     <input type="date" name="last_contact_date" class="form-control" 
-                                           value="{{ contact.last_contact_date|date:'Y-m-d'|default:'Not Specify' }}">
+                                           value="{{ contact.last_contact_date|date:'Y-m-d'|default:'' }}"
+                                           id="last-contact-date">
+                                    <div class="invalid-feedback">
+                                        Last contact date must be in the past.
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Next Follow-up Date</label>
                                     <input type="date" name="next_followup" class="form-control" 
-                                           value="{{ contact.next_followup|date:'Y-m-d'|default:'Not Specify' }}">
+                                           value="{{ contact.next_followup|date:'Y-m-d'|default:'' }}"
+                                           id="next-followup-date">
+                                    <div class="invalid-feedback">
+                                        Follow-up date must be today or in the future.
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -104,12 +153,19 @@
                         
                         <div class="mb-3">
                             <label class="form-label">Notes</label>
-                            <textarea name="notes" class="form-control" rows="3">{{ contact.notes|default:'' }}</textarea>
+                            <textarea name="notes" class="form-control" rows="3" maxlength="500">{{ contact.notes|default:'' }}</textarea>
+                            <div class="invalid-feedback">
+                                Maximum 500 characters allowed.
+                            </div>
                         </div>
                         
                         <div class="form-footer">
-                            <button type="submit" class="btn btn-primary">Update Contact</button>
-                            <a href="{% url 'company_contacts_list' contact.company.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Contact
+                            </button>
+                            <a href="{% url 'company_contacts_list' contact.company.id %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
                         </div>
                     </form>
                 </div>
@@ -143,4 +199,93 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('.needs-validation');
+    
+    // Date validation
+    const lastContactDate = document.getElementById('last-contact-date');
+    const nextFollowupDate = document.getElementById('next-followup-date');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (lastContactDate) {
+        lastContactDate.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            if (selectedDate > today) {
+                this.setCustomValidity("Last contact date must be in the past");
+                this.classList.add('is-invalid');
+            } else {
+                this.setCustomValidity("");
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+    
+    if (nextFollowupDate) {
+        nextFollowupDate.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            if (selectedDate < today) {
+                this.setCustomValidity("Follow-up date must be today or in the future");
+                this.classList.add('is-invalid');
+            } else {
+                this.setCustomValidity("");
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+    
+    // Form submission handler
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    }, false);
+    
+    // Real-time validation for all fields
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (input.checkValidity()) {
+                input.classList.remove('is-invalid');
+            } else {
+                input.classList.add('is-invalid');
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.form-label.required:after {
+    content: " *";
+    color: #dc3545;
+}
+.invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+}
+.is-invalid ~ .invalid-feedback,
+.is-invalid ~ .invalid-tooltip {
+    display: block;
+}
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid,
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+</style>
 {% endblock %}

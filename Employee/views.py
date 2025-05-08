@@ -1413,24 +1413,21 @@ def employee_company_profile(request,id) :
         if request.method == 'POST':
             if 'company_personal_information' in request.POST:
                 # Handle Employee fields
+                employee_name = request.POST.get('employee_name')
                 company_name = request.POST.get('company_name')
                 company_location = request.POST.get('company_location')
                 company_unique_code = request.POST.get('company_unique_code')
-                job_profile = request.POST.get('job_profile')
-                company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
                 company_logo = request.FILES.get('company_logo')
-                vacancy_opening_date = request.POST.get('vacancy_opening_date')
                 company_email_address = request.POST.get('company_email_address')
                 
+                company.employee_name = employee_name
                 company.company_name = company_name
                 company.company_location = company_location
                 company.company_unique_code = company_unique_code
-                company.job_profile = job_profile
-                company.company_vacancy_unique_code = company_vacancy_unique_code
-                company_email_address=company_email_address
+                company.company_email_address=company_email_address
+                company.updated_by=request.user
                 if company_logo:
                     company.company_logo = company_logo
-                company.vacancy_opening_date = vacancy_opening_date
                 company.save()
 
                 messages.success(request, 'Company details updated successfully!')
@@ -1828,10 +1825,10 @@ def employee_vendor_candidate_list(request, id):
                 # Profile Details
                 vendor.user.first_name = request.POST.get('first_name')
                 vendor.user.last_name = request.POST.get('last_name')
-                vendor.user.save()
                 vendor.mobile_number = request.POST.get('mobile_number')
-                vendor.email = request.POST.get('email')
+                vendor.user.email = request.POST.get('email')
                 vendor.date_of_birth = request.POST.get('date_of_birth')
+                vendor.user.save()
                 
                 if 'vendor_profile_image' in request.FILES:
                     vendor.vendor_profile_image = request.FILES['vendor_profile_image']

@@ -174,21 +174,7 @@
                   </td>
                 </tr>
                 {% empty %}
-                {% comment %} <tr>
-                  <td colspan="8" class="text-center py-4">
-                    <div class="d-flex flex-column align-items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-briefcase-off" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M11 7h8a2 2 0 0 1 2 2v8m-1.166 2.818a1.993 1.993 0 0 1 -.834 .182h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2h2"></path>
-                        <path d="M8.185 4.158a2 2 0 0 1 1.815 -1.158h4a2 2 0 0 1 2 2v2"></path>
-                        <path d="M12 12v.01"></path>
-                        <path d="M3 13a20 20 0 0 0 11.905 1.928m3.263 -.763a20 20 0 0 0 2.832 -1.165"></path>
-                        <path d="M3 3l18 18"></path>
-                      </svg>
-                      <span class="mt-2">No vacancies found for this company</span>
-                    </div>
-                  </td>
-                </tr> {% endcomment %}
+                
                 {% endfor %}
               {% endfor %}
             </tbody>
@@ -274,84 +260,79 @@
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  // Initialize tooltips
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-
-  // Search and filter functionality
-  const searchInput = document.getElementById('searchInput');
-  const sectorFilter = document.getElementById('sectorFilter');
-  const statusFilter = document.getElementById('statusFilter');
-  const companiesTable = document.getElementById('companiesTable');
-  const rows = companiesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-  const totalCountEl = document.getElementById('totalCount');
-  const showingFromEl = document.getElementById('showingFrom');
-  const showingToEl = document.getElementById('showingTo');
-  const totalCompaniesEl = document.getElementById('total-companies');
-  const totalVacanciesEl = document.getElementById('total-vacancies');
-  
-  function filterCompanies() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const sectorFilterValue = sectorFilter.value.toLowerCase();
-    const statusFilterValue = statusFilter.value.toLowerCase();
-    let visibleCount = 0;
-    
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const searchContent = row.getAttribute('data-search');
-      const rowSector = row.getAttribute('data-sector');
-      const rowStatus = row.getAttribute('data-status');
-      
-      const matchesSearch = searchContent.includes(searchTerm);
-      const matchesSector = sectorFilterValue === '' || 
-                          (rowSector && rowSector.toLowerCase().includes(sectorFilterValue));
-      const matchesStatus = statusFilterValue === '' || 
-                          (rowStatus && rowStatus.toLowerCase() === statusFilterValue.toLowerCase());
-      
-      if (matchesSearch && matchesSector && matchesStatus) {
-        row.style.display = '';
-        visibleCount++;
-      } else {
-        row.style.display = 'none';
-      }
-    }
-    
-    // Update counters
-    showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
-    showingToEl.textContent = visibleCount;
-    totalCountEl.textContent = visibleCount;
-  }
-  
-  // Event listeners
-  searchInput.addEventListener('input', filterCompanies);
-  sectorFilter.addEventListener('change', filterCompanies);
-  statusFilter.addEventListener('change', filterCompanies);
-  
-  // Initial filter
-  filterCompanies();
-  
-  // Make table rows clickable (except when clicking on buttons)
-  document.querySelectorAll('#companiesTable tbody tr').forEach(row => {
-    row.addEventListener('click', (e) => {
-      // Check if the click was on a button or link
-      if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-        return;
-      }
-      
-      // Find the profile link in the row and navigate to it
-      const profileLink = row.querySelector('td:nth-child(2) a');
-      if (profileLink) {
-        window.location.href = profileLink.href;
-      }
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-    
-    // Change cursor on hover
-    row.style.cursor = 'pointer';
+  
+    // Element references
+    const searchInput = document.getElementById('searchInput');
+    const sectorFilter = document.getElementById('sectorFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const companiesTable = document.getElementById('companiesTable');
+    const rows = companiesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    const totalCountEl = document.getElementById('totalCount');
+    const showingFromEl = document.getElementById('showingFrom');
+    const showingToEl = document.getElementById('showingTo');
+  
+    function filterCompanies() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const sectorFilterValue = sectorFilter.value.toLowerCase();
+      const statusFilterValue = statusFilter.value.toLowerCase();
+      let visibleCount = 0;
+  
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+  
+        const rowText = row.innerText.toLowerCase(); // Search in all visible cell text
+        const rowSector = row.getAttribute('data-sector')?.toLowerCase() || '';
+        const rowStatus = row.getAttribute('data-status')?.toLowerCase() || '';
+  
+        const matchesSearch = rowText.includes(searchTerm);
+        const matchesSector = !sectorFilterValue || rowSector.includes(sectorFilterValue);
+        const matchesStatus = !statusFilterValue || rowStatus === statusFilterValue;
+  
+        if (matchesSearch && matchesSector && matchesStatus) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      }
+  
+      // Update footer counters
+      showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
+      showingToEl.textContent = visibleCount;
+      totalCountEl.textContent = visibleCount;
+    }
+  
+    // Event listeners for filtering
+    searchInput.addEventListener('input', filterCompanies);
+    sectorFilter.addEventListener('change', filterCompanies);
+    statusFilter.addEventListener('change', filterCompanies);
+  
+    // Initial load
+    filterCompanies();
+  
+    // Make rows clickable, excluding button/link clicks
+    document.querySelectorAll('#companiesTable tbody tr').forEach(row => {
+      row.addEventListener('click', (e) => {
+        if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+          return;
+        }
+  
+        const profileLink = row.querySelector('td:nth-child(2) a');
+        if (profileLink) {
+          window.location.href = profileLink.href;
+        }
+      });
+  
+      row.style.cursor = 'pointer';
+    });
   });
-});
-</script>
+  </script>
+  
 
 {% endblock %}

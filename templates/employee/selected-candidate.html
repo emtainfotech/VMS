@@ -240,76 +240,82 @@
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  // Initialize tooltips
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-
-  // Search and filter functionality
-  const searchInput = document.getElementById('searchInput');
-  const companyFilter = document.getElementById('companyFilter');
-  const selectedCandidatesTable = document.getElementById('selectedCandidatesTable');
-  const rows = selectedCandidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-  const totalCountEl = document.getElementById('totalCount');
-  const showingFromEl = document.getElementById('showingFrom');
-  const showingToEl = document.getElementById('showingTo');
-  
-  function filterCandidates() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const companyFilterValue = companyFilter.value.toLowerCase();
-    let visibleCount = 0;
-    
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const searchContent = row.getAttribute('data-search');
-      const rowCompany = row.getAttribute('data-company');
-      
-      const matchesSearch = searchContent.includes(searchTerm);
-      const matchesCompany = companyFilterValue === '' || 
-                          (rowCompany && rowCompany.toLowerCase().includes(companyFilterValue));
-      
-      if (matchesSearch && matchesCompany) {
-        row.style.display = '';
-        visibleCount++;
-      } else {
-        row.style.display = 'none';
-      }
-    }
-    
-    // Update counters
-    showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
-    showingToEl.textContent = visibleCount;
-    document.getElementById('total-candidates').textContent = visibleCount;
-  }
-  
-  // Event listeners
-  searchInput.addEventListener('input', filterCandidates);
-  companyFilter.addEventListener('change', filterCandidates);
-  
-  // Initial filter
-  filterCandidates();
-  
-  // Make table rows clickable (except when clicking on buttons)
-  document.querySelectorAll('#selectedCandidatesTable tbody tr').forEach(row => {
-    row.addEventListener('click', (e) => {
-      // Check if the click was on a button or link
-      if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-        return;
-      }
-      
-      // Find the profile link in the row and navigate to it
-      const profileLink = row.querySelector('td:nth-child(2) a');
-      if (profileLink) {
-        window.location.href = profileLink.href;
-      }
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-    
-    // Change cursor on hover
-    row.style.cursor = 'pointer';
+  
+    // Search and filter functionality
+    const searchInput = document.getElementById('searchInput');
+    const companyFilter = document.getElementById('companyFilter');
+    const selectedCandidatesTable = document.getElementById('selectedCandidatesTable');
+    const rows = selectedCandidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    const totalCountEl = document.getElementById('totalCount');
+    const showingFromEl = document.getElementById('showingFrom');
+    const showingToEl = document.getElementById('showingTo');
+  
+    function filterCandidates() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const companyFilterValue = companyFilter.value.toLowerCase();
+      let visibleCount = 0;
+  
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+  
+        // Combine all cell text in the row
+        const cells = row.getElementsByTagName('td');
+        let rowText = '';
+        for (let j = 0; j < cells.length; j++) {
+          rowText += cells[j].textContent.toLowerCase() + ' ';
+        }
+  
+        const rowCompany = row.getAttribute('data-company') || '';
+  
+        const matchesSearch = rowText.includes(searchTerm);
+        const matchesCompany = companyFilterValue === '' || rowCompany.toLowerCase().includes(companyFilterValue);
+  
+        if (matchesSearch && matchesCompany) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      }
+  
+      // Update counters
+      showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
+      showingToEl.textContent = visibleCount;
+      document.getElementById('total-candidates').textContent = visibleCount;
+    }
+  
+    // Event listeners
+    searchInput.addEventListener('input', filterCandidates);
+    companyFilter.addEventListener('change', filterCandidates);
+  
+    // Initial filter
+    filterCandidates();
+  
+    // Make table rows clickable (except when clicking on buttons)
+    document.querySelectorAll('#selectedCandidatesTable tbody tr').forEach(row => {
+      row.addEventListener('click', (e) => {
+        // Ignore clicks on buttons or links
+        if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+          return;
+        }
+  
+        const profileLink = row.querySelector('td:nth-child(2) a');
+        if (profileLink) {
+          window.location.href = profileLink.href;
+        }
+      });
+  
+      // Change cursor on hover
+      row.style.cursor = 'pointer';
+    });
   });
-});
-</script>
+  </script>
+  
 
 {% endblock %}

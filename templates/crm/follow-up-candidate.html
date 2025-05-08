@@ -69,6 +69,7 @@
                 <th class="w-1">#</th>
                 <th>Candidate</th>
                 <th>Contact</th>
+                <th>Employee</th>
                 <th>Registered</th>
                 <th>Follow Up Date</th>
                 <th>Status</th>
@@ -114,6 +115,9 @@
                     </a>
                     {% endif %}
                   </div>
+                </td>
+                <td class="text-muted">
+                  {{ candidate.employee_name }}
                 </td>
                 <td class="text-muted" title="{{ candidate.register_time|date:'DATETIME_FORMAT' }}">
                   {{ candidate.register_time|date:"M d, Y" }}
@@ -262,75 +266,108 @@
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  // Initialize tooltips
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-
-  // Search and filter functionality
-  const searchInput = document.getElementById('searchInput');
-  const statusFilter = document.getElementById('statusFilter');
-  const followUpTable = document.getElementById('followUpTable');
-  const rows = followUpTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-  const totalCountEl = document.getElementById('totalCount');
-  const showingFromEl = document.getElementById('showingFrom');
-  const showingToEl = document.getElementById('showingTo');
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
   
-  function filterCandidates() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const statusFilterValue = statusFilter.value;
-    let visibleCount = 0;
+    // Search and filter functionality
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const followUpTable = document.getElementById('followUpTable');
+    const rows = followUpTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    const totalCountEl = document.getElementById('totalCount');
+    const showingFromEl = document.getElementById('showingFrom');
+    const showingToEl = document.getElementById('showingTo');
     
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const searchContent = row.getAttribute('data-search');
-      const rowStatus = row.getAttribute('data-status');
+    function filterCandidates() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const statusFilterValue = statusFilter.value;
+      let visibleCount = 0;
       
-      const matchesSearch = searchContent.includes(searchTerm);
-      const matchesStatus = statusFilterValue === '' || rowStatus === statusFilterValue;
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        let rowTextContent = '';
+        
+        // Get text content from all cells except actions column
+        const cells = row.getElementsByTagName('td');
+        for (let j = 0; j < cells.length - 1; j++) { // Skip last column (actions)
+          rowTextContent += ' ' + cells[j].textContent.toLowerCase();
+          
+          // Include title attributes if they exist
+          if (cells[j].hasAttribute('title')) {
+            rowTextContent += ' ' + cells[j].getAttribute('title').toLowerCase();
+          }
+        }
+        
+        // Also include data attributes if they exist
+        const searchContent = row.getAttribute('data-search') || '';
+        const rowStatus = row.getAttribute('data-status') || '';
+        
+        const matchesSearch = rowTextContent.includes(searchTerm) || searchContent.includes(searchTerm);
+        const matchesStatus = statusFilterValue === '' || rowStatus === statusFilterValue;
+        
+        if (matchesSearch && matchesStatus) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      }
       
-      if (matchesSearch && matchesStatus) {
-        row.style.display = '';
-        visibleCount++;
+      // Update counters
+      showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
+      showingToEl.textContent = visibleCount;
+      document.getElementById('total-candidates').textContent = visibleCount;
+      
+      // Update pagination visibility
+      updatePagination(visibleCount);
+    }
+    
+    function updatePagination(visibleCount) {
+      const pagination = document.querySelector('.pagination');
+      if (visibleCount === 0) {
+        pagination.classList.add('d-none');
       } else {
-        row.style.display = 'none';
+        pagination.classList.remove('d-none');
       }
     }
     
-    // Update counters
-    showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
-    showingToEl.textContent = visibleCount;
-    document.getElementById('total-candidates').textContent = visibleCount;
-  }
-  
-  // Event listeners
-  searchInput.addEventListener('input', filterCandidates);
-  statusFilter.addEventListener('change', filterCandidates);
-  
-  // Initial filter
-  filterCandidates();
-  
-  // Make table rows clickable (except when clicking on buttons)
-  document.querySelectorAll('#followUpTable tbody tr').forEach(row => {
-    row.addEventListener('click', (e) => {
-      // Check if the click was on a button or link
-      if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-        return;
-      }
-      
-      // Find the profile link in the row and navigate to it
-      const profileLink = row.querySelector('td:nth-child(2) a');
-      if (profileLink) {
-        window.location.href = profileLink.href;
-      }
-    });
+    // Event listeners
+    searchInput.addEventListener('input', filterCandidates);
+    statusFilter.addEventListener('change', filterCandidates);
     
-    // Change cursor on hover
-    row.style.cursor = 'pointer';
+    {% comment %} // Make search case-insensitive and trim whitespace
+    searchInput.addEventListener('keyup', function(e) {
+      this.value = this.value.toLowerCase().trim();
+    }); {% endcomment %}
+    
+    // Initial filter
+    filterCandidates();
+    
+    // Make table rows clickable (except when clicking on buttons)
+    document.querySelectorAll('#followUpTable tbody tr').forEach(row => {
+      row.addEventListener('click', (e) => {
+        // Check if the click was on a button, link, or input
+        if (e.target.tagName === 'A' || e.target.closest('a') || 
+            e.target.tagName === 'BUTTON' || e.target.closest('button') ||
+            e.target.tagName === 'INPUT' || e.target.closest('input')) {
+          return;
+        }
+        
+        // Find the profile link in the row and navigate to it
+        const profileLink = row.querySelector('td:nth-child(2) a');
+        if (profileLink) {
+          window.location.href = profileLink.href;
+        }
+      });
+      
+      // Change cursor on hover
+      row.style.cursor = 'pointer';
+    });
   });
-});
-</script>
+  </script>
 
 {% endblock %}

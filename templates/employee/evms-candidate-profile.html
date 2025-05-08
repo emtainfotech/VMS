@@ -416,7 +416,7 @@
             <div class="col-md-6 mb-3">
               <label class="form-label">Candidate Mobile Number <span class="text-danger">*</span></label>
               <input type="tel" class="form-control" name="candidate_mobile_number" 
-                     value="{{ candidate.candidate_mobile_number }}" required pattern="[0-9]{10}" />
+                     value="{{ candidate.candidate_mobile_number }}" required pattern="[0-9]{10}" max="10"/>
               <div class="invalid-feedback">
                 Please enter a valid 10-digit mobile number
               </div>
@@ -425,7 +425,7 @@
             <div class="col-md-6 mb-3">
               <label class="form-label">Candidate Email Address <span class="text-danger">*</span></label>
               <input type="email" class="form-control" name="candidate_email_address" 
-                     value="{{ candidate.candidate_email_address }}" required />
+                     value="{{ candidate.candidate_email_address }}" required pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"   />
               <div class="invalid-feedback">
                 Please enter a valid email address
               </div>

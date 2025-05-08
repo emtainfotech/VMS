@@ -850,7 +850,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <div class="col-md-6 mb-3">
                 <label class="form-label">Email Address</label>
                 <input type="email" class="form-control" name="company_email_address" value="{{ company.company_email_address }}" 
-                       maxlength="100" />
+                       maxlength="100" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"/>
                 <div class="invalid-feedback">
                   Please provide a valid email address.
                 </div>
@@ -894,8 +894,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <label class="form-label">Contact Person Contact Details</label>
                 <input type="text" class="form-control" name="company_contact_person_contact_details" 
                        value="{{ company.company_contact_person_contact_details }}"
-                       maxlength="20"
-                       pattern="^[0-9+\- ]*$" 
+                       maxlength="10"
+                       pattern="[0-9]{10}" 
                        title="Only numbers, +, - and spaces are allowed" />
                 <div class="invalid-feedback">
                   Please provide valid contact details (numbers, +, - only).
@@ -1499,6 +1499,332 @@ document.addEventListener("DOMContentLoaded", function () {
       document.querySelector('[name="expected_payment_date"]').min = today;
       document.querySelector('[name="candidate_salary_transfer_date"]').min = today;
   });
-  </script>
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all forms
+    initFormValidation('profileForm');
+    initFormValidation('companyDetailsForm');
+    initFormValidation('callingRemarkForm');
+  
+    // Add real-time validation for all input fields
+    addRealTimeValidation();
+  });
+  
+  function initFormValidation(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+  
+    form.addEventListener('submit', function(event) {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    });
+  
+    // Add input event listeners for real-time validation
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+      input.addEventListener('input', function() {
+        validateField(this);
+      });
+      input.addEventListener('blur', function() {
+        validateField(this);
+      });
+    });
+  }
+  
+  function addRealTimeValidation() {
+    // Employee Name validation
+    const employeeNameInput = document.querySelector('input[name="employee_name"]');
+    if (employeeNameInput) {
+      employeeNameInput.addEventListener('input', function() {
+        validateNameField(this, 'Employee name');
+      });
+    }
+  
+    // Company Name validation
+    const companyNameInput = document.querySelector('input[name="company_name"]');
+    if (companyNameInput) {
+      companyNameInput.addEventListener('input', function() {
+        validateRequiredField(this, 'Company name');
+      });
+    }
+  
+    // Company Logo validation
+    const companyLogoInput = document.querySelector('input[name="company_logo"]');
+    if (companyLogoInput) {
+      companyLogoInput.addEventListener('change', function() {
+        validateImageFile(this);
+      });
+    }
+  
+    // Company Location validation
+    const companyLocationInput = document.querySelector('input[name="company_location"]');
+    if (companyLocationInput) {
+      companyLocationInput.addEventListener('input', function() {
+        validateRequiredField(this, 'Company location');
+      });
+    }
+  
+    // Company Unique Code validation
+    const companyUniqueCodeInput = document.querySelector('input[name="company_unique_code"]');
+    if (companyUniqueCodeInput) {
+      companyUniqueCodeInput.addEventListener('input', function() {
+        validateAlphanumericField(this, 'Company unique code');
+      });
+    }
+  
+    // Email validation
+    const emailInput = document.querySelector('input[name="company_email_address"]');
+    if (emailInput) {
+      emailInput.addEventListener('input', function() {
+        validateEmailField(this);
+      });
+    }
+  
+    // Contact Person Name validation
+    const contactPersonNameInput = document.querySelector('input[name="company_contact_person_name"]');
+    if (contactPersonNameInput) {
+      contactPersonNameInput.addEventListener('input', function() {
+        validateNameField(this, 'Contact person name');
+      });
+    }
+  
+    // Contact Person Contact Details validation
+    const contactDetailsInput = document.querySelector('input[name="company_contact_person_contact_details"]');
+    if (contactDetailsInput) {
+      contactDetailsInput.addEventListener('input', function() {
+        validatePhoneField(this);
+      });
+    }
+  
+    // Interview Address validation
+    const interviewAddressInput = document.querySelector('input[name="interview_address"]');
+    if (interviewAddressInput) {
+      interviewAddressInput.addEventListener('input', function() {
+        validateRequiredField(this, 'Interview address');
+      });
+    }
+  
+    // Status of Proposal validation
+    const statusProposalSelect = document.querySelector('select[name="status_of_proposal"]');
+    if (statusProposalSelect) {
+      statusProposalSelect.addEventListener('change', function() {
+        validateSelectField(this, 'Status of proposal');
+      });
+    }
+  
+    // Date fields validation
+    const dateFields = document.querySelectorAll('input[type="date"]');
+    dateFields.forEach(field => {
+      field.addEventListener('change', function() {
+        validateDateField(this);
+      });
+    });
+  
+    // Payment Condition validation
+    const paymentConditionSelect = document.querySelector('select[name="payment_condiation"]');
+    if (paymentConditionSelect) {
+      paymentConditionSelect.addEventListener('change', function() {
+        validateSelectField(this, 'Payment condition');
+      });
+    }
+  
+    // Remark validation
+    const remarkTextarea = document.querySelector('textarea[name="remark"]');
+    if (remarkTextarea) {
+      remarkTextarea.addEventListener('input', function() {
+        validateTextField(this, 'Remark', 500);
+      });
+    }
+  }
+  
+  // Field-specific validation functions
+  function validateField(field) {
+    if (field.type === 'file') {
+      validateImageFile(field);
+    } else if (field.type === 'email') {
+      validateEmailField(field);
+    } else if (field.type === 'date') {
+      validateDateField(field);
+    } else if (field.tagName === 'SELECT') {
+      validateSelectField(field);
+    } else if (field.tagName === 'TEXTAREA') {
+      validateTextField(field, field.name, field.maxLength);
+    } else if (field.hasAttribute('pattern')) {
+      if (field.name.includes('name')) {
+        validateNameField(field);
+      } else if (field.name.includes('contact_details')) {
+        validatePhoneField(field);
+      } else if (field.name.includes('unique_code')) {
+        validateAlphanumericField(field);
+      }
+    } else {
+      validateRequiredField(field);
+    }
+  }
+  
+  function validateNameField(field, fieldName = 'Name') {
+    const value = field.value.trim();
+    const isValid = /^[a-zA-Z\s.]*$/.test(value) && value.length >= 2 && value.length <= 100;
+    
+    if (!isValid) {
+      field.setCustomValidity(`${fieldName} must be 2-100 characters with only alphabets, spaces and dots.`);
+    } else {
+      field.setCustomValidity('');
+    }
+    updateFieldStatus(field, isValid);
+  }
+  
+  function validateRequiredField(field, fieldName = 'This field') {
+    const value = field.value.trim();
+    const minLength = field.getAttribute('minlength') || 0;
+    const maxLength = field.getAttribute('maxlength') || Infinity;
+    const isValid = value.length >= minLength && value.length <= maxLength;
+    
+    if (!isValid) {
+      field.setCustomValidity(`${fieldName} is required and must be between ${minLength} and ${maxLength} characters.`);
+    } else {
+      field.setCustomValidity('');
+    }
+    updateFieldStatus(field, isValid);
+  }
+  
+  function validateEmailField(field) {
+    const value = field.value.trim();
+    if (!value) {
+      field.setCustomValidity('');
+      updateFieldStatus(field, true);
+      return;
+    }
+    
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 100;
+    if (!isValid) {
+      field.setCustomValidity('Please enter a valid email address (e.g., example@domain.com).');
+    } else {
+      field.setCustomValidity('');
+    }
+    updateFieldStatus(field, isValid);
+  }
+  
+  function validatePhoneField(field) {
+    const value = field.value.trim();
+    if (!value) {
+      field.setCustomValidity('');
+      updateFieldStatus(field, true);
+      return;
+    }
+    
+    const isValid = /^[0-9]{10}$/.test(value);
+    if (!isValid) {
+      field.setCustomValidity('Please enter a valid 10-digit phone number (numbers only).');
+    } else {
+      field.setCustomValidity('');
+    }
+    updateFieldStatus(field, isValid);
+  }
+  
+  function validateAlphanumericField(field, fieldName = 'This field') {
+    const value = field.value.trim();
+    const isValid = /^[a-zA-Z0-9\-_]*$/.test(value) && value.length >= 3 && value.length <= 50;
+    
+    if (!isValid) {
+      field.setCustomValidity(`${fieldName} must be 3-50 characters with only alphanumeric characters, hyphens and underscores.`);
+    } else {
+      field.setCustomValidity('');
+    }
+    updateFieldStatus(field, isValid);
+  }
+  
+  function validateImageFile(field) {
+    if (!field.files || field.files.length === 0) {
+      field.setCustomValidity('');
+      updateFieldStatus(field, true);
+      return;
+    }
+    
+    const file = field.files[0];
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    
+    const isValidType = validTypes.includes(file.type);
+    const isValidSize = file.size <= maxSize;
+    
+    if (!isValidType) {
+      field.setCustomValidity('Please upload a valid image file (PNG, JPG, JPEG only).');
+    } else if (!isValidSize) {
+      field.setCustomValidity('Image size must be less than 2MB.');
+    } else {
+      field.setCustomValidity('');
+    }
+    
+    updateFieldStatus(field, isValidType && isValidSize);
+  }
+  
+  function validateDateField(field) {
+    const value = field.value;
+    if (!value) {
+      field.setCustomValidity('');
+      updateFieldStatus(field, true);
+      return;
+    }
+    
+    const date = new Date(value);
+    const isValid = !isNaN(date.getTime());
+    
+    if (!isValid) {
+      field.setCustomValidity('Please enter a valid date (YYYY-MM-DD format).');
+    } else {
+      field.setCustomValidity('');
+    }
+    updateFieldStatus(field, isValid);
+  }
+  
+  function validateSelectField(field, fieldName = 'This field') {
+    const isValid = field.value !== '';
+    
+    if (!isValid) {
+      field.setCustomValidity(`Please select a ${fieldName.toLowerCase()}.`);
+    } else {
+      field.setCustomValidity('');
+    }
+    updateFieldStatus(field, isValid);
+  }
+  
+  function validateTextField(field, fieldName = 'This field', maxLength = 500) {
+    const value = field.value.trim();
+    const isValid = value.length <= maxLength;
+    
+    if (!isValid) {
+      field.setCustomValidity(`${fieldName} must be less than ${maxLength} characters.`);
+    } else {
+      field.setCustomValidity('');
+    }
+    updateFieldStatus(field, isValid);
+  }
+  
+  function updateFieldStatus(field, isValid) {
+    if (isValid) {
+      field.classList.remove('is-invalid');
+      field.classList.add('is-valid');
+    } else {
+      field.classList.remove('is-valid');
+      field.classList.add('is-invalid');
+    }
+    
+    // Update feedback message immediately
+    const feedback = field.nextElementSibling;
+    if (feedback && feedback.classList.contains('invalid-feedback')) {
+      feedback.textContent = field.validationMessage || feedback.dataset.originalMessage || 'Invalid value';
+    }
+  }
+  
+  // Initialize original messages for feedback elements
+  document.querySelectorAll('.invalid-feedback').forEach(feedback => {
+    feedback.dataset.originalMessage = feedback.textContent;
+  });
+</script>
 
 {% endblock content %}

@@ -104,6 +104,7 @@
                 <th>Status</th>
                 <th>Experience</th>
                 <th>Current Status</th>
+                <th>Employee</th>
                 <th>Registered</th>
                 <th class="text-center">Actions</th>
               </tr>
@@ -168,6 +169,9 @@
                     <div class="small">at {{ candidate.current_company }}</div>
                     {% endif %}
                   </div>
+                </td>
+                <td class="text-muted">
+                  {{ candidate.employee_name }}
                 </td>
                 <td class="text-muted" title="{{ candidate.register_time|date:'DATETIME_FORMAT' }}">
                   {{ candidate.register_time|date:"M d, Y" }}

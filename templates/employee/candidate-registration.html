@@ -72,7 +72,7 @@
                                         <label class="form-label">Email Address</label>
                                         <input type="email" class="form-control" name="candidate_email_address" 
                                                placeholder="Email Address"
-                                               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                               pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
                                                title="Please enter a valid email address">
                                         <div class="invalid-feedback">Please provide a valid email address.</div>
                                     </div>
@@ -250,7 +250,7 @@
                                     <div class="mb-3">
                                         <label class="form-label">Current Salary</label>
                                         <input type="number" class="form-control" name="current_salary" 
-                                               placeholder="Current Salary" min="0" step="1000">
+                                               placeholder="Current Salary" min="0" >
                                         <div class="invalid-feedback">Please enter a valid salary.</div>
                                     </div>
                                 </div>
@@ -260,7 +260,7 @@
                                     <div class="mb-3">
                                         <label class="form-label">Expected Salary</label>
                                         <input type="number" name='expected_salary' class="form-control" 
-                                               placeholder="Expected Salary" min="0" step="1000">
+                                               placeholder="Expected Salary" min="0" >
                                         <div class="invalid-feedback">Please enter a valid expected salary.</div>
                                     </div>
                                 </div>

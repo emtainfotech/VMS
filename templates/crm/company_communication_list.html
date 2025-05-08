@@ -1,4 +1,4 @@
-{% extends 'employee/performance-base.html' %}
+{% extends 'crm/base.html' %}
 
 {% block content %}
 <div class="page-wrapper">
@@ -144,87 +144,144 @@
                 </div>
             </div>
 
-            <!-- Add Communication Form -->
-            <div class="card mt-4" id="add-communication">
-                <div class="card-header">
-                    <h3 class="card-title">Add New Communication</h3>
+           <!-- Add Communication Form -->
+<div class="card mt-4" id="add-communication">
+    <div class="card-header">
+        <h3 class="card-title">Add New Communication</h3>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" novalidate class="needs-validation">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Contact Person</label>
+                        <input type="text" name="contact_person" class="form-control" required minlength="2" maxlength="100">
+                        <div class="invalid-feedback">Please provide a valid contact person name (2-100 characters).</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Designation</label>
+                        <input type="text" name="designation" class="form-control" maxlength="100">
+                        <div class="invalid-feedback">Designation cannot exceed 100 characters.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Email</label>
+                        <input type="email" name="contact_email" class="form-control" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$">
+                        <div class="invalid-feedback">Please provide a valid email address.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Phone</label>
+                        <input type="text" name="contact_phone" class="form-control" pattern="[0-9]{10}" maxlength="10" required>
+                        <div class="invalid-feedback">Please provide a valid phone number (10-20 digits, may include +, - or spaces).</div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Contact Person</label>
-                                    <input type="text" name="contact_person" class="form-control" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Designation</label>
-                                    <input type="text" name="designation" class="form-control">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Contact Email</label>
-                                    <input type="email" name="contact_email" class="form-control">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Contact Phone</label>
-                                    <input type="text" name="contact_phone" class="form-control">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Communication Type</label>
-                                    <select name="communication_type" class="form-select" required>
-                                        {% for type in communication_types %}
-                                        <option value="{{ type.0 }}">{{ type.1 }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Date & Time</label>
-                                    <input type="datetime-local" name="communication_date" class="form-control" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Priority</label>
-                                    <select name="priority" class="form-select" required>
-                                        {% for priority in priority_choices %}
-                                        <option value="{{ priority.0 }}" {% if priority.0 == 'medium' %}selected{% endif %}>{{ priority.1 }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Follow-up Date (optional)</label>
-                                    <input type="date" name="follow_up_date" class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Subject</label>
-                            <input type="text" name="subject" class="form-control" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Details</label>
-                            <textarea name="communication_details" class="form-control" rows="4" required></textarea>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Outcome (optional)</label>
-                            <textarea name="outcome" class="form-control" rows="2"></textarea>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Attachment (optional)</label>
-                            <input type="file" name="attachment" class="form-control">
-                        </div>
-                        
-                        <div class="form-footer">
-                            <button type="submit" class="btn btn-primary">Save Communication</button>
-                        </div>
-                    </form>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Communication Type</label>
+                        <select name="communication_type" class="form-select" required>
+                            {% for type in communication_types %}
+                            <option value="{{ type.0 }}">{{ type.1 }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">Please select a communication type.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date & Time</label>
+                        <input type="datetime-local" name="communication_date" class="form-control" required>
+                        <div class="invalid-feedback">Please select a valid date and time.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Priority</label>
+                        <select name="priority" class="form-select" required>
+                            {% for priority in priority_choices %}
+                            <option value="{{ priority.0 }}" {% if priority.0 == 'medium' %}selected{% endif %}>{{ priority.1 }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">Please select a priority.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Follow-up Date (optional)</label>
+                        <input type="date" name="follow_up_date" class="form-control">
+                        <div class="invalid-feedback">Please select a valid follow-up date.</div>
+                    </div>
                 </div>
             </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Subject</label>
+                <input type="text" name="subject" class="form-control" required minlength="5" maxlength="200">
+                <div class="invalid-feedback">Subject must be between 5-200 characters.</div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Details</label>
+                <textarea name="communication_details" class="form-control" rows="4" required minlength="10" oninput="validateDetails(this)"></textarea>
+                <div class="invalid-feedback">Please provide meaningful details (minimum 10 non-whitespace characters).</div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Outcome (optional)</label>
+                <textarea name="outcome" class="form-control" rows="2" maxlength="500"></textarea>
+                <div class="invalid-feedback">Outcome cannot exceed 500 characters.</div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Attachment (optional)</label>
+                <input type="file" name="attachment" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                <div class="invalid-feedback">Please upload a valid file (PDF, DOC, XLS, JPG, PNG).</div>
+            </div>
+            
+            <div class="form-footer">
+                <button type="submit" class="btn btn-primary">Save Communication</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Client-side form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                // Custom validation for communication details
+                var detailsField = form.querySelector('textarea[name="communication_details"]');
+                if (!validateDetailsContent(detailsField.value)) {
+                    detailsField.setCustomValidity("Please provide meaningful details (minimum 10 non-whitespace characters)");
+                    detailsField.classList.add('is-invalid');
+                    event.preventDefault();
+                    event.stopPropagation();
+                } else {
+                    detailsField.setCustomValidity("");
+                }
+                
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+    
+    // Real-time validation for details field
+    function validateDetails(field) {
+        if (!validateDetailsContent(field.value)) {
+            field.classList.add('is-invalid');
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    }
+    
+    // Validate that details has meaningful content (not just whitespace)
+    function validateDetailsContent(text) {
+        // Remove whitespace and check length
+        return text.trim().length >= 10;
+    }
+})();
+</script>
         </div>
     </div>
 </div>

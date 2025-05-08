@@ -17,8 +17,6 @@ class Vendor(models.Model):
     qr_code_plain = models.ImageField(upload_to='qr_codes_plain/', blank=True, null=True)  # Add this field
     
 
-    
-    
 class Vendor_profile_details(models.Model) :
     vendor = models.OneToOneField(Vendor, on_delete=models.CASCADE)
     address = models.CharField(max_length=100, null=True, blank=True)

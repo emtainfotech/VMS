@@ -326,7 +326,7 @@
                           <label class="form-label">Email Address</label>
                           <input type="email" class="form-control" name="candidate_email_address" 
                                  value="{{ candidate.candidate_email_address }}" 
-                                 maxlength="100" />
+                                 maxlength="100" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"/>
                           <div class="invalid-feedback">
                               Please enter a valid email address
                           </div>

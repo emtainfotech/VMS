@@ -738,25 +738,21 @@ def admin_company_profile(request,id) :
         if request.method == 'POST':
             if 'company_personal_information' in request.POST:
                 # Handle Employee fields
+                employee_name = request.POST.get('employee_name')
                 company_name = request.POST.get('company_name')
                 company_location = request.POST.get('company_location')
                 company_unique_code = request.POST.get('company_unique_code')
-                job_profile = request.POST.get('job_profile')
-                company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
                 company_logo = request.FILES.get('company_logo')
-                vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
                 company_email_address = request.POST.get('company_email_address')
                 
+                company.employee_name = employee_name
                 company.company_name = company_name
                 company.company_location = company_location
                 company.company_unique_code = company_unique_code
-                company.job_profile = job_profile
-                company.company_vacancy_unique_code = company_vacancy_unique_code
-                company_email_address=company_email_address
+                company.company_email_address=company_email_address
                 company.updated_by=request.user
                 if company_logo:
                     company.company_logo = company_logo
-                company.vacancy_opening_date = vacancy_opening_date
                 company.save()
 
                 messages.success(request, 'Company details updated successfully!')
@@ -767,43 +763,13 @@ def admin_company_profile(request,id) :
                 company_contact_person_contact_details = request.POST.get('company_contact_person_contact_details')
                 company_contact_person_designation = request.POST.get('company_contact_person_designation')
                 interview_address = request.POST.get('interview_address')
-                payroll = request.POST.get('payroll')
-                minimum_salary_range = request.POST.get('minimum_salary_range')
-                maximum_salary_range = request.POST.get('maximum_salary_range')
-                job_opening_origin = request.POST.get('job_opening_origin')
-                sector_type = request.POST.get('sector_type')
-                department_name = request.POST.get('department_name')
-                fresher_status = request.POST.get('fresher_status')
-                minimum_age = request.POST.get('minimum_age')
-                maximum_age = request.POST.get('maximum_age')
-                gender = request.POST.get('gender')
-                # Handle form submission for bank details
-                minimum_experience = request.POST.get('minimum_experience')
-                maximum_experience = request.POST.get('maximum_experience')
-                minimum_education_qualification = request.POST.get('minimum_education_qualification')
-                specialization = request.POST.get('specialization')
-                vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
+                
                 
                 # Update EmergencyContact fields
                 company.company_contact_person_name = company_contact_person_name
                 company.company_contact_person_contact_details = company_contact_person_contact_details
                 company.company_contact_person_designation = company_contact_person_designation
                 company.interview_address = interview_address
-                company.payroll = payroll
-                company.minimum_salary_range = minimum_salary_range
-                company.maximum_salary_range = maximum_salary_range
-                company.job_opening_origin = job_opening_origin
-                company.sector_type = sector_type
-                company.department_name = department_name
-                company.fresher_status = fresher_status
-                company.minimum_age = minimum_age
-                company.maximum_age = maximum_age
-                company.gender=gender
-                company.minimum_experience = minimum_experience
-                company.maximum_experience = maximum_experience
-                company.minimum_education_qualification = minimum_education_qualification
-                company.specialization = specialization
-                company.vacancy_closing_date = vacancy_closing_date
                 company.updated_by=request.user
                 company.save()
 
@@ -811,27 +777,19 @@ def admin_company_profile(request,id) :
                 
             elif 'submit_calling_remark' in request.POST:
                 # Handle Social Media details form submission
-                company_usp = request.POST.get('company_usp')
-                status_of_incentive = request.POST.get('status_of_incentive')
+                
                 status_of_proposal = request.POST.get('status_of_proposal')
                 invoice_generation_date = request.POST.get('invoice_generation_date') or None
                 payout_date = request.POST.get('payout_date') or None
                 payment_condiation = request.POST.get('payment_condiation')
-                replacement_criteria = request.POST.get('replacement_criteria')
                 remark = request.POST.get('remark')
-                specialization = request.POST.get('specialization')
-                vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
-
-                company.company_usp = company_usp
-                company.status_of_incentive = status_of_incentive
+                
+                
                 company.status_of_proposal = status_of_proposal
                 company.invoice_generation_date = invoice_generation_date
                 company.payout_date = payout_date
                 company.payment_condiation = payment_condiation
-                company.replacement_criteria = replacement_criteria
                 company.remark = remark
-                company.specialization = specialization
-                company.vacancy_closing_date = vacancy_closing_date
                 company.updated_by=request.user
                 company.save()
                 
@@ -873,11 +831,6 @@ def admin_company_profile(request,id) :
                 salary_transfer_date = request.POST.get('salary_transfer_date') or None
                 expected_payment_date = request.POST.get('expected_payment_date') or None
                 candidate_salary_transfer_date = request.POST.get('candidate_salary_transfer_date') or None
-
-                # Convert numeric fields to appropriate types
-                flat_amount = float(flat_amount) if flat_amount else None
-                percentage_of_ctc = float(percentage_of_ctc) if percentage_of_ctc else None
-                pay_per_days = int(pay_per_days) if pay_per_days else None
 
                 VacancyDetails.objects.create(
                     company=company,
@@ -975,7 +928,6 @@ def admin_company_profile(request,id) :
                 except ValueError as e:
                     messages.error(request, f'Invalid input format: {str(e)}')
                    
-                    
             elif 'delete_vacancy' in request.POST:
                 # Handle vacancy deletion
                 vacancy_id = request.POST.get('vacancy_id')
@@ -2590,7 +2542,7 @@ def admin_company_communication_list(request, company_id):
             designation=request.POST.get('designation'),
             contact_email=request.POST.get('contact_email'),
             contact_phone=request.POST.get('contact_phone'),
-            communication_date=request.POST.get('communication_date'),
+            communication_date=request.POST.get('communication_date') or None,
             communication_type=request.POST.get('communication_type'),
             subject=request.POST.get('subject'),
             communication_details=request.POST.get('communication_details'),
@@ -2641,7 +2593,7 @@ def admin_company_communication_detail(request, communication_id):
         communication.designation = request.POST.get('designation')
         communication.contact_email = request.POST.get('contact_email')
         communication.contact_phone = request.POST.get('contact_phone')
-        communication.communication_date = request.POST.get('communication_date')
+        communication.communication_date = request.POST.get('communication_date') or None
         communication.communication_type = request.POST.get('communication_type')
         communication.subject = request.POST.get('subject')
         communication.communication_details = request.POST.get('communication_details')

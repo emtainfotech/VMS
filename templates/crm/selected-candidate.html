@@ -69,6 +69,7 @@
                 <th class="w-1">#</th>
                 <th>Candidate</th>
                 <th>Contact</th>
+                <th>Employee</th>
                 <th>Company</th>
                 <th>Selection Date</th>
                 <th>Joining Date</th>
@@ -115,6 +116,11 @@
                     </a>
                     {% endif %}
                   </div>
+                </td>
+                <td>
+                  <span class="badge ">
+                    {{ candidate.employee_name|default:"-" }}
+                  </span>
                 </td>
                 <td>
                   <span class="badge bg-blue-lt">
@@ -240,76 +246,101 @@
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  // Initialize tooltips
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-
-  // Search and filter functionality
-  const searchInput = document.getElementById('searchInput');
-  const companyFilter = document.getElementById('companyFilter');
-  const selectedCandidatesTable = document.getElementById('selectedCandidatesTable');
-  const rows = selectedCandidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-  const totalCountEl = document.getElementById('totalCount');
-  const showingFromEl = document.getElementById('showingFrom');
-  const showingToEl = document.getElementById('showingTo');
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
   
-  function filterCandidates() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const companyFilterValue = companyFilter.value.toLowerCase();
-    let visibleCount = 0;
+    // Search and filter functionality
+    const searchInput = document.getElementById('searchInput');
+    const companyFilter = document.getElementById('companyFilter');
+    const selectedCandidatesTable = document.getElementById('selectedCandidatesTable');
+    const rows = selectedCandidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    const totalCountEl = document.getElementById('totalCount');
+    const showingFromEl = document.getElementById('showingFrom');
+    const showingToEl = document.getElementById('showingTo');
     
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const searchContent = row.getAttribute('data-search');
-      const rowCompany = row.getAttribute('data-company');
+    function filterCandidates() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const companyFilterValue = companyFilter.value.toLowerCase();
+      let visibleCount = 0;
       
-      const matchesSearch = searchContent.includes(searchTerm);
-      const matchesCompany = companyFilterValue === '' || 
-                          (rowCompany && rowCompany.toLowerCase().includes(companyFilterValue));
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        let rowTextContent = '';
+        
+        // Get text content from all cells except actions column
+        const cells = row.getElementsByTagName('td');
+        for (let j = 0; j < cells.length - 1; j++) { // Skip last column (actions)
+          rowTextContent += ' ' + cells[j].textContent.toLowerCase();
+        }
+        
+        // Also include data attributes if they exist
+        const searchContent = row.getAttribute('data-search') || '';
+        const rowCompany = row.getAttribute('data-company') || '';
+        
+        const matchesSearch = rowTextContent.includes(searchTerm) || searchContent.includes(searchTerm);
+        const matchesCompany = companyFilterValue === '' || 
+                            rowCompany.toLowerCase().includes(companyFilterValue);
+        
+        if (matchesSearch && matchesCompany) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      }
       
-      if (matchesSearch && matchesCompany) {
-        row.style.display = '';
-        visibleCount++;
+      // Update counters
+      showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
+      showingToEl.textContent = visibleCount;
+      document.getElementById('total-candidates').textContent = visibleCount;
+      
+      // Update pagination visibility
+      updatePagination(visibleCount);
+    }
+    
+    function updatePagination(visibleCount) {
+      const pagination = document.querySelector('.pagination');
+      if (visibleCount === 0) {
+        pagination.classList.add('d-none');
       } else {
-        row.style.display = 'none';
+        pagination.classList.remove('d-none');
       }
     }
     
-    // Update counters
-    showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
-    showingToEl.textContent = visibleCount;
-    document.getElementById('total-candidates').textContent = visibleCount;
-  }
-  
-  // Event listeners
-  searchInput.addEventListener('input', filterCandidates);
-  companyFilter.addEventListener('change', filterCandidates);
-  
-  // Initial filter
-  filterCandidates();
-  
-  // Make table rows clickable (except when clicking on buttons)
-  document.querySelectorAll('#selectedCandidatesTable tbody tr').forEach(row => {
-    row.addEventListener('click', (e) => {
-      // Check if the click was on a button or link
-      if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-        return;
-      }
-      
-      // Find the profile link in the row and navigate to it
-      const profileLink = row.querySelector('td:nth-child(2) a');
-      if (profileLink) {
-        window.location.href = profileLink.href;
-      }
-    });
+    // Event listeners
+    searchInput.addEventListener('input', filterCandidates);
+    companyFilter.addEventListener('change', filterCandidates);
     
-    // Change cursor on hover
-    row.style.cursor = 'pointer';
+    
+    
+    // Initial filter
+    filterCandidates();
+    
+    // Make table rows clickable (except when clicking on buttons)
+    document.querySelectorAll('#selectedCandidatesTable tbody tr').forEach(row => {
+      row.addEventListener('click', (e) => {
+        // Check if the click was on a button, link, or input
+        if (e.target.tagName === 'A' || e.target.closest('a') || 
+            e.target.tagName === 'BUTTON' || e.target.closest('button') ||
+            e.target.tagName === 'INPUT' || e.target.closest('input')) {
+          return;
+        }
+        
+        // Find the profile link in the row and navigate to it
+        const profileLink = row.querySelector('td:nth-child(2) a');
+        if (profileLink) {
+          window.location.href = profileLink.href;
+        }
+      });
+      
+      // Change cursor on hover
+      row.style.cursor = 'pointer';
+    });
   });
-});
-</script>
+  </script>
 
 {% endblock %}

@@ -280,117 +280,62 @@
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  // Initialize tooltips
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-
-  // Search and filter functionality
-  const searchInput = document.getElementById('searchInput');
-  const locationFilter = document.getElementById('locationFilter');
-  const statusFilter = document.getElementById('statusFilter');
-  const companiesTable = document.getElementById('companiesTable');
-  const rows = companiesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-  const totalCountEl = document.getElementById('totalCount');
-  const showingFromEl = document.getElementById('showingFrom');
-  const showingToEl = document.getElementById('showingTo');
+  document.addEventListener("DOMContentLoaded", function () {
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
   
-  function filterCompanies() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const locationFilterValue = locationFilter.value;
-    const statusFilterValue = statusFilter.value;
-    let visibleCount = 0;
-    
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const searchContent = row.getAttribute('data-search');
-      const rowLocation = row.getAttribute('data-location');
-      const rowStatus = row.getAttribute('data-status');
-      
-      const matchesSearch = searchContent.includes(searchTerm);
-      const matchesLocation = locationFilterValue === '' || rowLocation === locationFilterValue;
-      const matchesStatus = statusFilterValue === '' || rowStatus === statusFilterValue;
-      
-      if (matchesSearch && matchesLocation && matchesStatus) {
-        row.style.display = '';
-        visibleCount++;
-      } else {
-        row.style.display = 'none';
-      }
+    // Search functionality only
+    const searchInput = document.getElementById("searchInput");
+    const rows = document.querySelectorAll("#companiesTable tbody tr");
+    const totalCountEl = document.getElementById('totalCount');
+    const showingFromEl = document.getElementById('showingFrom');
+    const showingToEl = document.getElementById('showingTo');
+    const totalCompaniesEl = document.getElementById('total-companies');
+  
+    function filterCompanies() {
+      const searchTerm = searchInput.value.toLowerCase();
+      let visibleCount = 0;
+  
+      rows.forEach(row => {
+        const searchContent = row.getAttribute("data-search") || "";
+        const matchesSearch = searchContent.includes(searchTerm);
+  
+        if (matchesSearch) {
+          row.style.display = "";
+          visibleCount++;
+        } else {
+          row.style.display = "none";
+        }
+      });
+  
+      // Update visible counters (optional)
+      if (showingFromEl) showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
+      if (showingToEl) showingToEl.textContent = visibleCount;
+      if (totalCountEl) totalCountEl.textContent = visibleCount;
+      if (totalCompaniesEl) totalCompaniesEl.textContent = visibleCount;
     }
-    
-    // Update counters
-    showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
-    showingToEl.textContent = visibleCount;
-    totalCountEl.textContent = visibleCount;
-    document.getElementById('total-companies').textContent = visibleCount;
-  }
   
-  // Event listeners
-  searchInput.addEventListener('input', filterCompanies);
-  locationFilter.addEventListener('change', filterCompanies);
-  statusFilter.addEventListener('change', filterCompanies);
+    // Event listener
+    searchInput.addEventListener("input", filterCompanies);
   
-  // Initial filter
-  filterCompanies();
-  
-  // Make table rows clickable (except when clicking on buttons)
-  document.querySelectorAll('#companiesTable tbody tr').forEach(row => {
-    row.addEventListener('click', (e) => {
-      // Check if the click was on a button or link
-      if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-        return;
-      }
-      
-      // Find the profile link in the row and navigate to it
-      const profileLink = row.querySelector('td:nth-child(2) a');
-      if (profileLink) {
-        window.location.href = profileLink.href;
-      }
-    });
-    
-    // Change cursor on hover
-    row.style.cursor = 'pointer';
-  });
-});
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const searchInput = document.getElementById("searchInput");
-  {% comment %} const statusFilter = document.getElementById("statusFilter");
-  const locationFilter = document.getElementById("locationFilter"); {% endcomment %}
-  const rows = document.querySelectorAll("#companiesTable tbody tr");
-
-  function filterRows() {
-    const search = searchInput.value.toLowerCase();
-    {% comment %} const status = statusFilter.value;
-    const location = locationFilter.value; {% endcomment %}
-
+    // Make table rows clickable (excluding buttons/links)
     rows.forEach(row => {
-      const searchText = row.getAttribute("data-search");
-      {% comment %} const rowStatus = row.getAttribute("data-status");
-      const rowLocation = row.getAttribute("data-location"); {% endcomment %}
-
-      const matchesSearch = searchText.includes(search);
-      {% comment %} const matchesStatus = !status || rowStatus === status;
-      const matchesLocation = !location || rowLocation === location; {% endcomment %}
-
-      if (matchesSearch ) {
-        row.style.display = "";
-      } else {
-        row.style.display = "none";
-      }
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('a') || e.target.closest('button')) return;
+        const profileLink = row.querySelector('td:nth-child(2) a');
+        if (profileLink) window.location.href = profileLink.href;
+      });
+      row.style.cursor = 'pointer';
     });
-  }
-
-  searchInput.addEventListener("input", filterRows);
-  {% comment %} statusFilter.addEventListener("change", filterRows);
-  locationFilter.addEventListener("change", filterRows); {% endcomment %}
-});
-</script>
+  
+    // Initial call
+    filterCompanies();
+  });
+  </script>
+  
 
 
 {% endblock %}

@@ -514,8 +514,6 @@ class Bonus(models.Model):
     def __str__(self):
         return f'{self.amount} for {self.employee.name}'
     
-
-
 class Resignation(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     status = models.CharField(max_length=10, )
@@ -538,7 +536,6 @@ class Resignation(models.Model):
     def __str__(self):
         return f"{self.user.username} - Resignation"
     
-
 class Promotion(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     old_designation = models.CharField(max_length=100)
@@ -560,8 +557,7 @@ class Promotion(models.Model):
 
     def __str__(self):
         return f"{self.employee} - {self.promotion_title}"
-    
-    
+     
 class Termination(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     termination_type = models.CharField(max_length=100)
@@ -607,7 +603,6 @@ class Announcement(models.Model):
     def __str__(self):
         return self.title
     
-
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE) # User who will receive the notification
     notification_type = models.CharField(max_length=200)
@@ -651,7 +646,6 @@ class Award(models.Model):
     def __str__(self):
         return f"Award for {self.employee.name} - {self.award_type}"
     
-
 class OfficeActivity(models.Model):
     title = models.CharField(max_length=255)
     activity_type = models.CharField(max_length=100)
@@ -694,7 +688,6 @@ class Warning(models.Model):
 
     def __str__(self):
         return f"{self.employee.name} - {self.subject}"
-
 
 class Task(models.Model):
     assigned_to = models.ForeignKey(Employee, on_delete=models.CASCADE)
@@ -957,9 +950,9 @@ class VacancyDetails(models.Model):
         ('Pay as per days', 'Pay as per days'),
     ]
     company_pay_type = models.CharField(max_length=50, choices=COMPANY_PAY_TYPE_CHOICES, blank=True, null=True)
-    flat_amount = models.CharField(max_length=10, blank=True, null=True)
-    percentage_of_ctc = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
-    pay_per_days = models.PositiveIntegerField(blank=True, null=True)
+    flat_amount = models.CharField(max_length=255, blank=True, null=True)
+    percentage_of_ctc = models.CharField(max_length=100, blank=True, null=True)
+    pay_per_days = models.CharField(max_length=100, blank=True, null=True)
     
     # Salary Deduction fields
     salary_transfer_date = models.DateField(blank=True, null=True)

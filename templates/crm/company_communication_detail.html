@@ -15,7 +15,7 @@
                 </div>
                 <div class="col-auto ms-auto d-print-none">
                     <a href="{% url 'admin_company_communication_list' communication.company.id %}" class="btn btn-secondary">
-                        Back to List
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
                     </a>
                 </div>
             </div>
@@ -25,88 +25,120 @@
     <div class="page-body">
         <div class="container-xl">
             <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Edit Communication</h3>
+                </div>
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                         {% csrf_token %}
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Contact Person</label>
-                                    <input type="text" name="contact_person" class="form-control" value="{{ communication.contact_person }}" required>
+                                    <label class="form-label required">Contact Person</label>
+                                    <input type="text" name="contact_person" class="form-control" 
+                                           value="{{ communication.contact_person }}" 
+                                           required minlength="2" maxlength="100">
+                                    <div class="invalid-feedback">Please enter a valid contact person (2-100 characters).</div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Designation</label>
-                                    <input type="text" name="designation" class="form-control" value="{{ communication.designation }}">
+                                    <input type="text" name="designation" class="form-control" 
+                                           value="{{ communication.designation }}" maxlength="100">
+                                    <div class="invalid-feedback">Maximum 100 characters allowed.</div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Contact Email</label>
-                                    <input type="email" name="contact_email" class="form-control" value="{{ communication.contact_email }}">
+                                    <input type="email" name="contact_email" class="form-control" 
+                                           value="{{ communication.contact_email }}"
+                                           pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$">
+                                    <div class="invalid-feedback">Please enter a valid email address.</div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Contact Phone</label>
-                                    <input type="text" name="contact_phone" class="form-control" value="{{ communication.contact_phone }}">
+                                    <input type="text" name="contact_phone" class="form-control" 
+                                           value="{{ communication.contact_phone }}"
+                                           pattern="[0-9]{10}">
+                                    <div class="invalid-feedback">Please enter a valid phone number (10-20 digits).</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Communication Type</label>
+                                    <label class="form-label required">Communication Type</label>
                                     <select name="communication_type" class="form-select" required>
                                         {% for type in communication_types %}
                                         <option value="{{ type.0 }}" {% if type.0 == communication.communication_type %}selected{% endif %}>{{ type.1 }}</option>
                                         {% endfor %}
                                     </select>
+                                    <div class="invalid-feedback">Please select a communication type.</div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Date & Time</label>
+                                    <label class="form-label required">Date & Time</label>
                                     <input type="datetime-local" name="communication_date" class="form-control" 
-                                        value="{{ communication.communication_date|date:'Y-m-d\TH:i' }}" required>
+                                           value="{{ communication.communication_date|date:'Y-m-d\TH:i' }}" required>
+                                    <div class="invalid-feedback">Please select a valid date and time.</div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Priority</label>
+                                    <label class="form-label required">Priority</label>
                                     <select name="priority" class="form-select" required>
                                         {% for priority in priority_choices %}
                                         <option value="{{ priority.0 }}" {% if priority.0 == communication.priority %}selected{% endif %}>{{ priority.1 }}</option>
                                         {% endfor %}
                                     </select>
+                                    <div class="invalid-feedback">Please select a priority level.</div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Follow-up Date</label>
                                     <input type="date" name="follow_up_date" class="form-control" 
-                                        value="{{ communication.follow_up_date|date:'Y-m-d' }}">
+                                           value="{{ communication.follow_up_date|date:'Y-m-d' }}"
+                                           min="{{ communication.communication_date|date:'Y-m-d' }}">
+                                    <div class="invalid-feedback">Follow-up date must be after communication date.</div>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Subject</label>
-                            <input type="text" name="subject" class="form-control" value="{{ communication.subject }}" required>
+                            <label class="form-label required">Subject</label>
+                            <input type="text" name="subject" class="form-control" 
+                                   value="{{ communication.subject }}" 
+                                   required minlength="5" maxlength="200">
+                            <div class="invalid-feedback">Subject must be 5-200 characters long.</div>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Details</label>
-                            <textarea name="communication_details" class="form-control" rows="4" required>{{ communication.communication_details }}</textarea>
+                            <label class="form-label required">Details</label>
+                            <textarea name="communication_details" class="form-control" rows="4" 
+                                      required minlength="10" oninput="validateDetails(this)">{{ communication.communication_details }}</textarea>
+                            <div class="invalid-feedback">Please provide meaningful details (minimum 10 non-whitespace characters).</div>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Outcome</label>
-                            <textarea name="outcome" class="form-control" rows="2">{{ communication.outcome }}</textarea>
+                            <textarea name="outcome" class="form-control" rows="2" maxlength="500">{{ communication.outcome }}</textarea>
+                            <div class="invalid-feedback">Maximum 500 characters allowed.</div>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Attachment</label>
-                            <input type="file" name="attachment" class="form-control">
+                            <input type="file" name="attachment" class="form-control" 
+                                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
                             {% if communication.attachment %}
                             <div class="mt-2">
                                 <a href="{{ communication.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-paperclip"></i> View Current Attachment
+                                    <i class="fas fa-paperclip me-1"></i>View Current Attachment
                                 </a>
+                                <span class="text-muted ms-2">{{ communication.attachment.name|slice:"20:" }}</span>
                             </div>
                             {% endif %}
+                            <div class="invalid-feedback">Only PDF, Word, Excel, or image files are allowed.</div>
                         </div>
                         
                         <div class="form-footer">
-                            <button type="submit" class="btn btn-primary">Update Communication</button>
-                            <a href="{% url 'admin_company_communication_list' communication.company.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Communication
+                            </button>
+                            <a href="{% url 'admin_company_communication_list' communication.company.id %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
                         </div>
                     </form>
                 </div>
@@ -114,4 +146,102 @@
         </div>
     </div>
 </div>
+
+<script>
+// Client-side form validation
+document.addEventListener('DOMContentLoaded', function() {
+    // Validate details field for whitespace content
+    function validateDetailsContent(text) {
+        return text.trim().length >= 10;
+    }
+    
+    // Real-time validation for details field
+    window.validateDetails = function(field) {
+        if (!validateDetailsContent(field.value)) {
+            field.classList.add('is-invalid');
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    };
+    
+    // Form submission validation
+    const form = document.querySelector('.needs-validation');
+    form.addEventListener('submit', function(event) {
+        // Validate details field
+        const detailsField = form.querySelector('textarea[name="communication_details"]');
+        if (!validateDetailsContent(detailsField.value)) {
+            detailsField.setCustomValidity("Please provide meaningful details (minimum 10 non-whitespace characters)");
+            detailsField.classList.add('is-invalid');
+        } else {
+            detailsField.setCustomValidity("");
+        }
+        
+        // Validate follow-up date is after communication date if provided
+        const followUpField = form.querySelector('input[name="follow_up_date"]');
+        const commDateField = form.querySelector('input[name="communication_date"]');
+        
+        if (followUpField.value && commDateField.value) {
+            const followUpDate = new Date(followUpField.value);
+            const commDate = new Date(commDateField.value);
+            
+            if (followUpDate < commDate) {
+                followUpField.setCustomValidity("Follow-up date must be after communication date");
+                followUpField.classList.add('is-invalid');
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                followUpField.setCustomValidity("");
+            }
+        }
+        
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        form.classList.add('was-validated');
+    }, false);
+    
+    // Add Bootstrap validation styles to all required fields
+    const requiredFields = form.querySelectorAll('[required]');
+    requiredFields.forEach(function(field) {
+        field.addEventListener('input', function() {
+            if (field.checkValidity()) {
+                field.classList.remove('is-invalid');
+            } else {
+                field.classList.add('is-invalid');
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.form-label.required:after {
+    content: " *";
+    color: #dc3545;
+}
+.invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+}
+.is-invalid ~ .invalid-feedback,
+.is-invalid ~ .invalid-tooltip {
+    display: block;
+}
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid,
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+</style>
 {% endblock %}

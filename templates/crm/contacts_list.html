@@ -1,4 +1,4 @@
-{% extends 'employee/performance-base.html' %}
+{% extends 'crm/base.html' %}
 
 {% block content %}
 <div class="page-wrapper">
@@ -158,96 +158,229 @@
                 </div>
             </div>
 
-            <!-- Add Contact Form -->
-            <div class="card mt-4" id="add-contact">
-                <div class="card-header">
-                    <h3 class="card-title">Add New Contact Person</h3>
+           <!-- Add Contact Form -->
+<div class="card mt-4" id="add-contact">
+    <div class="card-header">
+        <h3 class="card-title">Add New Contact Person</h3>
+    </div>
+    <div class="card-body">
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label required">Full Name</label>
+                        <input type="text" name="name" class="form-control" 
+                               required minlength="2" maxlength="100"
+                               pattern="^[a-zA-Z\s\.'-]+$">
+                        <div class="invalid-feedback">
+                            Please provide a valid name (2-100 characters, letters only).
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Designation</label>
+                        <input type="text" name="designation" class="form-control" 
+                               required minlength="2" maxlength="100">
+                        <div class="invalid-feedback">
+                            Please provide a valid designation (2-100 characters).
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        <input type="text" name="department" class="form-control" 
+                               maxlength="100">
+                        <div class="invalid-feedback">
+                            Maximum 100 characters allowed.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Email</label>
+                        <input type="email" name="email" class="form-control" 
+                               required pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$">
+                        <div class="invalid-feedback">
+                            Please provide a valid email address.
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Full Name*</label>
-                                    <input type="text" name="name" class="form-control" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Designation*</label>
-                                    <input type="text" name="designation" class="form-control" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Department</label>
-                                    <input type="text" name="department" class="form-control">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Email*</label>
-                                    <input type="email" name="email" class="form-control" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Phone*</label>
-                                    <input type="text" name="phone" class="form-control" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Location*</label>
-                                    <input type="text" name="location" class="form-control" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Priority</label>
-                                    <select name="priority" class="form-select" required>
-                                        {% for priority in priority_choices %}
-                                        <option value="{{ priority.0 }}" {% if priority.0 == 'medium' %}selected{% endif %}>{{ priority.1 }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Status</label>
-                                    <select name="status" class="form-select" required>
-                                        {% for status in status_choices %}
-                                        <option value="{{ status.0 }}" {% if status.0 == 'active' %}selected{% endif %}>{{ status.1 }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label required">Phone</label>
+                        <input type="tel" name="phone" class="form-control" 
+                               required pattern="[0-9]{10}"
+                               title="10 digit phone number">
+                        <div class="invalid-feedback">
+                            Please provide a valid 10-digit phone number.
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Last Contact Date</label>
-                                    <input type="date" name="last_contact_date" class="form-control">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Next Follow-up Date</label>
-                                    <input type="date" name="next_followup" class="form-control">
-                                </div>
-                            </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Location</label>
+                        <input type="text" name="location" class="form-control" 
+                               required minlength="2" maxlength="100">
+                        <div class="invalid-feedback">
+                            Please provide a valid location (2-100 characters).
                         </div>
-                        
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="is_primary" name="is_primary">
-                                <label class="form-check-label" for="is_primary">
-                                    Primary Contact Person
-                                </label>
-                            </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Priority</label>
+                        <select name="priority" class="form-select" required>
+                            {% for priority in priority_choices %}
+                            <option value="{{ priority.0 }}" {% if priority.0 == 'medium' %}selected{% endif %}>{{ priority.1 }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a priority.
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Notes</label>
-                            <textarea name="notes" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Status</label>
+                        <select name="status" class="form-select" required>
+                            {% for status in status_choices %}
+                            <option value="{{ status.0 }}" {% if status.0 == 'active' %}selected{% endif %}>{{ status.1 }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a status.
                         </div>
-                        
-                        <div class="form-footer">
-                            <button type="submit" class="btn btn-primary">Save Contact</button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Last Contact Date</label>
+                        <input type="date" name="last_contact_date" class="form-control">
+                        <div class="invalid-feedback">
+                            Please select a valid past date.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Next Follow-up Date</label>
+                        <input type="date" name="next_followup" class="form-control" 
+                               >
+                        <div class="invalid-feedback">
+                            Follow-up date must be today or in the future.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="is_primary" name="is_primary">
+                    <label class="form-check-label" for="is_primary">
+                        Primary Contact Person
+                    </label>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Notes</label>
+                <textarea name="notes" class="form-control" rows="3" maxlength="500"></textarea>
+                <div class="invalid-feedback">
+                    Maximum 500 characters allowed.
+                </div>
+            </div>
+            
+            <div class="form-footer">
+                <button type="submit" class="btn btn-primary">Save Contact</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Client-side form validation
+document.addEventListener('DOMContentLoaded', function() {
+    // Validate last contact date is in the past if provided
+    const lastContactField = document.querySelector('input[name="last_contact_date"]');
+    if (lastContactField) {
+        lastContactField.addEventListener('change', function() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const selectedDate = new Date(this.value);
+            
+            if (selectedDate > today) {
+                this.setCustomValidity("Last contact date must be in the past");
+                this.classList.add('is-invalid');
+            } else {
+                this.setCustomValidity("");
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+    
+    // Validate follow-up date is in the future if provided
+    const followUpField = document.querySelector('input[name="next_followup"]');
+    if (followUpField) {
+        followUpField.addEventListener('change', function() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const selectedDate = new Date(this.value);
+            
+            if (selectedDate < today) {
+                this.setCustomValidity("Follow-up date must be today or in the future");
+                this.classList.add('is-invalid');
+            } else {
+                this.setCustomValidity("");
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+    
+    // Form submission validation
+    const form = document.querySelector('.needs-validation');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    }, false);
+    
+    // Add real-time validation for all fields
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (input.checkValidity()) {
+                input.classList.remove('is-invalid');
+            } else {
+                input.classList.add('is-invalid');
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.form-label.required:after {
+    content: " *";
+    color: #dc3545;
+}
+.invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+}
+.is-invalid ~ .invalid-feedback {
+    display: block;
+}
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid,
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+</style>
         </div>
     </div>
 </div>
