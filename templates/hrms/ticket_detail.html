@@ -1,0 +1,380 @@
+{% extends 'hrms/base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+  <div class="page-header d-print-none">
+    <div class="container-xl">
+      <div class="row g-2 align-items-center">
+        <div class="col">
+          <div class="d-flex align-items-center">
+            <h1 class="page-title me-3">Ticket Details</h1>
+            <span class="badge text-white bg-{{ ticket.get_status_color }} fs-6 align-middle">{{ ticket.ticket_status }}</span>
+          </div>
+          <div class="text-muted mt-1">
+            <span class="me-3">#{{ ticket.ticket_number }}</span>
+            <span>Created: {{ ticket.ticket_created_date|date:"M d, Y H:i" }}</span>
+          </div>
+        </div>
+        <div class="col-auto ms-auto d-print-none">
+          <div class="btn-list">
+            <a href="{% url 'ticket_list' %}" class="btn btn-outline-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrow-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M5 12l14 0"/>
+                <path d="M5 12l6 6"/>
+                <path d="M5 12l6 -6"/>
+              </svg>
+              Back to Tickets
+            </a>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-edit-ticket-{{ ticket.id }}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/>
+                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"/>
+                <path d="M16 5l3 3"/>
+              </svg>
+              Edit Ticket
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div class="container-xl">
+      <div class="card">
+        <div class="card-body">
+          <div class="row">
+            <!-- Left Column - Main Ticket Info -->
+            <div class="col-lg-8">
+              <div class="mb-4">
+                <h2 class="mb-2">{{ ticket.ticket_name }}</h2>
+                <div class="text-muted mb-3">Created by {{ ticket.created_by.get_full_name|default:ticket.created_by.username }}</div>
+                
+                <div class="markdown">
+                  <h4 class="mt-4 mb-3">Description</h4>
+                  <div class="card  p-3">
+                    {{ ticket.ticket_description|linebreaks }}
+                  </div>
+                  
+                  {% if ticket.ticket_remark %}
+                  <h4 class="mt-4 mb-3">Remarks</h4>
+                  <div class="card  p-3">
+                    {{ ticket.ticket_remark|linebreaks }}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <!-- Right Column - Meta Data -->
+            <div class="col-lg-4">
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Ticket Details</h3>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <div class="text-muted mb-1">Priority</div>
+                    <div>
+                      <span class="badge text-white bg-{{ ticket.get_priority_color }}">{{ ticket.ticket_priority }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <div class="text-muted mb-1">Category</div>
+                    <div>{{ ticket.ticket_category }}</div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <div class="text-muted mb-1">Related To</div>
+                    <div>{{ ticket.ticket_related_to|default:"-" }}</div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <div class="text-muted mb-1">Assigned To</div>
+                    <div>
+                      {% if ticket.ticket_assign_to %}
+                        <span class="avatar avatar-xs me-1" style="background-image: url({{ ticket.ticket_assign_to.employee_photo.url|default:'/static/default-profile.png' }})"></span>
+                        {{ ticket.ticket_assign_to }}
+                      {% else %}
+                        <span class="text-danger">Unassigned</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <div class="text-muted mb-1">Due Date</div>
+                    <div>
+                      {% if ticket.ticket_due_date %}
+                        <span>{{ ticket.ticket_due_date|date:"M d, Y" }}</span>
+                        {% if ticket.ticket_due_date < timezone.now and ticket.ticket_status != 'Closed' %}
+                          <span class="badge bg-danger ms-2">Overdue</span>
+                        {% endif %}
+                      {% else %}
+                        -
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  {% if ticket.ticket_attachment %}
+                  <div class="mb-3">
+                    <div class="text-muted mb-1">Attachment</div>
+                    <div>
+                      <a href="{{ ticket.ticket_attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-paperclip" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                          <path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5"/>
+                        </svg>
+                        Download Attachment
+                      </a>
+                    </div>
+                  </div>
+                  {% endif %}
+                  
+                  <div class="mt-4 pt-3 border-top">
+                    <div class="text-muted mb-1">Last Updated</div>
+                    <div>
+                      {{ ticket.updated_at|date:"M d, Y H:i" }}
+                      <span class="text-muted">by</span>
+                      {{ ticket.updated_by.get_full_name|default:ticket.updated_by.username }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+         <!-- Activity Timeline -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Activity Timeline</h3>
+      </div>
+      <div class="card-body">
+        <div class="timeline timeline-activity">
+          {% for activity in activities %}
+          <div class="timeline-item">
+            <div class="timeline-line"></div>
+            <div class="timeline-icon">
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-header d-flex mt-4">
+                {% with employee=activity.user.employee %}
+                <span class="avatar avatar-sm round" style="background-image: url({{ employee.employee_photo.url|default:'/static/default-profile.png' }})"
+                      data-bs-toggle="tooltip" title="{{ employee.first_name }} {{ employee.last_name }}"></span>
+                {% endwith %}
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <span class="me-auto ">
+                  {% with employee=activity.user.employee %}
+                  {{ employee.first_name }} {{ employee.last_name }}
+                  {% if employee.designation %}
+                  <small class="text-muted">({{ employee.designation }})</small>
+                  {% endif %}
+                  {% endwith %}
+                </span>
+              </span>
+              <span class="text-muted">{{ activity.timestamp|date:"M d, Y H:i" }}
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  <span class="badge text-white bg-{{ activity.ticket.get_status_color }}">
+                    {{ activity.get_action_display }}
+                  </span>
+              </div>
+              <div class="timeline-body">
+                <p class="mb-1">
+                  {% if activity.old_value and activity.new_value %}
+                  <small class="text-muted">
+                    (from {{ activity.old_value }} to {{ activity.new_value }})
+                  </small>
+                  {% endif %}
+                </p>
+                {% if activity.comment %}
+                <div class="card p-2  ">
+                  <div class="d-flex align-items-center mb-1">
+                    <i class="fas fa-comment me-2 text-primary"></i>
+                    <small class="text-muted">Comment</small>
+                  </div>
+                  {{ activity.comment|linebreaks }}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-4">
+            <div class="text-muted">No activity recorded yet</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Comment Form -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Add Comment</h3>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{% url 'view_ticket' ticket.id %}">
+          {% csrf_token %}
+          {{ form.comment }}
+          <div class="mt-3">
+            <button type="submit" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M10 14l11 -11"/>
+                <path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"/>
+              </svg>
+              Post Comment
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Ticket Modal -->
+<div class="modal modal-blur fade" id="modal-edit-ticket-{{ ticket.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Ticket #{{ ticket.ticket_number }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="{% url 'edit_ticket' ticket.id %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Ticket Name</label>
+                <input type="text" class="form-control" name="ticket_name" value="{{ ticket.ticket_name }}" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" name="ticket_status">
+                <option value="" disabled selected >Select Status</option>
+                <option value="Open" {% if ticket.ticket_status == 'Open' %}selected{% endif %}>Open</option>
+                <option value="In Progress" {% if ticket.ticket_status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                <option value="Resolved" {% if ticket.ticket_status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                <option value="Closed" {% if ticket.ticket_status == 'Closed' %}selected{% endif %}>Closed</option>
+                <option value="Reopened" {% if ticket.ticket_status == 'Reopened' %}selected{% endif %}>Reopened</option>
+
+              </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Priority</label>
+                <select class="form-select" name="ticket_priority">
+                  <option value="" disabled selected >Select Priority</option>
+                  <option value="Low" {% if ticket.ticket_priority == 'Low' %}selected{% endif %}>Low</option>
+                  <option value="Medium" {% if ticket.ticket_priority == 'Medium' %}selected{% endif %}>Medium</option>
+                  <option value="High" {% if ticket.ticket_priority == 'High' %}selected{% endif %}>High</option>
+                  <option value="Critical" {% if ticket.ticket_priority == 'Critical' %}selected{% endif %}>Critical</option>
+              </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Category</label>
+                <select class="form-select" name="ticket_category">
+                <option value="" disabled selected>Select Category</option>
+                <option value="IT" {% if ticket.ticket_category == 'IT' %}selected{% endif %}>IT</option>
+                <option value="HR" {% if ticket.ticket_category == 'HR' %}selected{% endif %}>HR</option>
+                <option value="Finance" {% if ticket.ticket_category == 'Finance' %}selected{% endif %}>Finance</option>
+                <option value="Operations" {% if ticket.ticket_category == 'Operations' %}selected{% endif %}>Operations</option>
+                <option value="Facilities" {% if ticket.ticket_category == 'Facilities' %}selected{% endif %}>Facilities</option>
+                <option value="Other" {% if ticket.ticket_category == 'Other' %}selected{% endif %}>Other</option>
+              </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Assigned To</label>
+                <select class="form-select" name="ticket_assign_to">
+                  <option value="">Unassigned</option>
+                  {% for user in assignable_users %}
+                  <option value="{{ user.id }}" {% if ticket.ticket_assign_to.id == user.id %}selected{% endif %}>{{ user.get_full_name|default:user.username }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Due Date</label>
+                <input type="date" class="form-control" name="ticket_due_date" value="{{ ticket.ticket_due_date|date:'Y-m-d' }}">
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+                <label class="form-label">Related To</label>
+                <input type="text" class="form-control" name="ticket_related_to" value="{{ ticket.ticket_related_to }}">
+              </div>
+
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" name="ticket_description" rows="4">{{ ticket.ticket_description }}</textarea>
+          </div>
+
+          
+          
+          <div class="mb-3">
+            <label class="form-label">Remarks</label>
+            <textarea class="form-control" name="ticket_remark" rows="3">{{ ticket.ticket_remark }}</textarea>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Attachment</label>
+            <input type="file" class="form-control" name="ticket_attachment">
+            {% if ticket.ticket_attachment %}
+            <div class="mt-2">
+              <small class="text-muted">Current: {{ ticket.ticket_attachment.name|cut:"ticket_attachments/" }}</small>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary ms-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+              <path d="M5 12l5 5l10 -10"/>
+            </svg>
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize any custom JS if needed
+document.addEventListener('DOMContentLoaded', function() {
+  // Any initialization code can go here
+});
+</script>
+{% endblock %}

@@ -39,6 +39,7 @@ from django.conf import settings
 import csv
 from django.db.models.functions import ExtractMonth, ExtractYear
 from django.db.models import Q
+from itertools import chain
 
 
 # Create your views here.
@@ -212,126 +213,163 @@ def crm_dashboard(request):
         return render(request, 'crm/404.html', status=404)
 
 @login_required
-def admin_candidate_profile(request,id) :
+def admin_candidate_profile(request, id):
     if request.user.is_staff or request.user.is_superuser:
-        candidate = get_object_or_404(Candidate_registration, id=id)
+        candidate = get_object_or_404(Candidate_registration.objects.prefetch_related('activities__employee'), id=id)
         logged_in_employee = Employee.objects.get(user=request.user)
 
         if request.method == 'POST':
+            # Store the original candidate data before any updates
+            original_candidate = Candidate_registration.objects.get(id=id)
+            changes = {}
+
             if 'candidate_personal_information' in request.POST:
-                # Handle Employee fields
-                candidate_name = request.POST.get('candidate_name')
-                candidate_mobile_number = request.POST.get('candidate_mobile_number')
-                candidate_email_address = request.POST.get('candidate_email_address')
-                gender = request.POST.get('gender')
-                lead_source = request.POST.get('lead_source')
-                candidate_photo = request.FILES.get('candidate_photo')
-                candidate_resume = request.FILES.get('candidate_resume')
+                # Track changes for personal information
+                fields_to_track = [
+                    'candidate_name', 'candidate_mobile_number', 'candidate_email_address',
+                    'gender', 'lead_source'
+                ]
                 
-                candidate.candidate_name = candidate_name
-                candidate.candidate_mobile_number = candidate_mobile_number
-                candidate.candidate_email_address = candidate_email_address
-                candidate.gender = gender
-                candidate.lead_source = lead_source
-                candidate.updated_by=logged_in_employee
-                if candidate_photo:
-                    candidate.candidate_photo = candidate_photo
-                if candidate_resume:
-                    candidate.candidate_resume = candidate_resume
+                for field in fields_to_track:
+                    new_value = request.POST.get(field)
+                    old_value = getattr(original_candidate, field)
+                    if str(old_value) != str(new_value):
+                        changes[field] = {'old': old_value, 'new': new_value}
+                
+                # Handle file uploads separately
+                if 'candidate_photo' in request.FILES:
+                    changes['candidate_photo'] = {
+                        'old': original_candidate.candidate_photo.name if original_candidate.candidate_photo else None,
+                        'new': request.FILES['candidate_photo'].name
+                    }
+                if 'candidate_resume' in request.FILES:
+                    changes['candidate_resume'] = {
+                        'old': original_candidate.candidate_resume.name if original_candidate.candidate_resume else None,
+                        'new': request.FILES['candidate_resume'].name
+                    }
+
+                # Update the candidate
+                candidate.candidate_name = request.POST.get('candidate_name')
+                candidate.candidate_mobile_number = request.POST.get('candidate_mobile_number')
+                candidate.candidate_email_address = request.POST.get('candidate_email_address')
+                candidate.gender = request.POST.get('gender')
+                candidate.lead_source = request.POST.get('lead_source')
+                if 'candidate_photo' in request.FILES:
+                    candidate.candidate_photo = request.FILES['candidate_photo']
+                if 'candidate_resume' in request.FILES:
+                    candidate.candidate_resume = request.FILES['candidate_resume']
+                candidate.updated_by = logged_in_employee
                 candidate.save()
 
                 messages.success(request, 'Candidate details updated successfully!')
 
             elif 'candidate_details' in request.POST:
-                # Handle Emergency Contact fields
-                candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
-                preferred_location = request.POST.get('preferred_location')
-                origin_location = request.POST.get('origin_location')
-                qualification = request.POST.get('qualification')
-                diploma = request.POST.get('diploma')
-                sector = request.POST.get('sector')
-                department = request.POST.get('department')
-                experience_year = request.POST.get('experience_year')
-                experience_month = request.POST.get('experience_month')
-                current_company = request.POST.get('current_company')
-                current_working_status = request.POST.get('current_working_status')
-                current_salary = request.POST.get('current_salary')
-                expected_salary = request.POST.get('expected_salary')
-                submit_by = request.POST.get('submit_by')
+                # Track changes for candidate details
+                fields_to_track = [
+                    'candidate_alternate_mobile_number', 'preferred_location', 'origin_location',
+                    'qualification', 'diploma', 'sector', 'department', 'experience_year',
+                    'experience_month', 'current_company', 'current_working_status',
+                    'current_salary', 'expected_salary', 'submit_by'
+                ]
+                
+                for field in fields_to_track:
+                    new_value = request.POST.get(field)
+                    old_value = getattr(original_candidate, field)
+                    if str(old_value) != str(new_value):
+                        changes[field] = {'old': old_value, 'new': new_value}
 
-                # Update EmergencyContact fields
-                candidate.candidate_alternate_mobile_number = candidate_alternate_mobile_number
-                candidate.preferred_location = preferred_location
-                candidate.origin_location = origin_location
-                candidate.qualification = qualification
-                candidate.diploma = diploma
-                candidate.sector = sector
-                candidate.department = department
-                candidate.experience_year = experience_year
-                candidate.experience_month = experience_month
-                candidate.current_company = current_company
-                candidate.current_working_status = current_working_status
-                candidate.current_salary = current_salary
-                candidate.expected_salary = expected_salary
-                candidate.updated_by=logged_in_employee
+                # Update the candidate
+                candidate.candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
+                candidate.preferred_location = request.POST.get('preferred_location')
+                candidate.origin_location = request.POST.get('origin_location')
+                candidate.qualification = request.POST.get('qualification')
+                candidate.diploma = request.POST.get('diploma')
+                candidate.sector = request.POST.get('sector')
+                candidate.department = request.POST.get('department')
+                candidate.experience_year = request.POST.get('experience_year')
+                candidate.experience_month = request.POST.get('experience_month')
+                candidate.current_company = request.POST.get('current_company')
+                candidate.current_working_status = request.POST.get('current_working_status')
+                candidate.current_salary = request.POST.get('current_salary')
+                candidate.expected_salary = request.POST.get('expected_salary')
+                candidate.submit_by = request.POST.get('submit_by')
+                candidate.updated_by = logged_in_employee
                 candidate.save()
 
                 messages.success(request, 'Candidate details updated successfully!')
                 
             elif 'submit_calling_remark' in request.POST:
-                # Handle Social Media details form submission
-                call_connection = request.POST.get('call_connection')
-                calling_remark = request.POST.get('calling_remark')
-                lead_generate = request.POST.get('lead_generate')
-                send_for_interview = request.POST.get('send_for_interview')
-                next_follow_up_date = request.POST.get('next_follow_up_date') or None
-                submit_by = request.POST.get('submit_by')
+                # Track changes for calling remarks
+                fields_to_track = [
+                    'call_connection', 'calling_remark', 'lead_generate',
+                    'send_for_interview', 'next_follow_up_date', 'submit_by'
+                ]
+                
+                for field in fields_to_track:
+                    new_value = request.POST.get(field)
+                    old_value = getattr(original_candidate, field)
+                    if str(old_value) != str(new_value):
+                        changes[field] = {'old': old_value, 'new': new_value}
 
-                candidate.call_connection = call_connection
-                candidate.calling_remark = calling_remark
-                candidate.lead_generate = lead_generate
-                candidate.send_for_interview = send_for_interview
-                candidate.next_follow_up_date = next_follow_up_date
-                candidate.submit_by = submit_by
-                candidate.updated_by=logged_in_employee
+                # Update the candidate
+                candidate.call_connection = request.POST.get('call_connection')
+                candidate.calling_remark = request.POST.get('calling_remark')
+                candidate.lead_generate = request.POST.get('lead_generate')
+                candidate.send_for_interview = request.POST.get('send_for_interview')
+                candidate.next_follow_up_date = request.POST.get('next_follow_up_date') or None
+                candidate.submit_by = request.POST.get('submit_by')
+                candidate.updated_by = logged_in_employee
                 candidate.save()
                 
                 messages.success(request, 'Candidate Calling details updated successfully!')
                 
             elif 'submit_secection_record' in request.POST:
-                # Handle form submission for bank details
-                selection_status = request.POST.get('selection_status')
-                company_name = request.POST.get('company_name')
-                offered_salary = request.POST.get('offered_salary')
-                selection_date = request.POST.get('selection_date') or None
-                candidate_joining_date = request.POST.get('candidate_joining_date') or None
-                emta_commission = request.POST.get('emta_commission')
-                payout_date = request.POST.get('payout_date') or None
+                # Track changes for selection records
+                fields_to_track = [
+                    'selection_status', 'company_name', 'offered_salary',
+                    'selection_date', 'candidate_joining_date', 'emta_commission',
+                    'payout_date'
+                ]
+                
+                for field in fields_to_track:
+                    new_value = request.POST.get(field)
+                    old_value = getattr(original_candidate, field)
+                    if str(old_value) != str(new_value):
+                        changes[field] = {'old': old_value, 'new': new_value}
 
-                # Update or create bank details for the employee
-                candidate.selection_status = selection_status
-                candidate.company_name = company_name
-                candidate.offered_salary = offered_salary
-                candidate.selection_date = selection_date
-                candidate.candidate_joining_date = candidate_joining_date
-                candidate.emta_commission = emta_commission
-                candidate.payout_date = payout_date
-
-                candidate.updated_by=logged_in_employee
+                # Update the candidate
+                candidate.selection_status = request.POST.get('selection_status')
+                candidate.company_name = request.POST.get('company_name')
+                candidate.offered_salary = request.POST.get('offered_salary')
+                candidate.selection_date = request.POST.get('selection_date') or None
+                candidate.candidate_joining_date = request.POST.get('candidate_joining_date') or None
+                candidate.emta_commission = request.POST.get('emta_commission')
+                candidate.payout_date = request.POST.get('payout_date') or None
+                candidate.updated_by = logged_in_employee
                 candidate.save()
 
-                messages.success(request, 'Secection details updated successfully!')
-                
-                
+                messages.success(request, 'Selection details updated successfully!')
+
+            # Create activity log if there were changes
+            if changes:
+                CandidateActivity.objects.create(
+                    candidate=candidate,
+                    employee=logged_in_employee,
+                    action='updated',
+                    changes=changes,
+                    remark=f"Updated via {list(request.POST.keys())[1]} form"  # Indicate which form was used
+                )
 
             return redirect('admin_candidate_profile', id=id)
+        
         context = {
-            'candidate': candidate
+            'candidate': candidate,
+            'activities': candidate.activities.all().order_by('-timestamp')
         }
-        return render(request,'crm/candidate-profile.html',{'candidate':candidate})
+        return render(request, 'crm/candidate-profile.html', context)
     else:
-        # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
+    
 
 @login_required    
 def admin_candidate_registration(request) :
@@ -732,151 +770,134 @@ def admin_company_list(request) :
         return render(request, 'crm/404.html', status=404)
 
 @login_required
-def admin_company_profile(request,id) :
+def admin_company_profile(request, id):
     if request.user.is_staff or request.user.is_superuser:
         company = get_object_or_404(Company_registration, id=id)
+        
         if request.method == 'POST':
+            # Handle Company Personal Information Form
             if 'company_personal_information' in request.POST:
-                # Handle Employee fields
-                employee_name = request.POST.get('employee_name')
-                company_name = request.POST.get('company_name')
-                company_location = request.POST.get('company_location')
-                company_unique_code = request.POST.get('company_unique_code')
-                company_logo = request.FILES.get('company_logo')
-                company_email_address = request.POST.get('company_email_address')
+                form_name = "Company Personal Information"
+                old_values = {
+                    'employee_name': company.employee_name,
+                    'company_name': company.company_name,
+                    'company_location': company.company_location,
+                    'company_unique_code': company.company_unique_code,
+                    'company_email_address': company.company_email_address,
+                }
                 
-                company.employee_name = employee_name
-                company.company_name = company_name
-                company.company_location = company_location
-                company.company_unique_code = company_unique_code
-                company.company_email_address=company_email_address
-                company.updated_by=request.user
-                if company_logo:
-                    company.company_logo = company_logo
-                company.save()
-
+                company.employee_name = request.POST.get('employee_name')
+                company.company_name = request.POST.get('company_name')
+                company.company_location = request.POST.get('company_location')
+                company.company_unique_code = request.POST.get('company_unique_code')
+                company.company_email_address = request.POST.get('company_email_address')
+                company.updated_by = request.user
+                
+                if 'company_logo' in request.FILES:
+                    old_values['company_logo'] = str(company.company_logo)
+                    company.company_logo = request.FILES['company_logo']
+                
+                company.save(user=request.user, form_name=form_name)
                 messages.success(request, 'Company details updated successfully!')
 
+            # Handle Company Contact Details Form
             elif 'company_details' in request.POST:
-                # Handle Emergency Contact fields
-                company_contact_person_name = request.POST.get('company_contact_person_name')
-                company_contact_person_contact_details = request.POST.get('company_contact_person_contact_details')
-                company_contact_person_designation = request.POST.get('company_contact_person_designation')
-                interview_address = request.POST.get('interview_address')
+                form_name = "Company Contact Details"
+                old_values = {
+                    'company_contact_person_name': company.company_contact_person_name,
+                    'company_contact_person_contact_details': company.company_contact_person_contact_details,
+                    'company_contact_person_designation': company.company_contact_person_designation,
+                    'interview_address': company.interview_address,
+                }
                 
+                company.company_contact_person_name = request.POST.get('company_contact_person_name')
+                company.company_contact_person_contact_details = request.POST.get('company_contact_person_contact_details')
+                company.company_contact_person_designation = request.POST.get('company_contact_person_designation')
+                company.interview_address = request.POST.get('interview_address')
+                company.updated_by = request.user
                 
-                # Update EmergencyContact fields
-                company.company_contact_person_name = company_contact_person_name
-                company.company_contact_person_contact_details = company_contact_person_contact_details
-                company.company_contact_person_designation = company_contact_person_designation
-                company.interview_address = interview_address
-                company.updated_by=request.user
-                company.save()
-
-                messages.success(request, 'company details updated successfully!')
+                company.save(user=request.user, form_name=form_name)
+                messages.success(request, 'Company contact details updated successfully!')
                 
+            # Handle Proposal Status Form
             elif 'submit_calling_remark' in request.POST:
-                # Handle Social Media details form submission
+                form_name = "Company Proposal Status"
+                old_values = {
+                    'status_of_proposal': company.status_of_proposal,
+                    'invoice_generation_date': company.invoice_generation_date,
+                    'payout_date': company.payout_date,
+                    'payment_condiation': company.payment_condiation,
+                    'remark': company.remark,
+                }
                 
-                status_of_proposal = request.POST.get('status_of_proposal')
-                invoice_generation_date = request.POST.get('invoice_generation_date') or None
-                payout_date = request.POST.get('payout_date') or None
-                payment_condiation = request.POST.get('payment_condiation')
-                remark = request.POST.get('remark')
+                company.status_of_proposal = request.POST.get('status_of_proposal')
+                company.invoice_generation_date = request.POST.get('invoice_generation_date') or None
+                company.payout_date = request.POST.get('payout_date') or None
+                company.payment_condiation = request.POST.get('payment_condiation')
+                company.remark = request.POST.get('remark')
+                company.updated_by = request.user
                 
+                company.save(user=request.user, form_name=form_name)
+                messages.success(request, 'Company proposal details updated successfully!')
                 
-                company.status_of_proposal = status_of_proposal
-                company.invoice_generation_date = invoice_generation_date
-                company.payout_date = payout_date
-                company.payment_condiation = payment_condiation
-                company.remark = remark
-                company.updated_by=request.user
-                company.save()
-                
-                messages.success(request, 'company Calling details updated successfully!')
-                
+            # Handle New Vacancy Creation
             elif 'add_vacancy' in request.POST:
-                # Handle new vacancy creation
-                job_profile = request.POST.get('job_profile')
-                company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
-                vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
-                vacancy_status = request.POST.get('vacancy_status', 'Pending')
-                payroll = request.POST.get('payroll')
-                third_party_name = request.POST.get('third_party_name')
-                job_opening_origin = request.POST.get('job_opening_origin')
-                sector_type = request.POST.get('sector_type')
-                department_name = request.POST.get('department_name')
-                fresher_status = request.POST.get('fresher_status')
-                minimum_age = request.POST.get('minimum_age')
-                maximum_age = request.POST.get('maximum_age')
-                gender = request.POST.get('gender')
-                minimum_experience = request.POST.get('minimum_experience')
-                maximum_experience = request.POST.get('maximum_experience')
-                minimum_education_qualification = request.POST.get('minimum_education_qualification')
-                specialization = request.POST.get('specialization')
-                minimum_salary_range = request.POST.get('minimum_salary_range')
-                maximum_salary_range = request.POST.get('maximum_salary_range')
-                vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
-                special_instruction = request.POST.get('special_instruction')
-                company_usp = request.POST.get('company_usp')
-                status_of_incentive = request.POST.get('status_of_incentive')
-                replacement_criteria = request.POST.get('replacement_criteria')
-                
-                # Payment related fields
-                payment_mode = request.POST.get('payment_mode')
-                company_pay_type = request.POST.get('company_pay_type')
-                flat_amount = request.POST.get('flat_amount')
-                percentage_of_ctc = request.POST.get('percentage_of_ctc')
-                pay_per_days = request.POST.get('pay_per_days')
-                salary_transfer_date = request.POST.get('salary_transfer_date') or None
-                expected_payment_date = request.POST.get('expected_payment_date') or None
-                candidate_salary_transfer_date = request.POST.get('candidate_salary_transfer_date') or None
+                form_name = "Add Vacancy"
+                try:
+                    vacancy = VacancyDetails(
+                        company=company,
+                        job_profile=request.POST.get('job_profile'),
+                        company_vacancy_unique_code=request.POST.get('company_vacancy_unique_code'),
+                        vacancy_opening_date=request.POST.get('vacancy_opening_date') or None,
+                        vacancy_status=request.POST.get('vacancy_status', 'Pending'),
+                        payroll=request.POST.get('payroll'),
+                        third_party_name=request.POST.get('third_party_name'),
+                        job_opening_origin=request.POST.get('job_opening_origin'),
+                        sector_type=request.POST.get('sector_type'),
+                        department_name=request.POST.get('department_name'),
+                        fresher_status=request.POST.get('fresher_status'),
+                        minimum_age=request.POST.get('minimum_age'),
+                        maximum_age=request.POST.get('maximum_age'),
+                        gender=request.POST.get('gender'),
+                        minimum_experience=request.POST.get('minimum_experience'),
+                        maximum_experience=request.POST.get('maximum_experience'),
+                        minimum_education_qualification=request.POST.get('minimum_education_qualification'),
+                        specialization=request.POST.get('specialization'),
+                        minimum_salary_range=request.POST.get('minimum_salary_range'),
+                        maximum_salary_range=request.POST.get('maximum_salary_range'),
+                        vacancy_closing_date=request.POST.get('vacancy_closing_date') or None,
+                        special_instruction=request.POST.get('special_instruction'),
+                        company_usp=request.POST.get('company_usp'),
+                        status_of_incentive=request.POST.get('status_of_incentive'),
+                        replacement_criteria=request.POST.get('replacement_criteria'),
+                        payment_mode=request.POST.get('payment_mode'),
+                        company_pay_type=request.POST.get('company_pay_type'),
+                        flat_amount=request.POST.get('flat_amount'),
+                        percentage_of_ctc=request.POST.get('percentage_of_ctc'),
+                        pay_per_days=request.POST.get('pay_per_days'),
+                        salary_transfer_date=request.POST.get('salary_transfer_date') or None,
+                        expected_payment_date=request.POST.get('expected_payment_date') or None,
+                        candidate_salary_transfer_date=request.POST.get('candidate_salary_transfer_date') or None,
+                        created_by=request.user
+                    )
+                    vacancy.save(user=request.user, form_name=form_name)
+                    messages.success(request, 'Vacancy added successfully!')
+                except Exception as e:
+                    messages.error(request, f'Error creating vacancy: {str(e)}')
 
-                VacancyDetails.objects.create(
-                    company=company,
-                    job_profile=job_profile,
-                    company_vacancy_unique_code=company_vacancy_unique_code,
-                    vacancy_opening_date=vacancy_opening_date,
-                    vacancy_status=vacancy_status,
-                    payroll=payroll,
-                    third_party_name=third_party_name,
-                    job_opening_origin=job_opening_origin,
-                    sector_type=sector_type,
-                    department_name=department_name,
-                    fresher_status=fresher_status,
-                    minimum_age=minimum_age,
-                    maximum_age=maximum_age,
-                    gender=gender,
-                    minimum_experience=minimum_experience,
-                    maximum_experience=maximum_experience,
-                    minimum_education_qualification=minimum_education_qualification,
-                    specialization=specialization,
-                    minimum_salary_range=minimum_salary_range,
-                    maximum_salary_range=maximum_salary_range,
-                    vacancy_closing_date=vacancy_closing_date,
-                    special_instruction=special_instruction,
-                    company_usp=company_usp,
-                    status_of_incentive=status_of_incentive,
-                    replacement_criteria=replacement_criteria,
-                    # Payment related fields
-                    payment_mode=payment_mode,
-                    company_pay_type=company_pay_type,
-                    flat_amount=flat_amount,
-                    percentage_of_ctc=percentage_of_ctc,
-                    pay_per_days=pay_per_days,
-                    salary_transfer_date=salary_transfer_date,
-                    expected_payment_date=expected_payment_date,
-                    candidate_salary_transfer_date=candidate_salary_transfer_date,
-                    created_by=request.user
-                    
-                )
-                messages.success(request, 'Vacancy added successfully!')
-
+            # Handle Vacancy Editing
             elif 'edit_vacancy' in request.POST:
-                # Handle vacancy editing
+                form_name = "Edit Vacancy"
                 vacancy_id = request.POST.get('vacancy_id')
                 try:
                     vacancy = VacancyDetails.objects.get(id=vacancy_id, company=company)
+                    
+                    # Store old values for tracking
+                    old_values = {field.name: getattr(vacancy, field.name) 
+                                for field in VacancyDetails._meta.fields 
+                                if field.name not in ['id', 'created_at', 'updated_at']}
+                    
+                    # Update fields
                     vacancy.job_profile = request.POST.get('job_profile')
                     vacancy.company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
                     vacancy.vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
@@ -901,44 +922,62 @@ def admin_company_profile(request,id) :
                     vacancy.company_usp = request.POST.get('company_usp')
                     vacancy.status_of_incentive = request.POST.get('status_of_incentive')
                     vacancy.replacement_criteria = request.POST.get('replacement_criteria')
-                    vacancy.updated_by=request.user
+                    vacancy.updated_by = request.user
                     
-                    # Payment related fields
+                    # Payment fields
                     vacancy.payment_mode = request.POST.get('payment_mode')
                     vacancy.company_pay_type = request.POST.get('company_pay_type')
-                    
-                    # Convert and set numeric fields
-                    # flat_amount = 
                     vacancy.flat_amount = request.POST.get('flat_amount') or None
                     
-                    percentage_of_ctc = request.POST.get('percentage_of_ctc')
-                    vacancy.percentage_of_ctc = float(percentage_of_ctc) if percentage_of_ctc else None
-                    
-                    pay_per_days = request.POST.get('pay_per_days')
-                    vacancy.pay_per_days = int(pay_per_days) if pay_per_days else None
+                    try:
+                        vacancy.percentage_of_ctc = float(request.POST.get('percentage_of_ctc')) if request.POST.get('percentage_of_ctc') else None
+                        vacancy.pay_per_days = int(request.POST.get('pay_per_days')) if request.POST.get('pay_per_days') else None
+                    except ValueError:
+                        pass
                     
                     vacancy.salary_transfer_date = request.POST.get('salary_transfer_date') or None
                     vacancy.expected_payment_date = request.POST.get('expected_payment_date') or None
                     vacancy.candidate_salary_transfer_date = request.POST.get('candidate_salary_transfer_date') or None
                     
-                    vacancy.save()
+                    vacancy.save(user=request.user, form_name=form_name)
                     messages.success(request, 'Vacancy updated successfully!')
                 except VacancyDetails.DoesNotExist:
                     messages.error(request, 'Vacancy not found!')
-                except ValueError as e:
-                    messages.error(request, f'Invalid input format: {str(e)}')
+                except Exception as e:
+                    messages.error(request, f'Error updating vacancy: {str(e)}')
                    
+            # Handle Vacancy Deletion
             elif 'delete_vacancy' in request.POST:
-                # Handle vacancy deletion
                 vacancy_id = request.POST.get('vacancy_id')
                 try:
                     vacancy = VacancyDetails.objects.get(id=vacancy_id, company=company)
+                    job_title = vacancy.job_profile
+                    company_name = vacancy.company.company_name
                     vacancy.delete()
+                    
+                    # Log deletion activity
+                    CompanyActivity.objects.create(
+                        content_type='vacancy',
+                        employee=request.user,
+                        action='status_changed',
+                        changes={
+                            'deleted': {
+                                'old': f"{job_title} at {company_name}",
+                                'new': "Deleted"
+                            }
+                        },
+                        form_used="Delete Vacancy",
+                        remark=f"Deleted vacancy: {job_title}"
+                    )
+                    
                     messages.success(request, 'Vacancy deleted successfully!')
                 except VacancyDetails.DoesNotExist:
                     messages.error(request, 'Vacancy not found!')
+                except Exception as e:
+                    messages.error(request, f'Error deleting vacancy: {str(e)}')
                     
             return redirect('admin_company_profile', id=id)
+
         districts = [
         "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
         "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
@@ -1063,21 +1102,39 @@ def admin_company_profile(request,id) :
         "Cabin Crew", "Research and Development"
         ]
 
-        vacancies = VacancyDetails.objects.filter(company=company).order_by('-id')
+
+        # Get all vacancies for the company
+        vacancies = VacancyDetails.objects.filter(company=company).order_by('-created_at')
+        
+        # Get all activities - both company and vacancy activities
+        company_activities = company.activities.all()
+        vacancy_activities = CompanyActivity.objects.filter(vacancy__company=company)
+        
+        # Combine and sort activities by timestamp (newest first)
+        all_activities = sorted(
+            chain(
+                company_activities.select_related('employee__employee'),
+                vacancy_activities.select_related('employee__employee')
+            ),
+            key=lambda x: x.timestamp,
+            reverse=True
+        )[:50]
         
         context = {
-        'districts': districts,
-        'job_sectors': job_sectors,
-        'departments': departments,
-        'company': company,
-        'vacancies' : vacancies
+            'districts': districts,
+            'job_sectors': job_sectors,
+            'departments': departments,
+            'company': company,
+            'vacancies': vacancies,
+            'activities': all_activities,
+            'now': timezone.now()
         }
         
-        return render(request,'crm/company-profile.html',context)
+        return render(request, 'crm/company-profile.html', context)
     else:
-        # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
-
+    
+    
 @login_required
 def admin_vendor_list(request) :
     if request.user.is_staff or request.user.is_superuser:

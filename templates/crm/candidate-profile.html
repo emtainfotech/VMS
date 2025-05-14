@@ -54,6 +54,8 @@
                     <div class="d-flex flex-column flex-md-row gap-4 align-items-start">
                         <!-- Candidate Photo -->
                         <div class="text-center">
+    
+    
                             {% if candidate.candidate_photo %}
                             <img src="{{candidate.candidate_photo.url}}" 
                                  class="rounded-circle object-cover border" 
@@ -282,10 +284,250 @@
                         </div>
                     </div>
                 </div>
+                
             </div>
         </div>
+
+<!-- Candidate Activity Timeline - Redesigned -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header  border-0">
+        <h3 class="card-title mb-0">Candidate Activity Log</h3>
+        <small class="text-muted">Chronological history of all candidate interactions</small>
+      </div>
+      <div class="card-body p-0">
+        <div class="activity-feed">
+          {% for activity in candidate.activities.all %}
+            {% if activity.employee %}
+            <div class="activity-item {% if forloop.first %}first-item{% endif %}">
+              <div class="activity-avatar">
+                {% if activity.employee.employee_photo %}
+                <img src="{{ activity.employee.employee_photo.url }}" class="avatar" alt="{{ activity.employee.first_name }}">
+                {% else %}
+                <div class="avatar bg-primary text-white">
+                  {{ activity.employee.first_name|first }}{{ activity.employee.last_name|first }}
+                </div>
+                {% endif %}
+              </div>
+              
+              <div class="activity-content">
+                <div class="activity-header">
+                  <div class="activity-user">
+                    <strong>{{ activity.employee.first_name }} {{ activity.employee.last_name }}</strong>
+                    <span class="text-muted">{{ activity.employee.designation }}</span>
+                  </div>
+                  <div class="activity-meta">
+                    <span class="text-muted">{{ activity.timestamp|date:"M d, Y" }}</span>
+                    <span class="badge text-white bg-{% if activity.action == 'created' %}success{% elif activity.action == 'status_changed' %}warning text-dark{% else %}info{% endif %}">
+                      {{ activity.get_action_display }}
+                    </span>
+                  </div>
+                </div>
+                
+                {% if activity.changes and activity.changes != 'initial' %}
+                <div class="activity-changes">
+                  <div class="changes-header">
+                    <i class="fas fa-exchange-alt me-2"></i>
+                    <small>MODIFICATIONS</small>
+                  </div>
+                  <div class="changes-grid">
+                    {% for field, values in activity.changes.items %}
+                      {% if field != 'initial' %}
+                      <div class="change-item">
+                        <div class="change-field">{{ field|title }}</div>
+                        <div class="change-values">
+                          {% if values.old %}
+                          <div class="old-value">
+                            <span class="change-label">Old:</span>
+                            <span class="text-danger">{{ values.old|truncatechars:40 }}</span>
+                          </div>
+                          {% endif %}
+                          {% if values.new %}
+                          <div class="new-value">
+                            <span class="change-label">New:</span>
+                            <span class="text-success">{{ values.new|truncatechars:40 }}</span>
+                          </div>
+                          {% endif %}
+                        </div>
+                      </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endif %}
+                
+                {% if activity.remark %}
+                <div class="activity-remark">
+                  <div class="remark-header">
+                    <i class="fas fa-comment-dots me-2"></i>
+                    <small>REMARKS</small>
+                  </div>
+                  <div class="remark-content">
+                    {{ activity.remark|linebreaks }}
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+          {% empty %}
+            <div class="empty-state">
+              <div class="empty-icon">
+                <i class="fas fa-history"></i>
+              </div>
+              <h5>No activity recorded yet</h5>
+              <p class="text-muted">All candidate interactions will appear here</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .activity-feed {
+    padding: 0 1.5rem;
+  }
+  
+  .activity-item {
+    display: flex;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+  }
+  
+  .activity-item.first-item {
+    padding-top: 1rem;
+  }
+  
+  .activity-avatar {
+    margin-right: 1rem;
+    flex-shrink: 0;
+  }
+  
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .activity-content {
+    flex-grow: 1;
+  }
+  
+  .activity-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  
+  .activity-user {
+    line-height: 1.2;
+  }
+  
+  .activity-user span {
+    display: block;
+    font-size: 0.8rem;
+  }
+  
+  .activity-meta {
+    text-align: right;
+  }
+  
+  .activity-meta span {
+    display: block;
+    font-size: 0.8rem;
+  }
+  
+  .activity-changes, .activity-remark {
+    margin-top: 1rem;
+    
+    border-radius: 6px;
+    padding: 0.75rem;
+  }
+  
+  .changes-header, .remark-header {
+    display: flex;
+    align-items: center;
+    color: #666;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .changes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .change-item {
+    font-size: 0.9rem;
+  }
+  
+  .change-field {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+  }
+  
+  .change-values div {
+    margin-bottom: 0.2rem;
+  }
+  
+  .change-label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-right: 0.5rem;
+  }
+  
+  .remark-content {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem 0;
+  }
+  
+  .empty-icon {
+    font-size: 2.5rem;
+    color: #ddd;
+    margin-bottom: 1rem;
+  }
+  
+  .empty-state h5 {
+    margin-bottom: 0.5rem;
+  }
+  
+  @media (max-width: 768px) {
+    .activity-header {
+      flex-direction: column;
+    }
+    
+    .activity-meta {
+      text-align: left;
+      margin-top: 0.5rem;
+    }
+    
+    .changes-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
     </div>
 </div>
+
+
 
 {% comment %}profile details{% endcomment %}
 <div class="modal modal-blur fade" id="modal-profile" tabindex="-1" role="dialog" aria-hidden="true">
@@ -868,7 +1110,7 @@ document.addEventListener('DOMContentLoaded', function() {
                       <div class="col-md-6 mb-3">
                           <label class="form-label">Offered Salary (₹) <span class="text-danger">*</span></label>
                           <input type="number" name="offered_salary" class="form-control" 
-                                 value="{{ candidate.offered_salary }}" min="0" step="1000">
+                                 value="{{ candidate.offered_salary }}" min="0" step="1">
                           <div class="invalid-feedback">Please enter valid salary</div>
                       </div>
 
@@ -1032,5 +1274,7 @@ document.addEventListener('DOMContentLoaded', function() {
   {% endif %}
 });
 </script>
+
+
 
 {% endblock %}

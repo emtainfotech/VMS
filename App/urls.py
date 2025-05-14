@@ -38,7 +38,10 @@ urlpatterns = [
     path('bonus/update-status/<int:bonus_id>/', update_bonus_status, name='update_bonus_status'),
     path('resignation/',resignation_view,name = 'resignation_view'),
     path('update-resignation/<int:resignation_id>/', update_resignation_status, name='update_resignation_status'),
-    path('documents/',documents_view,name = 'documents_view'),
+    path('documents/',document_list, name='document_list'),
+    path('documents/add/',add_document, name='add_document'),
+    path('documents/edit/<int:document_id>/',edit_document, name='edit_document'),
+    path('documents/delete/<int:document_id>/',delete_document, name='delete_document'),
     path('promotion/',promotion_view,name = 'promotion_view'),
     path('delete-promotion/<int:promotion_id>/', delete_promotion, name='delete_promotion'),
     path('terminations/', termination_view, name='termination_view'),
@@ -66,6 +69,11 @@ urlpatterns = [
     path('tasks/delete/<int:task_id>/', delete_task, name='delete_task'),
     path('tasks/update-status/<int:task_id>/', update_task_status, name='update_task_status'),
     path('admin-profile/<int:id>/', admin_profile, name='admin_profile'),
+    path('tickets/', ticket_list, name='ticket_list'),
+    path('tickets/add/', add_ticket, name='add_ticket'),
+    path('tickets/edit/<int:ticket_id>/', edit_ticket, name='edit_ticket'),
+    path('tickets/delete/<int:ticket_id>/', delete_ticket, name='delete_ticket'),
+    path('tickets/view/<int:ticket_id>/', view_ticket, name='view_ticket'),
     
     
 

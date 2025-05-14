@@ -2,8 +2,10 @@ from django.db import models
 from django.contrib.auth.models import User
 from datetime import timedelta, time, datetime
 import pytz
-from django.utils.timezone import now
+from django.utils.timezone import now, timezone
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+
 
 # Helper function to get current user
 def get_current_user():
@@ -365,8 +367,6 @@ class Holiday(models.Model):
     def __str__(self):
         return f"{self.name} ({self.get_day_display()}) on {self.date}"
     
-
-
 class Salary(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -473,8 +473,7 @@ class MonthlyExpense(models.Model):
 
     def __str__(self):
         return f"{self.month.strftime('%B %Y')}: {self.total_expense}"
-    
-    
+        
 class Incentive(models.Model):
     employee_name = models.ForeignKey(Employee, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -750,22 +749,49 @@ class Candidate_registration(models.Model):
     candidate_joining_date = models.DateField(blank=True, null=True)
     emta_commission = models.CharField(max_length=255, blank=True, null=True)
     payout_date = models.DateField(blank=True, null=True)
-    created_by = models.ForeignKey(Employee, related_name='candidate_registration_created', on_delete=models.SET_NULL, null=True, blank=True)
-    updated_by = models.ForeignKey(Employee, related_name='candidate_registration_updated', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         user = kwargs.pop('user', None)
-        if user and not self.pk:
-            self.created_by = user
-        if user:
-            self.updated_by = user
+        is_new = not self.pk
+        
         super().save(*args, **kwargs)
+        
+        if user:  # Only create activity if we have a user
+            if is_new:
+                CandidateActivity.objects.create(
+                    candidate=self,
+                    employee=user,
+                    action='created',
+                    changes={'initial': 'Record created'}
+                )
+            else:
+                # For updates, we'll track changes through signals instead
+                pass
+
+class CandidateActivity(models.Model):
+    ACTION_CHOICES = [
+        ('created', 'Created'),
+        ('updated', 'Updated'),
+        ('status_changed', 'Status Changed'),
+    ]
+    
+    candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE, related_name='activities')
+    employee = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    timestamp = models.DateTimeField(default=timezone.now)
+    changes = models.JSONField(default=dict)
+    remark = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name_plural = 'Candidate Activities'
 
     def __str__(self):
-        return self.candidate_name
-
+        employee_name = self.employee.get_full_name() if self.employee else "System"
+        return f"{self.get_action_display()} by {employee_name} on {self.candidate}"
+    
 class Candidate_chat(models.Model):
     candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE, related_name='chats')
     chat_date = models.DateTimeField(auto_now_add=True)
@@ -898,14 +924,49 @@ class Company_registration(models.Model):
    
     def save(self, *args, **kwargs):
         user = kwargs.pop('user', None)
-        if user and not self.pk:
-            self.created_by = user
-        if user:
-            self.updated_by = user
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.company_name
+        form_name = kwargs.pop('form_name', None)
+        is_new = not self.pk
+        
+        if is_new:
+            super().save(*args, **kwargs)
+            CompanyActivity.objects.create(
+                company=self,
+                content_type='company',
+                employee=user,
+                action='created',
+                changes={'initial': 'Company record created'},
+                form_used=form_name
+            )
+        else:
+            old_record = Company_registration.objects.get(pk=self.pk)
+            changes = {}
+            
+            for field in self._meta.fields:
+                field_name = field.name
+                if field_name in ['updated_at', 'created_at']:
+                    continue
+                    
+                old_value = getattr(old_record, field_name)
+                new_value = getattr(self, field_name)
+                
+                if old_value != new_value:
+                    changes[field_name] = {
+                        'old': str(old_value) if old_value is not None else '',
+                        'new': str(new_value) if new_value is not None else ''
+                    }
+            
+            super().save(*args, **kwargs)
+            
+            if changes:
+                CompanyActivity.objects.create(
+                    company=self,
+                    content_type='company',
+                    employee=user,
+                    action='updated',
+                    changes=changes,
+                    form_used=form_name,
+                    remark=f"Updated via {form_name} form" if form_name else None
+                )
 
 class VacancyDetails(models.Model):
     # Existing fields
@@ -967,14 +1028,122 @@ class VacancyDetails(models.Model):
 
     def save(self, *args, **kwargs):
         user = kwargs.pop('user', None)
-        if user and not self.pk:
-            self.created_by = user
-        if user:
-            self.updated_by = user
-        super().save(*args, **kwargs)
+        form_name = kwargs.pop('form_name', None)
+        is_new = not self.pk
+        
+        if is_new:
+            super().save(*args, **kwargs)
+            CompanyActivity.objects.create(
+                vacancy=self,
+                content_type='vacancy',
+                employee=user,
+                action='created',
+                changes={'initial': 'Vacancy record created'},
+                form_used=form_name
+            )
+        else:
+            old_record = VacancyDetails.objects.get(pk=self.pk)
+            changes = {}
+            
+            for field in self._meta.fields:
+                field_name = field.name
+                if field_name in ['updated_at', 'created_at']:
+                    continue
+                    
+                old_value = getattr(old_record, field_name)
+                new_value = getattr(self, field_name)
+                
+                if old_value != new_value:
+                    changes[field_name] = {
+                        'old': str(old_value) if old_value is not None else '',
+                        'new': str(new_value) if new_value is not None else ''
+                    }
+            
+            super().save(*args, **kwargs)
+            
+            if changes:
+                CompanyActivity.objects.create(
+                    vacancy=self,
+                    content_type='vacancy',
+                    employee=user,
+                    action='updated',
+                    changes=changes,
+                    form_used=form_name,
+                    remark=f"Updated via {form_name} form" if form_name else None
+                )
+    
+class CompanyActivity(models.Model):
+    ACTION_CHOICES = [
+        ('created', 'Created'),
+        ('updated', 'Updated'),
+        ('status_changed', 'Status Changed'),
+    ]
+    
+    CONTENT_TYPE_CHOICES = [
+        ('company', 'Company'),
+        ('vacancy', 'Vacancy'),
+    ]
+    
+    # Generic foreign key approach
+    company = models.ForeignKey(
+        Company_registration, 
+        on_delete=models.CASCADE, 
+        related_name='activities',
+        null=True,
+        blank=True
+    )
+    vacancy = models.ForeignKey(
+        VacancyDetails,
+        on_delete=models.CASCADE,
+        related_name='activities',
+        null=True,
+        blank=True
+    )
+    
+    content_type = models.CharField(
+        max_length=10,
+        choices=CONTENT_TYPE_CHOICES,
+        help_text="Type of object being tracked"
+    )
+    
+    employee = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='company_activities'
+    )
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    timestamp = models.DateTimeField(default=timezone.now)
+    changes = models.JSONField(default=dict)
+    remark = models.TextField(blank=True, null=True)
+    form_used = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Which form was used to make this change"
+    )
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name_plural = 'Company Activities'
 
     def __str__(self):
-        return f"{self.job_profile} at {self.company.company_name}"
+        target = self.get_target()
+        return f"{self.get_action_display()} by {self.employee or 'System'} on {target}"
+
+    def get_target(self):
+        if self.content_type == 'company' and self.company:
+            return self.company.company_name
+        elif self.content_type == 'vacancy' and self.vacancy:
+            return f"{self.vacancy.job_profile} at {self.vacancy.company.company_name}"
+        return "Unknown Target"
+    
+    def get_employee(self):
+        """Get the Employee profile associated with this activity's user"""
+        if hasattr(self.employee, 'employee'):
+            return self.employee.employee
+        return None
     
 class Company_spoke_person(models.Model):
     PRIORITY_CHOICES = [
@@ -1088,39 +1257,156 @@ class company_communication(models.Model):
     #         return self.follow_up_date <= timezone.now().date()
     #     return False
     
-
 class Ticket(models.Model):
+    TICKET_STATUS = [
+        ('Open', 'Open'),
+        ('In Progress', 'In Progress'),
+        ('Resolved', 'Resolved'),
+        ('Closed', 'Closed'),
+        ('Reopened', 'Reopened'),
+    ]
+    
+    TICKET_PRIORITY = [
+        ('Low', 'Low'),
+        ('Medium', 'Medium'),
+        ('High', 'High'),
+        ('Critical', 'Critical'),
+    ]
+    
+    TICKET_CATEGORY = [
+        ('IT', 'IT'),
+        ('HR', 'HR'),
+        ('Finance', 'Finance'),
+        ('Operations', 'Operations'),
+        ('Facilities', 'Facilities'),
+        ('Other', 'Other'),
+    ]
+    
     ticket_number = models.CharField(max_length=50, unique=True)
     ticket_name = models.CharField(max_length=255)
     ticket_description = models.TextField(blank=True, null=True)
     ticket_status = models.CharField(
         max_length=20,
-        choices=[('Open', 'Open'), ('In Progress', 'In Progress'), ('Closed', 'Closed')],
+        choices=TICKET_STATUS,
         default='Open'
     )
     ticket_priority = models.CharField(
         max_length=20,
-        choices=[('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')],
+        choices=TICKET_PRIORITY,
         default='Medium'
     )
-    ticket_category = models.CharField(max_length=100, blank=True, null=True)
-    ticket_assign_to = models.ForeignKey('Employee', related_name='assigned_tickets', on_delete=models.SET_NULL, null=True, blank=True)
-    ticket_assign_by = models.ForeignKey('Employee', related_name='created_tickets', on_delete=models.SET_NULL, null=True, blank=True)
+    ticket_category = models.CharField(
+        max_length=20,
+        choices=TICKET_CATEGORY,
+        default='Other'
+    )
+    ticket_assign_to = models.ForeignKey(Employee, related_name='assigned_tickets', on_delete=models.SET_NULL, null=True, blank=True)
+    ticket_assign_by = models.ForeignKey(Employee, related_name='created_tickets', on_delete=models.SET_NULL, null=True, blank=True)
     ticket_created_date = models.DateTimeField(auto_now_add=True)
+    ticket_updated_date = models.DateTimeField(auto_now=True)
     ticket_closed_date = models.DateTimeField(blank=True, null=True)
     ticket_remark = models.TextField(blank=True, null=True)
+    ticket_attachment = models.FileField(upload_to='ticket_attachments/', blank=True, null=True)
+    ticket_due_date = models.DateTimeField(blank=True, null=True)
+    ticket_sla = models.CharField(max_length=50, blank=True, null=True)
+    ticket_related_to = models.CharField(max_length=100, blank=True, null=True)
     created_by = models.ForeignKey(User, related_name='ticket_created', on_delete=models.SET_NULL, null=True, blank=True)
     updated_by = models.ForeignKey(User, related_name='ticket_updated', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
+        if not self.ticket_number:
+            # Generate ticket number if not provided
+            last_ticket = Ticket.objects.order_by('-id').first()
+            last_id = last_ticket.id if last_ticket else 0
+            self.ticket_number = f"TKT-{last_id + 1:05d}"
+            
         user = kwargs.pop('user', None)
         if user and not self.pk:
             self.created_by = user
         if user:
             self.updated_by = user
+            
+        # Set closed date if status is changed to Closed
+        if self.pk:
+            old_status = Ticket.objects.get(pk=self.pk).ticket_status
+            if old_status != 'Closed' and self.ticket_status == 'Closed':
+                self.ticket_closed_date = timezone.now()
+                
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.ticket_number} - {self.ticket_name}"
+
+    def get_status_color(self):
+        status_colors = {
+            'Open': 'primary',
+            'In Progress': 'info',
+            'Resolved': 'success',
+            'Closed': 'secondary',
+            'Reopened': 'warning',
+        }
+        return status_colors.get(self.ticket_status, 'light')
+
+    def get_priority_color(self):
+        priority_colors = {
+            'Low': 'success',
+            'Medium': 'info',
+            'High': 'warning',
+            'Critical': 'danger',
+        }
+        return priority_colors.get(self.ticket_priority, 'light')
+    
+class TicketActivity(models.Model):
+    ACTION_CHOICES = [
+        ('created', 'Created'),
+        ('updated', 'Updated'),
+        ('status_changed', 'Status Changed'),
+        ('assigned', 'Assigned'),
+        ('commented', 'Commented'),
+        ('closed', 'Closed'),
+        ('reopened', 'Reopened'),
+    ]
+    
+    ticket = models.ForeignKey('Ticket', on_delete=models.CASCADE, related_name='activities')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    comment = models.TextField(blank=True, null=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+    old_value = models.CharField(max_length=255, blank=True, null=True)
+    new_value = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name_plural = 'Ticket Activities'
+
+    def __str__(self):
+        return f"{self.get_action_display()} by {self.user} on {self.ticket}"
+
+    def save(self, *args, **kwargs):
+        # Ensure timestamp is set on creation
+        if not self.pk:
+            self.timestamp = timezone.now()
+        super().save(*args, **kwargs)
+    
+    
+class Document(models.Model):
+    DOCUMENT_TYPES = (
+        ('private', 'Private'),
+        ('public', 'Public'),
+        ('hidden', 'Hidden'),
+    )
+    
+    file_name = models.CharField(max_length=255)
+    document = models.FileField(upload_to='documents/')
+    document_type = models.CharField(max_length=10, choices=DOCUMENT_TYPES, default='private')
+    role = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, related_name='created_documents', on_delete=models.SET_NULL, null=True)
+    updated_by = models.ForeignKey(User, related_name='updated_documents', on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.file_name

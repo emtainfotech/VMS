@@ -2003,8 +2003,67 @@ def resignation_view(request) :
         return render(request, 'hrms/404.html', status=404)
 
 @login_required
-def documents_view(request) :
-    return render(request,'hrms/documents.html')
+def document_list(request):
+    documents = Document.objects.all().order_by('-created_at')
+    context = {
+        'documents': documents,
+    }
+    return render(request, 'hrms/documents.html', context)
+
+@login_required
+def add_document(request):
+    if request.method == 'POST':
+        file_name = request.POST.get('file_name')
+        document = request.FILES.get('document')
+        document_type = request.POST.get('document_type')
+        role = request.POST.get('role')
+        description = request.POST.get('description')
+        
+        if not file_name or not document:
+            messages.error(request, 'File name and document are required')
+            return redirect('document_list')
+            
+        doc = Document(
+            file_name=file_name,
+            document=document,
+            document_type=document_type,
+            role=role,
+            description=description,
+            created_by=request.user,
+            updated_by=request.user
+        )
+        doc.save()
+        messages.success(request, 'Document added successfully')
+        return redirect('document_list')
+    
+    return redirect('document_list')
+
+@login_required
+def edit_document(request, document_id):
+    document = get_object_or_404(Document, id=document_id)
+    
+    if request.method == 'POST':
+        document.file_name = request.POST.get('file_name')
+        document.document_type = request.POST.get('document_type')
+        document.role = request.POST.get('role')
+        document.description = request.POST.get('description')
+        document.updated_by = request.user
+        
+        if 'document' in request.FILES:
+            document.document = request.FILES['document']
+            
+        document.save()
+        messages.success(request, 'Document updated successfully')
+        return redirect('document_list')
+    
+    return redirect('document_list')
+
+@login_required
+def delete_document(request, document_id):
+    document = get_object_or_404(Document, id=document_id)
+    document.delete()
+    messages.success(request, 'Document deleted successfully')
+    return redirect('document_list')
 
 @login_required
 def promotion_view(request):
@@ -3838,3 +3897,145 @@ def admin_profile(request,id):
     else:
         return render(request, 'employee/login.html', {'error': 'User not authenticated'})
 
+
+
+@login_required
+def ticket_list(request):
+    tickets = Ticket.objects.all().order_by('-ticket_created_date')
+    employees = Employee.objects.all()
+    
+    # Filtering
+    status = request.GET.get('status')
+    priority = request.GET.get('priority')
+    category = request.GET.get('category')
+    assigned_to = request.GET.get('assigned_to')
+    
+    if status:
+        tickets = tickets.filter(ticket_status=status)
+    if priority:
+        tickets = tickets.filter(ticket_priority=priority)
+    if category:
+        tickets = tickets.filter(ticket_category=category)
+    if assigned_to:
+        tickets = tickets.filter(ticket_assign_to_id=assigned_to)
+    
+    context = {
+        'tickets': tickets,
+        'employees': employees,
+        'current_status': status,
+        'current_priority': priority,
+        'current_category': category,
+        'current_assigned_to': assigned_to,
+    }
+    return render(request, 'hrms/ticket_list.html', context)
+
+@login_required
+def add_ticket(request):
+    if request.method == 'POST':
+        try:
+            # Create ticket without user parameter
+            ticket = Ticket(
+                ticket_name=request.POST.get('ticket_name'),
+                ticket_description=request.POST.get('ticket_description'),
+                ticket_status=request.POST.get('ticket_status', 'Open'),
+                ticket_priority=request.POST.get('ticket_priority', 'Medium'),
+                ticket_category=request.POST.get('ticket_category', 'Other'),
+                ticket_assign_to_id=request.POST.get('ticket_assign_to'),
+                ticket_remark=request.POST.get('ticket_remark'),
+                ticket_due_date=request.POST.get('ticket_due_date') or None,
+                ticket_related_to=request.POST.get('ticket_related_to'),
+            )
+            
+            # Set user-related fields
+            ticket.created_by = request.user
+            ticket.updated_by = request.user
+            
+            if 'ticket_attachment' in request.FILES:
+                ticket.ticket_attachment = request.FILES['ticket_attachment']
+                
+            ticket.save()
+            
+            messages.success(request, 'Ticket created successfully!')
+            return redirect('ticket_list')
+            
+        except Exception as e:
+            messages.error(request, f'Error creating ticket: {str(e)}')
+    
+    return redirect('ticket_list')
+
+@login_required
+def edit_ticket(request, ticket_id):
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    
+    if request.method == 'POST':
+        try:
+            ticket.ticket_name = request.POST.get('ticket_name')
+            ticket.ticket_description = request.POST.get('ticket_description')
+            ticket.ticket_status = request.POST.get('ticket_status')
+            ticket.ticket_priority = request.POST.get('ticket_priority')
+            ticket.ticket_category = request.POST.get('ticket_category')
+            ticket.ticket_assign_to_id = request.POST.get('ticket_assign_to')
+            ticket.ticket_remark = request.POST.get('ticket_remark')
+            ticket.ticket_due_date = request.POST.get('ticket_due_date') or None
+            ticket.ticket_related_to = request.POST.get('ticket_related_to')
+            ticket.updated_by = request.user  # Set updated_by field
+            
+            if 'ticket_attachment' in request.FILES:
+                ticket.ticket_attachment = request.FILES['ticket_attachment']
+                
+            ticket.save()
+            
+            messages.success(request, 'Ticket updated successfully!')
+            return redirect('ticket_list')
+            
+        except Exception as e:
+            messages.error(request, f'Error updating ticket: {str(e)}')
+    
+    return redirect('ticket_list')
+@login_required
+def delete_ticket(request, ticket_id):
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    
+    if request.method == 'POST':
+        try:
+            ticket.delete()
+            messages.success(request, 'Ticket deleted successfully!')
+        except Exception as e:
+            messages.error(request, f'Error deleting ticket: {str(e)}')
+    
+    return redirect('ticket_list')
+
+from .forms import CommentForm
+
+@login_required
+def view_ticket(request, ticket_id):
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    employees = Employee.objects.all()
+    
+    # Handle comment submission
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            # Create activity record for the comment
+            TicketActivity.objects.create(
+                ticket=ticket,
+                user=request.user,
+                action='commented',
+                comment=form.cleaned_data['comment']
+            )
+            messages.success(request, 'Comment added successfully')
+            return redirect('view_ticket', ticket_id=ticket.id)
+    else:
+        form = CommentForm()
+    
+    # Get all activities for this ticket
+    activities = ticket.activities.all().select_related('user')
+    
+    context = {
+        'ticket': ticket,
+        'employees': employees,
+        'activities': activities,
+        'form': form,
+        'timezone': timezone,
+    }
+    return render(request, 'hrms/ticket_detail.html', context)
