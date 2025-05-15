@@ -78,7 +78,7 @@
                                     <div class="mb-3">
                                         <label class="form-label">Company Email Address</label>
                                         <input type="email" class="form-control" name="company_email_address" 
-                                               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                               pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
                                                oninput="validateField(this)">
                                         <div class="invalid-feedback">Please provide a valid email address.</div>
                                     </div>

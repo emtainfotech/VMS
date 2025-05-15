@@ -1175,7 +1175,7 @@ def admin_vendor_candidate_list(request, id):
                 vendor.first_name = first_name
                 vendor.last_name = last_name
                 vendor.mobile_number = mobile_number
-                vendor.email = email
+                vendor.user.email = email
                 vendor.date_of_birth = date_of_birth
                 
                 if vendor_profile_image:
@@ -1877,10 +1877,10 @@ def admin_vendor_profile(request, id):
                 # Profile Details
                 vendor.user.first_name = request.POST.get('first_name')
                 vendor.user.last_name = request.POST.get('last_name')
-                vendor.user.save()
                 vendor.mobile_number = request.POST.get('mobile_number')
-                vendor.email = request.POST.get('email')
+                vendor.user.email = request.POST.get('email')
                 vendor.date_of_birth = request.POST.get('date_of_birth')
+                vendor.user.save()
                 
                 if 'vendor_profile_image' in request.FILES:
                     vendor.vendor_profile_image = request.FILES['vendor_profile_image']
@@ -1960,7 +1960,7 @@ def admin_vendor_profile(request, id):
             'districts' : districts,
             'candidates' : candidates
         }
-        return render(request, 'crm/evms-vendor-profile.html', context)
+        return render(request, 'crm/evms-vendor-candidate-profile.html', context)
     else:
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)

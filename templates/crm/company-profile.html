@@ -542,10 +542,10 @@
             <div class="col-md-6 mb-3">
               <label class="form-label">Company Unique Code</label>
               <input type="text" class="form-control" name="company_unique_code" value="{{ company.company_unique_code }}" 
-                     required minlength="3" maxlength="50"
+                     required minlength="3" maxlength="5"
                      pattern="^[a-zA-Z0-9\-_]*$" title="Only alphanumeric characters, hyphens and underscores are allowed" />
               <div class="invalid-feedback">
-                Please provide a valid unique code (3-50 characters, alphanumeric only).
+                Please provide a valid unique code (3-5 characters, alphanumeric only).
               </div>
             </div>
             
@@ -737,7 +737,7 @@
             <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Vacancy Code</label>
-                <input type="text" class="form-control" name="company_vacancy_unique_code" required>
+                <input type="text" class="form-control" name="company_vacancy_unique_code" maxLength="5" required>
               </div>
             </div>
             <div class="col-md-4">

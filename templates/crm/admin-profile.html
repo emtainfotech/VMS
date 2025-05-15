@@ -139,7 +139,7 @@
                     </p>
                     <p class="mb-2">
                       <span class="info-label">Email:</span>
-                      <span class="info-value d-block">{{ employee.user.email }}</span>
+                      <span class="info-value d-block">{{ employee.email }}</span>
                     </p>
                   </div>
                 </div>
@@ -579,7 +579,7 @@
                 </div>
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Email <span class="text-danger">*</span></label>
-                  <input type="email" class="form-control" name="email" value="{{ employee.user.email }}" required />
+                  <input type="email" class="form-control" name="email" value="{{ employee.email }}" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" required />
                   <div class="invalid-feedback">Please enter a valid email address.</div>
                 </div>
                 <div class="col-md-6 mb-3">
