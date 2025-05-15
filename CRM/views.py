@@ -403,7 +403,7 @@ def admin_candidate_registration(request) :
             send_for_interview = request.POST.get('send_for_interview')
             next_follow_up_date = request.POST.get('next_follow_up_date') or None
             remark = request.POST.get('remark')
-            submit_by = request.POST.get('submit_by')
+            # submit_by = request.POST.get('submit_by')
             preferred_location_str = ', '.join(preferred_location)
             sector_str = ', '.join(sector)
             department_str = ', '.join(department)
@@ -439,8 +439,8 @@ def admin_candidate_registration(request) :
                 candidate_photo=candidate_photo,
                 candidate_resume=candidate_resume,
                 remark=remark,
-                created_by=request.user,
-                updated_by=request.user
+                # created_by=request.user,
+                # updated_by=request.user
                 
             )
         
