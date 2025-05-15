@@ -687,7 +687,7 @@ def vendor_profile(request, id):
             vendor.user.last_name = request.POST.get('last_name')
             vendor.user.save()
             vendor.mobile_number = request.POST.get('mobile_number')
-            vendor.email = request.POST.get('email')
+            vendor.user.email = request.POST.get('email')
             vendor.date_of_birth = request.POST.get('date_of_birth')
             
             if 'vendor_profile_image' in request.FILES:
