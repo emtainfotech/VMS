@@ -30,7 +30,8 @@
                                         <label class="form-label">Company Name</label>
                                         <input type="text" class="form-control" name="company_name" 
                                                pattern="[A-Za-z0-9 &.,-]{3,}" 
-                                               title="Company name should contain at least 3 characters (letters, numbers, spaces, &.,-)" required>
+                                               title="Company name should contain at least 3 characters (letters, numbers, spaces, &.,-)" required
+                                               oninput="validateField(this)">
                                         <div class="invalid-feedback">Please provide a valid company name (min 3 characters).</div>
                                         <input type="hidden" class="form-control" name="employee_name" value="{{user.employee.first_name}} {{user.employee.last_name}} ({{user.username}})" required>
                                     </div>
@@ -42,9 +43,10 @@
                                         <label class="form-label">Company Code</label>
                                         <input type="text" class="form-control" name="company_unique_code" 
                                                pattern="[A-Za-z0-9-]{3,5}" 
-                                               max="5"
-                                               title="Code should contain letters, numbers, or hyphens (min 3 characters)" required>
-                                        <div class="invalid-feedback">Please provide a valid company code.</div>
+                                               maxlength="5"
+                                               title="Code should contain letters, numbers, or hyphens (3-5 characters)" required
+                                               oninput="validateField(this)">
+                                        <div class="invalid-feedback">Please provide a valid company code (3-5 characters).</div>
                                     </div>
                                 </div>
                                 
@@ -53,7 +55,7 @@
                                     <div class="mb-3">
                                         <label class="form-label">Company Location</label>
                                         <select type="text" class="form-select" placeholder="Select Location" id="select-location" 
-                                                name="company_location" required>
+                                                name="company_location" required onchange="validateField(this)">
                                             {% for district in districts %}
                                             <option value="{{ district }}">{{ district }}</option>
                                             {% endfor %}
@@ -66,7 +68,7 @@
                                 <div class="col-md-2">
                                     <div class="mb-2">
                                         <label class="form-label">Company Logo</label>
-                                        <input type="file" class="form-control" name="company_logo" accept="image/*">
+                                        <input type="file" class="form-control" name="company_logo" accept="image/*" onchange="validateFile(this)">
                                         <div class="invalid-feedback">Please upload a valid image file.</div>
                                     </div>
                                 </div>
@@ -76,7 +78,8 @@
                                     <div class="mb-3">
                                         <label class="form-label">Company Email Address</label>
                                         <input type="email" class="form-control" name="company_email_address" 
-                                               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                                               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                               oninput="validateField(this)">
                                         <div class="invalid-feedback">Please provide a valid email address.</div>
                                     </div>
                                 </div>
@@ -86,7 +89,8 @@
                                     <div class="mb-3">
                                         <label class="form-label">Contact Person</label>
                                         <input type="text" class="form-control" name="company_contact_person_name" 
-                                               pattern="[A-Za-z ]{3,}" required>
+                                               pattern="[A-Za-z ]{3,}" required
+                                               oninput="validateField(this)">
                                         <div class="invalid-feedback">Please provide a valid contact person name.</div>
                                     </div>
                                 </div>
@@ -96,7 +100,8 @@
                                     <div class="mb-3">
                                         <label class="form-label">Contact Details</label>
                                         <input type="tel" name='company_contact_person_contact_details' class="form-control" 
-                                               pattern="[0-9]{10}" max="10" required>
+                                               pattern="[0-9]{10}" maxlength="10" required
+                                               oninput="this.value=this.value.replace(/[^0-9]/g,''); validateField(this)">
                                         <div class="invalid-feedback">Please provide a valid 10-digit contact number.</div>
                                     </div>
                                 </div>
@@ -105,7 +110,7 @@
                                 <div class="col-sm-6 col-md-2">
                                     <div class="mb-3">
                                         <label class="form-label">Contact Person Designation</label>
-                                        <select name="company_contact_person_designation" class="form-select" required>
+                                        <select name="company_contact_person_designation" class="form-select" required onchange="validateField(this)">
                                             <option value="">Select Designation</option>
                                             <option value="HR">HR</option>
                                             <option value="CEO">CEO</option>
@@ -122,7 +127,8 @@
                                 <div class="col-sm-12 col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Interview Address</label>
-                                        <input type="text" name='interview_address' class="form-control" required>
+                                        <input type="text" name='interview_address' class="form-control" required
+                                               oninput="validateField(this)">
                                         <div class="invalid-feedback">Please provide interview address.</div>
                                     </div>
                                 </div>
@@ -131,7 +137,7 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Status of Proposal</label>
-                                        <select class="form-control form-select" name='status_of_proposal' required>
+                                        <select class="form-control form-select" name='status_of_proposal' required onchange="validateField(this)">
                                             <option value="None">None</option>
                                             <option value="Lead Generate">Lead Generate</option>
                                             <option value="Follow-Up">Follow-Up</option>
@@ -159,14 +165,14 @@
                                 <div class="col-sm-6 col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label">Invoice Generate Date</label>
-                                        <input type="date" name='invoice_generation_date' class="form-control">
+                                        <input type="date" name='invoice_generation_date' class="form-control" onchange="validateField(this)">
                                     </div>
                                 </div>
                                 
                                 <div class="col-sm-6 col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label">Payout Date</label>
-                                        <input type="date" name='payout_date' class="form-control">
+                                        <input type="date" name='payout_date' class="form-control" onchange="validateField(this)">
                                     </div>
                                 </div>
                                 
@@ -174,7 +180,7 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Payment Conditions</label>
-                                        <textarea name='payment_condiation' class="form-control" rows="2" maxlength="500"></textarea>
+                                        <textarea name='payment_condiation' class="form-control" rows="2" maxlength="500" oninput="validateField(this)"></textarea>
                                     </div>
                                 </div>
                                 
@@ -182,10 +188,9 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Remark</label>
-                                        <textarea name='remark' class="form-control" rows="2" maxlength="500"></textarea>
+                                        <textarea name='remark' class="form-control" rows="2" maxlength="500" oninput="validateField(this)"></textarea>
                                     </div>
                                 </div>
-                                
                                 
                             </div>
                             <div class="card-footer text-end">
@@ -196,123 +201,6 @@
                     
                     <script>
                     document.addEventListener("DOMContentLoaded", function () {
-                        const form = document.getElementById("companyForm");
-                        
-                        // Form validation
-                        form.addEventListener("submit", function(event) {
-                            if (!form.checkValidity()) {
-                                event.preventDefault();
-                                event.stopPropagation();
-                            }
-                            
-                            // Custom validation for multi-select fields
-                            const multiSelectFields = ['company_location'];
-                            let isValid = true;
-                            
-                            multiSelectFields.forEach(fieldName => {
-                                const field = document.querySelector(`[name="${fieldName}"]`);
-                                if (field && field.required && field.selectedOptions.length === 0) {
-                                    field.classList.add('is-invalid');
-                                    isValid = false;
-                                }
-                            });
-                            
-                            // Validate date ranges
-                            const openingDate = document.querySelector('[name="vacancy_opening_date"]');
-                            const closingDate = document.querySelector('[name="vacancy_closing_date"]');
-                            
-                            if (closingDate.value && openingDate.value > closingDate.value) {
-                                closingDate.setCustomValidity("Closing date must be after opening date");
-                                closingDate.classList.add('is-invalid');
-                                isValid = false;
-                            } else {
-                                closingDate.setCustomValidity("");
-                            }
-                            
-                            // Validate age ranges
-                            const minAge = document.querySelector('[name="minimum_age"]');
-                            const maxAge = document.querySelector('[name="maximum_age"]');
-                            
-                            if (minAge.value && maxAge.value && parseInt(minAge.value) > parseInt(maxAge.value)) {
-                                maxAge.setCustomValidity("Maximum age must be greater than minimum age");
-                                maxAge.classList.add('is-invalid');
-                                isValid = false;
-                            } else {
-                                maxAge.setCustomValidity("");
-                            }
-                            
-                            // Validate experience ranges
-                            const minExp = document.querySelector('[name="minimum_experience"]');
-                            const maxExp = document.querySelector('[name="maximum_experience"]');
-                            
-                            if (minExp.value && maxExp.value && parseInt(minExp.value) > parseInt(maxExp.value)) {
-                                maxExp.setCustomValidity("Maximum experience must be greater than minimum experience");
-                                maxExp.classList.add('is-invalid');
-                                isValid = false;
-                            } else {
-                                maxExp.setCustomValidity("");
-                            }
-                            
-                            // Validate salary ranges
-                            const minSalary = document.querySelector('[name="minimum_salary_range"]');
-                            const maxSalary = document.querySelector('[name="maximum_salary_range"]');
-                            
-                            if (minSalary.value && maxSalary.value && parseInt(minSalary.value) > parseInt(maxSalary.value)) {
-                                maxSalary.setCustomValidity("Maximum salary must be greater than minimum salary");
-                                maxSalary.classList.add('is-invalid');
-                                isValid = false;
-                            } else {
-                                maxSalary.setCustomValidity("");
-                            }
-                            
-                            if (!isValid) {
-                                event.preventDefault();
-                            }
-                            
-                            form.classList.add('was-validated');
-                        });
-                        
-                        // Real-time validation for fields
-                        const fieldsToValidate = [
-                            'company_name', 'company_unique_code', 'job_profile', 
-                            'company_vacancy_unique_code', 'company_email_address',
-                            'company_contact_person_name', 'company_contact_person_contact_details',
-                            'minimum_age', 'maximum_age', 'minimum_experience', 'maximum_experience',
-                            'minimum_salary_range', 'maximum_salary_range'
-                        ];
-                        
-                        fieldsToValidate.forEach(fieldName => {
-                            const field = document.querySelector(`[name="${fieldName}"]`);
-                            if (field) {
-                                field.addEventListener('input', function() {
-                                    if (field.checkValidity()) {
-                                        field.classList.remove('is-invalid');
-                                        field.classList.add('is-valid');
-                                    } else {
-                                        field.classList.remove('is-valid');
-                                        field.classList.add('is-invalid');
-                                    }
-                                });
-                            }
-                        });
-                        
-                        // Payroll toggle
-                        const payrollSelect = document.getElementById("payrollSelect");
-                        const thirdPartyInput = document.getElementById("thirdPartyInput");
-                        
-                        function toggleThirdPartyInput() {
-                            if (payrollSelect.value === "Third Party") {
-                                thirdPartyInput.style.display = "block";
-                                document.querySelector('[name="third_party_name"]').setAttribute('required', '');
-                            } else {
-                                thirdPartyInput.style.display = "none";
-                                document.querySelector('[name="third_party_name"]').removeAttribute('required');
-                            }
-                        }
-                        
-                        toggleThirdPartyInput();
-                        payrollSelect.addEventListener("change", toggleThirdPartyInput);
-                        
                         // Initialize TomSelect for multi-select fields
                         if (window.TomSelect) {
                             new TomSelect(document.getElementById('select-location'), {
@@ -338,6 +226,56 @@
                                 }
                             });
                         }
+                    });
+
+                    // Real-time field validation
+                    function validateField(field) {
+                        if (field.checkValidity()) {
+                            field.classList.remove('is-invalid');
+                            field.classList.add('is-valid');
+                        } else {
+                            field.classList.remove('is-valid');
+                            field.classList.add('is-invalid');
+                        }
+                        
+                        // Special handling for company code (max 5 characters)
+                        if (field.name === 'company_unique_code' && field.value.length > 5) {
+                            field.value = field.value.slice(0, 5);
+                            validateField(field);
+                        }
+                    }
+
+                    // File validation
+                    function validateFile(fileInput) {
+                        const file = fileInput.files[0];
+                        if (!file) return;
+                        
+                        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                        if (!validTypes.includes(file.type)) {
+                            fileInput.setCustomValidity('Please upload a valid image file (JPEG, PNG, GIF)');
+                            fileInput.classList.add('is-invalid');
+                            fileInput.classList.remove('is-valid');
+                        } else {
+                            fileInput.setCustomValidity('');
+                            fileInput.classList.remove('is-invalid');
+                            fileInput.classList.add('is-valid');
+                        }
+                    }
+
+                    // Form submission validation
+                    document.getElementById('companyForm').addEventListener('submit', function(event) {
+                        const form = this;
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            
+                            // Force validation of all fields
+                            const fields = form.querySelectorAll('input, select, textarea');
+                            fields.forEach(field => {
+                                validateField(field);
+                            });
+                        }
+                        form.classList.add('was-validated');
                     });
                     </script>
                     </div>
