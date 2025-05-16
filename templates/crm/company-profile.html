@@ -919,100 +919,116 @@
         </div>
 
         <!-- Payment Section -->
-        <div class="card mt-4">
-          <div class="card-header bg-primary text-white">
-              <h5 class="mb-0">Payment Details</h5>
-          </div>
-          <div class="card-body">
-              <div class="row">
-                  <div class="col-md-6">
-                      <div class="mb-3">
-                          <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
-                          <select name="payment_mode" class="form-select" id="paymentModeSelect" required>
-                              <option value="">Select Payment Mode</option>
-                              <option value="Company Pay">Company Pay</option>
-                              <option value="Salary Deduction">Salary Deduction</option>
-                              <option value="SPDC/Candidate Pay">SPDC/Candidate Pay</option>
-                          </select>
-                      </div>
-                  </div>
-              </div>
-              
-              <!-- Company Pay Fields -->
-              <div id="companyPayFields" style="display: none;">
-                  <div class="row">
-                      <div class="col-md-6">
-                          <div class="mb-3">
-                              <label class="form-label">Payment Type <span class="text-danger">*</span></label>
-                              <select name="company_pay_type" class="form-select" id="companyPayTypeSelect" required>
-                                  <option value="">Select Type</option>
-                                  <option value="Flat">Flat</option>
-                                  <option value="Percentage of CTC">% of CTC</option>
-                                  <option value="Pay as per days">Pay as per days</option>
-                              </select>
-                          </div>
-                      </div>
-                  </div>
-                  
-                  <!-- Flat Amount Field -->
-                  <div class="row" id="flatAmountField" style="display: none;">
-                      <div class="col-md-6">
-                          <div class="mb-3">
-                              <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
-                              <input type="text" name="flat_amount" class="form-control">
-                          </div>
-                      </div>
-                  </div>
-                  
-                  <!-- Percentage of CTC Field -->
-                  <div class="row" id="percentageCtcField" style="display: none;">
-                      <div class="col-md-6">
-                          <div class="mb-3">
-                              <label class="form-label">Percentage of CTC <span class="text-danger">*</span></label>
-                              <input type="number" name="percentage_of_ctc" class="form-control" min="0" max="100" step="0.01">
-                              <small class="text-muted">Enter percentage value (e.g., 10 for 10%)</small>
-                          </div>
-                      </div>
-                  </div>
-                  
-                  <!-- Pay per Days Field -->
-                  <div class="row" id="payPerDaysField" style="display: none;">
-                      <div class="col-md-6">
-                          <div class="mb-3">
-                              <label class="form-label">Number of Days <span class="text-danger">*</span></label>
-                              <input type="number" name="pay_per_days" class="form-control" min="1">
-                          </div>
-                      </div>
-                  </div>
-              </div>
-              
-              <!-- Salary Deduction Fields -->
-              <div class="row" id="salaryDeductionFields" style="display: none;">
-                  <div class="col-md-6">
-                      <div class="mb-3">
-                          <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
-                          <input type="date" name="salary_transfer_date" class="form-control">
-                      </div>
-                  </div>
-                  <div class="col-md-6">
-                      <div class="mb-3">
-                          <label class="form-label">Expected Payment Date <span class="text-danger">*</span></label>
-                          <input type="date" name="expected_payment_date" class="form-control">
-                      </div>
-                  </div>
-              </div>
-              
-              <!-- SPDC/Candidate Pay Fields -->
-              <div class="row" id="spdcFields" style="display: none;">
-                  <div class="col-md-6">
-                      <div class="mb-3">
-                          <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
-                          <input type="date" name="candidate_salary_transfer_date" class="form-control">
-                      </div>
-                  </div>
-              </div>
+<div class="card mt-4">
+  <div class="card-header bg-primary text-white">
+    <h5 class="mb-0">Payment Details</h5>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="mb-3">
+          <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+          <div class="d-flex flex-wrap gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="payment_mode" id="companyPayRadio" value="Company Pay" required>
+              <label class="form-check-label" for="companyPayRadio">Company Pay</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="payment_mode" id="salaryDeductionRadio" value="Salary Deduction">
+              <label class="form-check-label" for="salaryDeductionRadio">Salary Deduction</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="payment_mode" id="spdcPayRadio" value="SPDC/Candidate Pay">
+              <label class="form-check-label" for="spdcPayRadio">SPDC/Candidate Pay</label>
+            </div>
           </div>
         </div>
+      </div>
+    </div>
+    
+    <!-- Company Pay Fields -->
+    <div id="companyPayFields" style="display: none;">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="mb-3">
+            <label class="form-label">Payment Type <span class="text-danger">*</span></label>
+            <div class="d-flex flex-wrap gap-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="company_pay_type" id="flatTypeRadio" value="Flat">
+                <label class="form-check-label" for="flatTypeRadio">Flat</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="company_pay_type" id="percentageTypeRadio" value="Percentage of CTC">
+                <label class="form-check-label" for="percentageTypeRadio">% of CTC</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="company_pay_type" id="perDaysTypeRadio" value="Pay as per days">
+                <label class="form-check-label" for="perDaysTypeRadio">Pay as per days</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Flat Amount Field -->
+      <div class="row" id="flatAmountField" style="display: none;">
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
+            <input type="text" name="flat_amount" class="form-control">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Percentage of CTC Field -->
+      <div class="row" id="percentageCtcField" style="display: none;">
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label class="form-label">Percentage of CTC <span class="text-danger">*</span></label>
+            <input type="number" name="percentage_of_ctc" class="form-control" min="0" max="100" step="0.01">
+            <small class="text-muted">Enter percentage value (e.g., 10 for 10%)</small>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Pay per Days Field -->
+      <div class="row" id="payPerDaysField" style="display: none;">
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label class="form-label">Number of Days <span class="text-danger">*</span></label>
+            <input type="number" name="pay_per_days" class="form-control" min="1">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Salary Deduction Fields -->
+    <div class="row" id="salaryDeductionFields" style="display: none;">
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
+          <input type="date" name="salary_transfer_date" class="form-control">
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label">Expected Payment Date <span class="text-danger">*</span></label>
+          <input type="date" name="expected_payment_date" class="form-control">
+        </div>
+      </div>
+    </div>
+    
+    <!-- SPDC/Candidate Pay Fields -->
+    <div class="row" id="spdcFields" style="display: none;">
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
+          <input type="date" name="candidate_salary_transfer_date" class="form-control">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -1352,106 +1368,128 @@
           </div>
           
           <!-- Payment Section -->
-          <div class="card mt-4">
-            <div class="card-header bg-primary text-white">
-              <h5 class="mb-0">Payment Details</h5>
+<div class="card mt-4">
+  <div class="card-header bg-primary text-white">
+    <h5 class="mb-0">Payment Details</h5>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="mb-3">
+          <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+          <div class="d-flex flex-wrap gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="payment_mode" id="companyPayRadioEdit{{ vacancy.id }}" 
+                     value="Company Pay" {% if vacancy.payment_mode == 'Company Pay' %}checked{% endif %} required>
+              <label class="form-check-label" for="companyPayRadioEdit{{ vacancy.id }}">Company Pay</label>
             </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="mb-3">
-                    <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
-                    <select name="payment_mode" class="form-select" id="paymentModeSelectEdit{{ vacancy.id }}" required>
-                      <option value="">Select Payment Mode</option>
-                      <option value="Company Pay" {% if vacancy.payment_mode == 'Company Pay' %}selected{% endif %}>Company Pay</option>
-                      <option value="Salary Deduction" {% if vacancy.payment_mode == 'Salary Deduction' %}selected{% endif %}>Salary Deduction</option>
-                      <option value="SPDC/Candidate Pay" {% if vacancy.payment_mode == 'SPDC/Candidate Pay' %}selected{% endif %}>SPDC/Candidate Pay</option>
-                    </select>
-                  </div>
-                </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="payment_mode" id="salaryDeductionRadioEdit{{ vacancy.id }}" 
+                     value="Salary Deduction" {% if vacancy.payment_mode == 'Salary Deduction' %}checked{% endif %}>
+              <label class="form-check-label" for="salaryDeductionRadioEdit{{ vacancy.id }}">Salary Deduction</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="payment_mode" id="spdcPayRadioEdit{{ vacancy.id }}" 
+                     value="SPDC/Candidate Pay" {% if vacancy.payment_mode == 'SPDC/Candidate Pay' %}checked{% endif %}>
+              <label class="form-check-label" for="spdcPayRadioEdit{{ vacancy.id }}">SPDC/Candidate Pay</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Company Pay Fields -->
+    <div id="companyPayFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'Company Pay' %}block{% else %}none{% endif %};">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="mb-3">
+            <label class="form-label">Payment Type <span class="text-danger">*</span></label>
+            <div class="d-flex flex-wrap gap-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="company_pay_type" id="flatTypeRadioEdit{{ vacancy.id }}" 
+                       value="Flat" {% if vacancy.company_pay_type == 'Flat' %}checked{% endif %}>
+                <label class="form-check-label" for="flatTypeRadioEdit{{ vacancy.id }}">Flat</label>
               </div>
-              
-              <!-- Company Pay Fields -->
-              <div id="companyPayFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'Company Pay' %}block{% else %}none{% endif %};">
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label class="form-label">Payment Type <span class="text-danger">*</span></label>
-                      <select name="company_pay_type" class="form-select" id="companyPayTypeSelectEdit{{ vacancy.id }}" {% if vacancy.payment_mode == 'Company Pay' %}required{% endif %}>
-                        <option value="">Select Type</option>
-                        <option value="Flat" {% if vacancy.company_pay_type == 'Flat' %}selected{% endif %}>Flat</option>
-                        <option value="Percentage of CTC" {% if vacancy.company_pay_type == 'Percentage of CTC' %}selected{% endif %}>% of CTC</option>
-                        <option value="Pay as per days" {% if vacancy.company_pay_type == 'Pay as per days' %}selected{% endif %}>Pay as per days</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Flat Amount Field -->
-                <div class="row" id="flatAmountFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Flat' %}block{% else %}none{% endif %};">
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
-                      <input type="text" name="flat_amount" class="form-control"  
-                            value="{{ vacancy.flat_amount|default:'' }}" {% if vacancy.company_pay_type == 'Flat' %}required{% endif %}>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Percentage of CTC Field -->
-                <div class="row" id="percentageCtcFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Percentage of CTC' %}block{% else %}none{% endif %};">
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label class="form-label">Percentage of CTC <span class="text-danger">*</span></label>
-                      <input type="number" name="percentage_of_ctc" class="form-control" min="0" max="100" step="0.01" 
-                            value="{{ vacancy.percentage_of_ctc|default:'' }}" {% if vacancy.company_pay_type == 'Percentage of CTC' %}required{% endif %}>
-                      <small class="text-muted">Enter percentage value (e.g., 10 for 10%)</small>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Pay per Days Field -->
-                <div class="row" id="payPerDaysFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Pay as per days' %}block{% else %}none{% endif %};">
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label class="form-label">Number of Days <span class="text-danger">*</span></label>
-                      <input type="number" name="pay_per_days" class="form-control" min="1" 
-                            value="{{ vacancy.pay_per_days|default:'' }}" {% if vacancy.company_pay_type == 'Pay as per days' %}required{% endif %}>
-                    </div>
-                  </div>
-                </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="company_pay_type" id="percentageTypeRadioEdit{{ vacancy.id }}" 
+                       value="Percentage of CTC" {% if vacancy.company_pay_type == 'Percentage of CTC' %}checked{% endif %}>
+                <label class="form-check-label" for="percentageTypeRadioEdit{{ vacancy.id }}">% of CTC</label>
               </div>
-              
-              <!-- Salary Deduction Fields -->
-              <div class="row" id="salaryDeductionFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'Salary Deduction' %}block{% else %}none{% endif %};">
-                <div class="col-md-6">
-                  <div class="mb-3">
-                    <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
-                    <input type="date" name="salary_transfer_date" class="form-control" 
-                          value="{{ vacancy.salary_transfer_date|date:'Y-m-d'|default:'' }}" {% if vacancy.payment_mode == 'Salary Deduction' %}required{% endif %}>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="mb-3">
-                    <label class="form-label">Expected Payment Date <span class="text-danger">*</span></label>
-                    <input type="date" name="expected_payment_date" class="form-control" 
-                          value="{{ vacancy.expected_payment_date|date:'Y-m-d'|default:'' }}" {% if vacancy.payment_mode == 'Salary Deduction' %}required{% endif %}>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- SPDC/Candidate Pay Fields -->
-              <div class="row" id="spdcFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'SPDC/Candidate Pay' %}block{% else %}none{% endif %};">
-                <div class="col-md-6">
-                  <div class="mb-3">
-                    <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
-                    <input type="date" name="candidate_salary_transfer_date" class="form-control" 
-                          value="{{ vacancy.candidate_salary_transfer_date|date:'Y-m-d'|default:'' }}" {% if vacancy.payment_mode == 'SPDC/Candidate Pay' %}required{% endif %}>
-                  </div>
-                </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="company_pay_type" id="perDaysTypeRadioEdit{{ vacancy.id }}" 
+                       value="Pay as per days" {% if vacancy.company_pay_type == 'Pay as per days' %}checked{% endif %}>
+                <label class="form-check-label" for="perDaysTypeRadioEdit{{ vacancy.id }}">Pay as per days</label>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      
+      <!-- Flat Amount Field -->
+      <div class="row" id="flatAmountFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Flat' %}block{% else %}none{% endif %};">
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
+            <input type="text" name="flat_amount" class="form-control" value="{{ vacancy.flat_amount|default:'' }}" 
+                   {% if vacancy.company_pay_type == 'Flat' %}required{% endif %}>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Percentage of CTC Field -->
+      <div class="row" id="percentageCtcFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Percentage of CTC' %}block{% else %}none{% endif %};">
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label class="form-label">Percentage of CTC <span class="text-danger">*</span></label>
+            <input type="number" name="percentage_of_ctc" class="form-control" min="0" max="100" step="0.01" 
+                   value="{{ vacancy.percentage_of_ctc|default:'' }}" >
+            <small class="text-muted">Enter percentage value (e.g., 10 for 10%)</small>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Pay per Days Field -->
+      <div class="row" id="payPerDaysFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Pay as per days' %}block{% else %}none{% endif %};">
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label class="form-label">Number of Days <span class="text-danger">*</span></label>
+            <input type="number" name="pay_per_days" class="form-control" min="1" 
+                   value="{{ vacancy.pay_per_days|default:'' }}" >
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Salary Deduction Fields -->
+    <div class="row" id="salaryDeductionFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'Salary Deduction' %}block{% else %}none{% endif %};">
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
+          <input type="date" name="salary_transfer_date" class="form-control" 
+                 value="{{ vacancy.salary_transfer_date|date:'Y-m-d'|default:'' }}" >
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label">Expected Payment Date <span class="text-danger">*</span></label>
+          <input type="date" name="expected_payment_date" class="form-control" 
+                 value="{{ vacancy.expected_payment_date|date:'Y-m-d'|default:'' }}" >
+        </div>
+      </div>
+    </div>
+    
+    <!-- SPDC/Candidate Pay Fields -->
+    <div class="row" id="spdcFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'SPDC/Candidate Pay' %}block{% else %}none{% endif %};">
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
+          <input type="date" name="candidate_salary_transfer_date" class="form-control" 
+                 value="{{ vacancy.candidate_salary_transfer_date|date:'Y-m-d'|default:'' }}" >
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -1992,6 +2030,123 @@ document.querySelectorAll('[id^="paymentModeSelectEdit"]').forEach(function(paym
   if (salaryTransferDate) salaryTransferDate.min = today;
   if (expectedPaymentDate) expectedPaymentDate.min = today;
   if (candidateSalaryTransferDate) candidateSalaryTransferDate.min = today;
+});
+</script>
+
+<script>
+
+  // Payment mode selection handler for add vacancy
+const paymentModeRadios = document.querySelectorAll('input[name="payment_mode"]');
+const companyPayFields = document.getElementById("companyPayFields");
+const salaryDeductionFields = document.getElementById("salaryDeductionFields");
+const spdcFields = document.getElementById("spdcFields");
+
+paymentModeRadios.forEach(radio => {
+  radio.addEventListener("change", function() {
+    // Hide all fields first
+    companyPayFields.style.display = "none";
+    salaryDeductionFields.style.display = "none";
+    spdcFields.style.display = "none";
+    
+    // Reset company pay type fields
+    document.querySelectorAll('input[name="company_pay_type"]').forEach(r => r.checked = false);
+    document.getElementById("flatAmountField").style.display = "none";
+    document.getElementById("percentageCtcField").style.display = "none";
+    document.getElementById("payPerDaysField").style.display = "none";
+    
+    // Show relevant fields based on selection
+    if (this.value === "Company Pay") {
+      companyPayFields.style.display = "block";
+    } else if (this.value === "Salary Deduction") {
+      salaryDeductionFields.style.display = "block";
+    } else if (this.value === "SPDC/Candidate Pay") {
+      spdcFields.style.display = "block";
+    }
+  });
+});
+
+// Company pay type selection handler for add vacancy
+const companyPayTypeRadios = document.querySelectorAll('input[name="company_pay_type"]');
+companyPayTypeRadios.forEach(radio => {
+  radio.addEventListener("change", function() {
+    // Hide all fields first
+    document.getElementById("flatAmountField").style.display = "none";
+    document.getElementById("percentageCtcField").style.display = "none";
+    document.getElementById("payPerDaysField").style.display = "none";
+    
+    // Show relevant field based on selection
+    if (this.value === "Flat") {
+      document.getElementById("flatAmountField").style.display = "block";
+    } else if (this.value === "Percentage of CTC") {
+      document.getElementById("percentageCtcField").style.display = "block";
+    } else if (this.value === "Pay as per days") {
+      document.getElementById("payPerDaysField").style.display = "block";
+    }
+  });
+});
+
+// Edit vacancy modals payment mode handlers
+document.querySelectorAll('input[name^="payment_mode"]').forEach(function(radio) {
+  if (radio.id.includes('Edit')) {
+    const vacancyId = radio.id.replace(/companyPayRadioEdit|salaryDeductionRadioEdit|spdcPayRadioEdit/g, '');
+    
+    const companyPayFields = document.getElementById('companyPayFieldsEdit' + vacancyId);
+    const salaryDeductionFields = document.getElementById('salaryDeductionFieldsEdit' + vacancyId);
+    const spdcFields = document.getElementById('spdcFieldsEdit' + vacancyId);
+    
+    radio.addEventListener('change', function() {
+      // Hide all fields first
+      companyPayFields.style.display = 'none';
+      salaryDeductionFields.style.display = 'none';
+      spdcFields.style.display = 'none';
+      
+      // Reset company pay type fields
+      document.querySelectorAll('input[name="company_pay_type"]').forEach(r => r.checked = false);
+      document.getElementById('flatAmountFieldEdit' + vacancyId).style.display = 'none';
+      document.getElementById('percentageCtcFieldEdit' + vacancyId).style.display = 'none';
+      document.getElementById('payPerDaysFieldEdit' + vacancyId).style.display = 'none';
+      
+      // Show relevant fields based on selection
+      if (this.value === 'Company Pay') {
+        companyPayFields.style.display = 'block';
+      } else if (this.value === 'Salary Deduction') {
+        salaryDeductionFields.style.display = 'block';
+      } else if (this.value === 'SPDC/Candidate Pay') {
+        spdcFields.style.display = 'block';
+      }
+    });
+  }
+});
+
+// Edit vacancy modals company pay type handlers
+document.querySelectorAll('input[name^="company_pay_type"]').forEach(function(radio) {
+  if (radio.id.includes('Edit')) {
+    const vacancyId = radio.id.replace(/flatTypeRadioEdit|percentageTypeRadioEdit|perDaysTypeRadioEdit/g, '');
+    
+    radio.addEventListener('change', function() {
+      // Hide all fields first
+      document.getElementById('flatAmountFieldEdit' + vacancyId).style.display = 'none';
+      document.getElementById('percentageCtcFieldEdit' + vacancyId).style.display = 'none';
+      document.getElementById('payPerDaysFieldEdit' + vacancyId).style.display = 'none';
+      
+      // Show relevant field based on selection
+      if (this.value === 'Flat') {
+        document.getElementById('flatAmountFieldEdit' + vacancyId).style.display = 'block';
+      } else if (this.value === 'Percentage of CTC') {
+        document.getElementById('percentageCtcFieldEdit' + vacancyId).style.display = 'block';
+      } else if (this.value === 'Pay as per days') {
+        document.getElementById('payPerDaysFieldEdit' + vacancyId).style.display = 'block';
+      }
+    });
+  }
+});
+
+// Set min dates on load
+const today = new Date().toISOString().split('T')[0];
+document.querySelectorAll('input[type="date"]').forEach(dateInput => {
+  if (!dateInput.value) {
+    dateInput.min = today;
+  }
 });
 </script>
 
