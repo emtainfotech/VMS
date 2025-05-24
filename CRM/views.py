@@ -570,9 +570,9 @@ def admin_candidate_registration(request) :
                 candidate_photo=candidate_photo,
                 candidate_resume=candidate_resume,
                 remark=remark,
-                created_by=request.user,
-                updated_by=request.user
-                
+                created_by=logged_in_employee,
+                # updated_by=logged_in_employee
+
             )
         
             return redirect('admin_candidate_list')
