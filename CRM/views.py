@@ -570,7 +570,7 @@ def admin_candidate_registration(request) :
                 candidate_photo=candidate_photo,
                 candidate_resume=candidate_resume,
                 remark=remark,
-                created_by=logged_in_employee,
+                # created_by=logged_in_employee,
                 # updated_by=logged_in_employee
 
             )
