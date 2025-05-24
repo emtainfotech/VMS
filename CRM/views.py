@@ -505,7 +505,7 @@ def admin_candidate_profile(request, id):
 @login_required    
 def admin_candidate_registration(request) :
     if request.user.is_staff or request.user.is_superuser:
-        logged_in_employee = request.user
+        logged_in_employee = Employee.objects.get(user=request.user)
         if request.method == 'POST':
             candidate_name = request.POST.get('candidate_name')
             unique_code = request.POST.get('unique_code')
