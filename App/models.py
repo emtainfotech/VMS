@@ -1445,6 +1445,7 @@ class Document(models.Model):
         ('private', 'Private'),
         ('public', 'Public'),
         ('hidden', 'Hidden'),
+        ('ese_hi', 'Ese Hi'),
     )
     
     file_name = models.CharField(max_length=255)
