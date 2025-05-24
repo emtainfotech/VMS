@@ -731,7 +731,9 @@ class Candidate_registration(models.Model):
     current_company = models.CharField(max_length=255, blank=True, null=True)
     current_working_status = models.CharField(max_length=50)
     current_salary = models.CharField(max_length=10, blank=True, null=True)
+    current_salary_type = models.CharField(max_length=50, blank=True, null=True)
     expected_salary = models.CharField(max_length=10, blank=True, null=True)
+    expected_salary_type = models.CharField(max_length=50, blank=True, null=True)
     call_connection = models.CharField(max_length=255, blank=True, null=True)
     calling_remark = models.CharField(max_length=255, blank=True, null=True)
     lead_generate = models.CharField(max_length=255, blank=True, null=True)
@@ -745,31 +747,69 @@ class Candidate_registration(models.Model):
     selection_status = models.CharField(max_length=10, default='Pending')
     company_name = models.CharField(max_length=10, blank=True, null=True)
     offered_salary = models.CharField(max_length=255, blank=True, null=True)
+    joining_status = models.CharField(max_length=10, blank=True, null=True)
     selection_date = models.DateField(blank=True, null=True)
     candidate_joining_date = models.DateField(blank=True, null=True)
     emta_commission = models.CharField(max_length=255, blank=True, null=True)
     payout_date = models.DateField(blank=True, null=True)
+    other_lead_source = models.CharField(max_length=255, blank=True, null=True)
+    other_qualification = models.CharField(max_length=255, blank=True, null=True)
+    other_working_status = models.CharField(max_length=255, blank=True, null=True)
+    other_call_connection = models.CharField(max_length=255, blank=True, null=True)
+    other_lead_generate = models.CharField(max_length=255, blank=True, null=True)
+    other_interview_status = models.CharField(max_length=255, blank=True, null=True)
+    other_selection_status = models.CharField(max_length=255, blank=True, null=True)
+    other_origin_location = models.CharField(max_length=255, blank=True, null=True)
+    created_by = models.ForeignKey(Employee, related_name='candidate_registration_created', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey(Employee, related_name='candidate_registration_updated', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         user = kwargs.pop('user', None)
-        is_new = not self.pk
         
-        super().save(*args, **kwargs)
-        
-        if user:  # Only create activity if we have a user
-            if is_new:
+        if not self.pk:  # New record being created
+            if user:
+                self.created_by = user
+            super().save(*args, **kwargs)
+            # Create activity log for creation
+            CandidateActivity.objects.create(
+                candidate=self,
+                employee=user,
+                action='created',
+                changes={'initial': 'Record created'}
+            )
+        else:
+            # Existing record being updated
+            old_record = Candidate_registration.objects.get(pk=self.pk)
+            changes = {}
+            
+            # Compare each field to find changes
+            for field in self._meta.fields:
+                field_name = field.name
+                old_value = getattr(old_record, field_name)
+                new_value = getattr(self, field_name)
+                
+                if old_value != new_value and field_name not in ['updated_at', 'created_at']:
+                    changes[field_name] = {
+                        'old': str(old_value),
+                        'new': str(new_value)
+                    }
+            
+            if user:
+                self.updated_by = user
+            
+            super().save(*args, **kwargs)
+            
+            # Only create activity log if there were changes
+            if changes:
                 CandidateActivity.objects.create(
                     candidate=self,
                     employee=user,
-                    action='created',
-                    changes={'initial': 'Record created'}
+                    action='updated',
+                    changes=changes
                 )
-            else:
-                # For updates, we'll track changes through signals instead
-                pass
-
+            
 class CandidateActivity(models.Model):
     ACTION_CHOICES = [
         ('created', 'Created'),
@@ -778,10 +818,10 @@ class CandidateActivity(models.Model):
     ]
     
     candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE, related_name='activities')
-    employee = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True)
+    employee = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True)
     action = models.CharField(max_length=20, choices=ACTION_CHOICES)
     timestamp = models.DateTimeField(default=timezone.now)
-    changes = models.JSONField(default=dict)
+    changes = models.JSONField(default=dict)  # Stores field names and their old/new values
     remark = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -789,9 +829,8 @@ class CandidateActivity(models.Model):
         verbose_name_plural = 'Candidate Activities'
 
     def __str__(self):
-        employee_name = self.employee.get_full_name() if self.employee else "System"
-        return f"{self.get_action_display()} by {employee_name} on {self.candidate}"
-    
+        return f"{self.get_action_display()} by {self.employee} on {self.candidate}"
+
 class Candidate_chat(models.Model):
     candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE, related_name='chats')
     chat_date = models.DateTimeField(auto_now_add=True)
@@ -850,6 +889,15 @@ class Candidate_Interview(models.Model):
         ('phone', 'Phone'),
         ('video', 'Video Call'),
         ('online_test', 'Online Test'),
+        ('assessment', 'Assessment'),
+        ('group_discussion', 'Group Discussion'),
+        ('walk_in', 'Walk-In'),
+        ('campus', 'Campus'),
+        ('telephonic', 'Telephonic'),
+        ('virtual', 'Virtual'),
+        ('face_to_face', 'Face-to-Face'),
+        ('on_site', 'On Site'),
+        ('other', 'Other'),
     ]
 
     candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE, related_name='interviews')
@@ -902,7 +950,8 @@ class Candidate_Interview(models.Model):
         return datetime.combine(self.interview_date, self.interview_time)
 
 class Company_registration(models.Model):
-    employee_name = models.CharField(max_length=50, blank=True, null=True)
+    handled_by1 = models.CharField(max_length=50, blank=True, null=True)
+    opened_by = models.CharField(max_length=50, blank=True, null=True)
     company_name = models.CharField(max_length=255, blank=True, null=True)
     company_logo = models.FileField(upload_to='Company-Logo/', blank=True, null=True)
     company_location = models.CharField(max_length=255, blank=True, null=True)

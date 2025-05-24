@@ -227,120 +227,280 @@ def admin_candidate_profile(request, id):
 
 
         if request.method == 'POST':
-            if 'candidate_personal_information' in request.POST:
-                # Handle Employee fields
-                candidate_name = request.POST.get('candidate_name')
-                candidate_mobile_number = request.POST.get('candidate_mobile_number')
-                candidate_email_address = request.POST.get('candidate_email_address')
-                gender = request.POST.get('gender')
-                lead_source = request.POST.get('lead_source')
-                candidate_photo = request.FILES.get('candidate_photo')
-                candidate_resume = request.FILES.get('candidate_resume')
-                
-                candidate.candidate_name = candidate_name
-                candidate.candidate_mobile_number = candidate_mobile_number
-                candidate.candidate_email_address = candidate_email_address
-                candidate.gender = gender
-                candidate.lead_source = lead_source
-                candidate.updated_by=logged_in_employee
-                if candidate_photo:
-                    candidate.candidate_photo = candidate_photo
-                if candidate_resume:
-                    candidate.candidate_resume = candidate_resume
-                candidate.save()
+            # Store the original candidate data before any updates
+            original_candidate = Candidate_registration.objects.get(id=id)
+            changes = {}
 
-                messages.success(request, 'Candidate details updated successfully!')
+            # Track changes for all fields at once
+            fields_to_track = [
+                # Personal Information
+                'candidate_name', 'candidate_mobile_number', 'candidate_email_address',
+                'gender', 'lead_source',
+                # Candidate Details
+                'candidate_alternate_mobile_number', 'preferred_location', 'origin_location',
+                'qualification', 'diploma', 'sector', 'department', 'experience_year',
+                'experience_month', 'current_company', 'current_working_status',
+                'current_salary', 'expected_salary', 'submit_by',
+                # Calling Remark
+                'call_connection', 'calling_remark', 'lead_generate',
+                'send_for_interview', 'next_follow_up_date',
+                # Selection Record
+                'selection_status', 'company_name', 'offered_salary',
+                'selection_date', 'candidate_joining_date', 'emta_commission',
+                'payout_date',
+                'other_lead_source', 'other_qualification', 'other_working_status',
+                'other_call_connection', 'other_lead_generate',
+                'other_interview_status', 'other_selection_status',
+                'other_origin_location'
+            ]
+            
+            # Check for changes in all fields
+            for field in fields_to_track:
+                new_value = request.POST.get(field)
+                old_value = getattr(original_candidate, field)
+                if str(old_value) != str(new_value):
+                    changes[field] = {'old': old_value, 'new': new_value}
 
-            elif 'candidate_details' in request.POST:
-                # Handle Emergency Contact fields
-                candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
-                preferred_location = request.POST.get('preferred_location')
-                origin_location = request.POST.get('origin_location')
-                qualification = request.POST.get('qualification')
-                diploma = request.POST.get('diploma')
-                sector = request.POST.get('sector')
-                department = request.POST.get('department')
-                experience_year = request.POST.get('experience_year')
-                experience_month = request.POST.get('experience_month')
-                current_company = request.POST.get('current_company')
-                current_working_status = request.POST.get('current_working_status')
-                current_salary = request.POST.get('current_salary')
-                expected_salary = request.POST.get('expected_salary')
-                submit_by = request.POST.get('submit_by')
+            # Handle file uploads
+            if 'candidate_photo' in request.FILES:
+                changes['candidate_photo'] = {
+                    'old': original_candidate.candidate_photo.name if original_candidate.candidate_photo else None,
+                    'new': request.FILES['candidate_photo'].name
+                }
+            if 'candidate_resume' in request.FILES:
+                changes['candidate_resume'] = {
+                    'old': original_candidate.candidate_resume.name if original_candidate.candidate_resume else None,
+                    'new': request.FILES['candidate_resume'].name
+                }
 
-                # Update EmergencyContact fields
-                candidate.candidate_alternate_mobile_number = candidate_alternate_mobile_number
-                candidate.preferred_location = preferred_location
-                candidate.origin_location = origin_location
-                candidate.qualification = qualification
-                candidate.diploma = diploma
-                candidate.sector = sector
-                candidate.department = department
-                candidate.experience_year = experience_year
-                candidate.experience_month = experience_month
-                candidate.current_company = current_company
-                candidate.current_working_status = current_working_status
-                candidate.current_salary = current_salary
-                candidate.expected_salary = expected_salary
-                candidate.updated_by=logged_in_employee
-                candidate.save()
+            # Get list inputs and convert to string
+            preferred_location = request.POST.getlist('preferred_location')
+            sector = request.POST.getlist('sector')
+            department = request.POST.getlist('department')
 
-                messages.success(request, 'Candidate details updated successfully!')
-                
-            elif 'submit_calling_remark' in request.POST:
-                # Handle Social Media details form submission
-                call_connection = request.POST.get('call_connection')
-                calling_remark = request.POST.get('calling_remark')
-                lead_generate = request.POST.get('lead_generate')
-                send_for_interview = request.POST.get('send_for_interview')
-                next_follow_up_date = request.POST.get('next_follow_up_date') or None
-                submit_by = request.POST.get('submit_by')
+            preferred_location_str = ', '.join(preferred_location)
+            sector_str = ', '.join(sector)
+            department_str = ', '.join(department)
 
-                candidate.call_connection = call_connection
-                candidate.calling_remark = calling_remark
-                candidate.lead_generate = lead_generate
-                candidate.send_for_interview = send_for_interview
-                candidate.next_follow_up_date = next_follow_up_date
-                candidate.submit_by = submit_by
-                candidate.updated_by=logged_in_employee
-                candidate.save()
-                
-                messages.success(request, 'Candidate Calling details updated successfully!')
-                
-            elif 'submit_secection_record' in request.POST:
-                # Handle form submission for bank details
-                selection_status = request.POST.get('selection_status')
-                company_name = request.POST.get('company_name')
-                offered_salary = request.POST.get('offered_salary')
-                selection_date = request.POST.get('selection_date') or None
-                candidate_joining_date = request.POST.get('candidate_joining_date') or None
-                emta_commission = request.POST.get('emta_commission')
-                payout_date = request.POST.get('payout_date') or None
+            # Update all fields at once
+            candidate.candidate_name = request.POST.get('candidate_name')
+            candidate.candidate_mobile_number = request.POST.get('candidate_mobile_number')
+            candidate.candidate_email_address = request.POST.get('candidate_email_address')
+            candidate.gender = request.POST.get('gender')
+            candidate.lead_source = request.POST.get('lead_source')
 
-                # Update or create bank details for the employee
-                candidate.selection_status = selection_status
-                candidate.company_name = company_name
-                candidate.offered_salary = offered_salary
-                candidate.selection_date = selection_date
-                candidate.candidate_joining_date = candidate_joining_date
-                candidate.emta_commission = emta_commission
-                candidate.payout_date = payout_date
+            if 'candidate_photo' in request.FILES:
+                candidate.candidate_photo = request.FILES['candidate_photo']
+            if 'candidate_resume' in request.FILES:
+                candidate.candidate_resume = request.FILES['candidate_resume']
 
-                candidate.updated_by=logged_in_employee
-                candidate.save()
+            # Candidate Details
+            candidate.candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
+            candidate.preferred_location = preferred_location_str
+            candidate.origin_location = request.POST.get('origin_location')
+            candidate.qualification = request.POST.get('qualification')
+            candidate.diploma = request.POST.get('diploma')
+            candidate.sector = sector_str
+            candidate.department = department_str
+            candidate.experience_year = request.POST.get('experience_year')
+            candidate.experience_month = request.POST.get('experience_month')
+            candidate.current_company = request.POST.get('current_company')
+            candidate.current_working_status = request.POST.get('current_working_status')
+            candidate.current_salary = request.POST.get('current_salary')
+            candidate.current_salary_type = request.POST.get('current_salary_type')
+            candidate.expected_salary = request.POST.get('expected_salary')
+            candidate.expected_salary_type = request.POST.get('expected_salary_type')
+            candidate.submit_by = request.POST.get('submit_by')
 
-                messages.success(request, 'Secection details updated successfully!')
-                
-                
+            # Calling Remark
+            candidate.call_connection = request.POST.get('call_connection')
+            candidate.calling_remark = request.POST.get('calling_remark')
+            candidate.lead_generate = request.POST.get('lead_generate')
+            candidate.send_for_interview = request.POST.get('send_for_interview')
+            candidate.next_follow_up_date = request.POST.get('next_follow_up_date') or None
 
+            # Selection Record
+            candidate.selection_status = request.POST.get('selection_status')
+            candidate.company_name = request.POST.get('company_name')
+            candidate.offered_salary = request.POST.get('offered_salary')
+            candidate.selection_date = request.POST.get('selection_date') or None
+            candidate.candidate_joining_date = request.POST.get('candidate_joining_date') or None
+            candidate.emta_commission = request.POST.get('emta_commission')
+            candidate.payout_date = request.POST.get('payout_date') or None
+            candidate.joining_status = request.POST.get('joining_status')
+
+            candidate.other_lead_source = request.POST.get('other_lead_source')
+            candidate.other_qualification = request.POST.get('other_qualification')
+            candidate.other_working_status = request.POST.get('other_working_status')
+            candidate.other_call_connection = request.POST.get('other_call_connection')
+            candidate.other_lead_generate = request.POST.get('other_lead_generate')
+            candidate.other_interview_status = request.POST.get('other_interview_status')
+            candidate.other_selection_status = request.POST.get('other_selection_status')
+            candidate.other_origin_location = request.POST.get('other_origin_location')
+
+            candidate.updated_by = logged_in_employee
+            candidate.save()
+
+
+            # Create activity log if there were changes
+            if changes:
+                CandidateActivity.objects.create(
+                    candidate=candidate,
+                    employee=logged_in_employee,
+                    action='updated',
+                    changes=changes,
+                    remark="Updated via unified form"
+                )
+
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Candidate details updated successfully!'
+                })
+            messages.success(request, 'Candidate details updated successfully!')
             return redirect('admin_candidate_profile', id=id)
+        
+        districts = [
+            "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
+            "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
+            "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni",
+            "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch",
+            "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni",
+            "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
+            "Ujjain", "Umaria", "Vidisha"
+        ]
+        job_sectors = [
+        "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
+        "Healthcare and Pharmaceuticals","Education and Training",
+        "Retail and E-commerce", "Manufacturing and Production","Real Estate and Construction", "Hospitality and Tourism",
+        "Media and Entertainment", "Telecommunications","Logistics and Supply Chain","Marketing and Advertising","Human Resources",
+        "Legal and Compliance","Engineering and Infrastructure","Automobile Industry",
+        "Fashion and Textile", "FMCG (Fast Moving Consumer Goods)",
+        "Agriculture and Farming", "Insurance","Government Sector","NGO and Social Services",
+        "Energy and Power","Aviation and Aerospace"
+        ]
+        departments = [
+        # IT (Information Technology)
+        "Software Development", "IT Support", "Web Development", 
+        "Network Administration", "Cybersecurity", 
+        "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)",
+
+        # BPO (Business Process Outsourcing)
+        "Customer Support", "Technical Support", "Voice Process", 
+        "Non-Voice Process", "Back Office Operations",
+
+        # Banking and Finance
+        "Investment Banking", "Retail Banking", "Loan Processing", 
+        "Risk Management", "Accounting and Auditing", 
+        "Financial Analysis", "Wealth Management",
+
+        # Healthcare and Pharmaceuticals
+        "Medical Representatives", "Clinical Research", "Nursing", 
+        "Medical Technicians", "Pharmacy Operations", 
+        "Healthcare Administration",
+
+        # Education and Training
+        "Teaching", "Curriculum Development", "Academic Counseling", 
+        "E-Learning Development", "Education Administration",
+
+        # Retail and E-commerce
+        "Store Operations", "Supply Chain Management", 
+        "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
+
+        # Manufacturing and Production
+        "Production Planning", "Quality Control", "Maintenance and Repair", 
+        "Operations Management", "Inventory Management",
+
+        # Real Estate and Construction
+        "Sales and Marketing", "Civil Engineering", "Project Management", 
+        "Interior Designing", "Surveying and Valuation",
+
+        # Hospitality and Tourism
+        "Hotel Management", "Travel Coordination", "Event Planning", 
+        "Food and Beverage Services", "Guest Relations",
+
+        # Media and Entertainment
+        "Content Writing", "Video Editing", "Graphic Designing", 
+        "Social Media Management", "Event Production",
+
+        # Telecommunications
+        "Network Installation", "Customer Support", "Telecom Engineering", 
+        "Technical Operations", "Business Development",
+
+        # Logistics and Supply Chain
+        "Logistics Coordination", "Warehouse Management", "Procurement", 
+        "Transportation Management", "Inventory Control",
+
+        # Marketing and Advertising
+        "Market Research", "Brand Management", "Advertising Sales", 
+        "Public Relations", "Digital Marketing",
+
+        # Human Resources
+        "Recruitment", "Employee Relations", "Payroll and Benefits", 
+        "Training and Development", "HR Analytics",
+
+        # Legal and Compliance
+        "Corporate Law", "Compliance Auditing", "Contract Management", 
+        "Intellectual Property Rights", "Legal Advisory",
+
+        # Engineering and Infrastructure
+        "Civil Engineering", "Mechanical Engineering", 
+        "Electrical Engineering", "Project Planning", "Structural Design",
+
+        # Automobile Industry
+        "Automotive Design", "Production and Assembly", "Sales and Service", 
+        "Supply Chain Management", "Quality Assurance",
+
+        # Fashion and Textile
+        "Fashion Design", "Merchandising", "Production Management", 
+        "Quality Control", "Retail Sales",
+
+        # FMCG (Fast Moving Consumer Goods)
+        "Sales and Marketing", "Supply Chain Operations", 
+        "Production Management", "Quality Control", "Brand Management",
+
+        # Agriculture and Farming
+        "Agribusiness Management", "Farm Operations", "Food Processing", 
+        "Agricultural Sales", "Quality Assurance",
+
+        # Insurance
+        "Sales and Business Development", "Underwriting", 
+        "Claims Management", "Actuarial Services", "Policy Administration",
+
+        # Government Sector
+        "Administrative Services", "Public Relations", 
+        "Policy Analysis", "Clerical Positions", "Field Operations",
+
+        # NGO and Social Services
+        "Community Development", "Fundraising", "Program Management", 
+        "Volunteer Coordination", "Policy Advocacy",
+
+        # Energy and Power
+        "Renewable Energy Operations", "Power Plant Engineering", 
+        "Energy Efficiency Management", "Electrical Design", "Maintenance",
+
+        # Aviation and Aerospace
+        "Flight Operations", "Ground Staff", "Aircraft Maintenance", 
+        "Cabin Crew", "Research and Development"
+        ]
+
+        
         context = {
-            'candidate': candidate
+            'candidate': candidate,
+            'activities': candidate.activities.all().order_by('-timestamp'),
+            'today': timezone.now().date(),
+            'districts': districts,
+            'job_sectors': job_sectors,
+            'departments': departments,
+            'vacancies': vacancies
         }
-        return render(request,'crm/candidate-profile.html',{'candidate':candidate})
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return render(request, 'crm/partials/candidate_form.html', context)
+            
+        return render(request, 'crm/candidate-profile.html', context)
     else:
-        # If the user is not an admin, show a 404 page
-        return render(request, 'crm/404.html', status=404)
+        return render(request, 'crm/404.html', status=404)  
 
 @login_required    
 def admin_candidate_registration(request) :
@@ -374,7 +534,7 @@ def admin_candidate_registration(request) :
             send_for_interview = request.POST.get('send_for_interview')
             next_follow_up_date = request.POST.get('next_follow_up_date') or None
             remark = request.POST.get('remark')
-            # submit_by = request.POST.get('submit_by')
+            submit_by = request.POST.get('submit_by')
             preferred_location_str = ', '.join(preferred_location)
             sector_str = ', '.join(sector)
             department_str = ', '.join(department)
@@ -410,8 +570,8 @@ def admin_candidate_registration(request) :
                 candidate_photo=candidate_photo,
                 candidate_resume=candidate_resume,
                 remark=remark,
-                # created_by=request.user,
-                # updated_by=request.user
+                created_by=request.user,
+                updated_by=request.user
                 
             )
         
@@ -748,24 +908,29 @@ def admin_company_profile(request, id):
         if request.method == 'POST':
             # Handle Company Personal Information Form
             if 'company_personal_information' in request.POST:
-                # Handle Employee fields
-                employee_name = request.POST.get('employee_name')
-                company_name = request.POST.get('company_name')
-                company_location = request.POST.get('company_location')
-                company_unique_code = request.POST.get('company_unique_code')
-                company_logo = request.FILES.get('company_logo')
-                company_email_address = request.POST.get('company_email_address')
+                form_name = "Company Personal Information"
+                old_values = {
+                    'handled_by': company.handled_by,
+                    'company_name': company.company_name,
+                    'company_location': company.company_location,
+                    'company_unique_code': company.company_unique_code,
+                    'company_email_address': company.company_email_address,
+                    'opened_by': company.opened_by,
+                }
                 
-                company.employee_name = employee_name
-                company.company_name = company_name
-                company.company_location = company_location
-                company.company_unique_code = company_unique_code
-                company.company_email_address=company_email_address
-                company.updated_by=request.user
-                if company_logo:
-                    company.company_logo = company_logo
-                company.save()
-
+                company.handled_by = request.POST.get('handled_by')
+                company.company_name = request.POST.get('company_name')
+                company.company_location = request.POST.get('company_location')
+                company.company_unique_code = request.POST.get('company_unique_code')
+                company.company_email_address = request.POST.get('company_email_address')
+                company.opened_by = request.POST.get('opened_by')
+                company.updated_by = request.user
+                
+                if 'company_logo' in request.FILES:
+                    old_values['company_logo'] = str(company.company_logo)
+                    company.company_logo = request.FILES['company_logo']
+                
+                company.save(user=request.user, form_name=form_name)
                 messages.success(request, 'Company details updated successfully!')
 
             # Handle Company Contact Details Form
@@ -1070,17 +1235,37 @@ def admin_company_profile(request, id):
         "Cabin Crew", "Research and Development"
         ]
 
-        vacancies = VacancyDetails.objects.filter(company=company).order_by('-id')
+
+        # Get all vacancies for the company
+        vacancies = VacancyDetails.objects.filter(company=company).order_by('-created_at')
         
+        # Get all activities - both company and vacancy activities
+        company_activities = company.activities.all()
+        vacancy_activities = CompanyActivity.objects.filter(vacancy__company=company)
+        
+        # Combine and sort activities by timestamp (newest first)
+        all_activities = sorted(
+            chain(
+                company_activities.select_related('employee__employee'),
+                vacancy_activities.select_related('employee__employee')
+            ),
+            key=lambda x: x.timestamp,
+            reverse=True
+        )[:50]
+        
+        employees = Employee.objects.all()
         context = {
-        'districts': districts,
-        'job_sectors': job_sectors,
-        'departments': departments,
-        'company': company,
-        'vacancies' : vacancies
+            'districts': districts,
+            'job_sectors': job_sectors,
+            'departments': departments,
+            'company': company,
+            'vacancies': vacancies,
+            'activities': all_activities,
+            'now': timezone.now(),
+            'employees': employees
         }
-        
-        return render(request,'crm/company-profile.html',context)
+
+        return render(request, 'crm/company-profile.html', context)
     else:
         return render(request, 'crm/404.html', status=404)
     
@@ -1125,7 +1310,7 @@ def admin_vendor_candidate_list(request, id):
                 vendor.first_name = first_name
                 vendor.last_name = last_name
                 vendor.mobile_number = mobile_number
-                vendor.user.email = email
+                vendor.email = email
                 vendor.date_of_birth = date_of_birth
                 
                 if vendor_profile_image:
@@ -1831,10 +2016,10 @@ def admin_vendor_profile(request, id):
                 # Profile Details
                 vendor.user.first_name = request.POST.get('first_name')
                 vendor.user.last_name = request.POST.get('last_name')
-                vendor.mobile_number = request.POST.get('mobile_number')
-                vendor.user.email = request.POST.get('email')
-                vendor.date_of_birth = request.POST.get('date_of_birth')
                 vendor.user.save()
+                vendor.mobile_number = request.POST.get('mobile_number')
+                vendor.email = request.POST.get('email')
+                vendor.date_of_birth = request.POST.get('date_of_birth')
                 
                 if 'vendor_profile_image' in request.FILES:
                     vendor.vendor_profile_image = request.FILES['vendor_profile_image']
@@ -1914,7 +2099,7 @@ def admin_vendor_profile(request, id):
             'districts' : districts,
             'candidates' : candidates
         }
-        return render(request, 'crm/evms-vendor-candidate-profile.html', context)
+        return render(request, 'crm/evms-vendor-profile.html', context)
     else:
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
