@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,500,600,700,800&display=swap" rel="stylesheet">
     <link rel="shortcut icon" href="/static/m.png" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add reCAPTCHA script -->
+    <script src="https://www.google.com/recaptcha/api.js?render=6LdcakcrAAAAAIqUEDm5nn1AGGqceYPUUrHwqF9w"></script>
     <style>
         body { 
             margin: 0; 
@@ -140,6 +142,8 @@
             <form method="POST" id="register" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="form_type" value="signup">
+                <!-- reCAPTCHA token will be added here by JavaScript -->
+                <input type="hidden" id="recaptchaToken" name="recaptcha_token">
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
@@ -189,7 +193,8 @@
                 </div>
 
                 <div class="mb-6">
-                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-200">
+                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-200 g-recaptcha" 
+                    data-sitekey="6LdcakcrAAAAAIqUEDm5nn1AGGqceYPUUrHwqF9w" data-callback='onSubmit' data-action='submit'>
                         Register
                     </button>
                 </div>
@@ -278,10 +283,29 @@
             retina_detect: true
         });
 
-        // Form validation
+        // reCAPTCHA v3 implementation
+        function onSubmit(token) {
+            // Set the token in the hidden input
+            document.getElementById('recaptchaToken').value = token;
+            
+            // Now submit the form
+            submitSignupForm();
+        }
+
+        // Modified form submission to use reCAPTCHA
         document.getElementById('register').addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Execute reCAPTCHA
+            grecaptcha.ready(function() {
+                grecaptcha.execute('6LdcakcrAAAAAIqUEDm5nn1AGGqceYPUUrHwqF9w', {action: 'submit'}).then(function(token) {
+                    onSubmit(token);
+                });
+            });
+        });
+
+        // Form submission after reCAPTCHA verification
+        function submitSignupForm() {
             const password1 = document.getElementById('password1');
             const password2 = document.getElementById('password2');
             const passwordError = document.getElementById('passwordError');
@@ -301,12 +325,12 @@
             }
             
             // Submit form via AJAX
-            const formData = new FormData(this);
+            const formData = new FormData(document.getElementById('register'));
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.innerHTML = 'Sending OTP...';
             
-            fetch(this.action, {
+            fetch(document.getElementById('register').action, {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -347,7 +371,7 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Register';
             });
-        });
+        }
 
         // OTP form submission
         document.getElementById('otpVerificationForm').addEventListener('submit', function(e) {

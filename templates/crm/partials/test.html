@@ -1,0 +1,70 @@
+<div class="row">
+  <div class="col-md-6 mb-3">
+    <label class="form-label">Selection Status</label>
+    <select class="form-select" name="selection_status" id="selectionStatus">
+      <option value="" disabled selected>Select Status</option>
+      <option value="Selected" {% if candidate.selection_status == "Selected" %}selected{% endif %}>Selected</option>
+      <option value="Rejected" {% if candidate.selection_status == "Rejected" %}selected{% endif %}>Rejected</option>
+      <option value="Pending" {% if candidate.selection_status == "Pending" %}selected{% endif %}>Pending</option>
+      <option value="Not Join" {% if candidate.selection_status == "Not Join" %}selected{% endif %}>Not Join</option>
+    </select>
+    <div class="invalid-feedback">Please select selection status</div>
+  </div>
+</div>
+
+    <!-- Other fields (hidden initially) -->
+    <div class="row" id="otherSelectionFields" style="display: none;">
+      <!-- Calling Remark -->
+      <div class="col-md-6 mb-3">
+      <label class="form-label">Company Name</label>
+      <input type="text" name="company_name" class="form-control selection-dependent" value="{{ candidate.company_name }}" maxlength="100" disabled>
+    </div>
+
+      <div class="col-md-6 mb-3">
+      <label class="form-label">Offered Salary (₹)</label>
+      <input type="number" name="offered_salary" class="form-control selection-dependent" value="{{ candidate.offered_salary }}" min="0" step="1000" disabled>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Selection Date</label>
+      <input type="date" name="selection_date" class="form-control selection-dependent" value="{{ candidate.selection_date|date:'Y-m-d' }}" disabled>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Joining Date</label>
+      <input type="date" name="candidate_joining_date" class="form-control selection-dependent" value="{{ candidate.candidate_joining_date|date:'Y-m-d' }}" disabled>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Our Commission (₹)</label>
+      <input type="number" name="emta_commission" class="form-control selection-dependent" value="{{ candidate.emta_commission }}" min="0" step="1" disabled>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Payout Date</label>
+      <input type="date" name="payout_date" class="form-control selection-dependent" value="{{ candidate.payout_date|date:'Y-m-d' }}" disabled>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const selectionRecord = document.getElementById('selectionStatus');
+    const otherSelectionFieldsWrapper = document.getElementById('otherSelectionFields');
+    const otherSelectionFieldsInputs = otherSelectionFieldsWrapper.querySelectorAll('select, textarea, input');
+
+    function toggleSelectionOtherFields() {
+      const isSelected = selectionRecord.value === 'Selected';
+      otherSelectionFieldsWrapper.style.display = isSelected ? 'flex' : 'none';
+      otherSelectionFieldsInputs.forEach(el => {
+        el.disabled = !isSelected;
+      });
+    }
+
+    // Initialize on load
+    toggleSelectionOtherFields();
+
+    // Add change listener
+    selectionRecord.addEventListener('change', toggleSelectionOtherFields);
+  });
+</script>

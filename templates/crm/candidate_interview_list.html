@@ -34,15 +34,21 @@
                                             <label class="form-label">Company Name</label>
                                             <select name="company_name" class="form-select" required>
                                                 <option value="" disabled selected>Select Company Name</option>
-                                                {% for company in companys %}
-                                                <option value="{{ company.company_name }}">{{ company.company_name }}</option>
+                                                {% for vaca in companys %}
+                                                <option value="{{ vaca.company_name }}">{{ vaca.company_name }}</option>
                                                 {% endfor %}
                                             </select>
                                         </div>
                                         
                                         <div class="mb-3">
                                             <label class="form-label">Job Position</label>
-                                            <input type="text" name="job_position" class="form-control" required>
+                                            {% comment %} <input type="text" name="job_position" class="form-control" required> {% endcomment %}
+                                            <select name="job_position" class="form-select" required>
+                                                <option value="" disabled selected>Select Job Position</option>
+                                                {% for vaca in vacancies %}
+                                                <option value="{{ vaca.job_profile }}">{{ vaca.job_profile }}</option>
+                                                {% endfor %}
+                                            </select>
                                         </div>
                                         
                                         <div class="row">

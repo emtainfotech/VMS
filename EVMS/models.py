@@ -100,6 +100,7 @@ class Candidate(models.Model):
     company_name = models.CharField(max_length=10, blank=True, null=True)
     offered_salary = models.CharField(max_length=255, blank=True, null=True)
     selection_date = models.DateField(blank=True, null=True)
+    joining_status = models.CharField(max_length=10, default='Pending')
     candidate_joining_date = models.CharField(max_length=255, blank=True, null=True)
     emta_commission = models.CharField(max_length=255, blank=True, null=True)
     payout_date = models.CharField(max_length=255, blank=True, null=True)
