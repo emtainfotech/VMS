@@ -950,7 +950,7 @@ class Candidate_Interview(models.Model):
         return datetime.combine(self.interview_date, self.interview_time)
 
 class Company_registration(models.Model):
-    handled_by1 = models.CharField(max_length=50, blank=True, null=True)
+    handled_by = models.CharField(max_length=50, blank=True, null=True)
     opened_by = models.CharField(max_length=50, blank=True, null=True)
     company_name = models.CharField(max_length=255, blank=True, null=True)
     company_logo = models.FileField(upload_to='Company-Logo/', blank=True, null=True)
