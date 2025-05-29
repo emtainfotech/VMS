@@ -14,8 +14,8 @@
     <link href="/static/dist/css/tabler-payments.min.css?1692870487" rel="stylesheet" />
     <link href="/static/dist/css/tabler-vendors.min.css?1692870487" rel="stylesheet" />
     <link href="/static/dist/css/demo.min.css?1692870487" rel="stylesheet" />
-    <!-- reCAPTCHA API -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- reCAPTCHA v3 API -->
+    <script src="https://www.google.com/recaptcha/api.js?render=6LdcakcrAAAAAIqUEDm5nn1AGGqceYPUUrHwqF9w"></script>
 </head>
 <body class="d-flex flex-column">
   <div class="page page-center">
@@ -50,6 +50,7 @@
       <!-- Application Form -->
       <form class="card card-md needs-validation" enctype="multipart/form-data" method="POST" autocomplete="off" novalidate id="applicationForm">
         {% csrf_token %}
+        <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response">
         <div class="card-body">
           <h2 class="card-title text-center mb-4">Candidate Application Form</h2>
           
@@ -214,12 +215,6 @@
             </div>
           </div>
           
-          <!-- reCAPTCHA -->
-          <div class="mb-3">
-            <div class="g-recaptcha" data-sitekey="6LdcakcrAAAAAIqUEDm5nn1AGGqceYPUUrHwqF9w"></div>
-            <div class="invalid-feedback" id="recaptcha-error">Please complete the reCAPTCHA verification</div>
-          </div>
-          
           <!-- Terms and Conditions -->
           <div class="mb-3">
             <div class="form-check">
@@ -283,15 +278,6 @@
           form.addEventListener('submit', function(event) {
               event.preventDefault();
               
-              // Validate reCAPTCHA
-              const recaptchaResponse = grecaptcha.getResponse();
-              if (recaptchaResponse.length === 0) {
-                  document.getElementById('recaptcha-error').style.display = 'block';
-                  return false;
-              } else {
-                  document.getElementById('recaptcha-error').style.display = 'none';
-              }
-              
               if (!form.checkValidity()) {
                   event.stopPropagation();
                   form.classList.add('was-validated');
@@ -303,15 +289,26 @@
               submitBtn.disabled = true;
               submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
               
-              // Submit form data via AJAX or standard form submission
-              form.classList.add('was-validated');
-              
-              // For demo purposes, show the modal after a delay
-              setTimeout(() => {
-                  $('#confirmationModal').modal('show');
-                  submitBtn.disabled = false;
-                  submitBtn.innerHTML = 'Submit Application';
-              }, 1500);
+              // Execute reCAPTCHA
+              grecaptcha.ready(function() {
+                  grecaptcha.execute('6LdcakcrAAAAAIqUEDm5nn1AGGqceYPUUrHwqF9w', {action: 'submit'}).then(function(token) {
+                      // Add token to form
+                      document.getElementById('g-recaptcha-response').value = token;
+                      
+                      // Submit the form
+                      form.classList.add('was-validated');
+                      
+                      // For demo purposes, show the modal after a delay
+                      setTimeout(() => {
+                          $('#confirmationModal').modal('show');
+                          submitBtn.disabled = false;
+                          submitBtn.innerHTML = 'Submit Application';
+                      }, 1500);
+                      
+                      // In a real application, you would submit the form here
+                      // form.submit();
+                  });
+              });
           }, false);
       });
       
