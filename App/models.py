@@ -752,6 +752,7 @@ class Candidate_registration(models.Model):
     candidate_joining_date = models.DateField(blank=True, null=True)
     emta_commission = models.CharField(max_length=255, blank=True, null=True)
     payout_date = models.DateField(blank=True, null=True)
+    selection_remark = models.CharField(max_length=255, blank=True, null=True)
     other_lead_source = models.CharField(max_length=255, blank=True, null=True)
     other_qualification = models.CharField(max_length=255, blank=True, null=True)
     other_working_status = models.CharField(max_length=255, blank=True, null=True)
@@ -1043,6 +1044,7 @@ class VacancyDetails(models.Model):
     special_instruction = models.CharField(max_length=255, blank=True, null=True)
     company_usp = models.CharField(max_length=255,blank=True, null=True)
     status_of_incentive = models.CharField(max_length=255, blank=True, null=True)
+    replacement_criteria_days = models.CharField(max_length=255, blank=True, null=True)
     replacement_criteria = models.CharField(max_length=255, blank=True, null=True)
     
     # New payment-related fields

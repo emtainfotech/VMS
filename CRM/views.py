@@ -40,6 +40,7 @@ import csv
 from django.db.models.functions import ExtractMonth, ExtractYear
 from django.db.models import Q
 from itertools import chain
+from django.urls import reverse
 
 
 # Create your views here.
@@ -139,7 +140,10 @@ def crm_dashboard(request):
         lead_generation = current_qs.filter(lead_generate='Yes').values('employee_name').annotate(
             lead_count=Count('id')
         ).order_by('-lead_count')
-        
+
+         # Lead generation by employee (where lead_generate='Yes')
+        total_lead_generation = current_qs.filter(lead_generate='Yes').count()
+
         # Call connection status by employee
         call_connection = current_qs.exclude(call_connection__isnull=True).exclude(call_connection__exact='').values(
             'employee_name', 'call_connection'
@@ -186,6 +190,7 @@ def crm_dashboard(request):
         context = {
             'employee_performance': employee_performance,
             'lead_generation': lead_generation,
+            'total_lead_generation' : total_lead_generation,
             'call_connection': call_connection,
             'interview_candidates': interview_candidates,
             'current_status': current_status,
@@ -247,7 +252,7 @@ def admin_candidate_profile(request, id):
                 # Selection Record
                 'selection_status', 'company_name', 'offered_salary',
                 'selection_date', 'candidate_joining_date', 'emta_commission',
-                'payout_date',
+                'payout_date', 'selection_remark',
                 'other_lead_source', 'other_qualification', 'other_working_status',
                 'other_call_connection', 'other_lead_generate',
                 'other_interview_status', 'other_selection_status',
@@ -328,6 +333,7 @@ def admin_candidate_profile(request, id):
             candidate.emta_commission = request.POST.get('emta_commission')
             candidate.payout_date = request.POST.get('payout_date') or None
             candidate.joining_status = request.POST.get('joining_status')
+            candidate.selection_remark = request.POST.get('selection_remark')
 
             candidate.other_lead_source = request.POST.get('other_lead_source')
             candidate.other_qualification = request.POST.get('other_qualification')
@@ -503,7 +509,7 @@ def admin_candidate_profile(request, id):
         return render(request, 'crm/404.html', status=404)  
 
 @login_required    
-def admin_candidate_registration(request) :
+def admin_candidate_registration(request):
     if request.user.is_staff or request.user.is_superuser:
         logged_in_employee = Employee.objects.get(user=request.user)
         if request.method == 'POST':
@@ -539,8 +545,24 @@ def admin_candidate_registration(request) :
             sector_str = ', '.join(sector)
             department_str = ', '.join(department)
             
+            # Check for duplicates
+            duplicate_mobile = Candidate_registration.objects.filter(
+                candidate_mobile_number=candidate_mobile_number
+            ).exists()
             
-            # Save to database
+            duplicate_email = Candidate_registration.objects.filter(
+                candidate_email_address=candidate_email_address
+            ).exists()
+            
+            if duplicate_mobile or duplicate_email:
+                errors = []
+                if duplicate_mobile:
+                    errors.append("Mobile number already registered")
+                if duplicate_email:
+                    errors.append("Email address already registered")
+                return JsonResponse({'status': 'error', 'errors': errors}, status=400)
+            
+            # Save to database if no duplicates
             Candidate_registration.objects.create(
                 employee_name=logged_in_employee,
                 candidate_name=candidate_name,
@@ -548,34 +570,31 @@ def admin_candidate_registration(request) :
                 candidate_mobile_number=candidate_mobile_number,
                 candidate_alternate_mobile_number=candidate_alternate_mobile_number,
                 candidate_email_address=candidate_email_address,
-                gender = gender,
+                gender=gender,
                 lead_source=lead_source,
                 preferred_location=preferred_location_str,
                 origin_location=origin_location,
                 qualification=qualification,
                 diploma=diploma,
-                sector = sector_str,
+                sector=sector_str,
                 department=department_str,
                 experience_year=experience_year,
                 experience_month=experience_month,
                 current_company=current_company,
                 current_working_status=current_working_status,
-                current_salary = current_salary,
+                current_salary=current_salary,
                 expected_salary=expected_salary,
                 call_connection=call_connection,
                 calling_remark=calling_remark,
                 lead_generate=lead_generate,
                 send_for_interview=send_for_interview,
-                next_follow_up_date = next_follow_up_date,
+                next_follow_up_date=next_follow_up_date,
                 candidate_photo=candidate_photo,
                 candidate_resume=candidate_resume,
                 remark=remark,
-                # created_by=logged_in_employee,
-                # updated_by=logged_in_employee
-
             )
-        
-            return redirect('admin_candidate_list')
+            
+            return JsonResponse({'status': 'success', 'redirect_url': reverse('admin_candidate_list')})
         
         suggested_unique_code = admin_get_next_unique_code()
         districts = [
@@ -1002,6 +1021,7 @@ def admin_company_profile(request, id):
                         special_instruction=request.POST.get('special_instruction'),
                         company_usp=request.POST.get('company_usp'),
                         status_of_incentive=request.POST.get('status_of_incentive'),
+                        replacement_criteria_days=request.POST.get('replacement_criteria_days'),
                         replacement_criteria=request.POST.get('replacement_criteria'),
                         payment_mode=request.POST.get('payment_mode'),
                         company_pay_type=request.POST.get('company_pay_type'),
@@ -1054,6 +1074,7 @@ def admin_company_profile(request, id):
                     vacancy.special_instruction = request.POST.get('special_instruction')
                     vacancy.company_usp = request.POST.get('company_usp')
                     vacancy.status_of_incentive = request.POST.get('status_of_incentive')
+                    vacancy.replacement_criteria_days = request.POST.get('replacement_criteria_days')
                     vacancy.replacement_criteria = request.POST.get('replacement_criteria')
                     vacancy.updated_by = request.user
                     

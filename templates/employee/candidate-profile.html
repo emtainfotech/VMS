@@ -7,6 +7,7 @@
       border: none;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       border-radius: 10px;
+      margin-bottom: 20px;
     }
     .object-cover {
       object-fit: cover;
@@ -30,23 +31,78 @@
       cursor: pointer;
       color: #6c63ff;
     }
-  </style>
-  
-  <div class="container py-4">
-    <div class="d-flex justify-content-between py-3">
-        <h4>Personal Details</h4>
+    .detail-label {
+      color: #6c757d;
+      font-size: 0.85rem;
+    }
+    .detail-value {
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+    .empty-value {
+      color: #adb5bd;
+      font-style: italic;
+    }
+    .badge-custom {
+      background-color: #e9ecef;
+      color: #495057;
+      font-weight: normal;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+    .timeline {
+      position: relative;
+      padding-left: 40px;
+    }
+    .timeline-item {
+      position: relative;
+      padding-bottom: 20px;
+    }
+    .timeline-line {
+      position: absolute;
+      left: 19px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background-color: #e9ecef;
+    }
+    .timeline-icon {
+      position: absolute;
+      left: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #f8f9fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #dee2e6;
+    }
+    .timeline-content {
+      padding-left: 20px;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center py-3">
+        <h4>Candidate Details</h4>
         <div>
-            <a href="{% url 'candidate_chat_list' candidate.id %}" class="btn btn-sm btn-outline-primary">Chat with Candidate</a>
-            <a href="{% url 'interview_list' candidate.id %}" class="btn btn-sm btn-outline-primary">Interview Record</a>
+            <a href="{% url 'admin_candidate_chat_list' candidate.id %}" class="btn btn-sm btn-outline-primary me-2">
+                <i class="bi bi-chat-left-text"></i> Chat
+            </a>
+            <a href="{% url 'admin_interview_list' candidate.id %}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-calendar-check"></i> Interviews
+            </a>
         </div>
     </div>
+    
     <div class="row g-4">
         <!-- Personal Information Card -->
         <div class="col-lg-6">
             <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center ">
                     <h5 class="mb-0">Personal Information</h5>
-                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-profile">
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-candidate">
                         <i class="bi bi-pencil"></i> Edit
                     </a>
                 </div>
@@ -54,13 +110,15 @@
                     <div class="d-flex flex-column flex-md-row gap-4 align-items-start">
                         <!-- Candidate Photo -->
                         <div class="text-center">
+    
+    
                             {% if candidate.candidate_photo %}
                             <img src="{{candidate.candidate_photo.url}}" 
                                  class="rounded-circle object-cover border" 
                                  style="width: 120px; height: 120px;" 
                                  alt="Candidate Photo">
                             {% else %}
-                            <div class="d-flex align-items-center justify-content-center bg-light rounded-circle border" 
+                            <div class="d-flex align-items-center justify-content-center  rounded-circle border" 
                                  style="width: 120px; height: 120px;">
                                 <span class="text-muted small">No Photo</span>
                             </div>
@@ -69,56 +127,71 @@
                         
                         <!-- Candidate Details -->
                         <div class="flex-grow-1">
-                            <h3 class="mb-2">{{ candidate.candidate_name }}</h3>
-                            <p class="text-muted mb-3 small">{{ candidate.unique_code }}</p>
+                            <h3 class="mb-2">{{ candidate.candidate_name|default:"-" }}</h3>
+                            <p class="text-muted mb-3 small">ID: {{ candidate.unique_code|default:"-" }}</p>
                             
                             <div class="row g-2">
                                 <div class="col-md-6">
-                                    <div class="mb-2">
-                                        <span class="d-block text-muted small">Mobile</span>
-                                        <span class="fw-medium">{{ candidate.candidate_mobile_number }}</span>
+                                    <div class="mb-3">
+                                        <span class="d-block detail-label">Mobile Number</span>
+                                        <span class="detail-value">{{ candidate.candidate_mobile_number|default:"-" }}</span>
                                     </div>
-                                    <div class="mb-2">
-                                        <span class="d-block text-muted small">Address</span>
-                                        <span class="fw-medium">{{ candidate.origin_location|default:"-" }}</span>
+                                    <div class="mb-3">
+                                        <span class="d-block detail-label">Alternate Mobile</span>
+                                        <span class="detail-value">{{ candidate.candidate_alternate_mobile_number|default:"-" }}</span>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-2">
-                                        <span class="d-block text-muted small">Email</span>
-                                        <span class="fw-medium">{{ candidate.candidate_email_address|default:"-" }}</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <span class="d-block text-muted small">Registered</span>
-                                        <span class="fw-medium">{{ candidate.register_time|date:"M d, Y" }}</span>
+                                    <div class="mb-3">
+                                        <span class="d-block detail-label">Email</span>
+                                        <span class="detail-value">{{ candidate.candidate_email_address|default:"-" }}</span>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="mb-2">
-                                        <span class="d-block text-muted small">Resume</span>
-                                        <span class="fw-medium">
-                                            {% if candidate.candidate_resume %}
-                                            <a href="{{candidate.candidate_resume.url}}" target="_blank" class="text-primary">
-                                                <i class="bi bi-file-earmark-text"></i> View Resume
-                                            </a>
+                                    <div class="mb-3">
+                                        <span class="d-block detail-label">Gender</span>
+                                        <span class="detail-value">{{ candidate.gender|default:"-" }}</span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <span class="d-block detail-label">Source</span>
+                                        <span class="detail-value">
+                                            {% if candidate.lead_source == 'Other' and candidate.other_lead_source %}
+                                                {{ candidate.other_lead_source }}
                                             {% else %}
-                                            <span class="text-muted">No Resume</span>
+                                                {{ candidate.lead_source|default:"-" }}
                                             {% endif %}
                                         </span>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-2">
-                                        <span class="d-block text-muted small">Gender</span>
-                                        <span class="fw-medium">{{ candidate.gender|default:"-" }}</span>
+                                    <div class="mb-3">
+                                        <span class="d-block detail-label">Registered</span>
+                                        <span class="detail-value">{{ candidate.register_time|date:"M d, Y"|default:"-" }}</span>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-2">
-                                        <span class="d-block text-muted small">Source</span>
-                                        <span class="fw-medium">{{ candidate.lead_source|default:"-" }}</span>
-                                    </div>
-                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Address</span>
+                                {% if candidate.other_origin_location %}
+                                    <span class="detail-value">{{ candidate.other_origin_location }}</span>
+                                {% else %}
+                                    <span class="detail-value">{{ candidate.origin_location|default:"-" }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Resume</span>
+                                <span class="detail-value">
+                                    {% if candidate.candidate_resume %}
+                                    <a href="{{candidate.candidate_resume.url}}" target="_blank" class="text-primary">
+                                        <i class="bi bi-file-earmark-text"></i> View Resume
+                                    </a>
+                                    {% else %}
+                                    <span class="empty-value">No Resume</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Follow-Up By</span>
+                                <span class="detail-value">{{ candidate.employee_name|default:"-" }}</span>
                             </div>
                         </div>
                     </div>
@@ -126,12 +199,12 @@
             </div>
         </div>
 
-        <!-- Candidate Details Card -->
+        <!-- Professional Details Card -->
         <div class="col-lg-6">
             <div class="card h-100">
-                <div class="card-header  d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Candidate Details</h5>
-                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-candidate-details">
+                <div class="card-header d-flex justify-content-between align-items-center ">
+                    <h5 class="mb-0">Professional Details</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-candidate">
                         <i class="bi bi-pencil"></i> Edit
                     </a>
                 </div>
@@ -139,46 +212,77 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Alternate Mobile</span>
-                                <span class="fw-medium">{{ candidate.candidate_alternate_mobile_number|default:"-" }}</span>
+                                <span class="d-block detail-label">Preferred Location</span>
+                                <span class="detail-value">{{ candidate.preferred_location|default:"-" }}</span>
                             </div>
+                            
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Preferred Location</span>
-                                <span class="fw-medium">{{ candidate.preferred_location|default:"-" }}</span>
+                                <span class="d-block detail-label">Highest Qualification</span>
+                                <span class="detail-value">
+                                    {% if candidate.qualification == 'Other' and candidate.other_qualification %}
+                                        {{ candidate.other_qualification }}
+                                    {% else %}
+                                        {{ candidate.qualification|default:"-" }}
+                                    {% endif %}
+                                </span>
                             </div>
+                            
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Highest Qualification</span>
-                                <span class="fw-medium">{{ candidate.qualification|default:"-" }}</span>
+                                <span class="d-block detail-label">Diploma</span>
+                                <span class="detail-value">{{ candidate.diploma|default:"-" }}</span>
                             </div>
+                            
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Diploma</span>
-                                <span class="fw-medium">{{ candidate.diploma|default:"-" }}</span>
+                                <span class="d-block detail-label">Sector</span>
+                                <span class="detail-value">{{ candidate.sector|default:"-" }}</span>
                             </div>
                         </div>
                         
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Experience</span>
-                                <span class="fw-medium">
+                                <span class="d-block detail-label">Department</span>
+                                <span class="detail-value">{{ candidate.department|default:"-" }}</span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Experience</span>
+                                <span class="detail-value">
                                     {{ candidate.experience_year|default:"0" }} years 
                                     {{ candidate.experience_month|default:"0" }} months
                                 </span>
                             </div>
+                            
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Current Company</span>
-                                <span class="fw-medium">{{ candidate.current_company|default:"-" }}</span>
+                                <span class="d-block detail-label">Current Company</span>
+                                <span class="detail-value">{{ candidate.current_company|default:"-" }}</span>
                             </div>
+                            
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Working Status</span>
-                                <span class="fw-medium">{{ candidate.current_working_status|default:"-" }}</span>
+                                <span class="d-block detail-label">Working Status</span>
+                                <span class="detail-value">
+                                    {% if candidate.current_working_status == 'Other' and candidate.other_working_status %}
+                                        {{ candidate.other_working_status }}
+                                    {% else %}
+                                        {{ candidate.current_working_status|default:"-" }}
+                                    {% endif %}
+                                </span>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Current Salary</span>
-                                <span class="fw-medium">{{ candidate.current_salary|default:"-" }}</span>
+                                <span class="d-block detail-label">Current Salary</span>
+                                <span class="detail-value">{{ candidate.current_salary|default:"-" }}</span>
+                                <span class="detail-value">{{ candidate.current_salary_type|default:"-" }}</span>
                             </div>
+                        </div>
+                        <div class="col-md-6">
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Expected Salary</span>
-                                <span class="fw-medium">{{ candidate.expected_salary|default:"-" }}</span>
+                                <span class="d-block detail-label">Expected Salary</span>
+                                <span class="detail-value">{{ candidate.expected_salary|default:"-" }}</span>
+                                <span class="detail-value">{{ candidate.expected_salary_type|default:"-" }}</span>
                             </div>
                         </div>
                     </div>
@@ -186,12 +290,12 @@
             </div>
         </div>
 
-        <!-- Calling Remarks Card -->
+        <!-- Calling & Follow-Up Card -->
         <div class="col-lg-6">
             <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Calling Remarks</h5>
-                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-calling-remark">
+                <div class="card-header d-flex justify-content-between align-items-center ">
+                    <h5 class="mb-0">Calling & Follow-Up</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-candidate">
                         <i class="bi bi-pencil"></i> Edit
                     </a>
                 </div>
@@ -199,30 +303,58 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Call Connection</span>
-                                <span class="fw-medium">{{ candidate.call_connection|default:"-" }}</span>
+                                <span class="d-block detail-label">Call Connection</span>
+                                <span class="detail-value">
+                                    {% if candidate.call_connection == 'Other' and candidate.other_call_connection %}
+                                        {{ candidate.other_call_connection }}
+                                    {% else %}
+                                        {{ candidate.call_connection|default:"-" }}
+                                    {% endif %}
+                                </span>
                             </div>
+                            
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Calling Remark</span>
-                                <span class="fw-medium">{{ candidate.calling_remark|default:"-" }}</span>
+                                <span class="d-block detail-label">Calling Remark</span>
+                                <span class="detail-value">{{ candidate.calling_remark|default:"-" }}</span>
                             </div>
+                        </div>
+                        
+                        <div class="col-md-6">
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Lead Status</span>
-                                <span class="fw-medium">{{ candidate.lead_generate|default:"-" }}</span>
+                                <span class="d-block detail-label">Lead Status</span>
+                                <span class="detail-value">
+                                    {% if candidate.lead_generate == 'Other' and candidate.other_lead_generate %}
+                                        {{ candidate.other_lead_generate }}
+                                    {% else %}
+                                        {{ candidate.lead_generate|default:"-" }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Interview Status</span>
+                                <span class="detail-value">
+                                    {% if candidate.send_for_interview == 'Other' and candidate.other_interview_status %}
+                                        {{ candidate.other_interview_status }}
+                                    {% else %}
+                                        {{ candidate.send_for_interview|default:"-" }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Next Follow-Up</span>
+                                <span class="detail-value">{{ candidate.next_follow_up_date|date:"M d, Y"|default:"-" }}</span>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Interview Status</span>
-                                <span class="fw-medium">{{ candidate.send_for_interview|default:"-" }}</span>
-                            </div>
-                            <div class="mb-3">
-                                <span class="d-block text-muted small">Next Follow-Up</span>
-                                <span class="fw-medium">{{ candidate.next_follow_up_date|date:"M d, Y"|default:"-" }}</span>
-                            </div>
-                            <div class="mb-3">
-                                <span class="d-block text-muted small">Remarks</span>
-                                <span class="fw-medium">{{ candidate.remark|default:"-" }}</span>
+                                <span class="d-block detail-label">Remarks</span>
+                                <span class="detail-value">{{ candidate.remark|default:"-" }}</span>
                             </div>
                         </div>
                     </div>
@@ -233,9 +365,9 @@
         <!-- Selection Status Card -->
         <div class="col-lg-6">
             <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center ">
                     <h5 class="mb-0">Selection Status</h5>
-                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-selection-record">
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-candidate">
                         <i class="bi bi-pencil"></i> Edit
                     </a>
                 </div>
@@ -243,791 +375,260 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Selection Status</span>
-                                <span class="fw-medium">{{ candidate.selection_status|default:"-" }}</span>
+                                <span class="d-block detail-label">Selection Status</span>
+                                <span class="detail-value">
+                                    {% if candidate.selection_status == 'Other' and candidate.other_selection_status %}
+                                        {{ candidate.other_selection_status }}
+                                    {% else %}
+                                        {{ candidate.selection_status|default:"-" }}
+                                    {% endif %}
+                                </span>
                             </div>
+                            
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Company</span>
-                                <span class="fw-medium">{{ candidate.company_name|default:"-" }}</span>
+                                <span class="d-block detail-label">Company</span>
+                                <span class="detail-value">{{ candidate.company_name|default:"-" }}</span>
                             </div>
+                            
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Offered Salary</span>
-                                <span class="fw-medium">{{ candidate.offered_salary|default:"-" }}</span>
+                                <span class="d-block detail-label">Offered Salary</span>
+                                <span class="detail-value">{{ candidate.offered_salary|default:"-" }}</span>
                             </div>
                         </div>
+                        
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Selection Date</span>
-                                <span class="fw-medium">{{ candidate.selection_date|date:"M d, Y"|default:"-" }}</span>
+                                <span class="d-block detail-label">Selection Date</span>
+                                <span class="detail-value">{{ candidate.selection_date|date:"M d, Y"|default:"-" }}</span>
                             </div>
+                            
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Joining Date</span>
-                                <span class="fw-medium">{{ candidate.candidate_joining_date|date:"M d, Y"|default:"-" }}</span>
+                                <span class="d-block detail-label">Joining Date</span>
+                                <span class="detail-value">{{ candidate.candidate_joining_date|date:"M d, Y"|default:"-" }}</span>
                             </div>
+                            
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Commission</span>
-                                <span class="fw-medium">{{ candidate.emta_commission|default:"-" }}</span>
+                                <span class="d-block detail-label">Commission</span>
+                                <span class="detail-value">{{ candidate.emta_commission|default:"-" }}</span>
                             </div>
+                            
                             <div class="mb-3">
-                                <span class="d-block text-muted small">Payout Date</span>
-                                <span class="fw-medium">{{ candidate.payout_date|date:"M d, Y"|default:"-" }}</span>
+                                <span class="d-block detail-label">Payout Date</span>
+                                <span class="detail-value">{{ candidate.payout_date|date:"M d, Y"|default:"-" }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
+                
             </div>
         </div>
+
+
+
+<style>
+  .activity-feed {
+    padding: 0 1.5rem;
+  }
+  
+  .activity-item {
+    display: flex;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+  }
+  
+  .activity-item.first-item {
+    padding-top: 1rem;
+  }
+  
+  .activity-avatar {
+    margin-right: 1rem;
+    flex-shrink: 0;
+  }
+  
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .activity-content {
+    flex-grow: 1;
+  }
+  
+  .activity-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  
+  .activity-user {
+    line-height: 1.2;
+  }
+  
+  .activity-user span {
+    display: block;
+    font-size: 0.8rem;
+  }
+  
+  .activity-meta {
+    text-align: right;
+  }
+  
+  .activity-meta span {
+    display: block;
+    font-size: 0.8rem;
+  }
+  
+  .activity-changes, .activity-remark {
+    margin-top: 1rem;
+    
+    border-radius: 6px;
+    padding: 0.75rem;
+  }
+  
+  .changes-header, .remark-header {
+    display: flex;
+    align-items: center;
+    color: #666;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .changes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .change-item {
+    font-size: 0.9rem;
+  }
+  
+  .change-field {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+  }
+  
+  .change-values div {
+    margin-bottom: 0.2rem;
+  }
+  
+  .change-label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-right: 0.5rem;
+  }
+  
+  .remark-content {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem 0;
+  }
+  
+  .empty-icon {
+    font-size: 2.5rem;
+    color: #ddd;
+    margin-bottom: 1rem;
+  }
+  
+  .empty-state h5 {
+    margin-bottom: 0.5rem;
+  }
+  
+  @media (max-width: 768px) {
+    .activity-header {
+      flex-direction: column;
+    }
+    
+    .activity-meta {
+      text-align: left;
+      margin-top: 0.5rem;
+    }
+    
+    .changes-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
     </div>
+    
+
 </div>
 
-{% comment %}profile {% endcomment %}
-<div class="modal modal-blur fade" id="modal-profile" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-          <div class="modal-header">
-              <h5 class="modal-title">Candidate Profile</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-              <form id="candidateProfileForm" method="POST" enctype="multipart/form-data" novalidate>
-                  {% csrf_token %}
-                  <div class="row">
-                      <!-- Candidate Fields -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Candidate Name <span class="text-danger">*</span></label>
-                          <input type="text" class="form-control" name="candidate_name" 
-                                 value="{{ candidate.candidate_name }}" 
-                                 required minlength="2" maxlength="100"
-                                 pattern="^[a-zA-Z\s]*$" />
-                          <div class="invalid-feedback">
-                              Please enter a valid name (2-100 characters, letters only)
-                          </div>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
-                          <input type="tel" class="form-control" name="candidate_mobile_number" 
-                                 value="{{ candidate.candidate_mobile_number }}" 
-                                 required pattern="[0-9]{10}" 
-                                 maxlength="10" />
-                          <div class="invalid-feedback">
-                              Please enter a valid 10-digit mobile number
-                          </div>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Email Address</label>
-                          <input type="email" class="form-control" name="candidate_email_address" 
-                                 value="{{ candidate.candidate_email_address }}" 
-                                 maxlength="100"
-                                 pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" />
-                          <div class="invalid-feedback">
-                              Please enter a valid email address
-                          </div>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Gender <span class="text-danger">*</span></label>
-                          <select class="form-select" name="gender" required>
-                              <option value="" disabled>Select Gender</option>
-                              <option value="Male" {% if candidate.gender == "Male" %}selected{% endif %}>Male</option>
-                              <option value="Female" {% if candidate.gender == "Female" %}selected{% endif %}>Female</option>
-                              <option value="Other" {% if candidate.gender == "Other" %}selected{% endif %}>Other</option>
-                          </select>
-                          <div class="invalid-feedback">
-                              Please select gender
-                          </div>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Profile Photo</label>
-                          <input type="file" class="form-control" name="candidate_photo" 
-                                 accept="image/*" />
-                          <div class="invalid-feedback">
-                              Please upload a valid image (JPEG, PNG, JPG)
-                          </div>
-                          <small class="text-muted">Max size: 10MB</small>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Resume <span class="text-danger">*</span></label>
-                          <input type="file" class="form-control" name="candidate_resume" 
-                                 accept=".pdf,.doc,.docx"  />
-                          <div class="invalid-feedback">
-                              Please upload a valid resume (PDF, DOC, DOCX)
-                          </div>
-                          <small class="text-muted">Max size: 10MB (PDF, DOC, DOCX)</small>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Lead Source</label>
-                          <select class="form-select" name="lead_source">
-                              <option value="">Select Source</option>
-                              <option value="Website" {% if candidate.lead_source == "Website" %}selected{% endif %}>Website</option>
-                              <option value="Referral" {% if candidate.lead_source == "Referral" %}selected{% endif %}>Referral</option>
-                              <option value="Social Media" {% if candidate.lead_source == "Social Media" %}selected{% endif %}>Social Media</option>
-                              <option value="Job Portal" {% if candidate.lead_source == "Job Portal" %}selected{% endif %}>Job Portal</option>
-                              <option value="Walk-in" {% if candidate.lead_source == "Walk-in" %}selected{% endif %}>Walk-in</option>
-                              <option value="Other" {% if candidate.lead_source == "Other" %}selected{% endif %}>Other</option>
-                          </select>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <input type="hidden" class="form-control" name="submit_by" value="{{user.username}}"/>
-                      </div>
-                  </div>
-                  
-                  <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                      <button type="submit" name="candidate_personal_information" class="btn btn-primary">Save Changes</button>
-                  </div>
-              </form>
-          </div>
-      </div>
-  </div>
-</div>
+<style>
+    /* Custom CSS for Modern Timeline */
+.timeline-modern {
+    position: relative;
+    padding-left: 50px; /* Space for the icons and line */
+}
 
-<!-- Success Modal -->
-<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-sm">
-      <div class="modal-content">
-          <div class="modal-body text-center p-4">
-              <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-              <h5 class="mt-3">Success!</h5>
-              <p class="mb-0">Candidate details updated successfully</p>
-          </div>
-          <div class="modal-footer justify-content-center">
-              <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
-          </div>
-      </div>
-  </div>
-</div>
+.timeline-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20px; /* Aligns with the center of the icon */
+    width: 2px;
+    height: 100%;
+    background-color: #e0e0e0; /* Light grey line */
+    z-index: 0;
+}
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.getElementById('candidateProfileForm');
-  
-  // Form submission validation
-  form.addEventListener('submit', function(event) {
-      if (!form.checkValidity()) {
-          event.preventDefault();
-          event.stopPropagation();
-      }
-      form.classList.add('was-validated');
-      
-      // Validate file sizes
-      validateFileSize(event, 'candidate_photo', 10);
-      validateFileSize(event, 'candidate_resume', 10);
-  }, false);
-  
-  // File size validation
-  function validateFileSize(event, fieldName, maxSizeMB) {
-      const fileInput = form.querySelector(`input[name="${fieldName}"]`);
-      if (fileInput.files.length > 0) {
-          const fileSize = fileInput.files[0].size / 1024 / 1024; // in MB
-          if (fileSize > maxSizeMB) {
-              fileInput.setCustomValidity(`File size should not exceed ${maxSizeMB}MB`);
-              fileInput.classList.add('is-invalid');
-              event.preventDefault();
-          } else {
-              fileInput.setCustomValidity('');
-              fileInput.classList.remove('is-invalid');
-          }
-      }
-  }
-  
-  // Real-time validation
-  const inputs = form.querySelectorAll('input, select');
-  inputs.forEach(input => {
-      input.addEventListener('blur', () => {
-          if (!input.checkValidity()) {
-              input.classList.add('is-invalid');
-          } else {
-              input.classList.remove('is-invalid');
-          }
-      });
-  });
-  
-  // Show success modal after form submission
-  {% if form_submitted %}
-  var successModal = new bootstrap.Modal(document.getElementById('successModal'));
-  successModal.show();
-  {% endif %}
-});
-</script>
-  
+.timeline-item-modern {
+    position: relative;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start; /* Align content to the top */
+}
 
-  {% comment %}contact{% endcomment %}
-<div class="modal modal-blur fade" id="modal-candidate-details" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-          <div class="modal-header">
-              <h5 class="modal-title">Candidate Details</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-              <form id="candidateDetailsForm" method="post" enctype="multipart/form-data" novalidate>
-                  {% csrf_token %}
-                  <h5 class="text-secondary mb-4">Candidate Information</h5>
-                  <div class="row">
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Alternate Mobile Number</label>
-                          <input type="tel" class="form-control" name="candidate_alternate_mobile_number" 
-                                 value="{{candidate.candidate_alternate_mobile_number}}"
-                                 pattern="[0-9]{10}" maxlength="10">
-                          <div class="invalid-feedback">
-                              Please enter a valid 10-digit mobile number
-                          </div>
-                      </div>
-                      
-                      <input type="hidden" class="form-control" name="submit_by" value="{{user.username}}"/>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Preferred Location</label>
-                          <input type="text" class="form-control" name="preferred_location" 
-                                 value="{{candidate.preferred_location}}"
-                                 maxlength="100">
-                          <div class="invalid-feedback">
-                              Maximum 100 characters allowed
-                          </div>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Origin Location</label>
-                          <input type="text" class="form-control" name="origin_location" 
-                                 value="{{candidate.origin_location}}"
-                                 maxlength="100">
-                          <div class="invalid-feedback">
-                              Maximum 100 characters allowed
-                          </div>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Qualification</label>
-                          <select class="form-select" name="qualification">
-                              <option value="">Select Qualification</option>
-                              <option value="High School" {% if candidate.qualification == "High School" %}selected{% endif %}>High School</option>
-                              <option value="Diploma" {% if candidate.qualification == "Diploma" %}selected{% endif %}>Diploma</option>
-                              <option value="Bachelor's Degree" {% if candidate.qualification == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree</option>
-                              <option value="Master's Degree" {% if candidate.qualification == "Master's Degree" %}selected{% endif %}>Master's Degree</option>
-                              <option value="PhD" {% if candidate.qualification == "PhD" %}selected{% endif %}>PhD</option>
-                              <option value="Other" {% if candidate.qualification == "Other" %}selected{% endif %}>Other</option>
-                          </select>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Diploma</label>
-                          <input type="text" class="form-control" name="diploma" 
-                                 value="{{candidate.diploma}}"
-                                 maxlength="100">
-                          <div class="invalid-feedback">
-                              Maximum 100 characters allowed
-                          </div>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Preferred Sector</label>
-                          <select class="form-select" name="sector">
-                              <option value="">Select Sector</option>
-                              <option value="IT" {% if candidate.sector == "IT" %}selected{% endif %}>IT</option>
-                              <option value="Finance" {% if candidate.sector == "Finance" %}selected{% endif %}>Finance</option>
-                              <option value="Healthcare" {% if candidate.sector == "Healthcare" %}selected{% endif %}>Healthcare</option>
-                              <option value="Manufacturing" {% if candidate.sector == "Manufacturing" %}selected{% endif %}>Manufacturing</option>
-                              <option value="Education" {% if candidate.sector == "Education" %}selected{% endif %}>Education</option>
-                              <option value="Other" {% if candidate.sector == "Other" %}selected{% endif %}>Other</option>
-                          </select>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Preferred Department</label>
-                          <select class="form-select" name="department">
-                              <option value="">Select Department</option>
-                              <option value="Engineering" {% if candidate.department == "Engineering" %}selected{% endif %}>Engineering</option>
-                              <option value="HR" {% if candidate.department == "HR" %}selected{% endif %}>HR</option>
-                              <option value="Sales" {% if candidate.department == "Sales" %}selected{% endif %}>Sales</option>
-                              <option value="Marketing" {% if candidate.department == "Marketing" %}selected{% endif %}>Marketing</option>
-                              <option value="Operations" {% if candidate.department == "Operations" %}selected{% endif %}>Operations</option>
-                              <option value="Other" {% if candidate.department == "Other" %}selected{% endif %}>Other</option>
-                          </select>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Experience (Years)</label>
-                          <input type="number" class="form-control" name="experience_year" 
-                                 value="{{candidate.experience_year}}"
-                                 min="0" max="50">
-                          <div class="invalid-feedback">
-                              Please enter valid years (0-50)
-                          </div>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Experience (Months)</label>
-                          <input type="number" class="form-control" name="experience_month" 
-                                 value="{{candidate.experience_month}}"
-                                 min="0" max="11">
-                          <div class="invalid-feedback">
-                              Please enter valid months (0-11)
-                          </div>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Current Company</label>
-                          <input type="text" class="form-control" name="current_company" 
-                                 value="{{candidate.current_company}}"
-                                 maxlength="100">
-                          <div class="invalid-feedback">
-                              Maximum 100 characters allowed
-                          </div>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Working Status</label>
-                          <select class="form-select" name="current_working_status">
-                              <option value="">Select Status</option>
-                              <option value="Employed" {% if candidate.current_working_status == "Employed" %}selected{% endif %}>Employed</option>
-                              <option value="Unemployed" {% if candidate.current_working_status == "Unemployed" %}selected{% endif %}>Unemployed</option>
-                              <option value="Student" {% if candidate.current_working_status == "Student" %}selected{% endif %}>Student</option>
-                              <option value="Freelancer" {% if candidate.current_working_status == "Freelancer" %}selected{% endif %}>Freelancer</option>
-                          </select>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Current Salary (₹)</label>
-                          <input type="number" class="form-control" name="current_salary" 
-                                 value="{{candidate.current_salary}}"
-                                 min="0" step="1">
-                          <div class="invalid-feedback">
-                              Please enter valid salary
-                          </div>
-                      </div>
-                      
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Expected Salary (₹)</label>
-                          <input type="number" class="form-control" name="expected_salary" 
-                                 value="{{candidate.expected_salary}}"
-                                 min="0" step="1">
-                          <div class="invalid-feedback">
-                              Please enter valid salary
-                          </div>
-                      </div>
-                  </div>
-                  
-                  <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                      <button type="submit" name="candidate_details" class="btn btn-primary">Save Changes</button>
-                  </div>
-              </form>
-          </div>
-      </div>
-  </div>
-</div>
+.timeline-icon-modern {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 40px;
+    height: 40px;
+    background-color: #fff; /* White background for the icon circle */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1; /* Ensure icon is above the line */
+    border: 2px solid #e0e0e0; /* Light border around the icon */
+}
 
-<!-- Success Modal -->
-<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-sm">
-      <div class="modal-content">
-          <div class="modal-body text-center p-4">
-              <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-              <h5 class="mt-3">Success!</h5>
-              <p class="mb-0">Candidate details updated successfully</p>
-          </div>
-          <div class="modal-footer justify-content-center">
-              <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
-          </div>
-      </div>
-  </div>
-</div>
+.timeline-content-modern {
+    flex-grow: 1;
+    margin-left: 20px; /* Space between icon and content */
+    border-left: 3px solid var(--bs-primary); /* Accent border */
+    padding-left: 15px !important; /* Padding for the accent border */
+}
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.getElementById('candidateDetailsForm');
-  
-  // Form submission validation
-  form.addEventListener('submit', function(event) {
-      if (!form.checkValidity()) {
-          event.preventDefault();
-          event.stopPropagation();
-      }
-      form.classList.add('was-validated');
-      
-      // Validate expected salary is >= current salary if both exist
-      const currentSalary = parseFloat(form.querySelector('input[name="current_salary"]').value);
-      const expectedSalary = parseFloat(form.querySelector('input[name="expected_salary"]').value);
-      
-      if (currentSalary && expectedSalary && expectedSalary < currentSalary) {
-          const expectedSalaryInput = form.querySelector('input[name="expected_salary"]');
-          expectedSalaryInput.setCustomValidity('Expected salary should be ≥ current salary');
-          expectedSalaryInput.classList.add('is-invalid');
-          event.preventDefault();
-      }
-  }, false);
-  
-  // Real-time validation
-  const inputs = form.querySelectorAll('input, select');
-  inputs.forEach(input => {
-      input.addEventListener('blur', () => {
-          if (!input.checkValidity()) {
-              input.classList.add('is-invalid');
-          } else {
-              input.classList.remove('is-invalid');
-          }
-      });
-  });
-  
-  // Show success modal after form submission
-  {% if form_submitted %}
-  var successModal = new bootstrap.Modal(document.getElementById('successModal'));
-  successModal.show();
-  {% endif %}
-});
-</script>
-  
+/* Adjustments for badges and table in changes */
+.timeline-content-modern .badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.7em;
+}
 
-<div class="modal modal-blur fade" id="modal-calling-remark" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-          <div class="modal-header">
-              <h5 class="modal-title">Calling Remark</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-              <form id="callingRemarkForm" method="post" enctype="multipart/form-data" novalidate>
-                  {% csrf_token %}
-                  <div class="row">
-                      <!-- Call Connection Status -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Call Connection Status <span class="text-danger">*</span></label>
-                          <select class="form-select" name="call_connection" required>
-                              <option value="" disabled>Select Status</option>
-                              <option value="Connected" {% if candidate.call_connection == "Connected" %}selected{% endif %}>Connected</option>
-                              <option value="Not Reachable" {% if candidate.call_connection == "Not Reachable" %}selected{% endif %}>Not Reachable</option>
-                              <option value="Busy" {% if candidate.call_connection == "Busy" %}selected{% endif %}>Busy</option>
-                              <option value="Wrong Number" {% if candidate.call_connection == "Wrong Number" %}selected{% endif %}>Wrong Number</option>
-                          </select>
-                          <div class="invalid-feedback">Please select call connection status</div>
-                      </div>
+.timeline-content-modern table td {
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.2rem !important;
+}
+</style>
 
-                      <!-- Calling Remark -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Calling Remark <span class="text-danger">*</span></label>
-                          <textarea class="form-control" name="calling_remark" 
-                                    maxlength="500" required>{{ candidate.calling_remark }}</textarea>
-                          <div class="invalid-feedback">Please enter a remark (max 500 characters)</div>
-                      </div>
-
-                      <!-- Lead Generate Status -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Lead Generate Status <span class="text-danger">*</span></label>
-                          <select class="form-select" name="lead_generate" required>
-                              <option value="" disabled>Select Status</option>
-                              <option value="Yes" {% if candidate.lead_generate == "Yes" %}selected{% endif %}>Yes</option>
-                              <option value="No" {% if candidate.lead_generate == "No" %}selected{% endif %}>No</option>
-                              <option value="Converted" {% if candidate.lead_generate == "Converted" %}selected{% endif %}>Converted</option>
-                          </select>
-                          <div class="invalid-feedback">Please select lead status</div>
-                      </div>
-
-                      <!-- Send for Interview Status -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Interview Status <span class="text-danger">*</span></label>
-                          <select class="form-select" name="send_for_interview" required>
-                              <option value="" disabled>Select Status</option>
-                              <option value="Yes" {% if candidate.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
-                              <option value="No" {% if candidate.send_for_interview == "No" %}selected{% endif %}>No</option>
-                              <option value="Scheduled" {% if candidate.send_for_interview == "Scheduled" %}selected{% endif %}>Scheduled</option>
-                              <option value="Not Interested" {% if candidate.send_for_interview == "Not Interested" %}selected{% endif %}>Not Interested</option>
-                              <option value="Rescheduled" {% if candidate.send_for_interview == "Rescheduled" %}selected{% endif %}>Rescheduled</option>
-                              <option value="Completed" {% if candidate.send_for_interview == "Completed" %}selected{% endif %}>Completed</option>
-                          </select>
-                          <div class="invalid-feedback">Please select interview status</div>
-                      </div>
-
-                      <!-- Next Follow-Up Date -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Next Follow-Up Date <span class="text-danger">*</span></label>
-                          <input type="date" class="form-control" name="next_follow_up_date" 
-                                 value="{{ candidate.next_follow_up_date|date:'Y-m-d' }}" 
-                                 min="{{ today|date:'Y-m-d' }}" required>
-                          <div class="invalid-feedback">Please select a valid future date</div>
-                      </div>
-
-                      <!-- Hidden Field -->
-                      <div class="col-md-6 mb-3">
-                          <input type="hidden" name="submit_by" value="{{ user.username }}">
-                      </div>
-                  </div>
-
-                  <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                      <button type="submit" name="submit_calling_remark" class="btn btn-primary">Submit</button>
-                  </div>
-              </form>
-          </div>
-      </div>
-  </div>
-</div>
-
-<!-- Success Modal -->
-<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-sm">
-      <div class="modal-content">
-          <div class="modal-body text-center p-4">
-              <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-              <h5 class="mt-3">Success!</h5>
-              <p class="mb-0">Calling remarks updated successfully</p>
-          </div>
-          <div class="modal-footer justify-content-center">
-              <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
-          </div>
-      </div>
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.getElementById('callingRemarkForm');
-  
-  // Form validation
-  form.addEventListener('submit', function(event) {
-      if (!form.checkValidity()) {
-          event.preventDefault();
-          event.stopPropagation();
-      }
-      form.classList.add('was-validated');
-      
-      // Custom date validation
-      const followUpDate = new Date(form.querySelector('input[name="next_follow_up_date"]').value);
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      
-      if (followUpDate < today) {
-          event.preventDefault();
-          form.querySelector('input[name="next_follow_up_date"]').classList.add('is-invalid');
-      }
-  }, false);
-
-  // Real-time validation
-  form.querySelectorAll('select, textarea, input').forEach(element => {
-      element.addEventListener('blur', () => {
-          if (!element.checkValidity()) {
-              element.classList.add('is-invalid');
-          } else {
-              element.classList.remove('is-invalid');
-          }
-      });
-  });
-
-  // Show success modal
-  {% if form_submitted %}
-  new bootstrap.Modal(document.getElementById('successModal')).show();
-  {% endif %}
-});
-</script>
+{% include "employee/partials/candidate_form.html" %}
 
 
-<div class="modal modal-blur fade" id="modal-selection-record" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-          <div class="modal-header">
-              <h5 class="modal-title">Selection Record</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-              <form id="selectionRecordForm" method="post" enctype="multipart/form-data" novalidate>
-                  {% csrf_token %}
-                  <div class="row">
-                      <!-- Selection Status -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Selection Status <span class="text-danger">*</span></label>
-                          <select class="form-select" name="selection_status" id="selectionStatus" required>
-                              <option value="" disabled>Select Status</option>
-                              <option value="Selected" {% if candidate.selection_status == "Selected" %}selected{% endif %}>Selected</option>
-                              <option value="Rejected" {% if candidate.selection_status == "Rejected" %}selected{% endif %}>Rejected</option>
-                              <option value="Pending"  {% if candidate.selection_status == "Pending" %}selected{% endif %}>Pending</option>
-                              <option value="Not Join" {% if candidate.selection_status == "Not Join" %}selected{% endif %}>Not Join</option>
-                          </select>
-                          <div class="invalid-feedback">Please select selection status</div>
-                      </div>
-
-                      <!-- Company Name -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Company Name <span class="text-danger">*</span></label>
-                          <select name="company_name" class="form-control">
-                                <option value="" disabled selected>Select Company</option>
-                                {% for vacancy in vacancies %}
-                                    <option value="{{ vacancy.company_name }}" {% if candidate.company_name == vacancy.company_name %}selected{% endif %}>{{ vacancy.company_name }}</option>
-                                {% endfor %}
-                          </select>
-                      </div>
-
-                      <!-- Offered Salary -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Offered Salary (₹) <span class="text-danger">*</span></label>
-                          <input type="number" name="offered_salary" class="form-control" 
-                                 value="{{ candidate.offered_salary }}" min="0" step="1">
-                          <div class="invalid-feedback">Please enter valid salary</div>
-                      </div>
-
-                      <!-- Selection Date -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Selection Date <span class="text-danger">*</span></label>
-                          <input type="date" name="selection_date" class="form-control" 
-                                 value="{{ candidate.selection_date|date:'Y-m-d' }}">
-                          <div class="invalid-feedback">Please select selection date</div>
-                      </div>
-
-                      <!-- Joining Date -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Joining Date <span class="text-danger selection-required">*</span></label>
-                          <input type="date" name="candidate_joining_date" class="form-control selection-dependent" 
-                                 value="{{ candidate.candidate_joining_date|date:'Y-m-d' }}">
-                          <div class="invalid-feedback">Please select joining date</div>
-                      </div>
-
-                      <!-- Commission -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Our Commission (₹) <span class="text-danger selection-required">*</span></label>
-                          <input type="number" name="emta_commission" class="form-control selection-dependent" 
-                                 value="{{ candidate.emta_commission }}" min="0" step="1">
-                          <div class="invalid-feedback">Please enter valid amount</div>
-                      </div>
-
-                      <!-- Payout Date -->
-                      <div class="col-md-6 mb-3">
-                          <label class="form-label">Payout Date <span class="text-danger selection-required">*</span></label>
-                          <input type="date" name="payout_date" class="form-control selection-dependent" 
-                                 value="{{ candidate.payout_date|date:'Y-m-d' }}">
-                          <div class="invalid-feedback">Please select payout date</div>
-                      </div>
-                  </div>
-
-                  <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                      <button type="submit" name="submit_secection_record" class="btn btn-primary">Submit</button>
-                  </div>
-              </form>
-          </div>
-      </div>
-  </div>
-</div>
-
-<!-- Success Modal -->
-<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-sm">
-      <div class="modal-content">
-          <div class="modal-body text-center p-4">
-              <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-              <h5 class="mt-3">Success!</h5>
-              <p class="mb-0">Selection record updated successfully</p>
-          </div>
-          <div class="modal-footer justify-content-center">
-              <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
-          </div>
-      </div>
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.getElementById('selectionRecordForm');
-  const selectionStatus = document.getElementById('selectionStatus');
-  const selectionDependentFields = document.querySelectorAll('.selection-dependent');
-  const selectionRequiredStars = document.querySelectorAll('.selection-required');
-  
-  // Toggle required fields based on selection status
-  function updateFieldRequirements() {
-      const isSelected = selectionStatus.value === 'Selected';
-      
-      selectionDependentFields.forEach(field => {
-          field.required = isSelected;
-          field.disabled = !isSelected;
-          if (!isSelected) {
-              field.classList.remove('is-invalid');
-          }
-      });
-      
-      selectionRequiredStars.forEach(star => {
-          star.style.display = isSelected ? 'inline' : 'none';
-      });
-  }
-  
-  // Initial setup
-  updateFieldRequirements();
-  
-  // Update when selection changes
-  selectionStatus.addEventListener('change', updateFieldRequirements);
-  
-  // Form validation
-  form.addEventListener('submit', function(event) {
-      if (!form.checkValidity()) {
-          event.preventDefault();
-          event.stopPropagation();
-      }
-      form.classList.add('was-validated');
-      
-      // Validate date sequences only if "Selected"
-      if (selectionStatus.value === 'Selected') {
-          validateDateSequence(event, 'selection_date', 'candidate_joining_date');
-          validateDateSequence(event, 'candidate_joining_date', 'payout_date');
-          
-          // Additional validation for selected status
-          const joiningDate = form.querySelector('input[name="candidate_joining_date"]');
-          const commission = form.querySelector('input[name="emta_commission"]');
-          const payoutDate = form.querySelector('input[name="payout_date"]');
-          
-          if (!joiningDate.value) {
-              joiningDate.classList.add('is-invalid');
-              event.preventDefault();
-          }
-          
-          if (!commission.value) {
-              commission.classList.add('is-invalid');
-              event.preventDefault();
-          }
-          
-          if (!payoutDate.value) {
-              payoutDate.classList.add('is-invalid');
-              event.preventDefault();
-          }
-      }
-  }, false);
-
-  function validateDateSequence(event, earlierDateField, laterDateField) {
-      const earlierDate = form.querySelector(`input[name="${earlierDateField}"]`);
-      const laterDate = form.querySelector(`input[name="${laterDateField}"]`);
-      
-      if (earlierDate.value && laterDate.value) {
-          const earlier = new Date(earlierDate.value);
-          const later = new Date(laterDate.value);
-          
-          if (later < earlier) {
-              laterDate.setCustomValidity(`Date must be after ${earlierDateField.replace('_', ' ')}`);
-              laterDate.classList.add('is-invalid');
-              event.preventDefault();
-          } else {
-              laterDate.setCustomValidity('');
-              laterDate.classList.remove('is-invalid');
-          }
-      }
-  }
-
-  // Real-time validation
-  form.querySelectorAll('select, input').forEach(element => {
-      element.addEventListener('blur', () => {
-          if (!element.checkValidity()) {
-              element.classList.add('is-invalid');
-          } else {
-              element.classList.remove('is-invalid');
-          }
-      });
-  });
-
-  // Show success modal
-  {% if form_submitted %}
-  new bootstrap.Modal(document.getElementById('successModal')).show();
-  {% endif %}
-});
-</script>
 
 {% endblock %}

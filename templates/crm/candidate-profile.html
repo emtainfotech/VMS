@@ -394,6 +394,10 @@
                                 <span class="d-block detail-label">Offered Salary</span>
                                 <span class="detail-value">{{ candidate.offered_salary|default:"-" }}</span>
                             </div>
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Payout Date</span>
+                                <span class="detail-value">{{ candidate.payout_date|date:"M d, Y"|default:"-" }}</span>
+                            </div>
                         </div>
                         
                         <div class="col-md-6">
@@ -412,9 +416,11 @@
                                 <span class="detail-value">{{ candidate.emta_commission|default:"-" }}</span>
                             </div>
                             
+                            
+
                             <div class="mb-3">
-                                <span class="d-block detail-label">Payout Date</span>
-                                <span class="detail-value">{{ candidate.payout_date|date:"M d, Y"|default:"-" }}</span>
+                                <span class="d-block detail-label">Selection Remark</span>
+                                <span class="detail-value">{{ candidate.selection_remark|default:"-" }}</span>
                             </div>
                         </div>
                     </div>
@@ -423,103 +429,7 @@
             </div>
         </div>
 
-<!-- Candidate Activity Timeline - Redesigned -->
-<div class="row mt-4">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header  border-0">
-        <h3 class="card-title mb-0">Candidate Activity Log</h3>
-        <small class="text-muted">Chronological history of all candidate interactions</small>
-      </div>
-      <div class="card-body p-0">
-        <div class="activity-feed">
-          {% for activity in candidate.activities.all %}
-            {% if activity.employee %}
-            <div class="activity-item {% if forloop.first %}first-item{% endif %}">
-              <div class="activity-avatar">
-                {% if activity.employee.employee_photo %}
-                <img src="{{ activity.employee.employee_photo.url }}" class="avatar" alt="{{ activity.employee.first_name }}">
-                {% else %}
-                <div class="avatar bg-primary text-white">
-                  {{ activity.employee.first_name|first }}{{ activity.employee.last_name|first }}
-                </div>
-                {% endif %}
-              </div>
-              
-              <div class="activity-content">
-                <div class="activity-header">
-                  <div class="activity-user">
-                    <strong>{{ activity.employee.first_name }} {{ activity.employee.last_name }}</strong>
-                    <span class="text-muted">{{ activity.employee.designation }}</span>
-                  </div>
-                  <div class="activity-meta">
-                    <span class="text-muted">{{ activity.timestamp|date:"M d, Y" }}</span>
-                    <span class="badge text-white bg-{% if activity.action == 'created' %}success{% elif activity.action == 'status_changed' %}warning text-dark{% else %}info{% endif %}">
-                      {{ activity.get_action_display }}
-                    </span>
-                  </div>
-                </div>
-                
-                {% if activity.changes and activity.changes != 'initial' %}
-                <div class="activity-changes">
-                  <div class="changes-header">
-                    <i class="fas fa-exchange-alt me-2"></i>
-                    <small>MODIFICATIONS</small>
-                  </div>
-                  <div class="changes-grid">
-                    {% for field, values in activity.changes.items %}
-                      {% if field != 'initial' %}
-                      <div class="change-item">
-                        <div class="change-field">{{ field|title }}</div>
-                        <div class="change-values">
-                          {% if values.old %}
-                          <div class="old-value">
-                            <span class="change-label">Old:</span>
-                            <span class="text-danger">{{ values.old|truncatechars:40 }}</span>
-                          </div>
-                          {% endif %}
-                          {% if values.new %}
-                          <div class="new-value">
-                            <span class="change-label">New:</span>
-                            <span class="text-success">{{ values.new|truncatechars:40 }}</span>
-                          </div>
-                          {% endif %}
-                        </div>
-                      </div>
-                      {% endif %}
-                    {% endfor %}
-                  </div>
-                </div>
-                {% endif %}
-                
-                {% if activity.remark %}
-                <div class="activity-remark">
-                  <div class="remark-header">
-                    <i class="fas fa-comment-dots me-2"></i>
-                    <small>REMARKS</small>
-                  </div>
-                  <div class="remark-content">
-                    {{ activity.remark|linebreaks }}
-                  </div>
-                </div>
-                {% endif %}
-              </div>
-            </div>
-            {% endif %}
-          {% empty %}
-            <div class="empty-state">
-              <div class="empty-icon">
-                <i class="fas fa-history"></i>
-              </div>
-              <h5>No activity recorded yet</h5>
-              <p class="text-muted">All candidate interactions will appear here</p>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <style>
   .activity-feed {
@@ -690,7 +600,7 @@
                                 </div>
                                 {% endif %}
                             </div>
-                            <div class="timeline-content-modern p-3 border rounded bg-light">
+                            <div class="timeline-content-modern p-3 border rounded">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <div>
                                         <strong class="text-dark">
