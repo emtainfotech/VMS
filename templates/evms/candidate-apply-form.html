@@ -10,11 +10,12 @@
     <link href="/static/dist/css/tabler.min.css?1692870487" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
     <link href="/static/dist/css/tabler-flags.min.css?1692870487" rel="stylesheet" />
     <link href="/static/dist/css/tabler-payments.min.css?1692870487" rel="stylesheet" />
     <link href="/static/dist/css/tabler-vendors.min.css?1692870487" rel="stylesheet" />
     <link href="/static/dist/css/demo.min.css?1692870487" rel="stylesheet" />
+    <!-- reCAPTCHA API -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body class="d-flex flex-column">
   <div class="page page-center">
@@ -47,7 +48,7 @@
       {% endif %}
 
       <!-- Application Form -->
-      <form class="card card-md needs-validation" enctype="multipart/form-data" method="POST" autocomplete="off" novalidate>
+      <form class="card card-md needs-validation" enctype="multipart/form-data" method="POST" autocomplete="off" novalidate id="applicationForm">
         {% csrf_token %}
         <div class="card-body">
           <h2 class="card-title text-center mb-4">Candidate Application Form</h2>
@@ -68,7 +69,7 @@
                       <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
                     </svg>
                   </span>
-                  <input type="text" name="candidate_name" class="form-control" placeholder="Enter Full name" required required minlength="3" maxlength="50" 
+                  <input type="text" name="candidate_name" class="form-control" placeholder="Enter Full name" required minlength="3" maxlength="50" 
                   pattern="^[A-Za-z\s.'-]+$"
                   oninput="validateName(this)">
                 </div>
@@ -95,7 +96,7 @@
 
             <!-- Email -->
             <div class="mb-3">
-              <label class="form-label ">Email Address</label>
+              <label class="form-label">Email Address</label>
               <div class="input-group">
                 <span class="input-group-text">
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -192,8 +193,6 @@
                 <div class="invalid-feedback">Please select at least one location</div>
               </div>
             </div>
-
-            
           </div>
           
           <!-- Documents Section -->
@@ -203,22 +202,22 @@
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label class="form-label">Profile Photo (Optional)</label>
-                <input type="file" name="candidate_photo" class="form-control" 
-                       accept="image/*,.heic,.heif,.webp,." 
-                       onchange="validateFileType(this, 'image')">
-                <div class="invalid-feedback">Please upload a valid image file (JPEG, PNG, JPG, WEBP, HEIC)</div>
-                <small class="text-muted">Max size: 10MB | Formats: JPEG, PNG, JPG, WEBP, HEIC</small>
+                <input type="file" name="candidate_photo" class="form-control">
+                <small class="text-muted">Any file type accepted</small>
               </div>
     
               <div class="col-md-6 mb-3">
                 <label class="form-label required">Resume</label>
-                <input type="file" name="candidate_resume" class="form-control" required 
-                       accept=".pdf,.doc,.docx,.odt,.rtf,.txt" 
-                       onchange="validateFileType(this, 'resume')">
-                <div class="invalid-feedback">Please upload your resume (PDF, DOC, DOCX, ODT, RTF, TXT)</div>
-                <small class="text-muted">Max size: 10MB | Formats: PDF, DOC, DOCX, ODT, RTF, TXT</small>
+                <input type="file" name="candidate_resume" class="form-control" required>
+                <small class="text-muted">Any file type accepted</small>
               </div>
             </div>
+          </div>
+          
+          <!-- reCAPTCHA -->
+          <div class="mb-3">
+            <div class="g-recaptcha" data-sitekey="6LdcakcrAAAAAIqUEDm5nn1AGGqceYPUUrHwqF9w"></div>
+            <div class="invalid-feedback" id="recaptcha-error">Please complete the reCAPTCHA verification</div>
           </div>
           
           <!-- Terms and Conditions -->
@@ -234,8 +233,7 @@
           
           <!-- Submit Button -->
           <div class="form-footer">
-            <button type="submit" class="btn btn-primary w-100 py-2">
-              {% comment %} <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span> {% endcomment %}
+            <button type="submit" class="btn btn-primary w-100 py-2" id="submitBtn">
               Submit Application
             </button>
           </div>
@@ -283,27 +281,37 @@
       
       Array.from(forms).forEach(form => {
           form.addEventListener('submit', function(event) {
-              if (!form.checkValidity()) {
-                  event.preventDefault();
-                  event.stopPropagation();
+              event.preventDefault();
+              
+              // Validate reCAPTCHA
+              const recaptchaResponse = grecaptcha.getResponse();
+              if (recaptchaResponse.length === 0) {
+                  document.getElementById('recaptcha-error').style.display = 'block';
+                  return false;
               } else {
-                  // Show loading spinner on submit button
-                  const submitBtn = form.querySelector('button[type="submit"]');
-                  const spinner = submitBtn.querySelector('.spinner-border');
-                  spinner.classList.remove('d-none');
-                  submitBtn.disabled = true;
-                  
-                  // In a real app, you would submit the form here
-                  // For demo, we'll show the modal after a short delay
-                  event.preventDefault();
-                  setTimeout(() => {
-                      $('#confirmationModal').modal('show');
-                      spinner.classList.add('d-none');
-                      submitBtn.disabled = false;
-                  }, 1500);
+                  document.getElementById('recaptcha-error').style.display = 'none';
               }
               
+              if (!form.checkValidity()) {
+                  event.stopPropagation();
+                  form.classList.add('was-validated');
+                  return false;
+              }
+              
+              // Show loading state
+              const submitBtn = document.getElementById('submitBtn');
+              submitBtn.disabled = true;
+              submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+              
+              // Submit form data via AJAX or standard form submission
               form.classList.add('was-validated');
+              
+              // For demo purposes, show the modal after a delay
+              setTimeout(() => {
+                  $('#confirmationModal').modal('show');
+                  submitBtn.disabled = false;
+                  submitBtn.innerHTML = 'Submit Application';
+              }, 1500);
           }, false);
       });
       
@@ -334,6 +342,19 @@
       });
   });
   
+  // Function to validate name (letters and spaces only)
+  function validateName(input) {
+      // Remove any non-letter characters (including numbers and special chars except spaces, apostrophes, hyphens, and periods)
+      input.value = input.value.replace(/[^A-Za-z\s.'-]/g, '');
+      capitalizeFirstLetter(input);
+  }
+
+  // Function to validate mobile (digits only)
+  function validateMobile(input) {
+      // Remove any non-digit characters
+      input.value = input.value.replace(/\D/g, '');
+  }
+
   // Function to capitalize first letter of each word
   function capitalizeFirstLetter(input) {
       const words = input.value.split(' ');
@@ -344,103 +365,6 @@
       }
       input.value = words.join(' ');
   }
-  
- 
   </script>
-
-  <script>
-     // Function to validate name (letters and spaces only)
-  function validateName(input) {
-    // Remove any non-letter characters (including numbers and special chars except spaces, apostrophes, hyphens, and periods)
-    input.value = input.value.replace(/[^A-Za-z\s.'-]/g, '');
-    capitalizeFirstLetter(input);
-}
-
-// Function to validate mobile (digits only)
-function validateMobile(input) {
-    // Remove any non-digit characters
-    input.value = input.value.replace(/\D/g, '');
-}
-
-// Function to capitalize first letter of each word
-function capitalizeFirstLetter(input) {
-    const words = input.value.split(' ');
-    for (let i = 0; i < words.length; i++) {
-        if (words[i].length > 0) {
-            words[i] = words[i][0].toUpperCase() + words[i].substring(1).toLowerCase();
-        }
-    }
-    input.value = words.join(' ');
-}
-  
-    // Updated File type validation
-    function validateFileType(input, type) {
-        const file = input.files[0];
-        if (!file) return;
-        
-        // Supported image types (including newer formats)
-        const validImageTypes = [
-            'image/jpeg', 
-            'image/png', 
-            'image/jpg',
-            'image/webp',
-            'image/heic',
-            'image/heif'
-        ];
-        
-        // Supported document types (expanded list)
-        const validDocTypes = [
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.oasis.opendocument.text',
-            'text/rtf',
-            'text/plain'
-        ];
-        
-        // File extensions mapping for better validation
-        const fileExtensions = {
-            'image/jpeg': '.jpeg,.jpg',
-            'image/png': '.png',
-            'image/webp': '.webp',
-            'image/heic': '.heic',
-            'image/heif': '.heif',
-            'application/pdf': '.pdf',
-            'application/msword': '.doc',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
-            'application/vnd.oasis.opendocument.text': '.odt',
-            'text/rtf': '.rtf',
-            'text/plain': '.txt'
-        };
-        
-        let isValid = false;
-        let errorMsg = '';
-        const maxSize = 10 * 1024 * 1024; // 10MB for both types now
-        
-        if (type === 'image') {
-            isValid = validImageTypes.includes(file.type) || 
-                     file.name.toLowerCase().match(/\.(jpeg|jpg|png|webp|heic|heif)$/);
-            errorMsg = 'Please upload a valid image file (JPEG, PNG, JPG, WEBP, HEIC)';
-        } else if (type === 'resume') {
-            isValid = validDocTypes.includes(file.type) || 
-                     file.name.toLowerCase().match(/\.(pdf|doc|docx|odt|rtf|txt)$/);
-            errorMsg = 'Please upload a valid document (PDF, DOC, DOCX, ODT, RTF, TXT)';
-        }
-        
-        // Check file size
-        if (file.size > maxSize) {
-            isValid = false;
-            errorMsg = 'File size exceeds 10MB limit';
-        }
-        
-        if (!isValid) {
-            input.setCustomValidity(errorMsg);
-            input.reportValidity();
-            input.value = '';
-        } else {
-            input.setCustomValidity('');
-        }
-    }
-    </script>
 </body>
 </html>
