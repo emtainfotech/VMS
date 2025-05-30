@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db import transaction
 from datetime import timedelta, time, datetime
 import pytz
 from django.utils.timezone import now
@@ -149,17 +150,25 @@ class Candidate(models.Model):
                         duplicate.refer_code = self.refer_code
                         duplicate.save()
         
-        # Generate unique ID if not exists
+        from django.db import transaction
+
+    def save(self, *args, **kwargs):
         if not self.unique_id:
-            last_candidate = Candidate.objects.order_by('id').last()
-            if last_candidate and last_candidate.unique_id:
-                last_id_number = int(last_candidate.unique_id[6:])  # Extract the number part and convert to int
+            with transaction.atomic():
+                # Lock the table to avoid race conditions
+                last_candidate = Candidate.objects.select_for_update().order_by('-id').first()
+                if last_candidate and last_candidate.unique_id:
+                    try:
+                        last_id_number = int(last_candidate.unique_id[1:])  # Assuming 'C000001' format
+                    except ValueError:
+                        last_id_number = 0
+                else:
+                    last_id_number = 0
                 new_id_number = last_id_number + 1
-            else:
-                new_id_number = 1
-            self.unique_id = f"C{new_id_number:06d}"
-            
+                self.unique_id = f"C{new_id_number:06d}"
+
         super().save(*args, **kwargs)
+
         
         
 class Notification(models.Model):
