@@ -532,7 +532,7 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Aadhar Card Image</label>
                       <input type="file" class="form-control" name="adhar_card_image" 
-                            accept="image/*"  />
+                            accept="image/*,application/pdf"  />
                       <div class="invalid-feedback">Only JPEG, PNG or PDF allowed (max 7MB)</div>
                     </div>
                     
@@ -617,7 +617,7 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label">PAN Card Image</label>
                       <input type="file" class="form-control" name="pan_card_image" 
-                            accept="image/*"  />
+                            accept="image/*,application/pdf"  />
                       <div class="invalid-feedback">Only JPEG, PNG or PDF allowed (max 7MB)</div>
                     </div>
                   </div>
@@ -758,7 +758,7 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Gumasta Certificate Image</label>
                       <input type="file" class="form-control" name="gumasta_image"
-                            accept="image/*" >
+                            accept="image/*,application/pdf" >
                       <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 7MB)</div>
                     </div>
                     
@@ -773,7 +773,7 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label">GST Certificate Image</label>
                       <input type="file" class="form-control" name="gst_image"
-                            accept="image/*" >
+                            accept="image/*,application/pdf" >
                       <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 7MB)</div>
                     </div>
                     
@@ -850,7 +850,7 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label">PAN Card Image</label>
                       <input type="file" class="form-control" name="Bpan_image"
-                           accept="image/*"  >
+                           accept="image/*,application/pdf"  >
                       <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 7MB)</div>
                     </div>
                     
@@ -864,20 +864,20 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label">MSME Certificate Image</label>
                       <input type="file" class="form-control" name="MSME_image"
-                            accept="image/*" >
+                            accept="image/*,application/pdf" >
                       <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 7MB)</div>
                     </div>
                     
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Business Photo (Outer View)</label>
                       <input type="file" class="form-control" name="Bphoto_outer"
-                            accept="image/*" >
+                            accept="image/*,application/pdf" >
                       <div class="invalid-feedback">Only JPEG or PNG images allowed (max 7MB)</div>
                     </div>
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Business Photo (Inside View)</label>
                       <input type="file" class="form-control" name="Bphoto_inside"
-                             accept="image/*">
+                             accept="image/*,application/pdf" >
                       <div class="invalid-feedback">Only JPEG or PNG images allowed (max 7MB)</div>
                     </div>
                   </div>
@@ -990,7 +990,7 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Upload Bank Document</label>
                       <input type="file" name="bank_document" class="form-control"
-                      accept="image/*"/>
+                      accept="image/*,application/pdf"/>
                       <div class="invalid-feedback">Only PDF, JPG, or PNG files allowed (max 7MB)</div>
                     </div>
             
@@ -1178,12 +1178,12 @@ fileInputs.forEach(input => {
       const file = this.files[0];
       const maxSize = 7 * 1024 * 1024; // 7MB
       
-      // Check if file is an image (regardless of specific type)
-      if (!file.type.startsWith('image/')) {
-        this.setCustomValidity('Please upload an image file');
-        this.classList.add('is-invalid');
-        return;
-      }
+      // // Check if file is an image (regardless of specific type)
+      // if (!file.type.startsWith('image/')) {
+      //   this.setCustomValidity('Please upload an image file');
+      //   this.classList.add('is-invalid');
+      //   return;
+      // }
       
       if (file.size > maxSize) {
         this.setCustomValidity('File size exceeds 7MB limit');
@@ -1402,12 +1402,12 @@ fileInputs.forEach(input => {
       const file = this.files[0];
       const maxSize = 7 * 1024 * 1024; // 7MB
       
-      // Check if file is an image (regardless of specific type)
-      if (!file.type.startsWith('image/')) {
-        this.setCustomValidity('Please upload an image file');
-        this.classList.add('is-invalid');
-        return;
-      }
+      // // Check if file is an image (regardless of specific type)
+      // if (!file.type.startsWith('image/')) {
+      //   this.setCustomValidity('Please upload an image file');
+      //   this.classList.add('is-invalid');
+      //   return;
+      // }
       
       if (file.size > maxSize) {
         this.setCustomValidity('File size exceeds 7MB limit');
