@@ -87,7 +87,9 @@ class Candidate(models.Model):
     current_company = models.CharField(max_length=255, blank=True, null=True)
     current_working_status = models.CharField(max_length=50, blank=True, null=True)
     current_salary = models.CharField(max_length=10, blank=True, null=True)
+    current_salary_type = models.CharField(max_length=51, blank=True, null=True)
     expected_salary = models.CharField(max_length=10, blank=True, null=True)
+    expected_salary_type = models.CharField(max_length=51, blank=True, null=True)
     call_connection = models.CharField(max_length=255, blank=True, null=True)
     calling_remark = models.CharField(max_length=255, blank=True, null=True)
     lead_generate = models.CharField(max_length=255, blank=True, null=True)
@@ -121,6 +123,15 @@ class Candidate(models.Model):
     payment_done_by = models.CharField(max_length=255, blank=True, null=True)
     payment_done_by_date = models.DateField(null=True, blank=True)
     submit_recipt = models.FileField(upload_to='vendor-payout-recipt/', blank=True, null=True)
+    selection_remark = models.CharField(max_length=255, blank=True, null=True)
+    other_lead_source = models.CharField(max_length=255, blank=True, null=True)
+    other_qualification = models.CharField(max_length=255, blank=True, null=True)
+    other_working_status = models.CharField(max_length=255, blank=True, null=True)
+    other_call_connection = models.CharField(max_length=255, blank=True, null=True)
+    other_lead_generate = models.CharField(max_length=255, blank=True, null=True)
+    other_interview_status = models.CharField(max_length=255, blank=True, null=True)
+    other_selection_status = models.CharField(max_length=255, blank=True, null=True)
+    other_origin_location = models.CharField(max_length=255, blank=True, null=True)
     
     def save(self, *args, **kwargs):
         # Check if candidate is older than 150 days
