@@ -254,7 +254,7 @@ def send_welcome_email(vendor_data):
         'refer_code': vendor_data['refer_code'],
         'company_name': 'EMTA VMS',
         'company_info': 'EMTA Vendor Management System provides comprehensive solutions for vendor onboarding and management.',
-        'support_email': 'emtainfotech@gmail.com',
+        'support_email': 'marketing.emta02@gmail.com',
         'website': 'www.emtavms.com',
     }
 
@@ -823,7 +823,7 @@ def candidate_form(request):
                     'job_type': job_type,
                     'preferred_location': preferred_location_str,
                     'refer_code': refer_code,
-                    'support_email': 'emtainfotech@gmail.com',
+                    'support_email': 'marketing.emta02@gmail.com',
                     'company_name': 'EMTA VMS',
                 }
 
@@ -833,7 +833,7 @@ def candidate_form(request):
                 send_mail(
                     subject,
                     plain_message,
-                    'emtainfotech@gmail.com',
+                    'marketing.emta02@gmail.com',
                     [candidate_email_address],
                     html_message=html_message,
                     fail_silently=False,
