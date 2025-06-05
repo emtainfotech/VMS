@@ -114,8 +114,36 @@
                         </td>
                         <td>
                           <span class="text-white badge 
-                            {% if vendor.profileVerification == 'Verified' %}bg-success
+                            {% if vendor.profileVerification == 'Approved' %}bg-success
                             {% elif vendor.profileVerification == 'Rejected' %}bg-danger
+                            {% elif vendor.profileVerification == 'Pending' %}bg-secondary
+                            {% elif vendor.profileVerification == 'In Progress' %}bg-info
+                            {% elif vendor.profileVerification == 'Not Verified' %}bg-warning
+                            {% elif vendor.profileVerification == 'Verification Failed' %}bg-danger
+                            {% elif vendor.profileVerification == 'Verification Required' %}bg-warning
+                            {% elif vendor.profileVerification == 'Under Review' %}bg-primary
+                            {% elif vendor.profileVerification == 'Verified' %}bg-success
+                            {% elif vendor.profileVerification == 'Unverified' %}bg-danger
+                            {% elif vendor.profileVerification == 'Suspended' %}bg-dark
+                            {% elif vendor.profileVerification == 'Deactivated' %}bg-secondary
+                            {% elif vendor.profileVerification == 'Active' %}bg-success
+                            {% elif vendor.profileVerification == 'Inactive' %}bg-warning
+                            {% elif vendor.profileVerification == 'Blocked' %}bg-danger
+                            {% elif vendor.profileVerification == 'On Hold' %}bg-warning
+                            {% elif vendor.profileVerification == 'Closed' %}bg-secondary
+                            {% elif vendor.profileVerification == 'Archived' %}bg-secondary
+                            {% elif vendor.profileVerification == 'Pending Approval' %}bg-info
+                            {% elif vendor.profileVerification == 'Awaiting Verification' %}bg-info
+                            {% elif vendor.profileVerification == 'Awaiting Documents' %}bg-warning
+                            {% elif vendor.profileVerification == 'Awaiting Review' %}bg-info
+                            {% elif vendor.profileVerification == 'Awaiting Confirmation' %}bg-info
+                            {% elif vendor.profileVerification == 'Awaiting Activation' %}bg-info
+                            {% elif vendor.profileVerification == 'Awaiting Closure' %}bg-warning
+                            {% elif vendor.profileVerification == 'Awaiting Deactivation' %}bg-warning
+                            {% elif vendor.profileVerification == 'Awaiting Suspension' %}bg-warning
+                            {% elif vendor.profileVerification == 'Awaiting Reactivation' %}bg-warning
+                            {% elif vendor.profileVerification == 'Awaiting Unblocking' %}bg-warning
+                            {% elif vendor.profileVerification == 'Awaiting Unverification' %}bg-warning
                             {% else %}bg-warning{% endif %}">
                             {{ vendor.profileVerification }}
                           </span>

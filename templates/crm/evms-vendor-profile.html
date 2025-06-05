@@ -501,8 +501,36 @@
                         <select class="form-select" name="profileVerification">
                           <option value="" disabled>Select Verification Status</option>
                           <option value="Pending" {% if vendor.profileVerification == "Pending" %}selected{% endif %}>Pending</option>
+                          <option value="In Progress" {% if vendor.profileVerification == "In Progress" %}selected{% endif %}>In Progress</option>
                           <option value="Approved" {% if vendor.profileVerification == "Approved" %}selected{% endif %}>Approved</option>
                           <option value="Rejected" {% if vendor.profileVerification == "Rejected" %}selected{% endif %}>Rejected</option>
+                          <option value="Not Verified" {% if vendor.profileVerification == "Not Verified" %}selected{% endif %}>Not Verified</option>
+                          <option value="Verification Failed" {% if vendor.profileVerification == "Verification Failed" %}selected{% endif %}>Verification Failed</option>
+                          <option value="Verification Required" {% if vendor.profileVerification == "Verification Required" %}selected{% endif %}>Verification Required</option>
+                          <option value="Under Review" {% if vendor.profileVerification == "Under Review" %}selected{% endif %}>Under Review</option>
+                          <option value="Verified" {% if vendor.profileVerification == "Verified" %}selected{% endif %}>Verified</option>
+                          <option value="Unverified" {% if vendor.profileVerification == "Unverified" %}selected{% endif %}>Unverified</option>
+                          <option value="Suspended" {% if vendor.profileVerification == "Suspended" %}selected{% endif %}>Suspended</option>
+                          <option value="Deactivated" {% if vendor.profileVerification == "Deactivated" %}selected{% endif %}>Deactivated</option>
+                          <option value="Active" {% if vendor.profileVerification == "Active" %}selected{% endif %}>Active</option>
+                          <option value="Inactive" {% if vendor.profileVerification == "Inactive" %}selected{% endif %}>Inactive</option>
+                          <option value="Blocked" {% if vendor.profileVerification == "Blocked" %}selected{% endif %}>Blocked</option>
+                          <option value="On Hold" {% if vendor.profileVerification == "On Hold" %}selected{% endif %}>On Hold</option>
+                          <option value="Closed" {% if vendor.profileVerification == "Closed" %}selected{% endif %}>Closed</option>
+                          <option value="Archived" {% if vendor.profileVerification == "Archived" %}selected{% endif %}>Archived</option>
+                          <option value="Pending Approval" {% if vendor.profileVerification == "Pending Approval" %}selected{% endif %}>Pending Approval</option>
+                          <option value="Awaiting Verification" {% if vendor.profileVerification == "Awaiting Verification" %}selected{% endif %}>Awaiting Verification</option>
+                          <option value="Awaiting Documents" {% if vendor.profileVerification == "Awaiting Documents" %}selected{% endif %}>Awaiting Documents</option>
+                          <option value="Awaiting Review" {% if vendor.profileVerification == "Awaiting Review" %}selected{% endif %}>Awaiting Review</option>
+                          <option value="Awaiting Confirmation" {% if vendor.profileVerification == "Awaiting Confirmation" %}selected{% endif %}>Awaiting Confirmation</option>
+                          <option value="Awaiting Activation" {% if vendor.profileVerification == "Awaiting Activation" %}selected{% endif %}>Awaiting Activation</option>
+                          <option value="Awaiting Closure" {% if vendor.profileVerification == "Awaiting Closure" %}selected{% endif %}>Awaiting Closure</option>
+                          <option value="Awaiting Deactivation" {% if vendor.profileVerification == "Awaiting Deactivation" %}selected{% endif %}>Awaiting Deactivation</option>
+                          <option value="Awaiting Suspension" {% if vendor.profileVerification == "Awaiting Suspension" %}selected{% endif %}>Awaiting Suspension</option>
+                          <option value="Awaiting Reactivation" {% if vendor.profileVerification == "Awaiting Reactivation" %}selected{% endif %}>Awaiting Reactivation</option>
+                          <option value="Awaiting Unblocking" {% if vendor.profileVerification == "Awaiting Unblocking" %}selected{% endif %}>Awaiting Unblocking</option>
+                          <option value="Awaiting Unverification" {% if vendor.profileVerification == "Awaiting Unverification" %}selected{% endif %}>Awaiting Unverification</option>
+
                         </select>
                         <div class="invalid-feedback">Please select a verification status</div>
                       </div>
