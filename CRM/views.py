@@ -1551,6 +1551,31 @@ def evms_candidate_profile(request,id) :
 
                 messages.success(request, 'Candidate details updated successfully!')
 
+            elif 'submit_vendor_related_data' in request.POST:
+                # Handle form submission for bank details
+                vendor_commission = request.POST.get('vendor_commission')
+                vendor_payout_date = request.POST.get('vendor_payout_date') or None
+                commission_generation_date = request.POST.get('commission_generation_date') or None
+                vendor_commission_status = request.POST.get('vendor_commission_status')
+                vendor_payment_remark = request.POST.get('vendor_payment_remark')
+                payment_done_by = request.POST.get('payment_done_by')
+                payment_done_by_date = request.POST.get('payment_done_by_date') or None
+                submit_recipt = request.FILES.get('submit_recipt')
+
+
+                # Update or create bank details for the employee
+                candidate.vendor_commission = vendor_commission
+                candidate.vendor_payout_date = vendor_payout_date
+                candidate.commission_generation_date = commission_generation_date
+                candidate.vendor_commission_status = vendor_commission_status
+                candidate.vendor_payment_remark = vendor_payment_remark
+                candidate.payment_done_by = payment_done_by
+                candidate.payment_done_by_date = payment_done_by_date
+                candidate.submit_recipt = submit_recipt
+                candidate.save()
+
+                messages.success(request, 'Vendor related details updated successfully!')
+                
             return redirect('evms_candidate_profile', id=id)
         
         districts = [

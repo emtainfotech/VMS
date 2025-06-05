@@ -1323,6 +1323,8 @@ def employee_candidate_profile(request, id):
         return render(request, 'employee/candidate-profile.html', context)
     else:
         return render(request, 'employee/404.html', status=404)
+    
+    
 @login_required
 def employee_company_registration(request):
     if request.user.is_authenticated:
