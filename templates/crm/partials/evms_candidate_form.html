@@ -2,7 +2,7 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modal-title">Candidate Information</h5>
+        <h5 class="modal-title" id="modal-title">Candidate Information - {{ candidate.candidate_name }}({{ candidate.candidate_mobile_number }})</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -436,7 +436,7 @@
               <div class="row" id="connectedFields" style="display: none;">
                 <div class="col-md-12 mb-3">
                   <label class="form-label">Lead Generate Status <span class="text-danger">*</span></label>
-                  <select class="form-select" name="lead_generate" id="leadGenerateSelect" required disabled>
+                  <select class="form-select" name="lead_generate" id="leadGenerateSelect" required>
                 <option value="" disabled selected>Select Status</option>
                 <option value="Yes" {% if candidate.lead_generate == "Yes" %}selected{% endif %}>Yes</option>
                 <option value="No" {% if candidate.lead_generate == "No" %}selected{% endif %}>No</option>
@@ -455,7 +455,7 @@
                 
                 <div class="col-md-12 mb-3">
                   <label class="form-label">Send for Interview Status <span class="text-danger">*</span></label>
-                  <select class="form-select" name="send_for_interview" id="interviewStatusSelect" required disabled>
+                  <select class="form-select" name="send_for_interview" id="interviewStatusSelect" required >
                 <option value="" disabled selected>Select Status</option>
                 <option value="Yes" {% if candidate.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
                 <option value="No" {% if candidate.send_for_interview == "No" %}selected{% endif %}>No</option>
@@ -1216,3 +1216,196 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+<div class="modal modal-blur fade" id="modal-vendor-data" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Vendor Data</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" enctype="multipart/form-data" id="vendorDataForm" novalidate>
+          {% csrf_token %}
+          <div class="row">
+            <!-- Vendor Commission -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Vendor Commission (₹) <span class="text-danger">*</span></label>
+              <input type="number" name="vendor_commission" class="form-control" 
+                     value="{{ candidate.vendor_commission }}" required
+                     min="0" step="1">
+              <div class="invalid-feedback">
+                Please enter a valid commission amount (minimum ₹0)
+              </div>
+            </div>
+
+            <!-- Expected Vendor Payout Date -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Commission Generate Date <span class="text-danger">*</span></label>
+              <input type="date" name="commission_generation_date" class="form-control" 
+                     value="{{ candidate.commission_generation_date|date:'Y-m-d' }}" required
+                     >
+              <div class="invalid-feedback">
+                Please select a valid date
+              </div>
+            </div>
+            
+            <!-- Expected Vendor Payout Date -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Expected Vendor Payout Date <span class="text-danger">*</span></label>
+              <input type="date" name="vendor_payout_date" class="form-control" 
+                     value="{{ candidate.vendor_payout_date|date:'Y-m-d' }}" required
+                     >
+              <div class="invalid-feedback">
+                Please select a valid future date
+              </div>
+            </div>
+            
+            <!-- Payment Status -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Payment Status <span class="text-danger">*</span></label>
+              <select class="form-select" name="vendor_commission_status" required>
+                <option value="" disabled selected>Select Payment Status</option>
+                <option value="Complete" {% if candidate.vendor_commission_status == "Complete" %}selected{% endif %}>Complete</option>
+                <option value="Failed" {% if candidate.vendor_commission_status == "Failed" %}selected{% endif %}>Failed</option>
+                <option value="In Process" {% if candidate.vendor_commission_status == "In Process" %}selected{% endif %}>In Process</option>
+                <option value="Pending" {% if candidate.vendor_commission_status == "Pending" %}selected{% endif %}>Pending</option>
+              </select>
+              <div class="invalid-feedback">
+                Please select payment status
+              </div>
+            </div>
+
+            <!-- Payment Done By -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Payment Done By</label>
+              <input type="text" name="payment_done_by" class="form-control" 
+                     value="{{ candidate.payment_done_by|default:request.user.get_full_name }}">
+              <div class="invalid-feedback">
+                Please enter who processed this payment
+              </div>
+            </div>
+
+            <!-- Payment Done Date -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Payment Done Date</label>
+              <input type="date" name="payment_done_by_date" class="form-control" 
+                     value="{{ candidate.payment_done_by_date|date:'Y-m-d' }}"
+                     max="{% now 'Y-m-d' %}">
+              <div class="invalid-feedback">
+                Please select a valid date (cannot be future date)
+              </div>
+            </div>
+
+            <!-- Payment Receipt Upload -->
+            <div class="col-md-12 mb-3">
+              <label class="form-label">Payment Receipt</label>
+              <input type="file" name="submit_recipt" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+              {% if candidate.submit_recipt %}
+                <div class="mt-2">
+                  <small class="text-muted">Current file: 
+                    <a href="{{ candidate.submit_recipt.url }}" target="_blank">View Receipt</a>
+                  </small>
+                </div>
+              {% endif %}
+              <div class="invalid-feedback">
+                Please upload a valid receipt (PDF, JPG, PNG)
+              </div>
+            </div>
+
+            <!-- Vendor Remark for Payment -->
+            <div class="col-md-12 mb-3">
+              <label class="form-label">Vendor Remark for Payment <span class="text-danger">*</span></label>
+              <textarea class="form-control" name="vendor_payment_remark" rows="3" required maxlength="500">{{ candidate.vendor_payment_remark }}</textarea>
+              <div class="invalid-feedback">
+                Please enter Vendor Remark for Payments (max 500 characters)
+              </div>
+            </div>
+          </div>
+          
+          <!-- Submit and Cancel Buttons -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" name="submit_vendor_related_data" class="btn btn-primary">Submit</button>
+          </div>
+        </form>
+
+        <script>
+        // Client-side form validation
+        document.addEventListener('DOMContentLoaded', function() {
+          const form = document.getElementById('vendorDataForm');
+          const today = new Date().toISOString().split('T')[0];
+          
+          
+          
+          // Set max date for payment done date (today)
+          const paymentDoneDateInput = form.querySelector('input[name="payment_done_by_date"]');
+          paymentDoneDateInput.max = today;
+          
+          form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+            
+            // Additional validation for commission when status is Complete
+            const commission = parseFloat(form.querySelector('input[name="vendor_commission"]').value);
+            const status = form.querySelector('select[name="vendor_commission_status"]').value;
+            
+            if (status === "Complete") {
+              // Validate commission is positive
+              if (isNaN(commission) || commission <= 0) {
+                const commissionInput = form.querySelector('input[name="vendor_commission"]');
+                commissionInput.setCustomValidity('Commission must be positive when status is Complete');
+                commissionInput.classList.add('is-invalid');
+                event.preventDefault();
+              }
+              
+              // Validate payment done by 
+              const paymentDoneBy = form.querySelector('input[name="payment_done_by"]').value;
+              if (!paymentDoneBy) {
+                const paymentDoneByInput = form.querySelector('input[name="payment_done_by"]');
+                paymentDoneByInput.setCustomValidity('Payment processor name is required when status is Complete');
+                paymentDoneByInput.classList.add('is-invalid');
+                event.preventDefault();
+              }
+              
+              // Validate payment done date is not empty
+              const paymentDoneDate = form.querySelector('input[name="payment_done_by_date"]').value;
+              if (!paymentDoneDate) {
+                const paymentDoneDateInput = form.querySelector('input[name="payment_done_by_date"]');
+                paymentDoneDateInput.setCustomValidity('Payment date is required when status is Complete');
+                paymentDoneDateInput.classList.add('is-invalid');
+                event.preventDefault();
+              }
+            }
+            
+            form.classList.add('was-validated');
+          }, false);
+          
+          // Clear validation when inputs change
+          form.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('change', function() {
+              this.setCustomValidity('');
+              this.classList.remove('is-invalid');
+            });
+          });
+          
+          // Auto-fill payment done by with current user's name if empty
+          const paymentDoneByInput = form.querySelector('input[name="payment_done_by"]');
+          if (!paymentDoneByInput.value) {
+            paymentDoneByInput.value = "{{ request.user.get_full_name }}";
+          }
+          
+          // Auto-fill payment done date with today if empty and status is Complete
+          const statusSelect = form.querySelector('select[name="vendor_commission_status"]');
+          statusSelect.addEventListener('change', function() {
+            if (this.value === "Complete" && !paymentDoneDateInput.value) {
+              paymentDoneDateInput.value = today;
+            }
+          });
+        });
+        </script>
+      </div>
+    </div>
+  </div>
+</div>

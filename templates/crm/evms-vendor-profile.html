@@ -497,6 +497,17 @@
                     <h4 class="mb-4">Profile Information</h4>
                     <div class="row">
                       <div class="col-md-6 mb-3">
+                        <label class="form-label">Verification Status</label>
+                        <select class="form-select" name="profileVerification">
+                          <option value="" disabled>Select Verification Status</option>
+                          <option value="Pending" {% if vendor.profileVerification == "Pending" %}selected{% endif %}>Pending</option>
+                          <option value="Approved" {% if vendor.profileVerification == "Approved" %}selected{% endif %}>Approved</option>
+                          <option value="Rejected" {% if vendor.profileVerification == "Rejected" %}selected{% endif %}>Rejected</option>
+                        </select>
+                        <div class="invalid-feedback">Please select a verification status</div>
+                      </div>
+                      <hr>
+                      <div class="col-md-6 mb-3">
                         <label class="form-label">First Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="first_name" value="{{ vendor.user.first_name }}" 
                                pattern="[A-Za-z ]{2,50}" title="Only letters and spaces (2-50 characters)" required />
