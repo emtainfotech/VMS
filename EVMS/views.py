@@ -671,8 +671,7 @@ def vendor_dashboard(request):
             return render(request, 'usernotfound.html', {'error': 'Vendor details not found'})
     else:
         return render(request, 'usernotfound.html', {'error': 'User not authenticated'})
-    
-    
+      
 def vendor_profile(request, id):
     vendor = get_object_or_404(Vendor, id=id)
     vendor_profile_detail, _ = Vendor_profile_details.objects.get_or_create(vendor=vendor)
@@ -699,6 +698,8 @@ def vendor_profile(request, id):
             vendor_profile_detail.adhar_card_number = request.POST.get('adhar_card_number')
             vendor_profile_detail.pan_card_number = request.POST.get('pan_card_number')
             vendor_profile_detail.location = request.POST.get('location')
+            vendor_profile_detail.pin_code = request.POST.get('pin_code')
+            vendor_profile_detail.other_location = request.POST.get('other_location')
             
             if 'adhar_card_image' in request.FILES:
                 vendor_profile_detail.adhar_card_image = request.FILES['adhar_card_image']
@@ -710,6 +711,9 @@ def vendor_profile(request, id):
             vendor_bussiness_detail.shop_name = request.POST.get('shop_name')
             vendor_bussiness_detail.busness_type = request.POST.get('busness_type')
             vendor_bussiness_detail.shop_address = request.POST.get('shop_address')
+            vendor_bussiness_detail.shop_location = request.POST.get('shop_location')
+            vendor_bussiness_detail.shop_pin_code = request.POST.get('shop_pin_code')
+            vendor_bussiness_detail.shop_other_location = request.POST.get('shop_other_location')
             vendor_bussiness_detail.Contact_number = request.POST.get('Contact_number')
             vendor_bussiness_detail.Busness_email = request.POST.get('Busness_email')
             vendor_bussiness_detail.Gumasta_number = request.POST.get('Gumasta_number')
@@ -899,7 +903,7 @@ def bulk_upload_candidates(request):
             # Read Excel File
             df = pd.read_excel(full_path, engine="openpyxl")
             required_columns = [
-                "candidate_name", "candidate_mobile_number", "candidate_email_address",
+                "candidate_name", "candidate_mobile_number","alternate_mobile_number", "candidate_email_address",
                 "qualification", "sector", "job_type", "preferred_location",
                 "refer_code"
             ]
@@ -914,6 +918,7 @@ def bulk_upload_candidates(request):
 
             for _, row in df.iterrows():
                 mobile_number = str(row["candidate_mobile_number"]).strip()
+                alternate_mobile_number = str(row["alternate_mobile_number"]).strip()
                 email_address = str(row["candidate_email_address"]).strip()
 
                 # Check for duplicates
@@ -927,6 +932,7 @@ def bulk_upload_candidates(request):
                     duplicate_candidates.append({
                         "candidate_name": row["candidate_name"],
                         "candidate_mobile_number": mobile_number,
+                        "alternate_mobile_number": alternate_mobile_number,
                         "candidate_email_address": email_address,
                         "qualification": row["qualification"],
                         "sector": row["sector"],
@@ -941,6 +947,7 @@ def bulk_upload_candidates(request):
                 Candidate.objects.create(
                     candidate_name=row["candidate_name"],
                     candidate_mobile_number=mobile_number,
+                    alternate_mobile_number=alternate_mobile_number,
                     candidate_email_address=email_address,
                     qualification=row["qualification"],
                     sector=row["sector"],
@@ -972,6 +979,7 @@ def download_sample_excel(request):
     data = {
         "candidate_name": ["John Doe"],
         "candidate_mobile_number": ["9876543210"],
+        "alternate_mobile_number": ["9123456780"],
         "candidate_email_address": ["johndoe@example.com"],
         "qualification": ["MBA"],
         "sector": ["Banking, Insurance"],

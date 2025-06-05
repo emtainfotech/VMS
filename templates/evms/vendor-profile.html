@@ -147,7 +147,68 @@
       color: #6c63ff;
     }
   </style>
+  <div class="page-wrapper">
+          <!-- Page header -->
+          <div class="page-header d-print-none">
+            <div class="container-xl">
+              <div class="row g-2 align-items-center">
+                <div class="col">
+                  <!-- Page pre-title -->
+                   <a href="{% url 'vendor_dashboard' %}" class="page-title-link text-white" style="text-decoration: none;">
+                  <div class="page-pretitle">< Home</div>
+                </a>
+                  
+                    {% comment %} <p class="page-title">< Vendor Dashboard</p> {% endcomment %}
+                  
+                </div>
+
+              </div>
+            </div>
+          </div>
   <div class="container py-4">
+    <!-- ✅ Progress Bar -->
+
+<!-- ✅ JavaScript for Progress Tracking -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const inputNames = [
+      "first_name", "last_name", "mobile_number", "email", "date_of_birth",
+      "gender", "address", "adhar_card_number", "pan_card_number",
+      "location", "pin_code", "other_location"
+    ];
+
+    const fileInputNames = ["vendor_profile_image", "adhar_card_image", "pan_card_image"];
+
+    function updateProgress() {
+      let filled = 0;
+      const total = inputNames.length + fileInputNames.length;
+
+      inputNames.forEach(name => {
+        const el = document.getElementsByName(name)[0];
+        if (el && el.value.trim() !== "") filled++;
+      });
+
+      fileInputNames.forEach(name => {
+        const el = document.getElementsByName(name)[0];
+        if (el && el.files.length > 0) filled++;
+      });
+
+      const percent = Math.round((filled / total) * 100);
+      const bar = document.getElementById("profileProgressBar");
+
+      bar.style.width = percent + "%";
+      bar.textContent = percent + "%";
+      bar.classList.toggle("bg-success", percent === 100);
+    }
+
+    document.querySelectorAll("input, select").forEach(el => {
+      el.addEventListener("input", updateProgress);
+      el.addEventListener("change", updateProgress);
+    });
+
+    updateProgress(); // run on load
+  });
+</script>
     <!-- Main Row -->
     <div class="row g-4">
       <!-- Personal Information Card -->
@@ -159,8 +220,17 @@
                 <i class="bi bi-pencil me-1"></i> Edit
               </a>
             </div>
+            
           <div class="card-body">
             <div class="row">
+              <div class="mb-4">
+  <label class="form-label">Profile Completion</label>
+  <div class="progress">
+    <div id="profileProgressBar" class="progress-bar" role="progressbar" style="width: 0%;">
+      0%
+    </div>
+  </div>
+</div>
               <!-- Profile Image and Basic Info -->
               <div class="col-md-4 border-end ps-4">
                 <div class="d-flex flex-column align-items-center text-center mb-4">
@@ -196,12 +266,31 @@
                     </div>
                   </div>
 
+                  {% comment %} <div class="col-md-6">
+                    <div class="info-item">
+                      <small class="text-muted d-block">Address</small>
+                      <strong>{{ vendor_profile_detail.address }}, {{ vendor_profile_detail.location }}-{{ vendor_profile_detail.pin_code }}</strong>
+                    </div>
+                  </div> {% endcomment %}
+
+                  {% if vendor_profile_detail.other_location %}
                   <div class="col-md-6">
                     <div class="info-item">
                       <small class="text-muted d-block">Address</small>
-                      <strong>{{ vendor_profile_detail.address|default:"Not provided" }}</strong>
+                      <strong>{{ vendor_profile_detail.address }}, {{ vendor_profile_detail.other_location }}-{{ vendor_profile_detail.pin_code }}</strong>
                     </div>
                   </div>
+
+                  {% else %}
+
+                  <div class="col-md-6">
+                    <div class="info-item">
+                      <small class="text-muted d-block">Address</small>
+                      <strong>{{ vendor_profile_detail.address }}, {{ vendor_profile_detail.location }}, {{ vendor_profile_detail.pin_code }}</strong>
+                    </div>
+                  </div>
+
+                  {% endif %}
 
                   <div class="col-md-6">
                     <div class="info-item">
@@ -263,6 +352,59 @@
           </div>
           <div class="card-body">
             <div class="row g-3">
+              <!-- ✅ Progress Bar -->
+<div class="mb-4">
+  <label class="form-label">Business Profile Completion</label>
+  <div class="progress">
+    <div id="businessProgressBar" class="progress-bar" role="progressbar" style="width: 0%;">
+      0%
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const textInputs = [
+      "shop_name", "busness_type", "shop_address", "shop_location", "shop_pin_code",
+      "shop_other_location", "Contact_number", "Busness_email", "Gumasta_number",
+      "gst_number", "Bpan_number", "MSME_number", "VCname", "VCmobile", "VCaddress"
+    ];
+
+    const fileInputs = [
+      "gumasta_image", "gst_image", "Bpan_image",
+      "MSME_image", "Bphoto_outer", "Bphoto_inside"
+    ];
+
+    const totalFields = textInputs.length + fileInputs.length;
+
+    function updateBusinessProgress() {
+      let filledCount = 0;
+
+      textInputs.forEach(name => {
+        const field = document.getElementsByName(name)[0];
+        if (field && field.value.trim() !== "") filledCount++;
+      });
+
+      fileInputs.forEach(name => {
+        const file = document.getElementsByName(name)[0];
+        if (file && file.files.length > 0) filledCount++;
+      });
+
+      const percent = Math.round((filledCount / totalFields) * 100);
+      const progressBar = document.getElementById("businessProgressBar");
+      progressBar.style.width = percent + "%";
+      progressBar.textContent = percent + "%";
+      progressBar.classList.toggle("bg-success", percent === 100);
+    }
+
+    document.querySelectorAll("input, select").forEach(element => {
+      element.addEventListener("input", updateBusinessProgress);
+      element.addEventListener("change", updateBusinessProgress);
+    });
+
+    updateBusinessProgress(); // initialize on load
+  });
+</script>
+
               <div class="col-md-6">
                 <div class="info-item">
                   <small class="text-muted d-block">Business Name</small>
@@ -284,11 +426,21 @@
                   <strong>{{ vendor_bussiness_detail.Busness_email|default:"Not provided" }}</strong>
                 </div>
 
-                <div class="info-item mt-3">
-                  <small class="text-muted d-block">Business Address</small>
-                  <strong>{{ vendor_bussiness_detail.shop_address|default:"Not provided" }}</strong>
-                </div>
                 
+
+                {% if vendor_bussiness_detail.shop_other_location %}
+                  <div class="info-item mt-3">
+                    <small class="text-muted d-block">Other Location</small>
+                    <strong>{{ vendor_bussiness_detail.shop_address|default:"Not provided" }}, {{ vendor_bussiness_detail.shop_other_location|default:"Not provided" }}-{{ vendor_bussiness_detail.shop_pin_code|default:"Not provided" }}</strong>
+                  </div>
+
+                {% else %}
+                  <div class="info-item mt-3">
+                  <small class="text-muted d-block">Business Address</small>
+                  <strong>{{ vendor_bussiness_detail.shop_address|default:"Not provided" }}, {{ vendor_bussiness_detail.shop_location|default:"Not provided" }}-{{ vendor_bussiness_detail.shop_pin_code|default:"Not provided" }}</strong>
+                </div>
+                {% endif %}
+
                 <div class="info-item mt-3">
                   <small class="text-muted d-block">GST Number</small>
                   <div class="d-flex align-items-center">
@@ -365,6 +517,55 @@
           </div>
           <div class="card-body">
             <div class="row g-3">
+              <!-- ✅ Progress Bar -->
+<div class="mb-4">
+  <label class="form-label">Bank Details Completion</label>
+  <div class="progress">
+    <div id="bankProgressBar" class="progress-bar" role="progressbar" style="width: 0%;">
+      0%
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const textInputs = [
+      "account_holder_name", "bank_name", "account_number",
+      "ifs_code", "account_type", "preffered_payout_date"
+    ];
+
+    const fileInputs = ["bank_document"];
+    const totalFields = textInputs.length + fileInputs.length;
+
+    function updateBankProgress() {
+      let filled = 0;
+
+      textInputs.forEach(name => {
+        const field = document.getElementsByName(name)[0];
+        if (field && field.value.trim() !== "") filled++;
+      });
+
+      fileInputs.forEach(name => {
+        const fileField = document.getElementsByName(name)[0];
+        if (fileField && fileField.files.length > 0) filled++;
+      });
+
+      const percent = Math.round((filled / totalFields) * 100);
+      const bar = document.getElementById("bankProgressBar");
+      bar.style.width = percent + "%";
+      bar.textContent = percent + "%";
+      bar.classList.toggle("bg-success", percent === 100);
+    }
+
+    document.querySelectorAll("input").forEach(el => {
+      el.addEventListener("input", updateBankProgress);
+      el.addEventListener("change", updateBankProgress);
+    });
+
+    updateBankProgress(); // Initial calculation on page load
+  });
+</script>
+
               <div class="col-md-6">
                 <div class="info-item">
                   <small class="text-muted d-block">Account Holder</small>
@@ -476,16 +677,17 @@
                     </div>
                     
                     <div class="col-md-6 mb-3">
-                      <label class="form-label">Date of Birth</label>
-                      <input type="date" class="form-control" name="date_of_birth" value="{{ vendor.date_of_birth }}" 
-                             max="{{ today|date:'Y-m-d' }}" />
-                      <div class="invalid-feedback">Date cannot be in the future</div>
-                    </div>
+  <label class="form-label">Date of Birth</label>
+  <input type="date" class="form-control" name="date_of_birth" id="dobInput" value="{{ vendor.date_of_birth }}" />
+  <div class="invalid-feedback">Minimum age should be 14 years</div>
+</div>
+
+
                     
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Vendor Profile Image</label>
                       <input type="file" class="form-control" name="vendor_profile_image" 
-                            accept="image/*"  />
+                            accept="image/*,application/*"  />
                       <div class="invalid-feedback">Only JPEG or PNG images allowed (max 7MB)</div>
                     </div>
                     
@@ -509,18 +711,53 @@
                     </div>
                     
                     <div class="col-md-6 mb-3">
-                      <label class="form-label">Location <span class="text-danger">*</span></label>
-                      <select class="form-select" name="location" required>
-                        <option value="">Select Location</option>
-                        {% for district in districts %}
-                        <option value="{{ district }}" {% if vendor_profile_detail.location == district %}selected{% endif %}>
-                          {{ district }}
-                        </option>
-                        {% endfor %}
-                      </select>
-                      <div class="invalid-feedback">Please select a location</div>
+  <label class="form-label">Location <span class="text-danger">*</span></label>
+  <select class="form-select" name="location" id="locationSelect" required onchange="toggleOtherLocation()">
+    <option value="">Select Location</option>
+    {% for district in districts %}
+    <option value="{{ district }}" {% if vendor_profile_detail.location == district %}selected{% endif %}>
+      {{ district }}
+    </option>
+    {% endfor %}
+    <option value="Other" {% if vendor_profile_detail.other_location and vendor_profile_detail.location == "Other" %}selected{% endif %}>
+      Other
+    </option>
+  </select>
+  <div class="invalid-feedback">Please select a location</div>
+</div>
+
+<div class="col-md-6 mb-3" id="otherLocationDiv" style="display: none;">
+  <label class="form-label">Other Location</label>
+  <input type="text" class="form-control" name="other_location"
+         value="{% if vendor_profile_detail.location == 'Other' %}{{ vendor_profile_detail.other_location }}{% endif %}" />
+  <div class="invalid-feedback">Please enter a valid location</div>
+</div>
+
+
+<script>
+  function toggleOtherLocation() {
+    const locationSelect = document.getElementById("locationSelect");
+    const otherDiv = document.getElementById("otherLocationDiv");
+    if (locationSelect.value === "Other") {
+      otherDiv.style.display = "block";
+    } else {
+      otherDiv.style.display = "none";
+    }
+  }
+
+  // Call once on page load to set initial visibility
+  document.addEventListener("DOMContentLoaded", toggleOtherLocation);
+</script>
+
+
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Pin Code</label>
+                      <input type="text" class="form-control" name="pin_code" 
+                             value="{{ vendor_profile_detail.pin_code }}" 
+                             pattern="[0-9]{6}" title="6 digit Pin Code" />
+                      <div class="invalid-feedback">Please enter 6-digit Pin Code</div>
                     </div>
-                    
+
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Aadhar Card Number</label>
                       <input type="text" class="form-control" name="adhar_card_number" 
@@ -532,7 +769,7 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Aadhar Card Image</label>
                       <input type="file" class="form-control" name="adhar_card_image" 
-                            accept="image/*,application/pdf"  />
+                            accept="image/*,application/*"  />
                       <div class="invalid-feedback">Only JPEG, PNG or PDF allowed (max 7MB)</div>
                     </div>
                     
@@ -542,82 +779,14 @@
                              value="{{ vendor_profile_detail.pan_card_number }}"
                              id="panCardInput"
                              pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" 
-                             title="Format: ABCDE1234F"
-                             oninput="validatePAN(this)" />
+                             title="Format: ABCDE1234F" />
                       <div class="invalid-feedback" id="panError">Please enter valid PAN (Format: ABCDE1234F)</div>
                     </div>
                     
-                    <script>
-                    function validatePAN(input) {
-                      const pan = input.value.toUpperCase();
-                      const errorElement = document.getElementById('panError');
-                      
-                      // Basic format check
-                      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
-                        errorElement.textContent = "Invalid format. Must be 5 letters + 4 digits + 1 letter";
-                        input.setCustomValidity("Invalid PAN format");
-                        return;
-                      }
-                    
-                      // Status character validation (4th character)
-                      const statusChars = ['P', 'C', 'H', 'A', 'B', 'G', 'J', 'L', 'F', 'T'];
-                      const statusChar = pan.charAt(3);
-                      if (!statusChars.includes(statusChar)) {
-                        errorElement.textContent = `Invalid 4th character. Must be one of: ${statusChars.join(', ')}`;
-                        input.setCustomValidity("Invalid PAN status character");
-                        return;
-                      }
-                    
-                      // For individuals (P), 5th character must match first letter of last name
-                      if (statusChar === 'P') {
-                        const surnameChar = pan.charAt(4);
-                        const lastNameInput = document.querySelector('input[name="last_name"]');
-                        const lastName = lastNameInput ? lastNameInput.value.trim().toUpperCase() : '';
-                        
-                        if (!/[A-Z]/.test(surnameChar)) {
-                          errorElement.textContent = "For individuals, 5th character must be a letter (surname initial)";
-                          input.setCustomValidity("Invalid surname initial");
-                          return;
-                        }
-                        
-                        // Check if 5th character matches first letter of last name
-                        if (lastName && lastName[0] !== surnameChar) {
-                          errorElement.textContent = `5th character (${surnameChar}) must match first letter of your last name (${lastName[0]})`;
-                          input.setCustomValidity("PAN surname initial mismatch");
-                          return;
-                        }
-                      }
-                    
-                      // Check digit validation
-                      const checkDigit = pan.charAt(9);
-                      if (!/[A-Z]/.test(checkDigit)) {
-                        errorElement.textContent = "Last character must be an alphabetic check digit";
-                        input.setCustomValidity("Invalid check digit");
-                        return;
-                      }
-                    
-                      // If all validations pass
-                      input.setCustomValidity("");
-                      errorElement.textContent = "Please enter valid PAN (Format: ABCDE1234F)";
-                    }
-                    
-                    // Add event listener to last name field to revalidate PAN when last name changes
-                    document.addEventListener('DOMContentLoaded', function() {
-                      const lastNameInput = document.querySelector('input[name="last_name"]');
-                      if (lastNameInput) {
-                        lastNameInput.addEventListener('input', function() {
-                          const panInput = document.getElementById('panCardInput');
-                          if (panInput && panInput.value) {
-                            validatePAN(panInput);
-                          }
-                        });
-                      }
-                    });
-                    </script>
                     <div class="col-md-6 mb-3">
                       <label class="form-label">PAN Card Image</label>
                       <input type="file" class="form-control" name="pan_card_image" 
-                            accept="image/*,application/pdf"  />
+                            accept="image/*,application/*"  />
                       <div class="invalid-feedback">Only JPEG, PNG or PDF allowed (max 7MB)</div>
                     </div>
                   </div>
@@ -704,7 +873,8 @@
                       // Get the registered contact values
                       const registeredContact = document.querySelector('input[name="mobile_number"]').value;
                       const registeredEmail = document.querySelector('input[name="email"]').value;
-                      
+                      const registeredPAN = document.querySelector('input[name="pan_card_number"]').value;
+
                       // Same as registered contact number checkbox
                       document.getElementById('sameAsContactCheckbox').addEventListener('change', function(e) {
                         const businessContactInput = document.getElementById('businessContactNumber');
@@ -726,13 +896,27 @@
                         }
                         businessEmailInput.dispatchEvent(new Event('input')); // Trigger validation
                       });
-                      
+
+                      // Same as registered PAN checkbox
+                      document.getElementById('sameAsPanCheckbox').addEventListener('change', function(e) {
+                        const businessPANInput = document.getElementById('businessPanInput');
+                        if (e.target.checked) {
+                          businessPANInput.value = registeredPAN;
+                        } else {
+                          businessPANInput.value = '';
+                        }
+                        businessPANInput.dispatchEvent(new Event('input')); // Trigger validation
+                      });
+
                       // Auto-check checkboxes if values match registered ones
                       if (document.getElementById('businessContactNumber').value === registeredContact) {
                         document.getElementById('sameAsContactCheckbox').checked = true;
                       }
                       if (document.getElementById('businessEmail').value === registeredEmail) {
                         document.getElementById('sameAsEmailCheckbox').checked = true;
+                      }
+                      if (document.getElementById('businessPanInput').value === registeredPAN) {
+                        document.getElementById('sameAsPanCheckbox').checked = true;
                       }
                     });
                     </script>
@@ -743,22 +927,62 @@
                              minlength="5" maxlength="200">
                       <div class="invalid-feedback">Address must be 5-200 characters</div>
                     </div>
-                  </div>
-                  
-                  <hr />
-                  <h5 class="text-secondary">Document Details</h5>
-                  <div class="row">
+                    <!-- Shop Location -->
+<div class="col-md-6 mb-3">
+  <label class="form-label">Shop Location</label>
+  <select class="form-select" name="shop_location" id="shopLocationSelect" required onchange="toggleShopOtherLocation()">
+    <option value="" disabled {% if not vendor_bussiness_detail.shop_location %}selected{% endif %}>Select Location</option>
+    {% for district in districts %}
+    <option value="{{ district }}" {% if vendor_bussiness_detail.shop_location == district %}selected{% endif %}>{{ district }}</option>
+    {% endfor %}
+    <option value="Other" {% if vendor_bussiness_detail.shop_location == "Other" %}selected{% endif %}>Other</option>
+  </select>
+</div>
+
+<!-- Other Shop Location -->
+<div class="col-md-6 mb-3" id="otherBLocationDiv" style="display: none;">
+  <label class="form-label">Other Location</label>
+  <input type="text" class="form-control" name="shop_other_location"
+         value="{% if vendor_bussiness_detail.shop_location == 'Other' %}{{ vendor_bussiness_detail.shop_other_location }}{% endif %}" />
+  <div class="invalid-feedback">Please enter a valid location</div>
+</div>
+
+<script>
+  function toggleShopOtherLocation() {
+    const shopSelect = document.getElementById("shopLocationSelect");
+    const otherDiv = document.getElementById("otherBLocationDiv");
+    otherDiv.style.display = shopSelect.value === "Other" ? "block" : "none";
+  }
+
+  // Trigger on page load
+  document.addEventListener("DOMContentLoaded", function () {
+    toggleShopOtherLocation();
+  });
+</script>
+
                     <div class="col-md-6 mb-3">
-                      <label class="form-label">Gumasta Number</label>
-                      <input type="text" class="form-control" name="Gumasta_number" 
-                             value="{{ vendor_bussiness_detail.Gumasta_number }}"
-                             pattern="[A-Za-z0-9]{8,20}" title="8-20 alphanumeric characters">
+                      <label class="form-label">Pin Code</label>
+                      <input type="text" class="form-control" name="shop_pin_code"
+                             value="{{ vendor_bussiness_detail.shop_pin_code }}"
+                             pattern="[0-9]{6}" title="6-digit PIN code">
+                      <div class="invalid-feedback">Please enter a valid 6-digit PIN code</div>
+                    </div>
+                  </div>
+
+                    <hr />
+                    <h5 class="text-secondary">Document Details</h5>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Gumasta Number</label>
+                        <input type="text" class="form-control" name="Gumasta_number"
+                               value="{{ vendor_bussiness_detail.Gumasta_number }}"
+                               pattern="[A-Za-z0-9]{8,20}" title="8-20 alphanumeric characters">
                       <div class="invalid-feedback">8-20 alphanumeric characters required</div>
                     </div>
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Gumasta Certificate Image</label>
                       <input type="file" class="form-control" name="gumasta_image"
-                            accept="image/*,application/pdf" >
+                            accept="image/*,application/*" >
                       <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 7MB)</div>
                     </div>
                     
@@ -773,7 +997,7 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label">GST Certificate Image</label>
                       <input type="file" class="form-control" name="gst_image"
-                            accept="image/*,application/pdf" >
+                            accept="image/*,application/*" >
                       <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 7MB)</div>
                     </div>
                     
@@ -785,6 +1009,18 @@
                              pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" 
                              title="Format: ABCDE1234F"
                              oninput="validateBusinessPAN(this)" />
+                             <div class="form-check">
+                        <div class="d-flex align-items-center gap-2 p-2 rounded-3" style="background-color: #f8f9fa;">
+                          <div class="form-check form-switch m-0" >
+                            <input class="form-check-input" type="checkbox" id="sameAsPanCheckbox" style="border:1px solid blue;">
+                          </div>
+                          <label class="form-check-label d-flex align-items-center gap-2 m-0" for="sameAsPanCheckbox">
+                            <i class="bi bi-phone text-primary"></i>
+                            <span class="fw-medium">Use registered PAN number</span>
+                            <small class="text-muted">({{ vendor_profile_detail.pan_card_number }})</small>
+                          </label>
+                        </div>
+                      </div>
                       <div class="invalid-feedback" id="businessPanError">Please enter valid PAN (Format: ABCDE1234F)</div>
                     </div>
                     
@@ -801,7 +1037,7 @@
                       }
                     
                       // Status character validation (4th character)
-                      const statusChars = ['C', 'H', 'A', 'B', 'G', 'J', 'L', 'F', 'T']; // Removed 'P' for individuals
+                      const statusChars = ['C', 'H', 'A', 'B', 'G', 'J', 'L', 'F', 'T', 'P']; // Removed 'P' for individuals
                       const statusChar = pan.charAt(3);
                       if (!statusChars.includes(statusChar)) {
                         errorElement.textContent = `Invalid 4th character for business. Must be one of: ${statusChars.join(', ')}`;
@@ -814,11 +1050,11 @@
                       const businessName = businessNameInput ? businessNameInput.value.trim().toUpperCase() : '';
                       const panFifthChar = pan.charAt(4);
                       
-                      if (businessName && businessName[0] !== panFifthChar) {
+                      {% comment %} if (businessName && businessName[0] !== panFifthChar) {
                         errorElement.textContent = `5th character (${panFifthChar}) must match first letter of your business name (${businessName[0]})`;
                         input.setCustomValidity("Business PAN initial mismatch");
                         return;
-                      }
+                      } {% endcomment %}
                     
                       // Check digit validation
                       const checkDigit = pan.charAt(9);
@@ -850,7 +1086,7 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label">PAN Card Image</label>
                       <input type="file" class="form-control" name="Bpan_image"
-                           accept="image/*,application/pdf"  >
+                           accept="image/*,application/*"  >
                       <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 7MB)</div>
                     </div>
                     
@@ -864,20 +1100,20 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label">MSME Certificate Image</label>
                       <input type="file" class="form-control" name="MSME_image"
-                            accept="image/*,application/pdf" >
+                            accept="image/*,application/*" >
                       <div class="invalid-feedback">Only JPEG, PNG or PDF files allowed (max 7MB)</div>
                     </div>
                     
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Business Photo (Outer View)</label>
                       <input type="file" class="form-control" name="Bphoto_outer"
-                            accept="image/*,application/pdf" >
+                            accept="image/*,application/*" >
                       <div class="invalid-feedback">Only JPEG or PNG images allowed (max 7MB)</div>
                     </div>
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Business Photo (Inside View)</label>
                       <input type="file" class="form-control" name="Bphoto_inside"
-                             accept="image/*,application/pdf" >
+                             accept="image/*,application/*" >
                       <div class="invalid-feedback">Only JPEG or PNG images allowed (max 7MB)</div>
                     </div>
                   </div>
@@ -990,7 +1226,7 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Upload Bank Document</label>
                       <input type="file" name="bank_document" class="form-control"
-                      accept="image/*,application/pdf"/>
+                      accept="image/*,application/*"/>
                       <div class="invalid-feedback">Only PDF, JPG, or PNG files allowed (max 7MB)</div>
                     </div>
             
@@ -1529,6 +1765,24 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const dobInput = document.getElementById("dobInput");
+    const today = new Date();
+    const minAge = 14;
+
+    // Calculate max date (today - 14 years)
+    const maxDate = new Date(today.getFullYear() - minAge, today.getMonth(), today.getDate());
+
+    // Format to YYYY-MM-DD
+    const maxDateStr = maxDate.toISOString().split("T")[0];
+
+    // Set max attribute
+    dobInput.setAttribute("max", maxDateStr);
+  });
+</script>
+
 
   <footer class="footer footer-transparent d-print-none">
     <div class="container-xl">

@@ -27,11 +27,16 @@ class Vendor_profile_details(models.Model) :
     adhar_card_image = models.FileField(upload_to='adhar/', null=True, blank=True)
     pan_card_image = models.FileField(upload_to='pan/', null=True, blank=True)
     location = models.CharField(max_length=255, null=True, blank=True)
+    pin_code = models.CharField(max_length=10, null=True, blank=True)
+    other_location = models.CharField(max_length=255, null=True, blank=True)
 
 class Vendor_bussiness_details(models.Model) :
     vendor = models.OneToOneField(Vendor, on_delete=models.CASCADE)
     shop_name = models.CharField(max_length=100, null=True, blank=True)
     shop_address = models.CharField(max_length=266, null=True, blank=True)
+    shop_location = models.CharField(max_length=255, null=True, blank=True)
+    shop_pin_code = models.CharField(max_length=10, null=True, blank=True)
+    shop_other_location = models.CharField(max_length=255, null=True, blank=True)
     busness_type = models.CharField(max_length=100, null=True, blank=True)
     Gumasta_number = models.CharField(max_length=15, null=True, blank=True)
     gumasta_image = models.FileField(upload_to='Gumasata/', null=True, blank=True)
