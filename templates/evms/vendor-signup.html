@@ -8,31 +8,40 @@
     <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,500,600,700,800&display=swap" rel="stylesheet">
     <link rel="shortcut icon" href="/static/m.png" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Add reCAPTCHA script -->
-    <script src="https://www.google.com/recaptcha/api.js?render=6LdcakcrAAAAAIqUEDm5nn1AGGqceYPUUrHwqF9w"></script>
     <style>
         body { 
             margin: 0; 
-            overflow: hidden; 
-            height: 100vh; 
+            min-height: 100vh;
             background: url('/static/bg.jpg');
             background-size: cover;
             background-position: center; 
             background-repeat: no-repeat;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            position: relative;
+            background-attachment: fixed;
             font-family: 'Poppins', sans-serif;
+            position: relative;
         }
 
         #particles-js { 
-            position: absolute; 
+            position: fixed; 
             width: 100%; 
             height: 100vh; 
             top: 0; 
             left: 0; 
             z-index: -1; 
+        }
+
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 32rem;
+            margin: 2rem auto;
         }
 
         .fade-in {
@@ -106,164 +115,233 @@
             font-size: 0.9rem;
             margin-top: 10px;
         }
+
+        .captcha-container {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .captcha-text {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            color: #1f2937;
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .captcha-text::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 45%, #e5e7eb 45%, #e5e7eb 55%, transparent 55%);
+            background-size: 10px 10px;
+            opacity: 0.3;
+        }
+
+        .refresh-captcha {
+            cursor: pointer;
+            color: #4c51bf;
+            margin-left: 10px;
+            transition: transform 0.2s;
+        }
+
+        .refresh-captcha:hover {
+            transform: rotate(180deg);
+        }
+
+        .captcha-input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .captcha-input:focus {
+            outline: none;
+            border-color: #4c51bf;
+            box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.2);
+        }
     </style>
 </head>
 <body class="bg-info-100">
     <div id="particles-js"></div>
-    <div class="min-h-screen flex items-center justify-center fade-in">
-        <!-- Main Signup Form -->
-        <div id="signupForm" class="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full mx-4">
-            <div class="flex justify-center mb-6">
-                <a href=".">
-                    <img src="https://emta.co.in/f.png" width="110" height="32" alt="EMTA Logo">
-                </a>
-            </div>
-            <header class="text-center">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">EVMS - Vendor Signup</h2>
-                <p class="text-gray-600 mb-6">Refer and Earn - Integrated Vendor Management System</p>
-                <span class="text-gray-500">Have an account? <a href="{% url 'vendor_login' %}" class="text-blue-500 hover:text-blue-600">Login</a></span>
-            </header>
+    <div class="main-container">
+        <div class="form-container fade-in">
+            <div id="signupForm" class="bg-white p-8 rounded-lg shadow-lg">
+                <div class="flex justify-center mb-6">
+                    <a href=".">
+                        <img src="https://emta.co.in/f.png" width="110" height="32" alt="EMTA Logo">
+                    </a>
+                </div>
+                <header class="text-center">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">EVMS - Vendor Signup</h2>
+                    <p class="text-gray-600 mb-6">Refer and Earn - Integrated Vendor Management System</p>
+                    <span class="text-gray-500">Have an account? <a href="{% url 'vendor_login' %}" class="text-blue-500 hover:text-blue-600">Login</a></span>
+                </header>
 
-            <div id="errorMessages" class="mb-4 hidden">
-                <div class="bg-red-50 border-l-4 border-red-500 p-4">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <p id="errorText" class="text-sm text-red-700"></p>
+                <div id="errorMessages" class="mb-4 hidden">
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p id="errorText" class="text-sm text-red-700"></p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <form method="POST" id="register" enctype="multipart/form-data">
-                {% csrf_token %}
-                <input type="hidden" name="form_type" value="signup">
-                <!-- reCAPTCHA token will be added here by JavaScript -->
-                <input type="hidden" id="recaptchaToken" name="recaptcha_token">
+                <form method="POST" id="register" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="signup">
 
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                                   name="first_name" placeholder="First Name" oninput="capitalizeFirstLetter(this)" required>
+                        </div>
+                        <div>
+                            <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                                   name="last_name" placeholder="Last Name" oninput="capitalizeFirstLetter(this)">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
                         <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
-                               name="first_name" placeholder="First Name" oninput="capitalizeFirstLetter(this)" required>
+                               name="username" placeholder="Username (ex. EMTA0001)" autocomplete="off" 
+                               pattern="[EMTA]{4}[0-9]{5}" title="Username must contain 'EMTA' followed by 5 numbers" 
+                               value="{{ suggested_username }}" required readonly>
                     </div>
-                    <div>
-                        <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
-                               name="last_name" placeholder="Last Name" oninput="capitalizeFirstLetter(this)">
+
+                    <div class="mb-4">
+                        <input type="tel" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                               name="mobile_number" placeholder="Mobile Number" pattern="[0-9]{10}" title="Enter a valid 10-digit mobile number" required>
                     </div>
-                </div>
 
-                <div class="mb-4">
-                    <input type="text" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
-                           name="username" placeholder="Username (ex. EMTA0001)" autocomplete="off" 
-                           pattern="[EMTA]{4}[0-9]{5}" title="Username must contain 'EMTA' followed by 5 numbers" 
-                           value="{{ suggested_username }}" required readonly>
-                </div>
+                    <div class="mb-4">
+                        <input type="email" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                               name="email" placeholder="Email Address" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" required>
+                    </div>
 
-                <div class="mb-4">
-                    <input type="tel" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
-                           name="mobile_number" placeholder="Mobile Number" pattern="[0-9]{10}" title="Enter a valid 10-digit mobile number" required>
-                </div>
+                    <div class="mb-4 password-container">
+                        <input type="password" id="password1" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                               name="password1" placeholder="Create Password (Ex@123)" 
+                               pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*[@$!%*?&])(?!^[0-9]*$).{5,}$" 
+                               title="Password must be at least 5 characters with uppercase, lowercase and special character" required>
+                        <button type="button" class="show-password-btn" id="togglePassword1">
+                            <i class="bx bx-show"></i>
+                        </button>
+                    </div>
 
-                <div class="mb-4">
-                    <input type="email" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
-                           name="email" placeholder="Email Address" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" required>
-                </div>
+                    <div class="mb-4 password-container">
+                        <input type="password" id="password2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                               name="password2" placeholder="Confirm Password" required>
+                        <button type="button" class="show-password-btn" id="togglePassword2">
+                            <i class="bx bx-show"></i>
+                        </button>
+                        <p class="text-red-500 text-sm mt-1 hidden" id="passwordError">Passwords do not match.</p>
+                    </div>
 
-                <div class="mb-4 password-container">
-                    <input type="password" id="password1" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
-                           name="password1" placeholder="Create Password (Ex@123)" 
-                           pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*[@$!%*?&])(?!^[0-9]*$).{5,}$" 
-                           title="Password must be at least 5 characters with uppercase, lowercase and special character" required>
-                    <button type="button" class="show-password-btn" id="togglePassword1">
-                        <i class="bx bx-show"></i>
-                    </button>
-                </div>
-
-                <div class="mb-4 password-container">
-                    <input type="password" id="password2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
-                           name="password2" placeholder="Confirm Password" required>
-                    <button type="button" class="show-password-btn" id="togglePassword2">
-                        <i class="bx bx-show"></i>
-                    </button>
-                    <p class="text-red-500 text-sm mt-1 hidden" id="passwordError">Passwords do not match.</p>
-                </div>
-
-                <div class="mb-6">
-                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-200 g-recaptcha" 
-                    data-sitekey="6LdcakcrAAAAAIqUEDm5nn1AGGqceYPUUrHwqF9w" data-callback='onSubmit' data-action='submit'>
-                        Register
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- OTP Verification Form (Initially Hidden) -->
-        <div id="otpForm" class="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full mx-4" style="display: none;">
-            <div class="flex justify-center mb-6">
-                <a href=".">
-                    <img src="https://emta.co.in/f.png" width="110" height="32" alt="EMTA Logo">
-                </a>
-            </div>
-            <header class="text-center">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-2">Verify Your Email</h2>
-                <p class="text-gray-600 mb-1">We've sent a 6-digit code to</p>
-                <p class="text-gray-600 mb-2">If you did not receive the email in your inbox, please check your spam or junk folder.</p>
-                <p id="userEmail" class="font-medium text-blue-600 mb-6"></p>
-            </header>
-
-            <div id="otpError" class="mb-4 hidden">
-                <div class="bg-red-50 border-l-4 border-red-500 p-4">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                            </svg>
+                    <div class="captcha-container">
+                        <div class="flex items-center justify-center mb-2">
+                            <div id="captchaText" class="captcha-text"></div>
+                            <button type="button" id="refreshCaptcha" class="refresh-captcha">
+                                <i class='bx bx-refresh text-2xl'></i>
+                            </button>
                         </div>
-                        <div class="ml-3">
-                            <p id="otpErrorText" class="text-sm text-red-700"></p>
-                        </div>
+                        <input type="text" id="captchaInput" class="captcha-input" placeholder="Enter CAPTCHA" required>
+                        <input type="hidden" id="captchaAnswer" name="captcha_answer">
                     </div>
-                </div>
+
+                    <div class="mb-6">
+                        <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-200">
+                            Register
+                        </button>
+                    </div>
+                </form>
             </div>
 
-            <form method="POST" id="otpVerificationForm">
-                {% csrf_token %}
-                <input type="hidden" name="form_type" value="otp_verification">
-                <input type="hidden" id="storedEmail" name="email">
+            <div id="otpForm" class="bg-white p-8 rounded-lg shadow-lg" style="display: none;">
+                <div class="flex justify-center mb-6">
+                    <a href=".">
+                        <img src="https://emta.co.in/f.png" width="110" height="32" alt="EMTA Logo">
+                    </a>
+                </div>
+                <header class="text-center">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-2">Verify Your Email</h2>
+                    <p class="text-gray-600 mb-1">We've sent a 6-digit code to</p>
+                    {% comment %} <p class="text-gray-600 mb-2">If you did not receive the email in your inbox, please check your spam or junk folder.</p> {% endcomment %}
+                    <p id="userEmail" class="font-medium text-blue-600 mb-6"></p>
+                </header>
 
-                <div class="otp-container">
-                    <input type="text" maxlength="1" class="otp-input" name="otp1" required autofocus>
-                    <input type="text" maxlength="1" class="otp-input" name="otp2" required>
-                    <input type="text" maxlength="1" class="otp-input" name="otp3" required>
-                    <input type="text" maxlength="1" class="otp-input" name="otp4" required>
-                    <input type="text" maxlength="1" class="otp-input" name="otp5" required>
-                    <input type="text" maxlength="1" class="otp-input" name="otp6" required>
+                <div id="otpError" class="mb-4 hidden">
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p id="otpErrorText" class="text-sm text-red-700"></p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="text-center mb-6">
-                    <p class="text-gray-600">Didn't receive the code? 
-                        <span id="resendOtpBtn" class="resend-otp">Resend OTP</span>
-                    </p>
-                    <p id="otpTimer" class="timer">You can resend OTP in <span id="countdown">60</span> seconds</p>
-                </div>
+                <form method="POST" id="otpVerificationForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="otp_verification">
+                    <input type="hidden" id="storedEmail" name="email">
 
-                <div class="mb-6">
-                    <button type="submit" id="verifyBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-200">
-                        Verify & Complete Registration
-                    </button>
-                </div>
+                    <div class="otp-container">
+                        <input type="text" maxlength="1" class="otp-input" name="otp1" required autofocus>
+                        <input type="text" maxlength="1" class="otp-input" name="otp2" required>
+                        <input type="text" maxlength="1" class="otp-input" name="otp3" required>
+                        <input type="text" maxlength="1" class="otp-input" name="otp4" required>
+                        <input type="text" maxlength="1" class="otp-input" name="otp5" required>
+                        <input type="text" maxlength="1" class="otp-input" name="otp6" required>
+                    </div>
 
-            </form>
+                    <div class="text-center mb-6">
+                        <p class="text-gray-600">Didn't receive the code? 
+                            <span id="resendOtpBtn" class="resend-otp">Resend OTP</span>
+                        </p>
+                        <p id="otpTimer" class="timer">You can resend OTP in <span id="countdown">60</span> seconds</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <button type="submit" id="verifyBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-200">
+                            Verify & Complete Registration
+                        </button>
+                    </div>
+                    <p class="text-gray-600 text-center mt-2 text-sm mb-2">If you did not receive the email in your inbox, please check your spam or junk folder.</p>
+                </form>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script>
-        // Initialize particles.js
         particlesJS('particles-js', {
             particles: {
                 number: { value: 80, density: { enable: true, value_area: 800 } },
@@ -285,54 +363,59 @@
             retina_detect: true
         });
 
-        // reCAPTCHA v3 implementation
-        function onSubmit(token) {
-            // Set the token in the hidden input
-            document.getElementById('recaptchaToken').value = token;
-            
-            // Now submit the form
-            submitSignupForm();
+        function generateCaptcha() {
+            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+            let captcha = '';
+            for (let i = 0; i < 6; i++) {
+                captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return captcha;
         }
 
-        // Modified form submission to use reCAPTCHA
+        function updateCaptcha() {
+            const captcha = generateCaptcha();
+            document.getElementById('captchaText').textContent = captcha;
+            document.getElementById('captchaAnswer').value = captcha;
+            document.getElementById('captchaInput').value = '';
+        }
+
+        updateCaptcha();
+
+        document.getElementById('refreshCaptcha').addEventListener('click', updateCaptcha);
+
         document.getElementById('register').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Execute reCAPTCHA
-            grecaptcha.ready(function() {
-                grecaptcha.execute('6LdcakcrAAAAAIqUEDm5nn1AGGqceYPUUrHwqF9w', {action: 'submit'}).then(function(token) {
-                    onSubmit(token);
-                });
-            });
-        });
-
-        // Form submission after reCAPTCHA verification
-        function submitSignupForm() {
             const password1 = document.getElementById('password1');
             const password2 = document.getElementById('password2');
             const passwordError = document.getElementById('passwordError');
+            const captchaInput = document.getElementById('captchaInput');
+            const captchaAnswer = document.getElementById('captchaAnswer');
             
-            // Clear previous errors
             document.getElementById('errorMessages').classList.add('hidden');
             passwordError.classList.add('hidden');
             password1.classList.remove('error-border');
             password2.classList.remove('error-border');
             
-            // Validate passwords match
             if (password1.value !== password2.value) {
                 passwordError.classList.remove('hidden');
                 password1.classList.add('error-border');
                 password2.classList.add('error-border');
                 return;
             }
+
+            if (captchaInput.value.toLowerCase() !== captchaAnswer.value.toLowerCase()) {
+                showError('Invalid CAPTCHA. Please try again.');
+                updateCaptcha();
+                return;
+            }
             
-            // Submit form via AJAX
-            const formData = new FormData(document.getElementById('register'));
+            const formData = new FormData(this);
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.innerHTML = 'Sending OTP...';
             
-            fetch(document.getElementById('register').action, {
+            fetch(this.action, {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -347,16 +430,13 @@
             })
             .then(data => {
                 if (data.status === 'success') {
-                    // Show OTP form
                     document.getElementById('signupForm').style.display = 'none';
                     document.getElementById('otpForm').style.display = 'block';
                     
-                    // Set the email in OTP form
                     const email = formData.get('email');
                     document.getElementById('userEmail').textContent = email;
                     document.getElementById('storedEmail').value = email;
                     
-                    // Start OTP timer
                     startOTPTimer();
                 } else {
                     showError(data.message || 'Error submitting form');
@@ -373,9 +453,8 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Register';
             });
-        }
+        });
 
-        // OTP form submission
         document.getElementById('otpVerificationForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -383,15 +462,12 @@
             verifyBtn.disabled = true;
             verifyBtn.innerHTML = 'Verifying...';
             
-            // Hide previous errors
             document.getElementById('otpError').classList.add('hidden');
             
-            // Collect OTP digits
             const otpDigits = Array.from(document.querySelectorAll('.otp-input'))
                 .map(input => input.value)
                 .join('');
             
-            // Add OTP to form data
             const formData = new FormData(this);
             formData.append('otp', otpDigits);
             
@@ -427,7 +503,6 @@
             });
         });
 
-        // OTP input handling
         const otpInputs = document.querySelectorAll('.otp-input');
         otpInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
@@ -435,7 +510,6 @@
                     otpInputs[index + 1].focus();
                 }
                 
-                // Auto-submit if last digit entered
                 if (index === otpInputs.length - 1 && e.target.value.length === 1) {
                     document.getElementById('otpVerificationForm').dispatchEvent(new Event('submit'));
                 }
@@ -448,7 +522,6 @@
             });
         });
 
-        // Resend OTP functionality
         document.getElementById('resendOtpBtn').addEventListener('click', function() {
             const email = document.getElementById('storedEmail').value;
             const resendBtn = this;
@@ -472,7 +545,6 @@
             })
             .then(data => {
                 if (data.status === 'success') {
-                    // Restart timer
                     startOTPTimer();
                     alert('New OTP sent successfully!');
                 } else {
@@ -488,7 +560,6 @@
             });
         });
 
-        // OTP Timer
         function startOTPTimer() {
             let timeLeft = 60;
             const timerElement = document.getElementById('countdown');
@@ -512,7 +583,6 @@
             }, 1000);
         }
 
-        // Helper functions
         function showError(message) {
             const errorContainer = document.getElementById('errorMessages');
             document.getElementById('errorText').textContent = message;
@@ -530,7 +600,6 @@
             input.value = input.value.charAt(0).toUpperCase() + input.value.slice(1);
         }
 
-        // Toggle password visibility
         document.getElementById('togglePassword1').addEventListener('click', function() {
             const passwordField = document.getElementById('password1');
             const icon = this.querySelector('i');

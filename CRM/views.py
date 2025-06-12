@@ -2139,10 +2139,11 @@ def admin_vendor_profile(request, id):
                 # Profile Details
                 vendor.user.first_name = request.POST.get('first_name')
                 vendor.user.last_name = request.POST.get('last_name')
+                vendor.user.email = request.POST.get('email')
                 vendor.user.save()
                 vendor.mobile_number = request.POST.get('mobile_number')
-                vendor.email = request.POST.get('email')
                 vendor.date_of_birth = request.POST.get('date_of_birth')
+                vendor.profileVerification = request.POST.get('profileVerification')
                 
                 if 'vendor_profile_image' in request.FILES:
                     vendor.vendor_profile_image = request.FILES['vendor_profile_image']
@@ -2153,6 +2154,8 @@ def admin_vendor_profile(request, id):
                 vendor_profile_detail.adhar_card_number = request.POST.get('adhar_card_number')
                 vendor_profile_detail.pan_card_number = request.POST.get('pan_card_number')
                 vendor_profile_detail.location = request.POST.get('location')
+                vendor_profile_detail.pin_code = request.POST.get('pin_code')
+                vendor_profile_detail.other_location = request.POST.get('other_location')
                 vendor_profile_detail.updated_by=request.user
                 
                 if 'adhar_card_image' in request.FILES:
@@ -2165,6 +2168,9 @@ def admin_vendor_profile(request, id):
                 vendor_bussiness_detail.shop_name = request.POST.get('shop_name')
                 vendor_bussiness_detail.busness_type = request.POST.get('busness_type')
                 vendor_bussiness_detail.shop_address = request.POST.get('shop_address')
+                vendor_bussiness_detail.shop_location = request.POST.get('shop_location')
+                vendor_bussiness_detail.shop_pin_code = request.POST.get('shop_pin_code')
+                vendor_bussiness_detail.shop_other_location = request.POST.get('shop_other_location')
                 vendor_bussiness_detail.Contact_number = request.POST.get('Contact_number')
                 vendor_bussiness_detail.Busness_email = request.POST.get('Busness_email')
                 vendor_bussiness_detail.Gumasta_number = request.POST.get('Gumasta_number')

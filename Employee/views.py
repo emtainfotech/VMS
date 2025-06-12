@@ -2077,141 +2077,80 @@ def employee_vendor_candidate_list(request, id):
     else:
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
-
 @login_required
-def employee_evms_candidate_profile(request,id) :
+def employee_evms_candidate_profile(request, id):
     if request.user.is_authenticated:
         candidate = get_object_or_404(Candidate, id=id)
         employees = Employee.objects.all()
+        
         if request.method == 'POST':
-            if 'candidate_personal_information' in request.POST:
+            if 'submit_all' in request.POST:
                 # Handle Employee fields
-                candidate_name = request.POST.get('candidate_name')
-                employee_name = request.POST.get('employee_name')
-                candidate_mobile_number = request.POST.get('candidate_mobile_number')
-                candidate_email_address = request.POST.get('candidate_email_address')
-                gender = request.POST.get('gender')
-                lead_source = request.POST.get('lead_source')
-                candidate_photo = request.FILES.get('candidate_photo')
-                candidate_resume = request.FILES.get('candidate_resume')
-                submit_by = request.POST.get('submit_by')
-                
-                candidate.candidate_name = candidate_name
-                candidate.employee_name = employee_name
-                candidate.candidate_mobile_number = candidate_mobile_number
-                candidate.candidate_email_address = candidate_email_address
-                candidate.gender = gender
-                candidate.lead_source = lead_source
-                submit_by=submit_by
-                if candidate_photo:
-                    candidate.candidate_photo = candidate_photo
-                if candidate_resume:
-                    candidate.candidate_resume = candidate_resume
-                candidate.save()
+                candidate.candidate_name = request.POST.get('candidate_name')
+                candidate.employee_name = request.POST.get('employee_name')
+                candidate.candidate_mobile_number = request.POST.get('candidate_mobile_number')
+                candidate.candidate_email_address = request.POST.get('candidate_email_address')
+                candidate.gender = request.POST.get('gender')
+                candidate.lead_source = request.POST.get('lead_source')
+                if 'candidate_photo' in request.FILES:
+                    candidate.candidate_photo = request.FILES.get('candidate_photo')
+                if 'candidate_resume' in request.FILES:
+                    candidate.candidate_resume = request.FILES.get('candidate_resume')
+                candidate.submit_by = request.POST.get('submit_by')
+                candidate.candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
+                candidate.preferred_location = request.POST.get('preferred_location')
+                candidate.origin_location = request.POST.get('origin_location')
+                candidate.qualification = request.POST.get('qualification')
+                candidate.diploma = request.POST.get('diploma')
+                candidate.sector = request.POST.get('sector')
+                candidate.department = request.POST.get('department')
+                candidate.experience_year = request.POST.get('experience_year')
+                candidate.experience_month = request.POST.get('experience_month')
+                candidate.current_company = request.POST.get('current_company')
+                candidate.current_working_status = request.POST.get('current_working_status')
+                candidate.current_salary = request.POST.get('current_salary')
+                candidate.expected_salary = request.POST.get('expected_salary')
+                candidate.submit_by = request.POST.get('submit_by')
 
-                messages.success(request, 'Candidate details updated successfully!')
+                candidate.call_connection = request.POST.get('call_connection')
+                candidate.calling_remark = request.POST.get('calling_remark')
+                candidate.lead_generate = request.POST.get('lead_generate')
+                candidate.send_for_interview = request.POST.get('send_for_interview')
+                candidate.next_follow_up_date = request.POST.get('next_follow_up_date') or None
+                candidate.submit_by = request.POST.get('submit_by')
 
-            elif 'candidate_details' in request.POST:
-                # Handle Emergency Contact fields
-                candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
-                preferred_location = request.POST.get('preferred_location')
-                origin_location = request.POST.get('origin_location')
-                qualification = request.POST.get('qualification')
-                diploma = request.POST.get('diploma')
-                sector = request.POST.get('sector')
-                department = request.POST.get('department')
-                experience_year = request.POST.get('experience_year')
-                experience_month = request.POST.get('experience_month')
-                current_company = request.POST.get('current_company')
-                current_working_status = request.POST.get('current_working_status')
-                current_salary = request.POST.get('current_salary')
-                expected_salary = request.POST.get('expected_salary')
-                submit_by = request.POST.get('submit_by')
+                candidate.selection_status = request.POST.get('selection_status')
+                candidate.company_name = request.POST.get('company_name')
+                candidate.offered_salary = request.POST.get('offered_salary')
+                candidate.selection_date = request.POST.get('selection_date') or None
+                candidate.candidate_joining_date = request.POST.get('candidate_joining_date') or None
+                candidate.emta_commission = request.POST.get('emta_commission')
+                candidate.payout_date = request.POST.get('payout_date')
 
-                # Update EmergencyContact fields
-                candidate.candidate_alternate_mobile_number = candidate_alternate_mobile_number
-                candidate.preferred_location = preferred_location
-                candidate.origin_location = origin_location
-                candidate.qualification = qualification
-                candidate.diploma = diploma
-                candidate.sector = sector
-                candidate.department = department
-                candidate.experience_year = experience_year
-                candidate.experience_month = experience_month
-                candidate.current_company = current_company
-                candidate.current_working_status = current_working_status
-                candidate.current_salary = current_salary
-                candidate.expected_salary = expected_salary
-                submit_by=submit_by
-                candidate.save()
-
-                messages.success(request, 'Candidate details updated successfully!')
-                
-            elif 'submit_calling_remark' in request.POST:
-                # Handle Social Media details form submission
-                call_connection = request.POST.get('call_connection')
-                calling_remark = request.POST.get('calling_remark')
-                lead_generate = request.POST.get('lead_generate')
-                send_for_interview = request.POST.get('send_for_interview')
-                next_follow_up_date = request.POST.get('next_follow_up_date') or None
-                submit_by = request.POST.get('submit_by')
-
-                candidate.call_connection = call_connection
-                candidate.calling_remark = calling_remark
-                candidate.lead_generate = lead_generate
-                candidate.send_for_interview = send_for_interview
-                candidate.next_follow_up_date = next_follow_up_date
-                candidate.submit_by = submit_by
-                candidate.save()
-                
-                messages.success(request, 'Candidate Calling details updated successfully!')
-                
-            elif 'submit_secection_record' in request.POST:
-                # Handle form submission for bank details
-                selection_status = request.POST.get('selection_status')
-                company_name = request.POST.get('company_name')
-                offered_salary = request.POST.get('offered_salary')
-                selection_date = request.POST.get('selection_date') or None
-                candidate_joining_date = request.POST.get('candidate_joining_date') or None
-                emta_commission = request.POST.get('emta_commission')
-                payout_date = request.POST.get('payout_date')
-
-                # Update or create bank details for the employee
-                candidate.selection_status = selection_status
-                candidate.company_name = company_name
-                candidate.offered_salary = offered_salary
-                candidate.selection_date = selection_date
-                candidate.candidate_joining_date = candidate_joining_date
-                candidate.emta_commission = emta_commission
-                candidate.payout_date = payout_date
+                candidate.vendor_commission = request.POST.get('vendor_commission')
+                candidate.vendor_payout_date = request.POST.get('vendor_payout_date') or None
+                candidate.commission_generation_date = request.POST.get('commission_generation_date') or None
+                candidate.vendor_commission_status = request.POST.get('vendor_commission_status')
+                candidate.vendor_payment_remark = request.POST.get('vendor_payment_remark')
+                candidate.payment_done_by = request.POST.get('payment_done_by')
+                candidate.payment_done_by_date = request.POST.get('payment_done_by_date') or None
+                if 'submit_recipt' in request.FILES:
+                    candidate.submit_recipt = request.FILES.get('submit_recipt')
                 candidate.save()
                 
             elif 'submit_vendor_related_data' in request.POST:
                 # Handle form submission for bank details
-                vendor_commission = request.POST.get('vendor_commission')
-                vendor_payout_date = request.POST.get('vendor_payout_date') or None
-                commission_generation_date = request.POST.get('commission_generation_date') or None
-                vendor_commission_status = request.POST.get('vendor_commission_status')
-                vendor_payment_remark = request.POST.get('vendor_payment_remark')
-                payment_done_by = request.POST.get('payment_done_by')
-                payment_done_by_date = request.POST.get('payment_done_by_date') or None
-                submit_recipt = request.FILES.get('submit_recipt')
-
-
-                # Update or create bank details for the employee
-                candidate.vendor_commission = vendor_commission
-                candidate.vendor_payout_date = vendor_payout_date
-                candidate.commission_generation_date = commission_generation_date
-                candidate.vendor_commission_status = vendor_commission_status
-                candidate.vendor_payment_remark = vendor_payment_remark
-                candidate.payment_done_by = payment_done_by
-                candidate.payment_done_by_date = payment_done_by_date
-                candidate.submit_recipt = submit_recipt
+                candidate.vendor_commission = request.POST.get('vendor_commission')
+                candidate.vendor_payout_date = request.POST.get('vendor_payout_date') or None
+                candidate.commission_generation_date = request.POST.get('commission_generation_date') or None
+                candidate.vendor_commission_status = request.POST.get('vendor_commission_status')
+                candidate.vendor_payment_remark = request.POST.get('vendor_payment_remark')
+                candidate.payment_done_by = request.POST.get('payment_done_by')
+                candidate.payment_done_by_date = request.POST.get('payment_done_by_date') or None
+                if 'submit_recipt' in request.FILES:
+                    candidate.submit_recipt = request.FILES.get('submit_recipt')
                 candidate.save()
-
                 messages.success(request, 'Vendor releted details updated successfully!')
-                
-                
 
             return redirect('employee_evms_candidate_profile', id=id)
         context = {

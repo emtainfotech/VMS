@@ -155,7 +155,7 @@
                 <div class="col">
                   <!-- Page pre-title -->
                    <a href="{% url 'vendor_dashboard' %}" class="page-title-link text-white" style="text-decoration: none;">
-                  <div class="page-pretitle">< Home</div>
+                  <div class="page-pretitle text-white">< Home</div>
                 </a>
                   
                     {% comment %} <p class="page-title">< Vendor Dashboard</p> {% endcomment %}
@@ -169,450 +169,398 @@
     <!-- ✅ Progress Bar -->
 
 <!-- ✅ JavaScript for Progress Tracking -->
+
+    <!-- Main Row -->
+    <div class="row g-4">
+      <!-- Personal Information Card -->
+<div class="col-lg-5">
+  <div class="card h-100">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">Personal Information</h5>
+      <a href="#details-update" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-pencil me-1"></i> Edit
+      </a>
+    </div>
+    
+    <div class="card-body">
+      <div class="row">
+        <!-- Progress Bar -->
+        <div class="mb-4">
+          <label class="form-label">Profile Completion</label>
+          <div class="progress">
+            <div id="profileProgressBar" class="progress-bar" role="progressbar" style="width: 0%;">
+              0%
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Image and Basic Info -->
+        <div class="col-md-4 border-end ps-4">
+          <div class="d-flex flex-column align-items-center text-center mb-4">
+            {% if vendor.vendor_profile_image %}
+            <img src="{{vendor.vendor_profile_image.url}}" class="rounded-circle object-cover mb-3" 
+                 style="width: 120px; height: 120px;" alt="Profile Picture">
+            {% else %}
+            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mb-3" 
+                 style="width: 120px; height: 120px;">
+              <i class="bi bi-person fs-1 text-muted"></i>
+            </div>
+            {% endif %}
+            <h4 class="mb-1">{{ user.first_name }} {{ user.last_name }}</h4>
+            <span class="badge bg-success text-white">{{ vendor.refer_code }}</span>
+          </div>
+        </div>
+        
+        <!-- Detailed Personal Info -->
+        <div class="col-md-8 ps-4">
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-telephone me-2 text-muted"></i>
+                <span>{{ vendor.mobile_number }}</span>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="info-item">
+                <small class="text-muted d-block">Email</small>
+                <strong>{{ vendor.user.email |default:"Not provided" }}</strong>
+              </div>
+            </div>
+
+            {% if vendor_profile_detail.other_location %}
+            <div class="col-md-6">
+              <div class="info-item">
+                <small class="text-muted d-block">Address</small>
+                <strong>{{ vendor_profile_detail.address }}, {{ vendor_profile_detail.other_location }}-{{ vendor_profile_detail.pin_code }}</strong>
+              </div>
+            </div>
+            {% else %}
+            <div class="col-md-6">
+              <div class="info-item">
+                <small class="text-muted d-block">Address</small>
+                <strong>{{ vendor_profile_detail.address }}, {{ vendor_profile_detail.location }}, {{ vendor_profile_detail.pin_code }}</strong>
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="col-md-6">
+              <div class="info-item">
+                <small class="text-muted d-block">Date of Birth</small>
+                <strong>{{ vendor.date_of_birth|default:"Not provided" }}</strong>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="info-item">
+                <small class="text-muted d-block">Gender</small>
+                <strong>{{ vendor_profile_detail.gender|default:"Not provided" }}</strong>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="info-item">
+                <small class="text-muted d-block">Aadhar Number</small>
+                <div class="d-flex align-items-center">
+                  <span>{{ vendor_profile_detail.adhar_card_number|default:"Not provided" }}</span>
+                  {% if vendor_profile_detail.adhar_card_image %}
+                  <a href="{{vendor_profile_detail.adhar_card_image.url}}" target="_blank" class="ms-2">
+                    <i class="bi bi-eye-fill text-primary"></i>
+                  </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="info-item">
+                <small class="text-muted d-block">PAN Number</small>
+                <div class="d-flex align-items-center">
+                  <span>{{ vendor_profile_detail.pan_card_number|default:"Not provided" }}</span>
+                  {% if vendor_profile_detail.pan_card_image %}
+                  <a href="{{vendor_profile_detail.pan_card_image.url}}" target="_blank" class="ms-2">
+                    <i class="bi bi-eye-fill text-primary"></i>
+                  </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Business Details Card -->
+<div class="col-lg-4">
+  <div class="card h-100">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">Business Details</h5>
+      <a href="#details-update" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-pencil me-1"></i> Edit
+      </a>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Progress Bar -->
+        <div class="mb-4">
+          <label class="form-label">Business Profile Completion</label>
+          <div class="progress">
+            <div id="businessProgressBar" class="progress-bar" role="progressbar" style="width: 0%;">
+              0%
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="info-item">
+            <small class="text-muted d-block">Business Name</small>
+            <strong>{{ vendor_bussiness_detail.shop_name|default:"Not provided" }}</strong>
+          </div>
+
+          <div class="info-item mt-3">
+            <small class="text-muted d-block">Business Type</small>
+            <strong>{{ vendor_bussiness_detail.busness_type|default:"Not provided" }}</strong>
+          </div>
+          
+          <div class="info-item mt-3">
+            <small class="text-muted d-block">Contact Number</small>
+            <strong>{{ vendor_bussiness_detail.Contact_number|default:"Not provided" }}</strong>
+          </div>
+          
+          <div class="info-item mt-3">
+            <small class="text-muted d-block">Business Email</small>
+            <strong>{{ vendor_bussiness_detail.Busness_email|default:"Not provided" }}</strong>
+          </div>
+
+          {% if vendor_bussiness_detail.shop_other_location %}
+          <div class="info-item mt-3">
+            <small class="text-muted d-block">Other Location</small>
+            <strong>{{ vendor_bussiness_detail.shop_address|default:"Not provided" }}, {{ vendor_bussiness_detail.shop_other_location|default:"Not provided" }}-{{ vendor_bussiness_detail.shop_pin_code|default:"Not provided" }}</strong>
+          </div>
+          {% else %}
+          <div class="info-item mt-3">
+            <small class="text-muted d-block">Business Address</small>
+            <strong>{{ vendor_bussiness_detail.shop_address|default:"Not provided" }}, {{ vendor_bussiness_detail.shop_location|default:"Not provided" }}-{{ vendor_bussiness_detail.shop_pin_code|default:"Not provided" }}</strong>
+          </div>
+          {% endif %}
+
+          <div class="info-item mt-3">
+            <small class="text-muted d-block">GST Number</small>
+            <div class="d-flex align-items-center">
+              <span>{{ vendor_bussiness_detail.gst_number|default:"Not provided" }}</span>
+              {% if vendor_bussiness_detail.gst_image %}
+              <a href="{{vendor_bussiness_detail.gst_image.url}}" target="_blank" class="ms-2">
+                <i class="bi bi-eye-fill text-primary"></i>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="info-item">
+            <small class="text-muted d-block">Business PAN</small>
+            <div class="d-flex align-items-center">
+              <span>{{ vendor_bussiness_detail.Bpan_number|default:"Not provided" }}</span>
+              {% if vendor_bussiness_detail.Bpan_image %}
+              <a href="{{vendor_bussiness_detail.Bpan_image.url}}" target="_blank" class="ms-2">
+                <i class="bi bi-eye-fill text-primary"></i>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="info-item mt-3">
+            <small class="text-muted d-block">Shop Photos</small>
+            <div class="d-flex gap-2 mt-1">
+              {% if vendor_bussiness_detail.Bphoto_outer %}
+              <a href="{{vendor_bussiness_detail.Bphoto_outer.url}}" target="_blank" class="badge bg-light text-dark">
+                <i class="bi bi-image me-1"></i> Outside
+              </a>
+              {% endif %}
+              {% if vendor_bussiness_detail.Bphoto_inside %}
+              <a href="{{vendor_bussiness_detail.Bphoto_inside.url}}" target="_blank" class="badge bg-light text-dark">
+                <i class="bi bi-image me-1"></i> Inside
+              </a>
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="reference-check mt-4 pt-3 border-top">
+            <h6 class="text-muted mb-3">Reference Check</h6>
+            <div class="info-item">
+              <small class="text-muted d-block">Contact Name</small>
+              <strong>{{ vendor_bussiness_detail.VCname|default:"Not provided" }}</strong>
+            </div>
+            
+            <div class="info-item mt-2">
+              <small class="text-muted d-block">Mobile Number</small>
+              <strong>{{ vendor_bussiness_detail.VCmobile|default:"Not provided" }}</strong>
+            </div>
+            
+            <div class="info-item mt-2">
+              <small class="text-muted d-block">Address</small>
+              <strong>{{ vendor_bussiness_detail.VCaddress|default:"Not provided" }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bank Account Card -->
+<div class="col-lg-3">
+  <div class="card h-100">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Bank Details</h5>
+      <a href="#details-update" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-pencil"></i> Edit
+      </a>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Progress Bar -->
+        <div class="mb-4">
+          <label class="form-label">Bank Details Completion</label>
+          <div class="progress">
+            <div id="bankProgressBar" class="progress-bar" role="progressbar" style="width: 0%;">
+              0%
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="info-item">
+            <small class="text-muted d-block">Account Holder</small>
+            <strong>{{ vendor_bank_detail.account_holder_name|default:"Not provided" }}</strong>
+          </div>
+          
+          <div class="info-item mt-3">
+            <small class="text-muted d-block">Account Number</small>
+            <strong>{{ vendor_bank_detail.account_number|default:"Not provided" }}</strong>
+          </div>
+          
+          <div class="info-item mt-3">
+            <small class="text-muted d-block">IFSC Code</small>
+            <strong>{{ vendor_bank_detail.ifs_code|default:"Not provided" }}</strong>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="info-item">
+            <small class="text-muted d-block">Bank Name</small>
+            <strong>{{ vendor_bank_detail.bank_name|default:"Not provided" }}</strong>
+          </div>
+          
+          <div class="info-item mt-3">
+            <small class="text-muted d-block">Account Type</small>
+            <strong>{{ vendor_bank_detail.account_type|default:"Not provided" }}</strong>
+          </div>
+          
+          <div class="info-item mt-3">
+            <small class="text-muted d-block">Preferred Payout</small>
+            <strong>{{ vendor_bank_detail.preffered_payout_date|default:"Not provided" }} of month</strong>
+          </div>
+          
+          {% if vendor_bank_detail.bank_document %}
+          <div class="info-item mt-3">
+            <small class="text-muted d-block">Bank Document</small>
+            <a href="{{vendor_bank_detail.bank_document.url}}" target="_blank" class="text-primary">
+              <i class="bi bi-file-earmark-text me-1"></i> View Document
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const inputNames = [
-      "first_name", "last_name", "mobile_number", "email", "date_of_birth",
-      "gender", "address", "adhar_card_number", "pan_card_number",
-      "location", "pin_code", "other_location"
-    ];
+document.addEventListener("DOMContentLoaded", function () {
+  // Progress bar configuration
+  const progressBars = [
+    {
+      id: "profileProgressBar",
+      textInputs: [
+        "first_name", "last_name", "mobile_number", "email", "date_of_birth",
+        "gender", "address", "adhar_card_number", "pan_card_number",
+        "location", "pin_code", "other_location"
+      ],
+      fileInputs: ["vendor_profile_image", "adhar_card_image", "pan_card_image"]
+    },
+    {
+      id: "businessProgressBar",
+      textInputs: [
+        "shop_name", "busness_type", "shop_address", "shop_location", "shop_pin_code",
+        "shop_other_location", "Contact_number", "Busness_email", "Gumasta_number",
+        "gst_number", "Bpan_number", "MSME_number", "VCname", "VCmobile", "VCaddress"
+      ],
+      fileInputs: [
+        "gumasta_image", "gst_image", "Bpan_image",
+        "MSME_image", "Bphoto_outer", "Bphoto_inside"
+      ]
+    },
+    {
+      id: "bankProgressBar",
+      textInputs: [
+        "account_holder_name", "bank_name", "account_number",
+        "ifs_code", "account_type", "preffered_payout_date"
+      ],
+      fileInputs: ["bank_document"]
+    }
+  ];
 
-    const fileInputNames = ["vendor_profile_image", "adhar_card_image", "pan_card_image"];
-
+  // Initialize all progress bars
+  progressBars.forEach(config => {
+    const bar = document.getElementById(config.id);
+    const totalFields = config.textInputs.length + config.fileInputs.length;
+    
     function updateProgress() {
       let filled = 0;
-      const total = inputNames.length + fileInputNames.length;
 
-      inputNames.forEach(name => {
+      // Check text inputs
+      config.textInputs.forEach(name => {
         const el = document.getElementsByName(name)[0];
-        if (el && el.value.trim() !== "") filled++;
+        if (el && el.value && el.value.trim() !== "") filled++;
       });
 
-      fileInputNames.forEach(name => {
+      // Check file inputs
+      config.fileInputs.forEach(name => {
         const el = document.getElementsByName(name)[0];
-        if (el && el.files.length > 0) filled++;
+        if (el && el.files && el.files.length > 0) filled++;
       });
 
-      const percent = Math.round((filled / total) * 100);
-      const bar = document.getElementById("profileProgressBar");
-
+      const percent = Math.round((filled / totalFields) * 100);
       bar.style.width = percent + "%";
       bar.textContent = percent + "%";
-      bar.classList.toggle("bg-success", percent === 100);
+      bar.setAttribute('aria-valuenow', percent);
+      
+      // Update color based on percentage
+      bar.className = 'progress-bar'; // Reset classes
+      if (percent === 100) {
+        bar.classList.add('bg-success');
+      } else if (percent >= 50) {
+        bar.classList.add('bg-warning');
+      } else {
+        bar.classList.add('bg-danger');
+      }
     }
 
+    // Add event listeners to all relevant inputs
     document.querySelectorAll("input, select").forEach(el => {
       el.addEventListener("input", updateProgress);
       el.addEventListener("change", updateProgress);
     });
 
-    updateProgress(); // run on load
+    // Initial update
+    updateProgress();
   });
+});
 </script>
-    <!-- Main Row -->
-    <div class="row g-4">
-      <!-- Personal Information Card -->
-      <div class="col-lg-5">
-        <div class="card h-100">
-          <div class="card-header d-flex justify-content-between align-items-center">
-              <h5 class="card-title mb-0">Personal Information</h5>
-              <a href="#details-update" class="btn btn-sm btn-outline-primary" >
-                <i class="bi bi-pencil me-1"></i> Edit
-              </a>
-            </div>
-            
-          <div class="card-body">
-            <div class="row">
-              <div class="mb-4">
-  <label class="form-label">Profile Completion</label>
-  <div class="progress">
-    <div id="profileProgressBar" class="progress-bar" role="progressbar" style="width: 0%;">
-      0%
-    </div>
-  </div>
-</div>
-              <!-- Profile Image and Basic Info -->
-              <div class="col-md-4 border-end ps-4">
-                <div class="d-flex flex-column align-items-center text-center mb-4">
-                  {% if vendor.vendor_profile_image %}
-                  <img src="{{vendor.vendor_profile_image.url}}" class="rounded-circle object-cover mb-3" 
-                       style="width: 120px; height: 120px;" alt="Profile Picture">
-                  {% else %}
-                  <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mb-3" 
-                       style="width: 120px; height: 120px;">
-                    <i class="bi bi-person fs-1 text-muted"></i>
-                  </div>
-                  {% endif %}
-                  <h4 class="mb-1">{{ user.first_name }} {{ user.last_name }}</h4>
-                  <span class="badge bg-success text-white">{{ vendor.refer_code }}</span>
-                </div>
-                
-              </div>
-              
-              <!-- Detailed Personal Info -->
-              <div class="col-md-8 ps-4">
-                <div class="row g-3">
-                  <div class="col-12">
-                    <div class="d-flex align-items-center mb-2">
-                      <i class="bi bi-telephone me-2 text-muted"></i>
-                      <span>{{ vendor.mobile_number }}</span>
-                    </div>
-                  </div>
-
-                  <div class="col-md-6">
-                    <div class="info-item">
-                      <small class="text-muted d-block">Email</small>
-                      <strong>{{ vendor.user.email |default:"Not provided" }}</strong>
-                    </div>
-                  </div>
-
-                  {% comment %} <div class="col-md-6">
-                    <div class="info-item">
-                      <small class="text-muted d-block">Address</small>
-                      <strong>{{ vendor_profile_detail.address }}, {{ vendor_profile_detail.location }}-{{ vendor_profile_detail.pin_code }}</strong>
-                    </div>
-                  </div> {% endcomment %}
-
-                  {% if vendor_profile_detail.other_location %}
-                  <div class="col-md-6">
-                    <div class="info-item">
-                      <small class="text-muted d-block">Address</small>
-                      <strong>{{ vendor_profile_detail.address }}, {{ vendor_profile_detail.other_location }}-{{ vendor_profile_detail.pin_code }}</strong>
-                    </div>
-                  </div>
-
-                  {% else %}
-
-                  <div class="col-md-6">
-                    <div class="info-item">
-                      <small class="text-muted d-block">Address</small>
-                      <strong>{{ vendor_profile_detail.address }}, {{ vendor_profile_detail.location }}, {{ vendor_profile_detail.pin_code }}</strong>
-                    </div>
-                  </div>
-
-                  {% endif %}
-
-                  <div class="col-md-6">
-                    <div class="info-item">
-                      <small class="text-muted d-block">Date of Birth</small>
-                      <strong>{{ vendor.date_of_birth|default:"Not provided" }}</strong>
-                    </div>
-                  </div>
-                  
-                  
-                  <div class="col-md-6">
-                    <div class="info-item">
-                      <small class="text-muted d-block">Gender</small>
-                      <strong>{{ vendor_profile_detail.gender|default:"Not provided" }}</strong>
-                    </div>
-                  </div>
-                  
-                  <div class="col-md-6">
-                    <div class="info-item">
-                      <small class="text-muted d-block">Aadhar Number</small>
-                      <div class="d-flex align-items-center">
-                        <span>{{ vendor_profile_detail.adhar_card_number|default:"Not provided" }}</span>
-                        {% if vendor_profile_detail.adhar_card_image %}
-                        <a href="{{vendor_profile_detail.adhar_card_image.url}}" target="_blank" class="ms-2">
-                          <i class="bi bi-eye-fill text-primary"></i>
-                        </a>
-                        {% endif %}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="col-md-6">
-                    <div class="info-item">
-                      <small class="text-muted d-block">PAN Number</small>
-                      <div class="d-flex align-items-center">
-                        <span>{{ vendor_profile_detail.pan_card_number|default:"Not provided" }}</span>
-                        {% if vendor_profile_detail.pan_card_image %}
-                        <a href="{{vendor_profile_detail.pan_card_image.url}}" target="_blank" class="ms-2">
-                          <i class="bi bi-eye-fill text-primary"></i>
-                        </a>
-                        {% endif %}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Business Details Card -->
-      <div class="col-lg-4">
-        <div class="card h-100">
-          <div class="card-header d-flex justify-content-between align-items-center">
-              <h5 class="card-title mb-0">Business Details</h5>
-              <a href="#details-update" class="btn btn-sm btn-outline-primary" >
-                <i class="bi bi-pencil me-1"></i> Edit
-              </a>
-          </div>
-          <div class="card-body">
-            <div class="row g-3">
-              <!-- ✅ Progress Bar -->
-<div class="mb-4">
-  <label class="form-label">Business Profile Completion</label>
-  <div class="progress">
-    <div id="businessProgressBar" class="progress-bar" role="progressbar" style="width: 0%;">
-      0%
-    </div>
-  </div>
-</div>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const textInputs = [
-      "shop_name", "busness_type", "shop_address", "shop_location", "shop_pin_code",
-      "shop_other_location", "Contact_number", "Busness_email", "Gumasta_number",
-      "gst_number", "Bpan_number", "MSME_number", "VCname", "VCmobile", "VCaddress"
-    ];
-
-    const fileInputs = [
-      "gumasta_image", "gst_image", "Bpan_image",
-      "MSME_image", "Bphoto_outer", "Bphoto_inside"
-    ];
-
-    const totalFields = textInputs.length + fileInputs.length;
-
-    function updateBusinessProgress() {
-      let filledCount = 0;
-
-      textInputs.forEach(name => {
-        const field = document.getElementsByName(name)[0];
-        if (field && field.value.trim() !== "") filledCount++;
-      });
-
-      fileInputs.forEach(name => {
-        const file = document.getElementsByName(name)[0];
-        if (file && file.files.length > 0) filledCount++;
-      });
-
-      const percent = Math.round((filledCount / totalFields) * 100);
-      const progressBar = document.getElementById("businessProgressBar");
-      progressBar.style.width = percent + "%";
-      progressBar.textContent = percent + "%";
-      progressBar.classList.toggle("bg-success", percent === 100);
-    }
-
-    document.querySelectorAll("input, select").forEach(element => {
-      element.addEventListener("input", updateBusinessProgress);
-      element.addEventListener("change", updateBusinessProgress);
-    });
-
-    updateBusinessProgress(); // initialize on load
-  });
-</script>
-
-              <div class="col-md-6">
-                <div class="info-item">
-                  <small class="text-muted d-block">Business Name</small>
-                  <strong>{{ vendor_bussiness_detail.shop_name|default:"Not provided" }}</strong>
-                </div>
-
-                <div class="info-item mt-3">
-                  <small class="text-muted d-block">Business Type</small>
-                  <strong>{{ vendor_bussiness_detail.busness_type|default:"Not provided" }}</strong>
-                </div>
-                
-                <div class="info-item mt-3">
-                  <small class="text-muted d-block">Contact Number</small>
-                  <strong>{{ vendor_bussiness_detail.Contact_number|default:"Not provided" }}</strong>
-                </div>
-                
-                <div class="info-item mt-3">
-                  <small class="text-muted d-block">Business Email</small>
-                  <strong>{{ vendor_bussiness_detail.Busness_email|default:"Not provided" }}</strong>
-                </div>
-
-                
-
-                {% if vendor_bussiness_detail.shop_other_location %}
-                  <div class="info-item mt-3">
-                    <small class="text-muted d-block">Other Location</small>
-                    <strong>{{ vendor_bussiness_detail.shop_address|default:"Not provided" }}, {{ vendor_bussiness_detail.shop_other_location|default:"Not provided" }}-{{ vendor_bussiness_detail.shop_pin_code|default:"Not provided" }}</strong>
-                  </div>
-
-                {% else %}
-                  <div class="info-item mt-3">
-                  <small class="text-muted d-block">Business Address</small>
-                  <strong>{{ vendor_bussiness_detail.shop_address|default:"Not provided" }}, {{ vendor_bussiness_detail.shop_location|default:"Not provided" }}-{{ vendor_bussiness_detail.shop_pin_code|default:"Not provided" }}</strong>
-                </div>
-                {% endif %}
-
-                <div class="info-item mt-3">
-                  <small class="text-muted d-block">GST Number</small>
-                  <div class="d-flex align-items-center">
-                    <span>{{ vendor_bussiness_detail.gst_number|default:"Not provided" }}</span>
-                    {% if vendor_bussiness_detail.gst_image %}
-                    <a href="{{vendor_bussiness_detail.gst_image.url}}" target="_blank" class="ms-2">
-                      <i class="bi bi-eye-fill text-primary"></i>
-                    </a>
-                    {% endif %}
-                  </div>
-                </div>
-              </div>
-              
-              <div class="col-md-6">
-                <div class="info-item">
-                  <small class="text-muted d-block">Business PAN</small>
-                  <div class="d-flex align-items-center">
-                    <span>{{ vendor_bussiness_detail.Bpan_number|default:"Not provided" }}</span>
-                    {% if vendor_bussiness_detail.Bpan_image %}
-                    <a href="{{vendor_bussiness_detail.Bpan_image.url}}" target="_blank" class="ms-2">
-                      <i class="bi bi-eye-fill text-primary"></i>
-                    </a>
-                    {% endif %}
-                  </div>
-                </div>
-                
-                <div class="info-item mt-3">
-                  <small class="text-muted d-block">Shop Photos</small>
-                  <div class="d-flex gap-2 mt-1">
-                    {% if vendor_bussiness_detail.Bphoto_outer %}
-                    <a href="{{vendor_bussiness_detail.Bphoto_outer.url}}" target="_blank" class="badge bg-light text-dark">
-                      <i class="bi bi-image me-1"></i> Outside
-                    </a>
-                    {% endif %}
-                    {% if vendor_bussiness_detail.Bphoto_inside %}
-                    <a href="{{vendor_bussiness_detail.Bphoto_inside.url}}" target="_blank" class="badge bg-light text-dark">
-                      <i class="bi bi-image me-1"></i> Inside
-                    </a>
-                    {% endif %}
-                  </div>
-                </div>
-                
-                <div class="reference-check mt-4 pt-3 border-top">
-                  <h6 class="text-muted mb-3">Reference Check</h6>
-                  <div class="info-item">
-                    <small class="text-muted d-block">Contact Name</small>
-                    <strong>{{ vendor_bussiness_detail.VCname|default:"Not provided" }}</strong>
-                  </div>
-                  
-                  <div class="info-item mt-2">
-                    <small class="text-muted d-block">Mobile Number</small>
-                    <strong>{{ vendor_bussiness_detail.VCmobile|default:"Not provided" }}</strong>
-                  </div>
-                  
-                  <div class="info-item mt-2">
-                    <small class="text-muted d-block">Address</small>
-                    <strong>{{ vendor_bussiness_detail.VCaddress|default:"Not provided" }}</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Bank Account Card -->
-      <div class="col-lg-3">
-        <div class="card h-100" >
-          <div class="card-header d-flex justify-content-between align-items-center">
-              <h5 class="mb-0">Personal Information</h5>
-              <a href="#details-update" class="btn btn-sm btn-outline-primary" >
-                  <i class="bi bi-pencil"></i> Edit
-              </a>
-          </div>
-          <div class="card-body">
-            <div class="row g-3">
-              <!-- ✅ Progress Bar -->
-<div class="mb-4">
-  <label class="form-label">Bank Details Completion</label>
-  <div class="progress">
-    <div id="bankProgressBar" class="progress-bar" role="progressbar" style="width: 0%;">
-      0%
-    </div>
-  </div>
-</div>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const textInputs = [
-      "account_holder_name", "bank_name", "account_number",
-      "ifs_code", "account_type", "preffered_payout_date"
-    ];
-
-    const fileInputs = ["bank_document"];
-    const totalFields = textInputs.length + fileInputs.length;
-
-    function updateBankProgress() {
-      let filled = 0;
-
-      textInputs.forEach(name => {
-        const field = document.getElementsByName(name)[0];
-        if (field && field.value.trim() !== "") filled++;
-      });
-
-      fileInputs.forEach(name => {
-        const fileField = document.getElementsByName(name)[0];
-        if (fileField && fileField.files.length > 0) filled++;
-      });
-
-      const percent = Math.round((filled / totalFields) * 100);
-      const bar = document.getElementById("bankProgressBar");
-      bar.style.width = percent + "%";
-      bar.textContent = percent + "%";
-      bar.classList.toggle("bg-success", percent === 100);
-    }
-
-    document.querySelectorAll("input").forEach(el => {
-      el.addEventListener("input", updateBankProgress);
-      el.addEventListener("change", updateBankProgress);
-    });
-
-    updateBankProgress(); // Initial calculation on page load
-  });
-</script>
-
-              <div class="col-md-6">
-                <div class="info-item">
-                  <small class="text-muted d-block">Account Holder</small>
-                  <strong>{{ vendor_bank_detail.account_holder_name|default:"Not provided" }}</strong>
-                </div>
-                
-                <div class="info-item mt-3">
-                  <small class="text-muted d-block">Account Number</small>
-                  <strong>{{ vendor_bank_detail.account_number|default:"Not provided" }}</strong>
-                </div>
-                
-                <div class="info-item mt-3">
-                  <small class="text-muted d-block">IFSC Code</small>
-                  <strong>{{ vendor_bank_detail.ifs_code|default:"Not provided" }}</strong>
-                </div>
-              </div>
-              
-              <div class="col-md-6">
-                <div class="info-item">
-                  <small class="text-muted d-block">Bank Name</small>
-                  <strong>{{ vendor_bank_detail.bank_name|default:"Not provided" }}</strong>
-                </div>
-                
-                <div class="info-item mt-3">
-                  <small class="text-muted d-block">Account Type</small>
-                  <strong>{{ vendor_bank_detail.account_type|default:"Not provided" }}</strong>
-                </div>
-                
-                <div class="info-item mt-3">
-                  <small class="text-muted d-block">Preferred Payout</small>
-                  <strong>{{ vendor_bank_detail.preffered_payout_date|default:"Not provided" }} of month</strong>
-                </div>
-                
-                {% if vendor_bank_detail.bank_document %}
-                <div class="info-item mt-3">
-                  <small class="text-muted d-block">Bank Document</small>
-                  <a href="{{vendor_bank_detail.bank_document.url}}" target="_blank" class="text-primary">
-                    <i class="bi bi-file-earmark-text me-1"></i> View Document
-                  </a>
-                </div>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <hr>
 
     <div class="col-12" id="details-update">
