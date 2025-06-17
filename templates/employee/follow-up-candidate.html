@@ -93,12 +93,22 @@
                     </div>
                     <div>
                       <div class="font-weight-medium">
+                        {% if candidate.lead_source == 'EVMS' %}  
+                        <a href="{% url 'employee_evms_candidate_profile' candidate.id %}" class="text-reset">
+                          {{ candidate.candidate_name }}
+                        </a>
+                        {% else %}
                         <a href="{% url 'employee_candidate_profile' candidate.id %}" class="text-reset">
                           {{ candidate.candidate_name }}
                         </a>
+                        {% endif %}
                       </div>
                       <div class="text-muted small">
+                        {% if candidate.lead_source == 'EVMS' %}
+                        <code>{{ candidate.refer_code }}-{{ candidate.unique_id }}</code>
+                        {% else %}
                         <code>{{ candidate.unique_code }}</code>
+                        {% endif %}
                       </div>
                     </div>
                   </div>
@@ -141,7 +151,11 @@
                 </td>
                 <td class="text-center">
                   <div class="btn-list justify-content-center">
+                    {% if candidate.lead_source == 'EVMS' %}
+                    <a href="{% url 'employee_evms_candidate_profile' candidate.id %}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
+                    {% else %}
                     <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
+                    {% endif %}
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />

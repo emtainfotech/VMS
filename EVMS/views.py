@@ -788,6 +788,25 @@ def candidate_form(request):
         sector_str = ', '.join(sector)
         preferred_location_str = ', '.join(preferred_location)
         
+        # Get all employees for round robin assignment
+        employees = Employee.objects.all()
+        if employees.exists():
+            # Get the last assigned employee's ID from session or default to 0
+            last_employee_id = request.session.get('last_assigned_employee_id', 0)
+            
+            # Find the next employee in round robin fashion
+            next_employee = employees.filter(id__gt=last_employee_id).first()
+            if not next_employee:
+                next_employee = employees.first()
+            
+            # Update the session with the new last assigned employee ID
+            request.session['last_assigned_employee_id'] = next_employee.id
+            
+            # Get the employee's full name
+            employee_name = f"{next_employee.first_name} {next_employee.last_name} ({next_employee.employee_id})"
+        else:
+            employee_name = "Unassigned"
+        
         # Check if candidate already exists
         candidate = Candidate.objects.filter(
             candidate_mobile_number=candidate_mobile_number
@@ -814,6 +833,7 @@ def candidate_form(request):
                 refer_code=refer_code,
                 job_type=job_type,
                 candidate_photo=candidate_photo,
+                employee_name=employee_name,  # Add the assigned employee name
             )
         
             # Send confirmation email to candidate
@@ -873,7 +893,6 @@ def candidate_form(request):
         "Energy and Power","Aviation and Aerospace"
         ]
         return render(request, 'evms/candidate-apply-form.html', {'initial_data': initial_data,'job_sectors':job_sectors,'districts':districts})
-    
 def term_and_conditions(request) :
     return render (request,'evms/candidate-t&c.html')
 

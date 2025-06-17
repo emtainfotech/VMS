@@ -1,3 +1,71 @@
+<style>
+  .sticky-section-header {
+    position: sticky;
+    top: -25px; /* Adjust based on your header height */
+    background-color: white;
+    z-index: 1000;
+    padding: 10px 0;
+    color: #000;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    margin-top: 0;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const modalBody = document.querySelector('.modal-body');
+    const modalHeader = document.querySelector('.modal-header');
+    const sections = document.querySelectorAll('.modal-body h5.text-secondary');
+    
+    // Create the sticky header element
+    const stickyHeader = document.createElement('h5');
+    stickyHeader.className = 'sticky-section-header text-secondary';
+    stickyHeader.style.display = 'none';
+    modalHeader.after(stickyHeader);
+    
+    // Add intersection observer to track which section is visible
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // Find the currently visible section
+            const visibleSection = Array.from(sections).find(section => {
+              const rect = section.getBoundingClientRect();
+              return rect.top >= 0 && rect.top <= window.innerHeight;
+            });
+            
+            if (visibleSection) {
+              stickyHeader.textContent = visibleSection.textContent;
+              stickyHeader.style.display = 'block';
+            } else {
+              stickyHeader.style.display = 'none';
+            }
+          }
+        });
+      }, 
+      {
+        root: modalBody,
+        threshold: 0.1,
+        rootMargin: '-60px 0px -90% 0px' // Adjust based on your needs
+      }
+    );
+    
+    // Observe each section
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+    
+    // Also observe the form's top to hide the sticky header when at the very top
+    const firstElement = document.querySelector('#candidateForm > *:first-child');
+    if (firstElement) {
+      observer.observe(firstElement);
+    }
+  });
+  </script>
+
 <!-- Single Modal Form -->
 <div class="modal modal-blur fade" id="modal-candidate" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
@@ -11,14 +79,15 @@
           {% csrf_token %}
           
           <!-- Personal Information Section -->
-          <h5 class="text-secondary mb-4">Personal Information</h5>
+          <h5 class="text-secondary mb-4 sticky-section-header">Personal Information</h5>
           <div class="row">
             <div class="col-md-6 mb-3">
               <label class="form-label">Candidate Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="candidate_name" 
+              <input type="text" class="form-control" name="candidate_name" id="candidateName"
                      value="{{ candidate.candidate_name }}" 
                      required minlength="2" maxlength="100"
-                     pattern="^[a-zA-Z\s]*$" />
+                     pattern="^[a-zA-Z\s]*$" 
+                     onchange="confirmFieldChange('name', this.value)" />
               <div class="invalid-feedback">
                 Please enter a valid name (2-100 characters, letters only)
               </div>
@@ -26,10 +95,11 @@
             
             <div class="col-md-6 mb-3">
               <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
-              <input type="tel" class="form-control" name="candidate_mobile_number" 
+              <input type="tel" class="form-control" name="candidate_mobile_number" id="candidateMobile"
                      value="{{ candidate.candidate_mobile_number }}" 
                      required pattern="[0-9]{10}" 
-                     maxlength="10" />
+                     maxlength="10"
+                     onchange="confirmFieldChange('mobile', this.value)" />
               <div class="invalid-feedback">
                 Please enter a valid 10-digit mobile number
               </div>
@@ -37,13 +107,44 @@
             
             <div class="col-md-6 mb-3">
               <label class="form-label">Email Address</label>
-              <input type="email" class="form-control" name="candidate_email_address" 
+              <input type="email" class="form-control" name="candidate_email_address" id="candidateEmail"
                      value="{{ candidate.candidate_email_address }}" 
-                     maxlength="100" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"/>
+                     maxlength="100" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
+                     onchange="confirmFieldChange('email', this.value)" />
               <div class="invalid-feedback">
                 Please enter a valid email address
               </div>
             </div>
+
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Store original values
+                window.originalValues = {
+                    name: document.getElementById('candidateName').value,
+                    mobile: document.getElementById('candidateMobile').value,
+                    email: document.getElementById('candidateEmail').value
+                };
+            });
+
+            function confirmFieldChange(field, newValue) {
+                const originalValue = window.originalValues[field];
+                if (newValue !== originalValue) {
+                    const fieldNames = {
+                        name: 'Name',
+                        mobile: 'Mobile Number',
+                        email: 'Email Address'
+                    };
+                    
+                    const message = `You are about to change the candidate's ${fieldNames[field]} from "${originalValue}" to "${newValue}".\n\nAre you sure you want to proceed?`;
+                    
+                    if (!confirm(message)) {
+                        // Reset to original value if user cancels
+                        const element = document.getElementById(`candidate${field.charAt(0).toUpperCase() + field.slice(1)}`);
+                        element.value = originalValue;
+                    }
+                }
+            }
+            </script>
             
             <div class="col-md-6 mb-3">
               <label class="form-label">Gender <span class="text-danger">*</span></label>
@@ -106,7 +207,7 @@
           
           <!-- Candidate Details Section -->
           <hr class="my-4">
-          <h5 class="text-secondary mb-4">Candidate Information</h5>
+          <h5 class="text-secondary mb-4 sticky-section-header">Candidate Information</h5>
           <div class="row">
             <div class="col-md-6 mb-3">
               <label class="form-label">Alternate Mobile Number</label>
@@ -163,7 +264,7 @@
             </div>
             
             <div class="col-md-6 mb-3">
-              <label class="form-label">Origin Location</label>
+              <label class="form-label">Candidate Origin Location</label>
               <select type="text" class="form-select" name="origin_location" id="originLocation" required>
                   {% for district in districts %}
                   <option value="{{ district }}" {% if candidate.origin_location == district %}selected{% endif %}>
@@ -173,7 +274,7 @@
                   <option value="Other" {% if candidate.origin_location == "Other" %}selected{% endif %}>Other</option>
               </select>
               <div id="otherOriginLocation" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Origin Location</label>
+                <label class="form-label">Specify Other Candidate Origin Location</label>
                 <input type="text" class="form-control" name="other_origin_location" 
                        value="{{ candidate.other_origin_location }}" maxlength="100">
               </div>
@@ -384,7 +485,7 @@
           
           <!-- Calling Remark Section -->
           <hr class="my-4">
-          <h5 class="text-secondary mb-4">Calling Remark</h5>
+          <h5 class="text-secondary mb-4 sticky-section-header">Calling Remark</h5>
           
           <div class="row">
             <!-- Call Connection Status -->
@@ -465,7 +566,7 @@
           
           <!-- Selection Record Section -->
           <hr class="my-4">
-          <h5 class="text-secondary mb-4">Selection Record</h5>
+          <h5 class="text-secondary mb-4 sticky-section-header">Selection Record</h5>
           
           <div class="row">
             <div class="col-md-6 mb-3">
@@ -580,6 +681,29 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize dropdowns
   initializeDropdowns(['sector', 'department', 'location']);
 
+  // Initialize form state based on preselected values
+  if (callConnection) {
+    toggleOtherFields();
+    toggleOtherInput(callConnection, 'otherCallConnectionContainer');
+  }
+
+  if (selectionStatus) {
+    toggleSelectionFields();
+    toggleOtherInput(selectionStatus, 'otherSelectionStatusContainer');
+  }
+
+  // Initialize other input fields
+  otherInputContainers.forEach(item => {
+    const select = document.getElementById(item.select);
+    if (select) {
+      select.addEventListener('change', function() {
+        toggleOtherInput(this, item.container);
+      });
+      // Initialize on load
+      toggleOtherInput(select, item.container);
+    }
+  });
+
   // Toggle fields based on call connection status
   callConnection.addEventListener('change', function() {
     toggleOtherFields();
@@ -596,18 +720,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (joiningStatus) {
     joiningStatus.addEventListener('change', toggleSelectionFields);
   }
-
-  // Initialize other input fields
-  otherInputContainers.forEach(item => {
-    const select = document.getElementById(item.select);
-    if (select) {
-      select.addEventListener('change', function() {
-        toggleOtherInput(this, item.container);
-      });
-      // Initialize on load
-      toggleOtherInput(select, item.container);
-    }
-  });
 
   // Form submission
   submitBtn.addEventListener('click', function(event) {

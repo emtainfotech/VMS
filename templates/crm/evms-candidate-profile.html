@@ -33,6 +33,17 @@
   </style>
 
   <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center py-3">
+        <h4>Candidate Details</h4>
+        <div>
+            <a href="{% url 'admin_evms_candidate_chat_list' candidate.id %}" class="btn btn-sm btn-outline-primary me-2">
+                <i class="bi bi-chat-left-text"></i> Chat
+            </a>
+            <a href="{% url 'admin_evms_interview_list' candidate.id %}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-calendar-check"></i> Interviews
+            </a>
+        </div>
+    </div>
     <div class="row g-4">
         <!-- Personal Information Card -->
         <div class="col-lg-6">
@@ -311,9 +322,10 @@
                           <p class="mb-2">
                             <strong>Admin Status:</strong><br>
                             <span class="badge 
-                                {% if candidate.admin_status == 'Approved' %}bg-success
-                                {% elif candidate.admin_status == 'Hold' %}bg-danger
-                                {% elif candidate.admin_status == 'In Process' %}bg-primary
+                                {% if candidate.admin_status == 'Complete' %}bg-success
+                                {% elif candidate.admin_status == 'Failed' %}bg-danger
+                                {% elif candidate.admin_status == 'Pending' %}bg-primary
+                                {% elif candidate.admin_status == 'In Process' %}bg-info
                                 {% else %}bg-warning {% endif %} text-white">
                                 {{ candidate.admin_status|default:"In Process" }}
                             </span>
@@ -398,6 +410,164 @@
         </div>
         {% endif %}
     </div>
+     
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header  border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-primary">Activity History</h5>
+                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#activityCollapse" aria-expanded="true" aria-controls="activityCollapse">
+                        <i class="bi bi-chevron-down"></i> <span class="d-none d-md-inline">Toggle View</span>
+                    </button>
+                </div>
+                <div class="collapse show" id="activityCollapse">
+                    <div class="card-body">
+                        <div class="timeline-modern">
+                            {% for activity in candidate.activities.all %}
+                            <div class="timeline-item-modern mb-4">
+                                <div class="timeline-icon-modern">
+                                    {% if activity.employee %}
+                                        {% if activity.employee.employee_photo %}
+                                        <img src="{{ activity.employee.employee_photo.url }}" class="rounded-circle shadow-sm" width="40" height="40" alt="{{ activity.employee.first_name }} {{ activity.employee.last_name }}">
+                                        {% else %}
+                                        <div class="d-flex align-items-center justify-content-center bg-info text-white rounded-circle shadow-sm" style="width: 40px; height: 40px; font-size: 1rem;">
+                                            {{ activity.employee.first_name|first }}{{ activity.employee.last_name|first }}
+                                        </div>
+                                        {% endif %}
+                                    {% else %}
+                                    <div class="d-flex align-items-center justify-content-center bg-secondary text-white rounded-circle shadow-sm" style="width: 40px; height: 40px; font-size: 1rem;">
+                                        <i class="bi bi-gear-fill"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="timeline-content-modern p-3 border rounded">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <strong class="text-dark">
+                                                {% if activity.employee %}
+                                                {{ activity.employee.first_name }} {{ activity.employee.last_name }}
+                                                <small class="text-muted">({{ activity.employee.designation }})</small>
+                                                {% else %}
+                                                System
+                                                {% endif %}
+                                            </strong>
+                                        </div>
+                                        <div class="text-muted small">{{ activity.timestamp|date:"M d, Y H:i" }}</div>
+                                    </div>
+    
+                                    <div class="mb-2">
+                                        <span class="badge text-white rounded-pill bg-{% if activity.action == 'created' %}success{% elif activity.action == 'updated' %}info{% elif activity.action == 'deleted' %}danger{% else %}primary{% endif %}">
+                                            {{ activity.get_action_display }}
+                                        </span>
+                                    </div>
+    
+                                    {% if activity.changes %}
+                                    <div class="card p-2 mb-2  border">
+                                        <h6 class="small text-muted mb-1">Changes:</h6>
+                                        <table class="table table-sm table-borderless mb-0">
+                                            <tbody>
+                                                {% for field, values in activity.changes.items %}
+                                                <tr>
+                                                    <td class="text-muted small py-0">{{ field|title }}</td>
+                                                    <td class="py-0">
+                                                        {% if values.old %}
+                                                        <span class="text-danger text-decoration-line-through small me-2">{{ values.old }}</span>
+                                                        {% endif %}
+                                                        {% if values.new %}
+                                                        <span class="text-success small">{{ values.new }}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% endif %}
+    
+                                    {% if activity.remark %}
+                                    <div class="card p-2 bg-white border">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="bi bi-chat-square-text-fill me-2 text-primary"></i>
+                                            <h6 class="small text-muted mb-0">Remark:</h6>
+                                        </div>
+                                        <div class="small text-dark">{{ activity.remark }}</div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-journal-check display-4 text-muted mb-3"></i>
+                                <div class="text-muted">No activity recorded yet.</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    
+    <style>
+        /* Custom CSS for Modern Timeline */
+    .timeline-modern {
+        position: relative;
+        padding-left: 50px; /* Space for the icons and line */
+    }
+    
+    .timeline-modern::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 20px; /* Aligns with the center of the icon */
+        width: 2px;
+        height: 100%;
+        background-color: #e0e0e0; /* Light grey line */
+        z-index: 0;
+    }
+    
+    .timeline-item-modern {
+        position: relative;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start; /* Align content to the top */
+    }
+    
+    .timeline-icon-modern {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 40px;
+        height: 40px;
+        background-color: #fff; /* White background for the icon circle */
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1; /* Ensure icon is above the line */
+        border: 2px solid #e0e0e0; /* Light border around the icon */
+    }
+    
+    .timeline-content-modern {
+        flex-grow: 1;
+        margin-left: 20px; /* Space between icon and content */
+        border-left: 3px solid var(--bs-primary); /* Accent border */
+        padding-left: 15px !important; /* Padding for the accent border */
+    }
+    
+    /* Adjustments for badges and table in changes */
+    .timeline-content-modern .badge {
+        font-size: 0.75rem;
+        padding: 0.4em 0.7em;
+    }
+    
+    .timeline-content-modern table td {
+        padding-top: 0.2rem !important;
+        padding-bottom: 0.2rem !important;
+    }
+    </style>
+    
 </div>
 
 <!-- Modals for Editing Candidate Information -->

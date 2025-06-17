@@ -65,6 +65,11 @@ urlpatterns = [
     path('company/<int:company_id>/contacts/add/', company_contacts_list, name='company_contact_create'),
     path('contacts/<int:contact_id>/', company_contact_detail, name='company_contact_detail'),
     path('contacts/<int:contact_id>/delete/', delete_company_contact, name='delete_company_contact'),
+    path('evms/candidate/<int:candidate_id>/interviews/', employee_evms_interview_list, name='employee_evms_interview_list'),
+    path('evms/interview/<int:interview_id>/', employee_evms_interview_detail, name='employee_evms_interview_detail'),
+    path('evms/interview/<int:interview_id>/delete/', employee_evms_delete_interview, name='employee_evms_delete_interview'),
+    path('evms/candidate/<int:candidate_id>/chats/', employee_evms_candidate_chat_list, name='employee_evms_candidate_chat_list'),
+    path('evms/chat/<int:pk>/delete/', employee_evms_delete_chat, name='employee_evms_delete_chat'),
     
     path('admin/', admin.site.urls),
 ]

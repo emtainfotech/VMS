@@ -586,6 +586,136 @@
             </div>
         </div>
     </div>
+
+    <!-- Third Content Row -->
+     <!-- Third Content Row - Interview Sections -->
+<div class="row">
+    <!-- Today's Interviews -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-calendar-day me-1 text-primary"></i>
+                        <span class="fw-bold">Today's Interviews</span>
+                    </div>
+                    <span class="badge bg-primary bg-opacity-10 text-white">
+                        {{ todays_interviews|length }} Scheduled
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if todays_interviews %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Candidate</th>
+                                <th>Recruiter</th>
+                                <th class="text-end">Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for interview in todays_interviews|slice:":5" %}
+                            <tr>
+                                <td>{{ interview.candidate_name }}</td>
+                                <td>{{ interview.employee_name }}</td>
+                                <td class="text-end">
+                                    {{ interview.register_time|time }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info bg-opacity-10 text-white">
+                                        Scheduled
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if todays_interviews|length > 5 %}
+                <div class="text-center mt-2">
+                    <a href="#" class="btn btn-sm btn-outline-primary">
+                        View All {{ todays_interviews|length }} Interviews
+                    </a>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-calendar-times fa-2x mb-3"></i>
+                    <p class="mb-0">No interviews scheduled for today</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Interviews by Employee -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-user-tie me-1 text-success"></i>
+                        <span class="fw-bold">Interviews by Employee</span>
+                    </div>
+                    <span class="badge bg-success bg-opacity-10 text-white">
+                        {{ interview_candidates }} Total
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if employee_interviews %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Recruiter</th>
+                                <th class="text-end">Interviews</th>
+                                <th class="text-end">% of Total</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for emp in employee_interviews|slice:":5" %}
+                            <tr>
+                                <td>{{ emp.employee_name }}</td>
+                                <td class="text-end fw-bold">{{ emp.interview_count }}</td>
+                                <td class="text-end">
+                                    {% if interview_candidates > 0 %}
+                                        {{ emp.interview_count|floatformat:1 }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-success bg-opacity-10 text-white">
+                                        <i class="fas fa-caret-up"></i> 12.5%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if employee_interviews|length > 5 %}
+                <div class="text-center mt-2">
+                    <a href="#" class="btn btn-sm btn-outline-success">
+                        View All {{ employee_interviews|length }} Employees
+                    </a>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-user-slash fa-2x mb-3"></i>
+                    <p class="mb-0">No interview data available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 
 <style>

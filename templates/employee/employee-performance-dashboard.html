@@ -8,7 +8,7 @@
       <div class="row g-2 align-items-center">
         <div class="col">
           <h2 class="page-title">My Performance Dashboard</h2>
-          <div class="text-muted mt-1">Welcome back, {{ user.employee.first_name |default:request.user.username }} {{ user.employee.last_name }}</div>
+          <div class="text-muted mt-1">Welcome back, {{ user.employee.first_name|default:request.user.username }} {{ user.employee.last_name }}</div>
         </div>
         <div class="col-auto ms-auto">
           <div class="btn-group">
@@ -16,7 +16,7 @@
             <button type="button" class="btn btn-outline-primary period-btn {% if period == 'week' %}active{% endif %}" data-period="week">Week</button>
             <button type="button" class="btn btn-outline-primary period-btn {% if period == 'month' %}active{% endif %}" data-period="month">Month</button>
             <button type="button" class="btn btn-outline-primary period-btn {% if period == 'year' %}active{% endif %}" data-period="year">Year</button>
-        </div>
+          </div>
         </div>
       </div>
     </div>
@@ -48,7 +48,9 @@
                   <div class="text-muted">{{ metrics.total_candidates }}</div>
                 </div>
                 <div class="col-auto">
-                  <span class="badge bg-primary-lt">{{ metrics.total_change }}% vs last {{ period }}</span>
+                  <span class="badge bg-{% if metrics.total_change >= 0 %}success{% else %}danger{% endif %}-lt">
+                    {{ metrics.total_change }}% vs last {{ period }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -75,7 +77,7 @@
                 </div>
                 <div class="col-auto">
                   <span class="badge bg-{% if metrics.selection_change >= 0 %}success{% else %}danger{% endif %}-lt">
-                    {{ metrics.selection_change|floatformat:1 }}%
+                    {{ metrics.selection_change }}%
                   </span>
                 </div>
               </div>
@@ -105,8 +107,8 @@
                   <div class="text-muted">{{ metrics.interview_candidates }} ({{ metrics.interview_rate }}%)</div>
                 </div>
                 <div class="col-auto">
-                  <span class="badge bg-{% if metrics.interview_change >= 0 %}info{% else %}danger{% endif %}-lt">
-                    {{ metrics.interview_change|floatformat:1 }}%
+                  <span class="badge bg-{% if metrics.interview_change >= 0 %}success{% else %}danger{% endif %}-lt">
+                    {{ metrics.interview_change }}%
                   </span>
                 </div>
               </div>
@@ -134,8 +136,8 @@
                   <div class="text-muted">{{ metrics.lead_generation }}</div>
                 </div>
                 <div class="col-auto">
-                  <span class="badge bg-{% if metrics.lead_change >= 0 %}warning{% else %}danger{% endif %}-lt">
-                    {{ metrics.lead_change|floatformat:1 }}%
+                  <span class="badge bg-{% if metrics.lead_change >= 0 %}success{% else %}danger{% endif %}-lt">
+                    {{ metrics.lead_change }}%
                   </span>
                 </div>
               </div>
@@ -178,7 +180,7 @@
         <div class="col-lg-4">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">Status Distribution</h3>
+              <h3 class="card-title">Status Distribution (Employee Source)</h3>
             </div>
             <div class="card-body">
               <div id="status-distribution-chart" style="height: 300px;"></div>
@@ -202,83 +204,8 @@
         </div>
       </div>
 
-      <!-- Detailed Tables -->
+      <!-- Call Connection Stats -->
       <div class="row mt-4">
-        <!-- Recent Candidates -->
-        <div class="col-lg-6">
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Recent Candidates</h3>
-              <div class="card-actions">
-                <a href="{% url 'employee_candidate_list' %}" class="btn btn-primary btn-sm">
-                  View All
-                </a>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-vcenter table-hover table-striped">
-                  <thead>
-                    <tr>
-                      <th>Candidate</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                      <th class="w-1"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for candidate in recent_candidates %}
-                    <tr>
-                      <td>
-                        <div class="d-flex py-1 align-items-center">
-                          {% comment %} <span class="avatar me-2" style="background-image: url({{ candidate.candidate_photo.url }})"></span> {% endcomment %}
-                          <div class="flex-fill">
-                            <div class="font-weight-medium">{{ candidate.candidate_name }}</div>
-                            <div class="text-muted">{{ candidate.department|default:"-" }}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="badge text-white bg-{% if candidate.selection_status == 'Selected' %}success{% elif candidate.selection_status == 'Pending' %}warning{% else %}danger{% endif %}">
-                          {{ candidate.selection_status }}
-                        </span>
-                      </td>
-                      <td class="text-muted">{{ candidate.register_time|date:"M d, Y" }}</td>
-                      <td>
-                        <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-link">
-                          View
-                        </a>
-                      </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="4" class="text-center py-4">
-                        <div class="empty">
-                          <div class="empty-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                              <path d="M9 10l.01 0" />
-                              <path d="M15 10l.01 0" />
-                              <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
-                            </svg>
-                          </div>
-                          <p class="empty-title">No candidates found</p>
-                          <p class="empty-subtitle text-muted">
-                            Try adjusting your search or filter
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Call Connection Stats -->
         <div class="col-lg-6">
           <div class="card">
             <div class="card-header">
@@ -331,29 +258,30 @@
                 </div>
               </div>
               
+              <!-- Call Breakdown Section -->
               <div class="mt-4">
-                <h4 class="mb-3">Call Outcomes</h4>
+                <h4 class="card-subtitle mb-3">Call Status Breakdown</h4>
                 <div class="table-responsive">
-                  <table class="table table-sm">
+                  <table class="table table-vcenter">
                     <thead>
                       <tr>
                         <th>Status</th>
                         <th>Count</th>
-                        <th>Percentage</th>
-                        <th>Trend</th>
+                        <!-- <th>Percentage</th> -->
+                        <!-- <th>Change</th> -->
                       </tr>
                     </thead>
                     <tbody>
-                      {% for outcome in call_stats.breakdown %}
+                      {% for status in call_stats.breakdown %}
                       <tr>
-                        <td>{{ outcome.status }}</td>
-                        <td>{{ outcome.count }}</td>
-                        <td>{{ outcome.percentage }}%</td>
-                        <td>
-                          <span class="badge bg-{% if outcome.trend >= 0 %}success{% else %}danger{% endif %}-lt">
-                            {{ outcome.trend }}%
+                        <td>{{ status.status }}</td>
+                        <td>{{ status.current }}</td>
+                        <!-- <td>{{ status.percentage }}%</td> -->
+                        <!-- <td>
+                          <span class="badge badge-sm text-white  bg-{% if status.change >= 0 %}success{% else %}danger{% endif %}">
+                            {{ status.change }}%
                           </span>
-                        </td>
+                        </td> -->
                       </tr>
                       {% endfor %}
                     </tbody>
@@ -363,6 +291,239 @@
             </div>
           </div>
         </div>
+
+        <!-- Recent Candidates -->
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Recent Candidates</h3>
+              <div class="card-actions">
+                <a href="{% url 'employee_candidate_list' %}" class="btn btn-primary btn-sm">
+                  View All
+                </a>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-vcenter table-hover table-striped">
+                  <thead>
+                    <tr>
+                      <th>Candidate</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th class="w-1"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for candidate in recent_candidates %}
+                    <tr>
+                      <td>
+                        <div class="d-flex py-1 align-items-center">
+                          <div class="flex-fill">
+                            <div class="font-weight-medium">{{ candidate.candidate_name }}</div>
+                             {% if candidate.lead_source == 'EVMS' %}
+                            <div class="text-muted">{{ candidate.refer_code|default:"" }}-{{ candidate.unique_id|default:"-" }}</div>
+                            {% else %}
+                            <div class="text-muted">{{ candidate.unique_code|default:"-" }}</div>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge text-white bg-{% if candidate.selection_status == 'Selected' %}success{% elif candidate.selection_status == 'Pending' %}warning{% else %}danger{% endif %}">
+                          {{ candidate.selection_status }}
+                        </span>
+                      </td>
+                      <td class="text-muted">{{ candidate.register_time|date:"M d, Y" }}</td>
+                      {% if candidate.lead_source == 'EVMS' %}
+                      <td>
+                        <a href="{% url 'employee_evms_candidate_profile' candidate.id %}" class="btn btn-link">
+                          View
+                        </a>
+                      </td>
+                      {% else %}
+                      <td>
+                        <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-link">
+                          View
+                        </a>
+                      </td>
+                      {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                      <td colspan="4" class="text-center py-4">
+                        <div class="empty">
+                          <div class="empty-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                              <path d="M9 10l.01 0" />
+                              <path d="M15 10l.01 0" />
+                              <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
+                            </svg>
+                          </div>
+                          <p class="empty-title">No candidates found</p>
+                          <p class="empty-subtitle text-muted">
+                            Try adjusting your search or filter
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interview Detail -->
+      <div class="row mt-4">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Today's Interviews</h3>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-vcenter table-hover table-striped">
+                  <thead>
+                    <tr>
+                      <th>Candidate</th>
+                      <th>Status</th>
+                      <th>Time</th>
+                      <th>Mode</th>
+                      <th>Location</th>
+                      <th>Notes</th>
+                      <th class="w-1"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for interview in interview_detail %}
+                    <tr class="interview-row" data-date="{{ interview.interview_date }}" data-time="{{ interview.interview_time }}">
+                      <td>{{ interview.candidate.candidate_name }}</td>
+                      <td>{{ interview.status }}</td>
+                      <td class="interview-time">{{ interview.interview_time|time:"g:i A" }}</td>
+                      <td>{{ interview.interview_mode }}</td>
+                      <td>{{ interview.location }}</td>
+                      <td>{{ interview.notes }}</td>
+                      <td>
+                        <a href="{% url 'interview_detail' interview.id %}" class="btn btn-link">
+                          View
+                        </a>
+                      </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                      <td colspan="7" class="text-center py-4">
+                        <div class="empty">
+                          <div class="empty-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                              <path d="M9 10l.01 0" />
+                              <path d="M15 10l.01 0" />
+                              <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
+                            </svg>
+                          </div>
+                          <p class="empty-title">No interviews scheduled for today</p>
+                          <p class="empty-subtitle text-muted">
+                            Check back later for updates
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const interviewRows = document.querySelectorAll('.interview-row');
+          const alarmModal = new bootstrap.Modal(document.getElementById('alarmModal'));
+          let alarmIntervals = {};
+          
+          // Create audio element for notification sound
+          const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+          notificationSound.volume = 0.5;
+
+          function checkInterviewTime() {
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+
+            interviewRows.forEach(row => {
+              const timeStr = row.querySelector('.interview-time').textContent;
+              const [time, period] = timeStr.split(' ');
+              let [hours, minutes] = time.split(':').map(Number);
+              
+              // Convert to 24-hour format
+              if (period === 'PM' && hours !== 12) hours += 12;
+              if (period === 'AM' && hours === 12) hours = 0;
+              
+              const interviewTime = hours * 60 + minutes;
+              const timeUntilInterview = interviewTime - currentTime;
+              const interviewId = row.dataset.interviewId;
+
+              // Check if interview is within 15 minutes
+              if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
+                if (!alarmIntervals[interviewId]) {
+                  showAlarm(row);
+                  // Play notification sound
+                  notificationSound.play().catch(error => console.log('Error playing sound:', error));
+                  
+                  // Set interval to show alarm every 5 minutes
+                  alarmIntervals[interviewId] = setInterval(() => {
+                    showAlarm(row);
+                    // Play notification sound on each interval
+                    notificationSound.play().catch(error => console.log('Error playing sound:', error));
+                  }, 5 * 60 * 1000);
+                }
+              }
+            });
+          }
+
+          function showAlarm(row) {
+            const candidateName = row.cells[0].textContent;
+            const interviewTime = row.querySelector('.interview-time').textContent;
+            const location = row.cells[4].textContent;
+            
+            document.getElementById('alarmModalBody').innerHTML = `
+              <p>Interview with <strong>${candidateName}</strong> is scheduled in 15 minutes!</p>
+              <p>Time: ${interviewTime}</p>
+              <p>Location: ${location}</p>
+            `;
+            
+            alarmModal.show();
+          }
+
+          // Check every minute
+          setInterval(checkInterviewTime, 60 * 1000);
+          // Initial check
+          checkInterviewTime();
+        });
+      </script>
+    </div>
+  </div>
+</div>
+
+<!-- Interview Alert Modal -->
+<div class="modal fade" id="alarmModal" tabindex="-1" aria-labelledby="alarmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title" id="alarmModalLabel">Interview Alert</h5>
+      </div>
+      <div class="modal-body" id="alarmModalBody">
+        <!-- Filled by JS -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
       </div>
     </div>
   </div>
@@ -454,6 +615,44 @@ document.addEventListener('DOMContentLoaded', function() {
       window.location.search = `?period=${period}`;
     });
   });
+
+  // Interview alert handling
+  function parseCustomDateTime(dateStr, timeStr) {
+    const fullDateStr = dateStr + ' ' + timeStr;
+    return new Date(fullDateStr);
+  }
+
+  function checkAlarms() {
+    const now = new Date();
+    document.querySelectorAll('.interview-row').forEach(row => {
+      const dateStr = row.dataset.date;
+      const timeStr = row.dataset.time;
+
+      const eventTime = parseCustomDateTime(dateStr, timeStr);
+
+      if (!eventTime || isNaN(eventTime.getTime())) return;
+
+      const diff = eventTime - now;
+      if (diff < 1000 && diff > -1000 && !row.classList.contains("alarmed")) {
+        const candidateName = row.querySelector('td').textContent;
+        document.getElementById("alarmModalBody").innerText =
+          "Interview scheduled for " + candidateName + " is happening now!";
+
+        const modal = new bootstrap.Modal(document.getElementById("alarmModal"));
+        modal.show();
+
+        row.classList.add("table-danger", "alarmed");
+      }
+    });
+  }
+
+  setInterval(checkAlarms, 1000);
 });
 </script>
+
+<style>
+.table-danger {
+  background-color: #f8d7da !important;
+}
+</style>
 {% endblock %}

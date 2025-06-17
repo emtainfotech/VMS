@@ -336,9 +336,9 @@ document.addEventListener("DOMContentLoaded", function () {
       textInputs: [
         "first_name", "last_name", "mobile_number", "email", "date_of_birth",
         "gender", "address", "adhar_card_number", "pan_card_number",
-        "location", "pin_code", "other_location"
+        "location", "pin_code"
       ],
-      fileInputs: ["vendor_profile_image", "adhar_card_image", "pan_card_image"]
+      fileInputs: []
     },
     {
       id: "businessProgressBar",
@@ -347,10 +347,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "shop_other_location", "Contact_number", "Busness_email", "Gumasta_number",
         "gst_number", "Bpan_number", "MSME_number", "VCname", "VCmobile", "VCaddress"
       ],
-      fileInputs: [
-        "gumasta_image", "gst_image", "Bpan_image",
-        "MSME_image", "Bphoto_outer", "Bphoto_inside"
-      ]
+      fileInputs: []
     },
     {
       id: "bankProgressBar",
@@ -358,7 +355,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "account_holder_name", "bank_name", "account_number",
         "ifs_code", "account_type", "preffered_payout_date"
       ],
-      fileInputs: ["bank_document"]
+      fileInputs: []
     }
   ];
 
@@ -610,7 +607,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Verification Status</label>
-                        <select class="form-select" name="profileVerification">
+                        <select class="form-select" name="profileVerification" id="verificationStatus">
                           <option value="" disabled>Select Verification Status</option>
                           <option value="Pending" {% if vendor.profileVerification == "Pending" %}selected{% endif %}>Pending</option>
                           <option value="In Progress" {% if vendor.profileVerification == "In Progress" %}selected{% endif %}>In Progress</option>
@@ -642,38 +639,89 @@ document.addEventListener("DOMContentLoaded", function () {
                           <option value="Awaiting Reactivation" {% if vendor.profileVerification == "Awaiting Reactivation" %}selected{% endif %}>Awaiting Reactivation</option>
                           <option value="Awaiting Unblocking" {% if vendor.profileVerification == "Awaiting Unblocking" %}selected{% endif %}>Awaiting Unblocking</option>
                           <option value="Awaiting Unverification" {% if vendor.profileVerification == "Awaiting Unverification" %}selected{% endif %}>Awaiting Unverification</option>
-
                         </select>
                         <div class="invalid-feedback">Please select a verification status</div>
-                      </div>
+                    </div>
+                    <div class="col-md-6 mb-3" id="verificationRemarkDiv" style="display: none;">
+                        <label class="form-label">Verification Remark</label>
+                        <input type="text" class="form-control" name="verification_remark" id="verificationRemark" value="{{ vendor.verification_remark }}" />
+                    </div>
+                    <script>
+                        document.getElementById('verificationStatus').addEventListener('change', function() {
+                            const remarkDiv = document.getElementById('verificationRemarkDiv');
+                            if (this.value === 'Rejected') {
+                                remarkDiv.style.display = 'block';
+                            } else {
+                                remarkDiv.style.display = 'none';
+                            }
+                        });
+                    </script>
                       <hr>
 
                     <div class="col-md-6 mb-3">
                       <label class="form-label">First Name <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control" name="first_name" value="{{ vendor.user.first_name }}" 
+                      <input type="text" class="form-control" name="first_name" id="firstName" value="{{ vendor.user.first_name }}" 
                              pattern="[A-Za-z ]{2,50}" title="Only letters and spaces (2-50 characters)" required />
                       <div class="invalid-feedback">Please enter a valid first name (2-50 letters)</div>
                     </div>
                     
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control" name="last_name" value="{{ vendor.user.last_name }}" 
+                      <input type="text" class="form-control" name="last_name" id="lastName" value="{{ vendor.user.last_name }}" 
                              pattern="[A-Za-z ]{2,50}" title="Only letters and spaces (2-50 characters)" required />
                       <div class="invalid-feedback">Please enter a valid last name (2-50 letters)</div>
                     </div>
                     
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-                      <input type="tel" class="form-control" name="mobile_number" value="{{ vendor.mobile_number }}" 
+                      <input type="tel" class="form-control" name="mobile_number" id="mobileNumber" value="{{ vendor.mobile_number }}" 
                              pattern="[0-9]{10}" title="10 digit mobile number" required />
                       <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
                     </div>
                     
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Email <span class="text-danger">*</span></label>
-                      <input type="email" class="form-control" name="email" value="{{ vendor.user.email }}"  pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" required />
+                      <input type="email" class="form-control" name="email" id="email" value="{{ vendor.user.email }}"  pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" required />
                       <div class="invalid-feedback">Please enter a valid email address</div>
                     </div>
+
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const originalValues = {
+                            firstName: document.getElementById('firstName').value,
+                            lastName: document.getElementById('lastName').value,
+                            mobileNumber: document.getElementById('mobileNumber').value,
+                            email: document.getElementById('email').value
+                        };
+
+                        function handleChange(input, fieldName) {
+                            const newValue = input.value;
+                            if (newValue !== originalValues[fieldName]) {
+                                if (confirm(`Are you sure you want to change the ${fieldName} from "${originalValues[fieldName]}" to "${newValue}"?`)) {
+                                    originalValues[fieldName] = newValue;
+                                } else {
+                                    input.value = originalValues[fieldName];
+                                }
+                            }
+                        }
+
+                        document.getElementById('firstName').addEventListener('change', function() {
+                            handleChange(this, 'firstName');
+                        });
+
+                        document.getElementById('lastName').addEventListener('change', function() {
+                            handleChange(this, 'lastName');
+                        });
+
+                        document.getElementById('mobileNumber').addEventListener('change', function() {
+                            handleChange(this, 'mobileNumber');
+                        });
+
+                        document.getElementById('email').addEventListener('change', function() {
+                            handleChange(this, 'email');
+                        });
+                    });
+                    </script>
                     
                     <div class="col-md-6 mb-3">
   <label class="form-label">Date of Birth</label>

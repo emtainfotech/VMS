@@ -1,548 +1,680 @@
+<style>
+  .sticky-section-header {
+    position: sticky;
+    top: -25px; /* Adjust based on your header height */
+    background-color: white;
+    z-index: 1000;
+    padding: 10px 0;
+    color: #000;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    margin-top: 0;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .modal-content {
+    border-radius: 0.5rem;
+  }
+
+  .modal-header {
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem;
+  }
+
+  .modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  /* Ensure dropdowns appear above other content */
+  .dropdown-menu {
+    z-index: 1060;
+  }
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const modalBody = document.querySelector('.modal-body');
+    const modalHeader = document.querySelector('.modal-header');
+    const sections = document.querySelectorAll('.modal-body h5.text-secondary');
+    
+    // Create the sticky header element
+    const stickyHeader = document.createElement('h5');
+    stickyHeader.className = 'sticky-section-header text-secondary';
+    stickyHeader.style.display = 'none';
+    modalHeader.after(stickyHeader);
+    
+    // Add intersection observer to track which section is visible
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // Find the currently visible section
+            const visibleSection = Array.from(sections).find(section => {
+              const rect = section.getBoundingClientRect();
+              return rect.top >= 0 && rect.top <= window.innerHeight;
+            });
+            
+            if (visibleSection) {
+              stickyHeader.textContent = visibleSection.textContent;
+              stickyHeader.style.display = 'block';
+            } else {
+              stickyHeader.style.display = 'none';
+            }
+          }
+        });
+      }, 
+      {
+        root: modalBody,
+        threshold: 0.1,
+        rootMargin: '-60px 0px -90% 0px' // Adjust based on your needs
+      }
+    );
+    
+    // Observe each section
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+    
+    // Also observe the form's top to hide the sticky header when at the very top
+    const firstElement = document.querySelector('#candidateForm > *:first-child');
+    if (firstElement) {
+      observer.observe(firstElement);
+    }
+  });
+  </script>
+
 <!-- Single Modal Form -->
-<div class="modal modal-blur fade" id="modal-candidate" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Candidate Profile</h5>
+<div class="modal modal-blur fade" id="unified-candidate-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content d-flex flex-column" style="height: 90vh;">
+      <div class="modal-header sticky-top bg-white" style="z-index: 1050;">
+        <h5 class="modal-title" id="modal-title">Candidate Information - {{ candidate.candidate_name }}({{ candidate.candidate_mobile_number }})</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body" style="overflow-y: auto; max-height: calc(100vh - 200px);">
-        <form id="candidateForm" method="POST" enctype="multipart/form-data" novalidate>
+      <div class="modal-body flex-grow-1" style="overflow-y: auto;">
+        <form method="POST" enctype="multipart/form-data" id="unifiedCandidateForm" novalidate>
           {% csrf_token %}
+          <input type="hidden" name="submit_by" value="{{user.username}}"/>
           
-          <!-- Personal Information Section -->
-          <h5 class="text-secondary mb-4">Personal Information</h5>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Candidate Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="candidate_name" 
-                     value="{{ candidate.candidate_name }}" 
-                     required minlength="2" maxlength="100"
-                     pattern="^[a-zA-Z\s]*$" />
-              <div class="invalid-feedback">
-                Please enter a valid name (2-100 characters, letters only)
+          <div class="tab-content" id="formTabContent">
+            <!-- Personal Information Section -->
+            <h5 class="text-secondary mb-4 sticky-section-header">Personal Information</h5>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Candidate Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="candidate_name" id="candidateName"
+                       value="{{ candidate.candidate_name }}" 
+                       required minlength="2" maxlength="100"
+                       pattern="^[a-zA-Z\s]*$" 
+                       onchange="confirmFieldChange('name', this.value)" />
+                <div class="invalid-feedback">
+                  Please enter a valid name (2-100 characters, letters only)
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                <input type="tel" class="form-control" name="candidate_mobile_number" id="candidateMobile"
+                       value="{{ candidate.candidate_mobile_number }}" 
+                       required pattern="[0-9]{10}" 
+                       maxlength="10"
+                       onchange="confirmFieldChange('mobile', this.value)" />
+                <div class="invalid-feedback">
+                  Please enter a valid 10-digit mobile number
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" name="candidate_email_address" id="candidateEmail"
+                       value="{{ candidate.candidate_email_address }}" 
+                       maxlength="100" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
+                       onchange="confirmFieldChange('email', this.value)" />
+                <div class="invalid-feedback">
+                  Please enter a valid email address
+                </div>
+              </div>
+
+              <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                  // Store original values
+                  window.originalValues = {
+                      name: document.getElementById('candidateName').value,
+                      mobile: document.getElementById('candidateMobile').value,
+                      email: document.getElementById('candidateEmail').value
+                  };
+              });
+
+              function confirmFieldChange(field, newValue) {
+                  const originalValue = window.originalValues[field];
+                  if (newValue !== originalValue) {
+                      const fieldNames = {
+                          name: 'Name',
+                          mobile: 'Mobile Number',
+                          email: 'Email Address'
+                      };
+                      
+                      const message = `You are about to change the candidate's ${fieldNames[field]} from "${originalValue}" to "${newValue}".\n\nAre you sure you want to proceed?`;
+                      
+                      if (!confirm(message)) {
+                          // Reset to original value if user cancels
+                          const element = document.getElementById(`candidate${field.charAt(0).toUpperCase() + field.slice(1)}`);
+                          element.value = originalValue;
+                      }
+                  }
+              }
+              </script>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Gender <span class="text-danger">*</span></label>
+                <select class="form-select" name="gender" required>
+                  <option value="" disabled>Select Gender</option>
+                  <option value="Male" {% if candidate.gender == "Male" %}selected{% endif %}>Male</option>
+                  <option value="Female" {% if candidate.gender == "Female" %}selected{% endif %}>Female</option>
+                  <option value="Other" {% if candidate.gender == "Other" %}selected{% endif %}>Other</option>
+                </select>
+                <div class="invalid-feedback">
+                  Please select gender
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Profile Photo</label>
+                <input type="file" class="form-control" name="candidate_photo" 
+                       accept="image/*" />
+                <div class="invalid-feedback">
+                  Please upload a valid image (JPEG, PNG, JPG)
+                </div>
+                <small class="text-muted">Max size: 10MB</small>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Resume <span class="text-danger">*</span></label>
+                <input type="file" class="form-control" name="candidate_resume" 
+                       accept=".pdf,.doc,.docx" />
+                <div class="invalid-feedback">
+                  Please upload a valid resume (PDF, DOC, DOCX)
+                </div>
+                <small class="text-muted">Max size: 10MB (PDF, DOC, DOCX)</small>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Lead Source</label>
+                <select name="lead_source" class="form-select" required id="leadSourceSelect">
+                    <option value="" disabled selected>Select Lead Source</option>
+                    <option value="EVMS" {% if candidate.lead_source == "EVMS" %}selected{% endif %}>EVMS</option>
+                    <option value="Walk-In" {% if candidate.lead_source == "Walk-In" %}selected{% endif %}>Walk-In</option>
+                    <option value="Job Hai" {% if candidate.lead_source == "Job Hai" %}selected{% endif %}>Job Hai</option>
+                    <option value="Naukari" {% if candidate.lead_source == "Naukari" %}selected{% endif %}>Naukari</option>
+                    <option value="Apna" {% if candidate.lead_source == "Apna" %}selected{% endif %}>Apna</option>
+                    <option value="Expertia" {% if candidate.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
+                    <option value="Instagram" {% if candidate.lead_source == "Instagram" %}selected{% endif %}>Instagram</option>
+                    <option value="Website" {% if candidate.lead_source == "Website" %}selected{% endif %}>Website</option>
+                    <option value="Indeed" {% if candidate.lead_source == "Indeed" %}selected{% endif %}>Indeed</option>
+                    <option value="Facebook" {% if candidate.lead_source == "Facebook" %}selected{% endif %}>Facebook</option>
+                    <option value="Linkedin" {% if candidate.lead_source == "Linkedin" %}selected{% endif %}>Linkedin</option>
+                    <option value="Personal Refference" {% if candidate.lead_source == "Personal Refference" %}selected{% endif %}>Personal Refference</option>
+                    <option value="Other" {% if candidate.lead_source == "Other" %}selected{% endif %}>Other</option>
+                </select>
+                <div id="otherLeadSourceContainer" style="display: none;" class="mt-2">
+                  <label class="form-label">Specify Other Lead Source</label>
+                  <input type="text" class="form-control" name="other_lead_source" 
+                         value="{{ candidate.other_lead_source }}" maxlength="100">
+                </div>
               </div>
             </div>
             
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
-              <input type="tel" class="form-control" name="candidate_mobile_number" 
-                     value="{{ candidate.candidate_mobile_number }}" 
-                     required pattern="[0-9]{10}" 
-                     maxlength="10" />
-              <div class="invalid-feedback">
-                Please enter a valid 10-digit mobile number
+            <!-- Candidate Details Section -->
+            <hr class="my-4">
+            <h5 class="text-secondary mb-4 sticky-section-header">Candidate Information</h5>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Alternate Mobile Number</label>
+                <input type="tel" class="form-control" name="candidate_alternate_mobile_number" 
+                       value="{{candidate.candidate_alternate_mobile_number}}"
+                       pattern="[0-9]{10}" maxlength="10">
+                <div class="invalid-feedback">
+                  Please enter a valid 10-digit mobile number
+                </div>
               </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Email Address</label>
-              <input type="email" class="form-control" name="candidate_email_address" 
-                     value="{{ candidate.candidate_email_address }}" 
-                     maxlength="100" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"/>
-              <div class="invalid-feedback">
-                Please enter a valid email address
-              </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Gender <span class="text-danger">*</span></label>
-              <select class="form-select" name="gender" required>
-                <option value="" disabled>Select Gender</option>
-                <option value="Male" {% if candidate.gender == "Male" %}selected{% endif %}>Male</option>
-                <option value="Female" {% if candidate.gender == "Female" %}selected{% endif %}>Female</option>
-                <option value="Other" {% if candidate.gender == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div class="invalid-feedback">
-                Please select gender
-              </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Profile Photo</label>
-              <input type="file" class="form-control" name="candidate_photo" 
-                     accept="image/*" />
-              <div class="invalid-feedback">
-                Please upload a valid image (JPEG, PNG, JPG)
-              </div>
-              <small class="text-muted">Max size: 10MB</small>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Resume <span class="text-danger">*</span></label>
-              <input type="file" class="form-control" name="candidate_resume" 
-                     accept=".pdf,.doc,.docx" />
-              <div class="invalid-feedback">
-                Please upload a valid resume (PDF, DOC, DOCX)
-              </div>
-              <small class="text-muted">Max size: 10MB (PDF, DOC, DOCX)</small>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Lead Source</label>
-              <select name="lead_source" class="form-select" required id="leadSourceSelect">
-                  <option value="" disabled selected>Select Lead Source</option>
-                  <option value="EVMS" {% if candidate.lead_source == "EVMS" %}selected{% endif %}>EVMS</option>
-                  <option value="Walk-In" {% if candidate.lead_source == "Walk-In" %}selected{% endif %}>Walk-In</option>
-                  <option value="Job Hai" {% if candidate.lead_source == "Job Hai" %}selected{% endif %}>Job Hai</option>
-                  <option value="Naukari" {% if candidate.lead_source == "Naukari" %}selected{% endif %}>Naukari</option>
-                  <option value="Apna" {% if candidate.lead_source == "Apna" %}selected{% endif %}>Apna</option>
-                  <option value="Expertia" {% if candidate.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
-                  <option value="Instagram" {% if candidate.lead_source == "Instagram" %}selected{% endif %}>Instagram</option>
-                  <option value="Website" {% if candidate.lead_source == "Website" %}selected{% endif %}>Website</option>
-                  <option value="Indeed" {% if candidate.lead_source == "Indeed" %}selected{% endif %}>Indeed</option>
-                  <option value="Facebook" {% if candidate.lead_source == "Facebook" %}selected{% endif %}>Facebook</option>
-                  <option value="Linkedin" {% if candidate.lead_source == "Linkedin" %}selected{% endif %}>Linkedin</option>
-                  <option value="Personal Refference" {% if candidate.lead_source == "Personal Refference" %}selected{% endif %}>Personal Refference</option>
-                  <option value="Other" {% if candidate.lead_source == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherLeadSourceContainer" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Lead Source</label>
-                <input type="text" class="form-control" name="other_lead_source" 
-                       value="{{ candidate.other_lead_source }}" maxlength="100">
-              </div>
-            </div>
-          </div>
-          
-          <!-- Candidate Details Section -->
-          <hr class="my-4">
-          <h5 class="text-secondary mb-4">Candidate Information</h5>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Alternate Mobile Number</label>
-              <input type="tel" class="form-control" name="candidate_alternate_mobile_number" 
-                     value="{{candidate.candidate_alternate_mobile_number}}"
-                     pattern="[0-9]{10}" maxlength="10">
-              <div class="invalid-feedback">
-                Please enter a valid 10-digit mobile number
-              </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Preferred Location</label>
-              <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                        id="locationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                  {% if candidate.preferred_location %}
-                    {% if candidate.preferred_location|length > 2 %}
-                      {{ candidate.preferred_location|length }} locations selected
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Preferred Location</label>
+                <div class="dropdown">
+                  <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                          id="locationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if candidate.preferred_location %}
+                      {% if candidate.preferred_location|length > 2 %}
+                        {{ candidate.preferred_location|length }} locations selected
+                      {% else %}
+                        {{ candidate.preferred_location|join:", " }}
+                      {% endif %}
                     {% else %}
-                      {{ candidate.preferred_location|join:", " }}
+                      Select locations...
                     {% endif %}
-                  {% else %}
-                    Select locations...
-                  {% endif %}
-                </button>
-                <ul class="dropdown-menu w-100 p-2" aria-labelledby="locationDropdown">
-                  <li>
-                    <div class="px-2 mb-2">
-                      <input type="text" class="form-control search-input" 
-                             placeholder="Search locations..." 
-                             id="locationSearch">
+                  </button>
+                  <ul class="dropdown-menu w-100 p-2" aria-labelledby="locationDropdown">
+                    <li>
+                      <div class="px-2 mb-2">
+                        <input type="text" class="form-control search-input" 
+                               placeholder="Search locations..." 
+                               id="locationSearch">
+                      </div>
+                    </li>
+                    <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+                      {% for district in districts %}
+                      <li class="dropdown-item">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="preferred_location" 
+                                 value="{{ district }}" id="loc-{{ forloop.counter }}"
+                                 {% if district in candidate.preferred_location %}checked{% endif %}>
+                          <label class="form-check-label w-100" for="loc-{{ forloop.counter }}">
+                            {{ district }}
+                          </label>
+                        </div>
+                      </li>
+                      {% endfor %}
                     </div>
-                  </li>
-                  <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+                  </ul>
+                </div>
+                <div class="invalid-feedback">
+                  Please select at least one location
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Candidate Origin Location</label>
+                <select type="text" class="form-select" name="origin_location" id="originLocation" required>
                     {% for district in districts %}
-                    <li class="dropdown-item">
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="preferred_location" 
-                               value="{{ district }}" id="loc-{{ forloop.counter }}"
-                               {% if district in candidate.preferred_location %}checked{% endif %}>
-                        <label class="form-check-label w-100" for="loc-{{ forloop.counter }}">
-                          {{ district }}
-                        </label>
-                      </div>
-                    </li>
+                    <option value="{{ district }}" {% if candidate.origin_location == district %}selected{% endif %}>
+                        {{ district }}
+                    </option>
                     {% endfor %}
+                    <option value="Other" {% if candidate.origin_location == "Other" %}selected{% endif %}>Other</option>
+                </select>
+                <div id="otherOriginLocation" style="display: none;" class="mt-2">
+                  <label class="form-label">Specify Other Candidate Origin Location</label>
+                  <input type="text" class="form-control" name="other_origin_location" 
+                         value="{{ candidate.other_origin_location }}" maxlength="100">
+                </div>
+                <div class="invalid-feedback">
+                  Maximum 100 characters allowed
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Qualification</label>
+                <select class="form-select" name="qualification" id="qualificationSelect">
+                  <option value="">Select Qualification</option>
+                  <option value="High School" {% if candidate.qualification == "High School" %}selected{% endif %}>High School</option>
+                  <option value="Diploma" {% if candidate.qualification == "Diploma" %}selected{% endif %}>Diploma</option>
+                  <option value="Bachelor's Degree" {% if candidate.qualification == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree</option>
+                  <option value="Master's Degree" {% if candidate.qualification == "Master's Degree" %}selected{% endif %}>Master's Degree</option>
+                  <option value="PhD" {% if candidate.qualification == "PhD" %}selected{% endif %}>PhD</option>
+                  <option value="Other" {% if candidate.qualification == "Other" %}selected{% endif %}>Other</option>
+                </select>
+                <div id="otherQualificationContainer" style="display: none;" class="mt-2">
+                  <label class="form-label">Specify Other Qualification</label>
+                  <input type="text" class="form-control" name="other_qualification" 
+                         value="{{ candidate.other_qualification }}" maxlength="100">
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Diploma</label>
+                <input type="text" class="form-control" name="diploma" 
+                       value="{{candidate.diploma}}"
+                       maxlength="100">
+                <div class="invalid-feedback">
+                  Maximum 100 characters allowed
+                </div>
+              </div>
+              
+              <!-- Sector -->
+              <div class="col-sm-6 col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Sector</label>
+                  <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                            id="sectorDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                      {% if candidate.sector %}
+                        {% if candidate.sector|length > 2 %}
+                          {{ candidate.sector|length }} sectors selected
+                        {% else %}
+                          {{ candidate.sector|join:", " }}
+                        {% endif %}
+                      {% else %}
+                        Select sectors...
+                      {% endif %}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-2" aria-labelledby="sectorDropdown">
+                      <li>
+                        <div class="px-2 mb-2">
+                          <input type="text" class="form-control sector-search-input" 
+                                 placeholder="Search sectors..." 
+                                 id="sectorSearch">
+                        </div>
+                      </li>
+                      <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+                        {% for job_sector in job_sectors %}
+                        <li class="dropdown-item">
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="sector" 
+                                   value="{{ job_sector }}" id="sector-{{ forloop.counter }}"
+                                   {% if job_sector in candidate.sector %}checked{% endif %}>
+                            <label class="form-check-label w-100" for="sector-{{ forloop.counter }}">
+                              {{ job_sector }}
+                            </label>
+                          </div>
+                        </li>
+                        {% endfor %}
+                      </div>
+                    </ul>
                   </div>
-                </ul>
+                  <div class="invalid-feedback">Please select at least one sector.</div>
+                </div>
               </div>
-              <div class="invalid-feedback">
-                Please select at least one location
+              
+              <!-- Department -->
+              <div class="col-sm-6 col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Department</label>
+                  <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                            id="departmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                      {% if candidate.department %}
+                        {% if candidate.department|length > 2 %}
+                          {{ candidate.department|length }} departments selected
+                        {% else %}
+                          {{ candidate.department|join:", " }}
+                        {% endif %}
+                      {% else %}
+                        Select departments...
+                      {% endif %}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-2" aria-labelledby="departmentDropdown">
+                      <li>
+                        <div class="px-2 mb-2">
+                          <input type="text" class="form-control department-search-input" 
+                                 placeholder="Search departments..." 
+                                 id="departmentSearch">
+                        </div>
+                      </li>
+                      <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+                        {% for department in departments %}
+                        <li class="dropdown-item">
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="department" 
+                                   value="{{ department }}" id="dept-{{ forloop.counter }}"
+                                   {% if department in candidate.department %}checked{% endif %}>
+                            <label class="form-check-label w-100" for="dept-{{ forloop.counter }}">
+                              {{ department }}
+                            </label>
+                          </div>
+                        </li>
+                        {% endfor %}
+                      </div>
+                    </ul>
+                  </div>
+                  <div class="invalid-feedback">Please select at least one department.</div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Experience (Years)</label>
+                <input type="number" class="form-control" name="experience_year" 
+                       value="{{candidate.experience_year}}"
+                       min="0" max="50">
+                <div class="invalid-feedback">
+                  Please enter valid years (0-50)
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Experience (Months)</label>
+                <input type="number" class="form-control" name="experience_month" 
+                       value="{{candidate.experience_month}}"
+                       min="0" max="11">
+                <div class="invalid-feedback">
+                  Please enter valid months (0-11)
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Current Company</label>
+                <input type="text" class="form-control" name="current_company" 
+                       value="{{candidate.current_company}}"
+                       maxlength="100">
+                <div class="invalid-feedback">
+                  Maximum 100 characters allowed
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Working Status</label>
+                <select class="form-select" name="current_working_status" id="workingStatusSelect">
+                  <option value="">Select Status</option>
+                  <option value="Employed" {% if candidate.current_working_status == "Employed" %}selected{% endif %}>Employed</option>
+                  <option value="Unemployed" {% if candidate.current_working_status == "Unemployed" %}selected{% endif %}>Unemployed</option>
+                  <option value="Student" {% if candidate.current_working_status == "Student" %}selected{% endif %}>Student</option>
+                  <option value="Freelancer" {% if candidate.current_working_status == "Freelancer" %}selected{% endif %}>Freelancer</option>
+                  <option value="Other" {% if candidate.current_working_status == "Other" %}selected{% endif %}>Other</option>
+                </select>
+                <div id="otherWorkingStatusContainer" style="display: none;" class="mt-2">
+                  <label class="form-label">Specify Other Working Status</label>
+                  <input type="text" class="form-control" name="other_working_status" 
+                         value="{{ candidate.other_working_status }}" maxlength="100">
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Current Salary (₹)</label>
+                <div class="input-group">
+                  <input type="number" class="form-control" name="current_salary"
+                         value="{{ candidate.current_salary }}" min="0" step="1">
+                  <select class="form-select" name="current_salary_type">
+                    <option value="(CTC)" {% if candidate.current_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
+                    <option value="(Per Month)" {% if candidate.current_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
+                    <option value="(In Hand)" {% if candidate.current_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
+                    <option value="(Per Annum)" {% if candidate.current_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
+                  </select>
+                </div>
+                <div class="invalid-feedback">
+                  Please enter a valid salary
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Expected Salary (₹)</label>
+                <div class="input-group">
+                  <input type="number" class="form-control" name="expected_salary"
+                         value="{{ candidate.expected_salary }}" min="0" step="1">
+                  <select class="form-select" name="expected_salary_type">
+                    <option value="(CTC)" {% if candidate.expected_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
+                    <option value="(Per Month)" {% if candidate.expected_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
+                    <option value="(In Hand)" {% if candidate.expected_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
+                    <option value="(Per Annum)" {% if candidate.expected_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
+                  </select>
+                </div>
+                <div class="invalid-feedback">
+                  Please enter a valid salary
+                </div>
               </div>
             </div>
             
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Origin Location</label>
-              <select type="text" class="form-select" name="origin_location" id="originLocation" required>
-                  {% for district in districts %}
-                  <option value="{{ district }}" {% if candidate.origin_location == district %}selected{% endif %}>
-                      {{ district }}
-                  </option>
+            <!-- Calling Remark Section -->
+            <hr class="my-4">
+            <h5 class="text-secondary mb-4 sticky-section-header">Calling Remark</h5>
+            
+            <div class="row">
+              <!-- Call Connection Status -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Call Connection Status <span class="text-danger">*</span></label>
+                <select class="form-select" name="call_connection" id="callConnection" required>
+                  <option value="" disabled selected>Select Status</option>
+                  <option value="Connected" {% if candidate.call_connection == "Connected" %}selected{% endif %}>Connected</option>
+                  <option value="Not Reachable" {% if candidate.call_connection == "Not Reachable" %}selected{% endif %}>Not Reachable</option>
+                  <option value="Busy" {% if candidate.call_connection == "Busy" %}selected{% endif %}>Busy</option>
+                  <option value="Wrong Number" {% if candidate.call_connection == "Wrong Number" %}selected{% endif %}>Wrong Number</option>
+                  <option value="Other" {% if candidate.call_connection == "Other" %}selected{% endif %}>Other</option>
+                </select>
+                <div id="otherCallConnectionContainer" style="display: none;" class="mt-2">
+                  <label class="form-label">Specify Other Call Connection Status</label>
+                  <input type="text" class="form-control" name="other_call_connection" 
+                         value="{{ candidate.other_call_connection }}" maxlength="100">
+                </div>
+                <div class="invalid-feedback">Please select call connection status</div>
+              </div>
+            </div>
+
+            <!-- Other fields (hidden initially) -->
+            <div class="row" id="otherFields" style="display: none;">
+              <!-- Lead Generate Status -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Lead Generate Status <span class="text-danger">*</span></label>
+                <select class="form-select" name="lead_generate" id="leadGenerateSelect" required disabled>
+                  <option value="" disabled selected>Select Status</option>
+                  <option value="Yes" {% if candidate.lead_generate == "Yes" %}selected{% endif %}>Yes</option>
+                  <option value="No" {% if candidate.lead_generate == "No" %}selected{% endif %}>No</option>
+                  <option value="Converted" {% if candidate.lead_generate == "Converted" %}selected{% endif %}>Converted</option>
+                  <option value="Other" {% if candidate.lead_generate == "Other" %}selected{% endif %}>Other</option>
+                </select>
+                <div id="otherLeadGenerateContainer" style="display: none;" class="mt-2">
+                  <label class="form-label">Specify Other Lead Generate Status</label>
+                  <input type="text" class="form-control" name="other_lead_generate" 
+                         value="{{ candidate.other_lead_generate }}" maxlength="100">
+                </div>
+                <div class="invalid-feedback">Please select lead status</div>
+              </div>
+
+              <!-- Interview Status -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Interview Status <span class="text-danger">*</span></label>
+                <select class="form-select" name="send_for_interview" id="interviewStatusSelect" required disabled>
+                  <option value="" disabled selected>Select Status</option>
+                  <option value="Yes" {% if candidate.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
+                  <option value="No" {% if candidate.send_for_interview == "No" %}selected{% endif %}>No</option>
+                  <option value="Scheduled" {% if candidate.send_for_interview == "Scheduled" %}selected{% endif %}>Scheduled</option>
+                  <option value="Not Interested" {% if candidate.send_for_interview == "Not Interested" %}selected{% endif %}>Not Interested</option>
+                  <option value="Rescheduled" {% if candidate.send_for_interview == "Rescheduled" %}selected{% endif %}>Rescheduled</option>
+                  <option value="Completed" {% if candidate.send_for_interview == "Completed" %}selected{% endif %}>Completed</option>
+                  <option value="Other" {% if candidate.send_for_interview == "Other" %}selected{% endif %}>Other</option>
+                </select>
+                <div id="otherInterviewStatusContainer" style="display: none;" class="mt-2">
+                  <label class="form-label">Specify Other Interview Status</label>
+                  <input type="text" class="form-control" name="other_interview_status" 
+                         value="{{ candidate.other_interview_status }}" maxlength="100">
+                </div>
+                <div class="invalid-feedback">Please select interview status</div>
+              </div>
+
+              <!-- Next Follow-Up Date -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Next Follow-Up Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="next_follow_up_date" value="{{ candidate.next_follow_up_date|date:'Y-m-d' }}" min="{{ today|date:'Y-m-d' }}" required disabled>
+                <div class="invalid-feedback">Please select a valid future date</div>
+              </div>
+              
+              <!-- Calling Remark -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Calling Remark <span class="text-danger">*</span></label>
+                <textarea class="form-control" name="calling_remark" maxlength="500" required disabled>{{ candidate.calling_remark }}</textarea>
+                <div class="invalid-feedback">Please enter a remark (max 500 characters)</div>
+              </div>
+            </div>
+            
+            <!-- Selection Record Section -->
+            <hr class="my-4">
+            <h5 class="text-secondary mb-4 sticky-section-header">Selection Record</h5>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Selection Status</label>
+                <select class="form-select" name="selection_status" id="selectionStatus">
+                  <option value="" disabled selected>Select Status</option>
+                  <option value="Selected" {% if candidate.selection_status == "Selected" %}selected{% endif %}>Selected</option>
+                  <option value="Rejected" {% if candidate.selection_status == "Rejected" %}selected{% endif %}>Rejected</option>
+                  <option value="Pending" {% if candidate.selection_status == "Pending" %}selected{% endif %}>Pending</option>
+                  <option value="Not Join" {% if candidate.selection_status == "Not Join" %}selected{% endif %}>Not Join</option>
+                  <option value="Other" {% if candidate.selection_status == "Other" %}selected{% endif %}>Other</option>
+                </select>
+
+                <div id="otherSelectionStatusContainer" class="mt-2" style="display: none;">
+                  <label class="form-label">Specify Other Selection Status</label>
+                  <input type="text" class="form-control" name="other_selection_status" value="{{ candidate.other_selection_status }}" maxlength="100">
+                </div>
+              </div>
+            </div>
+
+            <!-- Fields shown when Selection = Selected -->
+            <div class="row" id="selectionFields" style="display: none;">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Company & Job Profile</label>
+                <select class="form-select" name="company_name">
+                  {% for v in vacancies %}
+                    <option value="{{ v.company__company_name }}"
+                      {% if candidate.company_name == v.company__company_name %}selected{% endif %}>
+                      {{ v.job_profile }} - {{ v.company__company_name }}
+                    </option>
                   {% endfor %}
-                  <option value="Other" {% if candidate.origin_location == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherOriginLocation" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Origin Location</label>
-                <input type="text" class="form-control" name="other_origin_location" 
-                       value="{{ candidate.other_origin_location }}" maxlength="100">
-              </div>
-              <div class="invalid-feedback">
-                Maximum 100 characters allowed
-              </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Qualification</label>
-              <select class="form-select" name="qualification" id="qualificationSelect">
-                <option value="">Select Qualification</option>
-                <option value="High School" {% if candidate.qualification == "High School" %}selected{% endif %}>High School</option>
-                <option value="Diploma" {% if candidate.qualification == "Diploma" %}selected{% endif %}>Diploma</option>
-                <option value="Bachelor's Degree" {% if candidate.qualification == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree</option>
-                <option value="Master's Degree" {% if candidate.qualification == "Master's Degree" %}selected{% endif %}>Master's Degree</option>
-                <option value="PhD" {% if candidate.qualification == "PhD" %}selected{% endif %}>PhD</option>
-                <option value="Other" {% if candidate.qualification == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherQualificationContainer" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Qualification</label>
-                <input type="text" class="form-control" name="other_qualification" 
-                       value="{{ candidate.other_qualification }}" maxlength="100">
-              </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Diploma</label>
-              <input type="text" class="form-control" name="diploma" 
-                     value="{{candidate.diploma}}"
-                     maxlength="100">
-              <div class="invalid-feedback">
-                Maximum 100 characters allowed
-              </div>
-            </div>
-            
-            <!-- Sector -->
-            <div class="col-sm-6 col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Sector</label>
-                <div class="dropdown">
-                  <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                          id="sectorDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    {% if candidate.sector %}
-                      {% if candidate.sector|length > 2 %}
-                        {{ candidate.sector|length }} sectors selected
-                      {% else %}
-                        {{ candidate.sector|join:", " }}
-                      {% endif %}
-                    {% else %}
-                      Select sectors...
-                    {% endif %}
-                  </button>
-                  <ul class="dropdown-menu w-100 p-2" aria-labelledby="sectorDropdown">
-                    <li>
-                      <div class="px-2 mb-2">
-                        <input type="text" class="form-control sector-search-input" 
-                               placeholder="Search sectors..." 
-                               id="sectorSearch">
-                      </div>
-                    </li>
-                    <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
-                      {% for job_sector in job_sectors %}
-                      <li class="dropdown-item">
-                        <div class="form-check">
-                          <input class="form-check-input" type="checkbox" name="sector" 
-                                 value="{{ job_sector }}" id="sector-{{ forloop.counter }}"
-                                 {% if job_sector in candidate.sector %}checked{% endif %}>
-                          <label class="form-check-label w-100" for="sector-{{ forloop.counter }}">
-                            {{ job_sector }}
-                          </label>
-                        </div>
-                      </li>
-                      {% endfor %}
-                    </div>
-                  </ul>
-                </div>
-                <div class="invalid-feedback">Please select at least one sector.</div>
-              </div>
-            </div>
-            
-            <!-- Department -->
-            <div class="col-sm-6 col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Department</label>
-                <div class="dropdown">
-                  <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                          id="departmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    {% if candidate.department %}
-                      {% if candidate.department|length > 2 %}
-                        {{ candidate.department|length }} departments selected
-                      {% else %}
-                        {{ candidate.department|join:", " }}
-                      {% endif %}
-                    {% else %}
-                      Select departments...
-                    {% endif %}
-                  </button>
-                  <ul class="dropdown-menu w-100 p-2" aria-labelledby="departmentDropdown">
-                    <li>
-                      <div class="px-2 mb-2">
-                        <input type="text" class="form-control department-search-input" 
-                               placeholder="Search departments..." 
-                               id="departmentSearch">
-                      </div>
-                    </li>
-                    <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
-                      {% for department in departments %}
-                      <li class="dropdown-item">
-                        <div class="form-check">
-                          <input class="form-check-input" type="checkbox" name="department" 
-                                 value="{{ department }}" id="dept-{{ forloop.counter }}"
-                                 {% if department in candidate.department %}checked{% endif %}>
-                          <label class="form-check-label w-100" for="dept-{{ forloop.counter }}">
-                            {{ department }}
-                          </label>
-                        </div>
-                      </li>
-                      {% endfor %}
-                    </div>
-                  </ul>
-                </div>
-                <div class="invalid-feedback">Please select at least one department.</div>
-              </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Experience (Years)</label>
-              <input type="number" class="form-control" name="experience_year" 
-                     value="{{candidate.experience_year}}"
-                     min="0" max="50">
-              <div class="invalid-feedback">
-                Please enter valid years (0-50)
-              </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Experience (Months)</label>
-              <input type="number" class="form-control" name="experience_month" 
-                     value="{{candidate.experience_month}}"
-                     min="0" max="11">
-              <div class="invalid-feedback">
-                Please enter valid months (0-11)
-              </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Current Company</label>
-              <input type="text" class="form-control" name="current_company" 
-                     value="{{candidate.current_company}}"
-                     maxlength="100">
-              <div class="invalid-feedback">
-                Maximum 100 characters allowed
-              </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Working Status</label>
-              <select class="form-select" name="current_working_status" id="workingStatusSelect">
-                <option value="">Select Status</option>
-                <option value="Employed" {% if candidate.current_working_status == "Employed" %}selected{% endif %}>Employed</option>
-                <option value="Unemployed" {% if candidate.current_working_status == "Unemployed" %}selected{% endif %}>Unemployed</option>
-                <option value="Student" {% if candidate.current_working_status == "Student" %}selected{% endif %}>Student</option>
-                <option value="Freelancer" {% if candidate.current_working_status == "Freelancer" %}selected{% endif %}>Freelancer</option>
-                <option value="Other" {% if candidate.current_working_status == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherWorkingStatusContainer" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Working Status</label>
-                <input type="text" class="form-control" name="other_working_status" 
-                       value="{{ candidate.other_working_status }}" maxlength="100">
-              </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Current Salary (₹)</label>
-              <div class="input-group">
-                <input type="number" class="form-control" name="current_salary"
-                       value="{{ candidate.current_salary }}" min="0" step="1">
-                <select class="form-select" name="current_salary_type">
-                  <option value="(CTC)" {% if candidate.current_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
-                  <option value="(Per Month)" {% if candidate.current_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
-                  <option value="(In Hand)" {% if candidate.current_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
-                  <option value="(Per Annum)" {% if candidate.current_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
+                  <option value="Other" {% if candidate.company_name == "Other" %}selected{% endif %}>Other</option>
                 </select>
               </div>
-              <div class="invalid-feedback">
-                Please enter a valid salary
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Offered Salary (₹)</label>
+                <input type="number" name="offered_salary" class="form-control" value="{{ candidate.offered_salary }}" min="0" step="1">
               </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Expected Salary (₹)</label>
-              <div class="input-group">
-                <input type="number" class="form-control" name="expected_salary"
-                       value="{{ candidate.expected_salary }}" min="0" step="1">
-                <select class="form-select" name="expected_salary_type">
-                  <option value="(CTC)" {% if candidate.expected_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
-                  <option value="(Per Month)" {% if candidate.expected_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
-                  <option value="(In Hand)" {% if candidate.expected_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
-                  <option value="(Per Annum)" {% if candidate.expected_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Selection Date</label>
+                <input type="date" name="selection_date" class="form-control" value="{{ candidate.selection_date|date:'Y-m-d' }}">
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Joining Status</label>
+                <select class="form-select" name="joining_status" id="joiningStatus">
+                  <option value="" disabled selected>Select Joining Status</option>
+                  <option value="Joined" {% if candidate.joining_status == "Joined" %}selected{% endif %}>Joined</option>
+                  <option value="Not Joined" {% if candidate.joining_status == "Not Joined" %}selected{% endif %}>Not Joined</option>
                 </select>
               </div>
-              <div class="invalid-feedback">
-                Please enter a valid salary
+            </div>
+
+            <!-- Fields shown when Joining Status = Joined -->
+            <div class="row" id="joinedFields" style="display: none;">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Joining Date</label>
+                <input type="date" name="candidate_joining_date" class="form-control" value="{{ candidate.candidate_joining_date|date:'Y-m-d' }}">
               </div>
-            </div>
-          </div>
-          
-          <!-- Calling Remark Section -->
-          <hr class="my-4">
-          <h5 class="text-secondary mb-4">Calling Remark</h5>
-          
-          <div class="row">
-            <!-- Call Connection Status -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Call Connection Status <span class="text-danger">*</span></label>
-              <select class="form-select" name="call_connection" id="callConnection" required>
-                <option value="" disabled selected>Select Status</option>
-                <option value="Connected" {% if candidate.call_connection == "Connected" %}selected{% endif %}>Connected</option>
-                <option value="Not Reachable" {% if candidate.call_connection == "Not Reachable" %}selected{% endif %}>Not Reachable</option>
-                <option value="Busy" {% if candidate.call_connection == "Busy" %}selected{% endif %}>Busy</option>
-                <option value="Wrong Number" {% if candidate.call_connection == "Wrong Number" %}selected{% endif %}>Wrong Number</option>
-                <option value="Other" {% if candidate.call_connection == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherCallConnectionContainer" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Call Connection Status</label>
-                <input type="text" class="form-control" name="other_call_connection" 
-                       value="{{ candidate.other_call_connection }}" maxlength="100">
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Our Commission (₹)</label>
+                <input type="number" name="emta_commission" class="form-control" value="{{ candidate.emta_commission }}" min="0" step="1">
               </div>
-              <div class="invalid-feedback">Please select call connection status</div>
-            </div>
-          </div>
 
-          <!-- Other fields (hidden initially) -->
-          <div class="row" id="otherFields" style="display: none;">
-            <!-- Lead Generate Status -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Lead Generate Status <span class="text-danger">*</span></label>
-              <select class="form-select" name="lead_generate" id="leadGenerateSelect" required disabled>
-                <option value="" disabled selected>Select Status</option>
-                <option value="Yes" {% if candidate.lead_generate == "Yes" %}selected{% endif %}>Yes</option>
-                <option value="No" {% if candidate.lead_generate == "No" %}selected{% endif %}>No</option>
-                <option value="Converted" {% if candidate.lead_generate == "Converted" %}selected{% endif %}>Converted</option>
-                <option value="Other" {% if candidate.lead_generate == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherLeadGenerateContainer" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Lead Generate Status</label>
-                <input type="text" class="form-control" name="other_lead_generate" 
-                       value="{{ candidate.other_lead_generate }}" maxlength="100">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Payout Date</label>
+                <input type="date" name="payout_date" class="form-control" value="{{ candidate.payout_date|date:'Y-m-d' }}">
               </div>
-              <div class="invalid-feedback">Please select lead status</div>
-            </div>
 
-            <!-- Interview Status -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Interview Status <span class="text-danger">*</span></label>
-              <select class="form-select" name="send_for_interview" id="interviewStatusSelect" required disabled>
-                <option value="" disabled selected>Select Status</option>
-                <option value="Yes" {% if candidate.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
-                <option value="No" {% if candidate.send_for_interview == "No" %}selected{% endif %}>No</option>
-                <option value="Scheduled" {% if candidate.send_for_interview == "Scheduled" %}selected{% endif %}>Scheduled</option>
-                <option value="Not Interested" {% if candidate.send_for_interview == "Not Interested" %}selected{% endif %}>Not Interested</option>
-                <option value="Rescheduled" {% if candidate.send_for_interview == "Rescheduled" %}selected{% endif %}>Rescheduled</option>
-                <option value="Completed" {% if candidate.send_for_interview == "Completed" %}selected{% endif %}>Completed</option>
-                <option value="Other" {% if candidate.send_for_interview == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherInterviewStatusContainer" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Interview Status</label>
-                <input type="text" class="form-control" name="other_interview_status" 
-                       value="{{ candidate.other_interview_status }}" maxlength="100">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Selection Remark</label>
+                <input type="text" name="selection_remark" class="form-control" value="{{ candidate.selection_remark }}">
               </div>
-              <div class="invalid-feedback">Please select interview status</div>
-            </div>
-
-            <!-- Next Follow-Up Date -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Next Follow-Up Date <span class="text-danger">*</span></label>
-              <input type="date" class="form-control" name="next_follow_up_date" value="{{ candidate.next_follow_up_date|date:'Y-m-d' }}" min="{{ today|date:'Y-m-d' }}" required disabled>
-              <div class="invalid-feedback">Please select a valid future date</div>
-            </div>
-            
-            <!-- Calling Remark -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Calling Remark <span class="text-danger">*</span></label>
-              <textarea class="form-control" name="calling_remark" maxlength="500" required disabled>{{ candidate.calling_remark }}</textarea>
-              <div class="invalid-feedback">Please enter a remark (max 500 characters)</div>
-            </div>
-          </div>
-          
-          <!-- Selection Record Section -->
-          <hr class="my-4">
-          <h5 class="text-secondary mb-4">Selection Record</h5>
-          
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Selection Status</label>
-              <select class="form-select" name="selection_status" id="selectionStatus">
-                <option value="" disabled selected>Select Status</option>
-                <option value="Selected" {% if candidate.selection_status == "Selected" %}selected{% endif %}>Selected</option>
-                <option value="Rejected" {% if candidate.selection_status == "Rejected" %}selected{% endif %}>Rejected</option>
-                <option value="Pending" {% if candidate.selection_status == "Pending" %}selected{% endif %}>Pending</option>
-                <option value="Not Join" {% if candidate.selection_status == "Not Join" %}selected{% endif %}>Not Join</option>
-                <option value="Other" {% if candidate.selection_status == "Other" %}selected{% endif %}>Other</option>
-              </select>
-
-              <div id="otherSelectionStatusContainer" class="mt-2" style="display: none;">
-                <label class="form-label">Specify Other Selection Status</label>
-                <input type="text" class="form-control" name="other_selection_status" value="{{ candidate.other_selection_status }}" maxlength="100">
-              </div>
-            </div>
-          </div>
-
-          <!-- Fields shown when Selection = Selected -->
-          <div class="row" id="selectionFields" style="display: none;">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Company & Job Profile</label>
-              <select class="form-select" name="company_name">
-                {% for v in vacancies %}
-                  <option value="{{ v.company__company_name }}"
-                    {% if candidate.company_name == v.company__company_name %}selected{% endif %}>
-                    {{ v.job_profile }} - {{ v.company__company_name }}
-                  </option>
-                {% endfor %}
-                <option value="Other" {% if candidate.company_name == "Other" %}selected{% endif %}>Other</option>
-              </select>
-            </div>
-
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Offered Salary (₹)</label>
-              <input type="number" name="offered_salary" class="form-control" value="{{ candidate.offered_salary }}" min="0" step="1">
-            </div>
-
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Selection Date</label>
-              <input type="date" name="selection_date" class="form-control" value="{{ candidate.selection_date|date:'Y-m-d' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Joining Status</label>
-              <select class="form-select" name="joining_status" id="joiningStatus">
-                <option value="" disabled selected>Select Joining Status</option>
-                <option value="Joined" {% if candidate.joining_status == "Joined" %}selected{% endif %}>Joined</option>
-                <option value="Not Joined" {% if candidate.joining_status == "Not Joined" %}selected{% endif %}>Not Joined</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Fields shown when Joining Status = Joined -->
-          <div class="row" id="joinedFields" style="display: none;">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Joining Date</label>
-              <input type="date" name="candidate_joining_date" class="form-control" value="{{ candidate.candidate_joining_date|date:'Y-m-d' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Our Commission (₹)</label>
-              <input type="number" name="emta_commission" class="form-control" value="{{ candidate.emta_commission }}" min="0" step="1">
-            </div>
-
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Payout Date</label>
-              <input type="date" name="payout_date" class="form-control" value="{{ candidate.payout_date|date:'Y-m-d' }}">
             </div>
           </div>
         </form>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer sticky-bottom bg-white" style="z-index: 1050;">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id="submitFormButton">Save All Changes</button>
+        <button type="submit" name="submit_all" class="btn btn-primary">Save All Changes</button>
       </div>
     </div>
   </div>
@@ -551,8 +683,8 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // Form elements
-  const form = document.getElementById('candidateForm');
-  const submitBtn = document.getElementById('submitFormButton');
+  const form = document.getElementById('unifiedCandidateForm');
+  const submitBtn = document.querySelector('button[type="submit"]');
   
   // Conditional fields
   const callConnection = document.getElementById('callConnection');
@@ -575,6 +707,29 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize dropdowns
   initializeDropdowns(['sector', 'department', 'location']);
 
+  // Initialize form state based on preselected values
+  if (callConnection) {
+    toggleOtherFields();
+    toggleOtherInput(callConnection, 'otherCallConnectionContainer');
+  }
+
+  if (selectionStatus) {
+    toggleSelectionFields();
+    toggleOtherInput(selectionStatus, 'otherSelectionStatusContainer');
+  }
+
+  // Initialize other input fields
+  otherInputContainers.forEach(item => {
+    const select = document.getElementById(item.select);
+    if (select) {
+      select.addEventListener('change', function() {
+        toggleOtherInput(this, item.container);
+      });
+      // Initialize on load
+      toggleOtherInput(select, item.container);
+    }
+  });
+
   // Toggle fields based on call connection status
   callConnection.addEventListener('change', function() {
     toggleOtherFields();
@@ -591,18 +746,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (joiningStatus) {
     joiningStatus.addEventListener('change', toggleSelectionFields);
   }
-
-  // Initialize other input fields
-  otherInputContainers.forEach(item => {
-    const select = document.getElementById(item.select);
-    if (select) {
-      select.addEventListener('change', function() {
-        toggleOtherInput(this, item.container);
-      });
-      // Initialize on load
-      toggleOtherInput(select, item.container);
-    }
-  });
 
   // Form submission
   submitBtn.addEventListener('click', function(event) {
@@ -824,7 +967,7 @@ document.addEventListener('DOMContentLoaded', function() {
           if (window.location.pathname.includes('add')) {
             window.location.href = data.redirect_url || window.location.href;
           } else {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modal-candidate'));
+            const modal = bootstrap.Modal.getInstance(document.getElementById('unified-candidate-modal'));
             if (modal) modal.hide();
           }
         }, 1500);

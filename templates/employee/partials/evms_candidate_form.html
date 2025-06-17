@@ -1,3 +1,71 @@
+<style>
+  .sticky-section-header {
+    position: sticky;
+    top: -25px; /* Adjust based on your header height */
+    background-color: white;
+    z-index: 1000;
+    padding: 10px 0;
+    color: #000;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    margin-top: 0;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const modalBody = document.querySelector('.modal-body');
+    const modalHeader = document.querySelector('.modal-header');
+    const sections = document.querySelectorAll('.modal-body h5.text-secondary');
+    
+    // Create the sticky header element
+    const stickyHeader = document.createElement('h5');
+    stickyHeader.className = 'sticky-section-header text-secondary';
+    stickyHeader.style.display = 'none';
+    modalHeader.after(stickyHeader);
+    
+    // Add intersection observer to track which section is visible
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // Find the currently visible section
+            const visibleSection = Array.from(sections).find(section => {
+              const rect = section.getBoundingClientRect();
+              return rect.top >= 0 && rect.top <= window.innerHeight;
+            });
+            
+            if (visibleSection) {
+              stickyHeader.textContent = visibleSection.textContent;
+              stickyHeader.style.display = 'block';
+            } else {
+              stickyHeader.style.display = 'none';
+            }
+          }
+        });
+      }, 
+      {
+        root: modalBody,
+        threshold: 0.1,
+        rootMargin: '-60px 0px -90% 0px' // Adjust based on your needs
+      }
+    );
+    
+    // Observe each section
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+    
+    // Also observe the form's top to hide the sticky header when at the very top
+    const firstElement = document.querySelector('#candidateForm > *:first-child');
+    if (firstElement) {
+      observer.observe(firstElement);
+    }
+  });
+  </script>
+
 <div class="modal modal-blur fade" id="unified-candidate-modal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -5,22 +73,7 @@
         <h5 class="modal-title" id="modal-title">Candidate Information - {{ candidate.candidate_name }}({{ candidate.candidate_mobile_number }})</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <ul class="nav nav-tabs mb-4" id="formTabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">Profile</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab">Details</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="calling-tab" data-bs-toggle="tab" data-bs-target="#calling" type="button" role="tab">Calling</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="selection-tab" data-bs-toggle="tab" data-bs-target="#selection" type="button" role="tab">Selection</button>
-          </li>
-        </ul>
-        
+      <div class="modal-body" style="overflow-y: auto; max-height: calc(100vh - 200px);">
         <form method="POST" enctype="multipart/form-data" id="unifiedCandidateForm" novalidate>
           {% csrf_token %}
           <input type="hidden" name="submit_by" value="{{user.username}}"/>
@@ -28,10 +81,12 @@
           <div class="tab-content" id="formTabContent">
             <!-- Profile Tab -->
             <div class="tab-pane fade show active" id="profile" role="tabpanel">
+              <hr class="my-4">
+              <h5 class="text-secondary mb-4 sticky-section-header">Candidate Profile</h5>
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Candidate Name <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" name="candidate_name" value="{{ candidate.candidate_name }}" 
+                  <input type="text" class="form-control" name="candidate_name" id="candidateName" value="{{ candidate.candidate_name }}" 
                          required pattern="[A-Za-z ]+" minlength="3" maxlength="50" />
                   <div class="invalid-feedback">
                     Please enter a valid name (3-50 characters, letters only)
@@ -40,7 +95,7 @@
                 
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Candidate Mobile Number <span class="text-danger">*</span></label>
-                  <input type="tel" class="form-control" name="candidate_mobile_number" 
+                  <input type="tel" class="form-control" name="candidate_mobile_number" id="candidateMobile"
                          value="{{ candidate.candidate_mobile_number }}" required pattern="[0-9]{10}" />
                   <div class="invalid-feedback">
                     Please enter a valid 10-digit mobile number
@@ -49,13 +104,13 @@
                 
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Candidate Email Address <span class="text-danger">*</span></label>
-                  <input type="email" class="form-control" name="candidate_email_address" 
+                  <input type="email" class="form-control" name="candidate_email_address" id="candidateEmail"
                          value="{{ candidate.candidate_email_address }}" required />
                   <div class="invalid-feedback">
                     Please enter a valid email address
                   </div>
                 </div>
-                
+
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Gender <span class="text-danger">*</span></label>
                   <select class="form-select" name="gender" required>
@@ -90,29 +145,29 @@
                 </div>
                 
                 <div class="col-md-6 mb-3">
-              <label class="form-label">Lead Source</label>
-              <select name="lead_source" class="form-select" required id="leadSourceSelect">
-                  <option value="" disabled selected>Select Lead Source</option>
-                  <option value="EVMS" {% if candidate.lead_source == "EVMS" %}selected{% endif %}>EVMS</option>
-                  <option value="Walk-In" {% if candidate.lead_source == "Walk-In" %}selected{% endif %}>Walk-In</option>
-                  <option value="Job Hai" {% if candidate.lead_source == "Job Hai" %}selected{% endif %}>Job Hai</option>
-                  <option value="Naukari" {% if candidate.lead_source == "Naukari" %}selected{% endif %}>Naukari</option>
-                  <option value="Apna" {% if candidate.lead_source == "Apna" %}selected{% endif %}>Apna</option>
-                  <option value="Expertia" {% if candidate.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
-                  <option value="Instagram" {% if candidate.lead_source == "Instagram" %}selected{% endif %}>Instagram</option>
-                  <option value="Website" {% if candidate.lead_source == "Website" %}selected{% endif %}>Website</option>
-                  <option value="Indeed" {% if candidate.lead_source == "Indeed" %}selected{% endif %}>Indeed</option>
-                  <option value="Facebook" {% if candidate.lead_source == "Facebook" %}selected{% endif %}>Facebook</option>
-                  <option value="Linkedin" {% if candidate.lead_source == "Linkedin" %}selected{% endif %}>Linkedin</option>
-                  <option value="Personal Refference" {% if candidate.lead_source == "Personal Refference" %}selected{% endif %}>Personal Refference</option>
-                  <option value="Other" {% if candidate.lead_source == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherLeadSourceContainer" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Lead Source</label>
-                <input type="text" class="form-control" name="other_lead_source" 
-                       value="{{ candidate.other_lead_source }}" maxlength="100">
-              </div>
-            </div>
+                  <label class="form-label">Lead Source</label>
+                  <select name="lead_source" class="form-select" required id="leadSourceSelect">
+                      <option value="" disabled selected>Select Lead Source</option>
+                      <option value="EVMS" {% if candidate.lead_source == "EVMS" %}selected{% endif %}>EVMS</option>
+                      <option value="Walk-In" {% if candidate.lead_source == "Walk-In" %}selected{% endif %}>Walk-In</option>
+                      <option value="Job Hai" {% if candidate.lead_source == "Job Hai" %}selected{% endif %}>Job Hai</option>
+                      <option value="Naukari" {% if candidate.lead_source == "Naukari" %}selected{% endif %}>Naukari</option>
+                      <option value="Apna" {% if candidate.lead_source == "Apna" %}selected{% endif %}>Apna</option>
+                      <option value="Expertia" {% if candidate.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
+                      <option value="Instagram" {% if candidate.lead_source == "Instagram" %}selected{% endif %}>Instagram</option>
+                      <option value="Website" {% if candidate.lead_source == "Website" %}selected{% endif %}>Website</option>
+                      <option value="Indeed" {% if candidate.lead_source == "Indeed" %}selected{% endif %}>Indeed</option>
+                      <option value="Facebook" {% if candidate.lead_source == "Facebook" %}selected{% endif %}>Facebook</option>
+                      <option value="Linkedin" {% if candidate.lead_source == "Linkedin" %}selected{% endif %}>Linkedin</option>
+                      <option value="Personal Refference" {% if candidate.lead_source == "Personal Refference" %}selected{% endif %}>Personal Refference</option>
+                      <option value="Other" {% if candidate.lead_source == "Other" %}selected{% endif %}>Other</option>
+                  </select>
+                  <div id="otherLeadSourceContainer" style="display: none;" class="mt-2">
+                    <label class="form-label">Specify Other Lead Source</label>
+                    <input type="text" class="form-control" name="other_lead_source" 
+                           value="{{ candidate.other_lead_source }}" maxlength="100">
+                  </div>
+                </div>
                 
                 <div class="col-md-6 col-md-3">
                   <div class="mb-3">
@@ -120,9 +175,9 @@
                     <select class="form-select" name="employee_name" required>
                       <option value="" disabled>Select Employee</option>
                       {% for employee in employees %}
-                        <option value="{{ employee.first_name }} {{ employee.last_name }}" 
-                                {% if candidate.employee_name == "{{ employee.first_name }} {{ employee.last_name }}" %}selected{% endif %}>
-                          {{ employee.first_name }} {{ employee.last_name }}
+                        <option value="{{ employee.first_name }} {{ employee.last_name }} ({{ employee.employee_id }})" 
+                                {% if candidate.employee_name == employee.first_name|add:" "|add:employee.last_name|add:" ("|add:employee.employee_id|add:")"  %}selected{% endif %}>
+                          {{ employee.first_name }} {{ employee.last_name }} ({{ employee.employee_id }})
                         </option>
                       {% endfor %}
                     </select>
@@ -132,10 +187,8 @@
                   </div>
                 </div>
               </div>
-            </div>
-            
-            <!-- Details Tab -->
-            <div class="tab-pane fade" id="details" role="tabpanel">
+              <hr class="my-4">
+              <h5 class="text-secondary mb-4 sticky-section-header">Candidate Details</h5>
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Alternate Mobile Number</label>
@@ -148,86 +201,86 @@
                 </div>
                 
                 <div class="col-md-6 mb-3">
-              <label class="form-label">Preferred Location</label>
-              <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                        id="locationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                  {% if candidate.preferred_location %}
-                    {% if candidate.preferred_location|length > 2 %}
-                      {{ candidate.preferred_location|length }} locations selected
-                    {% else %}
-                      {{ candidate.preferred_location|join:", " }}
-                    {% endif %}
-                  {% else %}
-                    Select locations...
-                  {% endif %}
-                </button>
-                <ul class="dropdown-menu w-100 p-2" aria-labelledby="locationDropdown">
-                  <li>
-                    <div class="px-2 mb-2">
-                      <input type="text" class="form-control search-input" 
-                             placeholder="Search locations..." 
-                             id="locationSearch">
-                    </div>
-                  </li>
-                  <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
-                    {% for district in districts %}
-                    <li class="dropdown-item">
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="preferred_location" 
-                               value="{{ district }}" id="loc-{{ forloop.counter }}"
-                               {% if district in candidate.preferred_location %}checked{% endif %}>
-                        <label class="form-check-label w-100" for="loc-{{ forloop.counter }}">
-                          {{ district }}
-                        </label>
+                  <label class="form-label">Preferred Location</label>
+                  <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                            id="locationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                      {% if candidate.preferred_location %}
+                        {% if candidate.preferred_location|length > 2 %}
+                          {{ candidate.preferred_location|length }} locations selected
+                        {% else %}
+                          {{ candidate.preferred_location|join:", " }}
+                        {% endif %}
+                      {% else %}
+                        Select locations...
+                      {% endif %}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-2" aria-labelledby="locationDropdown">
+                      <li>
+                        <div class="px-2 mb-2">
+                          <input type="text" class="form-control search-input" 
+                                 placeholder="Search locations..." 
+                                 id="locationSearch">
+                        </div>
+                      </li>
+                      <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+                        {% for district in districts %}
+                        <li class="dropdown-item">
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="preferred_location" 
+                                   value="{{ district }}" id="loc-{{ forloop.counter }}"
+                                   {% if district in candidate.preferred_location %}checked{% endif %}>
+                            <label class="form-check-label w-100" for="loc-{{ forloop.counter }}">
+                              {{ district }}
+                            </label>
+                          </div>
+                        </li>
+                        {% endfor %}
                       </div>
-                    </li>
-                    {% endfor %}
+                    </ul>
                   </div>
-                </ul>
-              </div>
-              <div class="invalid-feedback">
-                Please select at least one location
-              </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Origin Location</label>
-              <select type="text" class="form-select" name="origin_location" id="originLocation" required>
-                  {% for district in districts %}
-                  <option value="{{ district }}" {% if candidate.origin_location == district %}selected{% endif %}>
-                      {{ district }}
-                  </option>
-                  {% endfor %}
-                  <option value="Other" {% if candidate.origin_location == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherOriginLocation" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Origin Location</label>
-                <input type="text" class="form-control" name="other_origin_location" 
-                       value="{{ candidate.other_origin_location }}" maxlength="100">
-              </div>
-              <div class="invalid-feedback">
-                Maximum 100 characters allowed
-              </div>
-            </div>
+                  <div class="invalid-feedback">
+                    Please select at least one location
+                  </div>
+                </div>
                 
                 <div class="col-md-6 mb-3">
-              <label class="form-label">Qualification</label>
-              <select class="form-select" name="qualification" id="qualificationSelect">
-                <option value="">Select Qualification</option>
-                <option value="High School" {% if candidate.qualification == "High School" %}selected{% endif %}>High School</option>
-                <option value="Diploma" {% if candidate.qualification == "Diploma" %}selected{% endif %}>Diploma</option>
-                <option value="Bachelor's Degree" {% if candidate.qualification == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree</option>
-                <option value="Master's Degree" {% if candidate.qualification == "Master's Degree" %}selected{% endif %}>Master's Degree</option>
-                <option value="PhD" {% if candidate.qualification == "PhD" %}selected{% endif %}>PhD</option>
-                <option value="Other" {% if candidate.qualification == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherQualificationContainer" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Qualification</label>
-                <input type="text" class="form-control" name="other_qualification" 
-                       value="{{ candidate.other_qualification }}" maxlength="100">
-              </div>
-            </div>
+                  <label class="form-label">Candidate Origin Location</label>
+                  <select type="text" class="form-select" name="origin_location" id="originLocation" required>
+                      {% for district in districts %}
+                      <option value="{{ district }}" {% if candidate.origin_location == district %}selected{% endif %}>
+                          {{ district }}
+                      </option>
+                      {% endfor %}
+                      <option value="Other" {% if candidate.origin_location == "Other" %}selected{% endif %}>Other</option>
+                  </select>
+                  <div id="otherOriginLocation" style="display: none;" class="mt-2">
+                    <label class="form-label">Specify Other Origin Location</label>
+                    <input type="text" class="form-control" name="other_origin_location" 
+                           value="{{ candidate.other_origin_location }}" maxlength="100">
+                  </div>
+                  <div class="invalid-feedback">
+                    Maximum 100 characters allowed
+                  </div>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Qualification</label>
+                  <select class="form-select" name="qualification" id="qualificationSelect">
+                    <option value="">Select Qualification</option>
+                    <option value="High School" {% if candidate.qualification == "High School" %}selected{% endif %}>High School</option>
+                    <option value="Diploma" {% if candidate.qualification == "Diploma" %}selected{% endif %}>Diploma</option>
+                    <option value="Bachelor's Degree" {% if candidate.qualification == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree</option>
+                    <option value="Master's Degree" {% if candidate.qualification == "Master's Degree" %}selected{% endif %}>Master's Degree</option>
+                    <option value="PhD" {% if candidate.qualification == "PhD" %}selected{% endif %}>PhD</option>
+                    <option value="Other" {% if candidate.qualification == "Other" %}selected{% endif %}>Other</option>
+                  </select>
+                  <div id="otherQualificationContainer" style="display: none;" class="mt-2">
+                    <label class="form-label">Specify Other Qualification</label>
+                    <input type="text" class="form-control" name="other_qualification" 
+                           value="{{ candidate.other_qualification }}" maxlength="100">
+                  </div>
+                </div>
                 
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Diploma</label>
@@ -239,94 +292,94 @@
                 </div>
                 
                 <!-- Sector -->
-            <div class="col-sm-6 col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Sector</label>
-                <div class="dropdown">
-                  <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                          id="sectorDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    {% if candidate.sector %}
-                      {% if candidate.sector|length > 2 %}
-                        {{ candidate.sector|length }} sectors selected
-                      {% else %}
-                        {{ candidate.sector|join:", " }}
-                      {% endif %}
-                    {% else %}
-                      Select sectors...
-                    {% endif %}
-                  </button>
-                  <ul class="dropdown-menu w-100 p-2" aria-labelledby="sectorDropdown">
-                    <li>
-                      <div class="px-2 mb-2">
-                        <input type="text" class="form-control sector-search-input" 
-                               placeholder="Search sectors..." 
-                               id="sectorSearch">
-                      </div>
-                    </li>
-                    <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
-                      {% for job_sector in job_sectors %}
-                      <li class="dropdown-item">
-                        <div class="form-check">
-                          <input class="form-check-input" type="checkbox" name="sector" 
-                                 value="{{ job_sector }}" id="sector-{{ forloop.counter }}"
-                                 {% if job_sector in candidate.sector %}checked{% endif %}>
-                          <label class="form-check-label w-100" for="sector-{{ forloop.counter }}">
-                            {{ job_sector }}
-                          </label>
+                <div class="col-sm-6 col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Sector</label>
+                    <div class="dropdown">
+                      <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                              id="sectorDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if candidate.sector %}
+                          {% if candidate.sector|length > 2 %}
+                            {{ candidate.sector|length }} sectors selected
+                          {% else %}
+                            {{ candidate.sector|join:", " }}
+                          {% endif %}
+                        {% else %}
+                          Select sectors...
+                        {% endif %}
+                      </button>
+                      <ul class="dropdown-menu w-100 p-2" aria-labelledby="sectorDropdown">
+                        <li>
+                          <div class="px-2 mb-2">
+                            <input type="text" class="form-control sector-search-input" 
+                                   placeholder="Search sectors..." 
+                                   id="sectorSearch">
+                          </div>
+                        </li>
+                        <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+                          {% for job_sector in job_sectors %}
+                          <li class="dropdown-item">
+                            <div class="form-check">
+                              <input class="form-check-input" type="checkbox" name="sector" 
+                                     value="{{ job_sector }}" id="sector-{{ forloop.counter }}"
+                                     {% if job_sector in candidate.sector %}checked{% endif %}>
+                              <label class="form-check-label w-100" for="sector-{{ forloop.counter }}">
+                                {{ job_sector }}
+                              </label>
+                            </div>
+                          </li>
+                          {% endfor %}
                         </div>
-                      </li>
-                      {% endfor %}
+                      </ul>
                     </div>
-                  </ul>
+                    <div class="invalid-feedback">Please select at least one sector.</div>
+                  </div>
                 </div>
-                <div class="invalid-feedback">Please select at least one sector.</div>
-              </div>
-            </div>
-            
-            <!-- Department -->
-            <div class="col-sm-6 col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Department</label>
-                <div class="dropdown">
-                  <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                          id="departmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    {% if candidate.department %}
-                      {% if candidate.department|length > 2 %}
-                        {{ candidate.department|length }} departments selected
-                      {% else %}
-                        {{ candidate.department|join:", " }}
-                      {% endif %}
-                    {% else %}
-                      Select departments...
-                    {% endif %}
-                  </button>
-                  <ul class="dropdown-menu w-100 p-2" aria-labelledby="departmentDropdown">
-                    <li>
-                      <div class="px-2 mb-2">
-                        <input type="text" class="form-control department-search-input" 
-                               placeholder="Search departments..." 
-                               id="departmentSearch">
-                      </div>
-                    </li>
-                    <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
-                      {% for department in departments %}
-                      <li class="dropdown-item">
-                        <div class="form-check">
-                          <input class="form-check-input" type="checkbox" name="department" 
-                                 value="{{ department }}" id="dept-{{ forloop.counter }}"
-                                 {% if department in candidate.department %}checked{% endif %}>
-                          <label class="form-check-label w-100" for="dept-{{ forloop.counter }}">
-                            {{ department }}
-                          </label>
+                
+                <!-- Department -->
+                <div class="col-sm-6 col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Department</label>
+                    <div class="dropdown">
+                      <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                              id="departmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if candidate.department %}
+                          {% if candidate.department|length > 2 %}
+                            {{ candidate.department|length }} departments selected
+                          {% else %}
+                            {{ candidate.department|join:", " }}
+                          {% endif %}
+                        {% else %}
+                          Select departments...
+                        {% endif %}
+                      </button>
+                      <ul class="dropdown-menu w-100 p-2" aria-labelledby="departmentDropdown">
+                        <li>
+                          <div class="px-2 mb-2">
+                            <input type="text" class="form-control department-search-input" 
+                                   placeholder="Search departments..." 
+                                   id="departmentSearch">
+                          </div>
+                        </li>
+                        <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+                          {% for department in departments %}
+                          <li class="dropdown-item">
+                            <div class="form-check">
+                              <input class="form-check-input" type="checkbox" name="department" 
+                                     value="{{ department }}" id="dept-{{ forloop.counter }}"
+                                     {% if department in candidate.department %}checked{% endif %}>
+                              <label class="form-check-label w-100" for="dept-{{ forloop.counter }}">
+                                {{ department }}
+                              </label>
+                            </div>
+                          </li>
+                          {% endfor %}
                         </div>
-                      </li>
-                      {% endfor %}
+                      </ul>
                     </div>
-                  </ul>
+                    <div class="invalid-feedback">Please select at least one department.</div>
+                  </div>
                 </div>
-                <div class="invalid-feedback">Please select at least one department.</div>
-              </div>
-            </div>
                 
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Experience (In Years)</label>
@@ -358,96 +411,94 @@
                 </div>
                 
                 <div class="col-md-6 mb-3">
-              <label class="form-label">Working Status</label>
-              <select class="form-select" name="current_working_status" id="workingStatusSelect">
-                <option value="">Select Status</option>
-                <option value="Employed" {% if candidate.current_working_status == "Employed" %}selected{% endif %}>Employed</option>
-                <option value="Unemployed" {% if candidate.current_working_status == "Unemployed" %}selected{% endif %}>Unemployed</option>
-                <option value="Student" {% if candidate.current_working_status == "Student" %}selected{% endif %}>Student</option>
-                <option value="Freelancer" {% if candidate.current_working_status == "Freelancer" %}selected{% endif %}>Freelancer</option>
-                <option value="Other" {% if candidate.current_working_status == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherWorkingStatusContainer" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Working Status</label>
-                <input type="text" class="form-control" name="other_working_status" 
-                       value="{{ candidate.other_working_status }}" maxlength="100">
-              </div>
-            </div>
+                  <label class="form-label">Working Status</label>
+                  <select class="form-select" name="current_working_status" id="workingStatusSelect">
+                    <option value="">Select Status</option>
+                    <option value="Employed" {% if candidate.current_working_status == "Employed" %}selected{% endif %}>Employed</option>
+                    <option value="Unemployed" {% if candidate.current_working_status == "Unemployed" %}selected{% endif %}>Unemployed</option>
+                    <option value="Student" {% if candidate.current_working_status == "Student" %}selected{% endif %}>Student</option>
+                    <option value="Freelancer" {% if candidate.current_working_status == "Freelancer" %}selected{% endif %}>Freelancer</option>
+                    <option value="Other" {% if candidate.current_working_status == "Other" %}selected{% endif %}>Other</option>
+                  </select>
+                  <div id="otherWorkingStatusContainer" style="display: none;" class="mt-2">
+                    <label class="form-label">Specify Other Working Status</label>
+                    <input type="text" class="form-control" name="other_working_status" 
+                           value="{{ candidate.other_working_status }}" maxlength="100">
+                  </div>
+                </div>
                 
                 <div class="col-md-6 mb-3">
-              <label class="form-label">Current Salary (₹)</label>
-              <div class="input-group">
-                <input type="number" class="form-control" name="current_salary"
-                       value="{{ candidate.current_salary }}" min="0" step="1">
-                <select class="form-select" name="current_salary_type">
-                  <option value="(CTC)" {% if candidate.current_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
-                  <option value="(Per Month)" {% if candidate.current_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
-                  <option value="(In Hand)" {% if candidate.current_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
-                  <option value="(Per Annum)" {% if candidate.current_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
-                </select>
+                  <label class="form-label">Current Salary (₹)</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" name="current_salary"
+                           value="{{ candidate.current_salary }}" min="0" step="1">
+                    <select class="form-select" name="current_salary_type">
+                      <option value="(CTC)" {% if candidate.current_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
+                      <option value="(Per Month)" {% if candidate.current_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
+                      <option value="(In Hand)" {% if candidate.current_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
+                      <option value="(Per Annum)" {% if candidate.current_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
+                    </select>
+                  </div>
+                  <div class="invalid-feedback">
+                    Please enter a valid salary
+                  </div>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Expected Salary (₹)</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" name="expected_salary"
+                           value="{{ candidate.expected_salary }}" min="0" step="1">
+                    <select class="form-select" name="expected_salary_type">
+                      <option value="(CTC)" {% if candidate.expected_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
+                      <option value="(Per Month)" {% if candidate.expected_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
+                      <option value="(In Hand)" {% if candidate.expected_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
+                      <option value="(Per Annum)" {% if candidate.expected_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
+                    </select>
+                  </div>
+                  <div class="invalid-feedback">
+                    Please enter a valid salary
+                  </div>
+                </div>
               </div>
-              <div class="invalid-feedback">
-                Please enter a valid salary
-              </div>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Expected Salary (₹)</label>
-              <div class="input-group">
-                <input type="number" class="form-control" name="expected_salary"
-                       value="{{ candidate.expected_salary }}" min="0" step="1">
-                <select class="form-select" name="expected_salary_type">
-                  <option value="(CTC)" {% if candidate.expected_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
-                  <option value="(Per Month)" {% if candidate.expected_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
-                  <option value="(In Hand)" {% if candidate.expected_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
-                  <option value="(Per Annum)" {% if candidate.expected_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
-                </select>
-              </div>
-              <div class="invalid-feedback">
-                Please enter a valid salary
-              </div>
-            </div>
-              </div>
-            </div>
-            
-            <!-- Calling Tab -->
-            <div class="tab-pane fade" id="calling" role="tabpanel">
+              <hr class="my-4">
+              <h5 class="text-secondary mb-4 sticky-section-header">Candidate Calling Details</h5>
               <div class="row">
-            <!-- Call Connection Status -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Call Connection Status <span class="text-danger">*</span></label>
-              <select class="form-select" name="call_connection" id="callConnection" required>
-                <option value="" disabled selected>Select Status</option>
-                <option value="Connected" {% if candidate.call_connection == "Connected" %}selected{% endif %}>Connected</option>
-                <option value="Not Reachable" {% if candidate.call_connection == "Not Reachable" %}selected{% endif %}>Not Reachable</option>
-                <option value="Busy" {% if candidate.call_connection == "Busy" %}selected{% endif %}>Busy</option>
-                <option value="Wrong Number" {% if candidate.call_connection == "Wrong Number" %}selected{% endif %}>Wrong Number</option>
-                <option value="Other" {% if candidate.call_connection == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherCallConnectionContainer" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Call Connection Status</label>
-                <input type="text" class="form-control" name="other_call_connection" 
-                       value="{{ candidate.other_call_connection }}" maxlength="100">
+                <!-- Call Connection Status -->
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Call Connection Status <span class="text-danger">*</span></label>
+                  <select class="form-select" name="call_connection" id="callConnection" required>
+                    <option value="" disabled selected>Select Status</option>
+                    <option value="Connected" {% if candidate.call_connection == "Connected" %}selected{% endif %}>Connected</option>
+                    <option value="Not Reachable" {% if candidate.call_connection == "Not Reachable" %}selected{% endif %}>Not Reachable</option>
+                    <option value="Busy" {% if candidate.call_connection == "Busy" %}selected{% endif %}>Busy</option>
+                    <option value="Wrong Number" {% if candidate.call_connection == "Wrong Number" %}selected{% endif %}>Wrong Number</option>
+                    <option value="Other" {% if candidate.call_connection == "Other" %}selected{% endif %}>Other</option>
+                  </select>
+                  <div id="otherCallConnectionContainer" style="display: none;" class="mt-2">
+                    <label class="form-label">Specify Other Call Connection Status</label>
+                    <input type="text" class="form-control" name="other_call_connection" 
+                           value="{{ candidate.other_call_connection }}" maxlength="100">
+                  </div>
+                  <div class="invalid-feedback">Please select call connection status</div>
+                </div>
               </div>
-              <div class="invalid-feedback">Please select call connection status</div>
-            </div>
-          </div>
 
               <div class="row" id="connectedFields" style="display: none;">
                 <div class="col-md-12 mb-3">
                   <label class="form-label">Lead Generate Status <span class="text-danger">*</span></label>
                   <select class="form-select" name="lead_generate" id="leadGenerateSelect" required>
-                <option value="" disabled selected>Select Status</option>
-                <option value="Yes" {% if candidate.lead_generate == "Yes" %}selected{% endif %}>Yes</option>
-                <option value="No" {% if candidate.lead_generate == "No" %}selected{% endif %}>No</option>
-                <option value="Converted" {% if candidate.lead_generate == "Converted" %}selected{% endif %}>Converted</option>
-                <option value="Other" {% if candidate.lead_generate == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherLeadGenerateContainer" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Lead Generate Status</label>
-                <input type="text" class="form-control" name="other_lead_generate" 
-                       value="{{ candidate.other_lead_generate }}" maxlength="100">
-              </div>
+                    <option value="" disabled selected>Select Status</option>
+                    <option value="Yes" {% if candidate.lead_generate == "Yes" %}selected{% endif %}>Yes</option>
+                    <option value="No" {% if candidate.lead_generate == "No" %}selected{% endif %}>No</option>
+                    <option value="Converted" {% if candidate.lead_generate == "Converted" %}selected{% endif %}>Converted</option>
+                    <option value="Other" {% if candidate.lead_generate == "Other" %}selected{% endif %}>Other</option>
+                  </select>
+                  <div id="otherLeadGenerateContainer" style="display: none;" class="mt-2">
+                    <label class="form-label">Specify Other Lead Generate Status</label>
+                    <input type="text" class="form-control" name="other_lead_generate" 
+                           value="{{ candidate.other_lead_generate }}" maxlength="100">
+                  </div>
                   <div class="invalid-feedback">
                     Please select lead generation status
                   </div>
@@ -455,21 +506,21 @@
                 
                 <div class="col-md-12 mb-3">
                   <label class="form-label">Send for Interview Status <span class="text-danger">*</span></label>
-                  <select class="form-select" name="send_for_interview" id="interviewStatusSelect" required >
-                <option value="" disabled selected>Select Status</option>
-                <option value="Yes" {% if candidate.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
-                <option value="No" {% if candidate.send_for_interview == "No" %}selected{% endif %}>No</option>
-                <option value="Scheduled" {% if candidate.send_for_interview == "Scheduled" %}selected{% endif %}>Scheduled</option>
-                <option value="Not Interested" {% if candidate.send_for_interview == "Not Interested" %}selected{% endif %}>Not Interested</option>
-                <option value="Rescheduled" {% if candidate.send_for_interview == "Rescheduled" %}selected{% endif %}>Rescheduled</option>
-                <option value="Completed" {% if candidate.send_for_interview == "Completed" %}selected{% endif %}>Completed</option>
-                <option value="Other" {% if candidate.send_for_interview == "Other" %}selected{% endif %}>Other</option>
-              </select>
-              <div id="otherInterviewStatusContainer" style="display: none;" class="mt-2">
-                <label class="form-label">Specify Other Interview Status</label>
-                <input type="text" class="form-control" name="other_interview_status" 
-                       value="{{ candidate.other_interview_status }}" maxlength="100">
-              </div>
+                  <select class="form-select" name="send_for_interview" id="interviewStatusSelect" required>
+                    <option value="" disabled selected>Select Status</option>
+                    <option value="Yes" {% if candidate.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
+                    <option value="No" {% if candidate.send_for_interview == "No" %}selected{% endif %}>No</option>
+                    <option value="Scheduled" {% if candidate.send_for_interview == "Scheduled" %}selected{% endif %}>Scheduled</option>
+                    <option value="Not Interested" {% if candidate.send_for_interview == "Not Interested" %}selected{% endif %}>Not Interested</option>
+                    <option value="Rescheduled" {% if candidate.send_for_interview == "Rescheduled" %}selected{% endif %}>Rescheduled</option>
+                    <option value="Completed" {% if candidate.send_for_interview == "Completed" %}selected{% endif %}>Completed</option>
+                    <option value="Other" {% if candidate.send_for_interview == "Other" %}selected{% endif %}>Other</option>
+                  </select>
+                  <div id="otherInterviewStatusContainer" style="display: none;" class="mt-2">
+                    <label class="form-label">Specify Other Interview Status</label>
+                    <input type="text" class="form-control" name="other_interview_status" 
+                           value="{{ candidate.other_interview_status }}" maxlength="100">
+                  </div>
                   <div class="invalid-feedback">
                     Please select interview status
                   </div>
@@ -494,26 +545,24 @@
                   <small class="text-muted">Characters remaining: <span id="remarkCounter">500</span></small>
                 </div>
               </div>
-            </div>
-            
-            <!-- Selection Tab -->
-            <div class="tab-pane fade" id="selection" role="tabpanel">
+              <hr class="my-4">
+              <h5 class="text-secondary mb-4 sticky-section-header">Candidate Selection</h5>
               <div class="row">
                 <div class="col-md-12 mb-3">
                   <label class="form-label">Selection Status <span class="text-danger">*</span></label>
                   <select class="form-select" name="selection_status" id="selectionStatus">
-                <option value="" disabled selected>Select Status</option>
-                <option value="Selected" {% if candidate.selection_status == "Selected" %}selected{% endif %}>Selected</option>
-                <option value="Rejected" {% if candidate.selection_status == "Rejected" %}selected{% endif %}>Rejected</option>
-                <option value="Pending" {% if candidate.selection_status == "Pending" %}selected{% endif %}>Pending</option>
-                <option value="Not Join" {% if candidate.selection_status == "Not Join" %}selected{% endif %}>Not Join</option>
-                <option value="Other" {% if candidate.selection_status == "Other" %}selected{% endif %}>Other</option>
-              </select>
+                    <option value="" disabled selected>Select Status</option>
+                    <option value="Selected" {% if candidate.selection_status == "Selected" %}selected{% endif %}>Selected</option>
+                    <option value="Rejected" {% if candidate.selection_status == "Rejected" %}selected{% endif %}>Rejected</option>
+                    <option value="Pending" {% if candidate.selection_status == "Pending" %}selected{% endif %}>Pending</option>
+                    <option value="Not Join" {% if candidate.selection_status == "Not Join" %}selected{% endif %}>Not Join</option>
+                    <option value="Other" {% if candidate.selection_status == "Other" %}selected{% endif %}>Other</option>
+                  </select>
 
-              <div id="otherSelectionStatusContainer" class="mt-2" style="display: none;">
-                <label class="form-label">Specify Other Selection Status</label>
-                <input type="text" class="form-control" name="other_selection_status" value="{{ candidate.other_selection_status }}" maxlength="100">
-              </div>
+                  <div id="otherSelectionStatusContainer" class="mt-2" style="display: none;">
+                    <label class="form-label">Specify Other Selection Status</label>
+                    <input type="text" class="form-control" name="other_selection_status" value="{{ candidate.other_selection_status }}" maxlength="100">
+                  </div>
                   <div class="invalid-feedback">Please select candidate selection status</div>
                 </div>
               </div>
@@ -522,14 +571,14 @@
                 <div class="col-md-12 mb-3">
                   <label class="form-label">Company Name <span class="text-danger">*</span></label>
                   <select class="form-select" name="company_name">
-                {% for v in vacancies %}
-                  <option value="{{ v.company__company_name }}"
-                    {% if candidate.company_name == v.company__company_name %}selected{% endif %}>
-                    {{ v.job_profile }} - {{ v.company__company_name }}
-                  </option>
-                {% endfor %}
-                <option value="Other" {% if candidate.company_name == "Other" %}selected{% endif %}>Other</option>
-              </select>
+                    {% for v in vacancies %}
+                      <option value="{{ v.company__company_name }}"
+                        {% if candidate.company_name == v.company__company_name %}selected{% endif %}>
+                        {{ v.job_profile }} - {{ v.company__company_name }}
+                      </option>
+                    {% endfor %}
+                    <option value="Other" {% if candidate.company_name == "Other" %}selected{% endif %}>Other</option>
+                  </select>
                   <div class="invalid-feedback">Please enter company name</div>
                 </div>
 
@@ -584,7 +633,7 @@
             </div>
           </div>
           
-          <div class="modal-footer">
+          <div class="modal-footer" style="position: sticky; bottom: -30px; z-index: 1050; background: var(--tblr-bg-surface); border-top: 1px solid var(--tblr-border-color);">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" name="submit_all" class="btn btn-primary">Save All Changes</button>
           </div>
@@ -596,286 +645,321 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // Main form elements
   const form = document.getElementById('unifiedCandidateForm');
   const currentDate = new Date().toISOString().split('T')[0];
   
-  // Tab functionality
-  const tabs = new bootstrap.Tab(document.getElementById('profile-tab'));
-  tabs.show();
-  
-  // Profile tab validations
-  const nameInput = form.querySelector('input[name="candidate_name"]');
-  nameInput.addEventListener('input', function() {
-    if (this.validity.patternMismatch) {
-      this.setCustomValidity('Name should only contain letters and spaces');
-    } else if (this.validity.tooShort || this.validity.tooLong) {
-      this.setCustomValidity('Name should be between 3-50 characters');
-    } else {
-      this.setCustomValidity('');
+  // Field change confirmation for name, mobile, email
+  const originalValues = {
+    name: document.getElementById('candidateName').value,
+    mobile: document.getElementById('candidateMobile').value,
+    email: document.getElementById('candidateEmail').value
+  };
+
+  function checkChanges() {
+    const currentValues = {
+      name: document.getElementById('candidateName').value,
+      mobile: document.getElementById('candidateMobile').value,
+      email: document.getElementById('candidateEmail').value
+    };
+
+    const changes = [];
+    if (currentValues.name !== originalValues.name) {
+      changes.push('Name');
     }
-    this.reportValidity();
-  });
-  
-  const mobileInput = form.querySelector('input[name="candidate_mobile_number"]');
-  mobileInput.addEventListener('input', function() {
-    if (this.validity.patternMismatch) {
-      this.setCustomValidity('Please enter exactly 10 digits');
-    } else {
-      this.setCustomValidity('');
+    if (currentValues.mobile !== originalValues.mobile) {
+      changes.push('Mobile Number');
     }
-    this.reportValidity();
-  });
-  
-  const emailInput = form.querySelector('input[name="candidate_email_address"]');
-  emailInput.addEventListener('input', function() {
-    if (this.validity.typeMismatch) {
-      this.setCustomValidity('Please enter a valid email address (e.g., example@domain.com)');
-    } else {
-      this.setCustomValidity('');
+    if (currentValues.email !== originalValues.email) {
+      changes.push('Email');
     }
-    this.reportValidity();
-  });
-  
-  const photoInput = form.querySelector('input[name="candidate_photo"]');
-  photoInput.addEventListener('change', function() {
-    if (this.files.length > 0) {
-      const file = this.files[0];
-      const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-      const maxSize = 2 * 1024 * 1024; // 2MB
+
+    if (changes.length > 0) {
+      const message = `You have modified the following fields:\n${changes.join('\n')}\n\nAre you sure you want to save these changes?`;
+      if (!confirm(message)) {
+        // Reset to original values if user cancels
+        document.getElementById('candidateName').value = originalValues.name;
+        document.getElementById('candidateMobile').value = originalValues.mobile;
+        document.getElementById('candidateEmail').value = originalValues.email;
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Add change event listeners for confirmation
+  document.getElementById('candidateName').addEventListener('change', checkChanges);
+  document.getElementById('candidateMobile').addEventListener('change', checkChanges);
+  document.getElementById('candidateEmail').addEventListener('change', checkChanges);
+
+  // Initialize dropdown search functionality
+  function initializeDropdownSearch(dropdownType) {
+    const searchInput = document.getElementById(`${dropdownType}Search`);
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const options = document.querySelectorAll(`#${dropdownType}Dropdown + .dropdown-menu .dropdown-item`);
       
-      if (!validTypes.includes(file.type)) {
-        this.setCustomValidity('Please upload an image file (JPEG, PNG, GIF)');
-      } else if (file.size > maxSize) {
-        this.setCustomValidity('Image size should not exceed 2MB');
-      } else {
-        this.setCustomValidity('');
-      }
-      this.reportValidity();
-    }
-  });
-  
-  const resumeInput = form.querySelector('input[name="candidate_resume"]');
-  resumeInput.addEventListener('change', function() {
-    if (this.files.length > 0) {
-      const file = this.files[0];
-      const validTypes = ['application/pdf', 'application/msword', 
-                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      
-      if (!validTypes.includes(file.type)) {
-        this.setCustomValidity('Please upload a PDF or Word document');
-      } else if (file.size > maxSize) {
-        this.setCustomValidity('Resume size should not exceed 5MB');
-      } else {
-        this.setCustomValidity('');
-      }
-      this.reportValidity();
-    }
-  });
-  
-  // Details tab validations
-  const altMobileInput = form.querySelector('input[name="candidate_alternate_mobile_number"]');
-  altMobileInput.addEventListener('input', function() {
-    if (this.value && this.validity.patternMismatch) {
-      this.setCustomValidity('Please enter exactly 10 digits');
+      options.forEach(option => {
+        const text = option.textContent.toLowerCase();
+        option.style.display = text.includes(searchTerm) ? '' : 'none';
+      });
+    });
+  }
+
+  // Initialize all dropdown searches
+  initializeDropdownSearch('location');
+  initializeDropdownSearch('sector');
+  initializeDropdownSearch('department');
+
+  // Update dropdown button text based on selected items
+  function updateDropdownButtonText(dropdownType) {
+    const button = document.getElementById(`${dropdownType}Dropdown`);
+    const checkboxes = document.querySelectorAll(`input[name="${dropdownType}"]:checked`);
+    const selectedItems = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (selectedItems.length === 0) {
+      button.textContent = `Select ${dropdownType}s...`;
+    } else if (selectedItems.length > 2) {
+      button.textContent = `${selectedItems.length} ${dropdownType}s selected`;
     } else {
-      this.setCustomValidity('');
+      button.textContent = selectedItems.join(', ');
     }
-    this.reportValidity();
-  });
-  
-  form.querySelectorAll('input[type="text"][maxlength]').forEach(input => {
-    input.addEventListener('input', function() {
-      if (this.value.length > parseInt(this.maxLength)) {
-        this.setCustomValidity(`Maximum ${this.maxLength} characters allowed`);
-      } else {
-        this.setCustomValidity('');
-      }
-      this.reportValidity();
+  }
+
+  // Initialize dropdown button text
+  ['location', 'sector', 'department'].forEach(type => {
+    updateDropdownButtonText(type);
+    document.querySelectorAll(`input[name="${type}"]`).forEach(checkbox => {
+      checkbox.addEventListener('change', () => updateDropdownButtonText(type));
     });
   });
-  
-  const expYearInput = form.querySelector('input[name="experience_year"]');
-  expYearInput.addEventListener('input', function() {
-    if (this.validity.rangeUnderflow || this.validity.rangeOverflow) {
-      this.setCustomValidity('Please enter a value between 0-50 years');
-    } else {
-      this.setCustomValidity('');
-    }
-    this.reportValidity();
-  });
-  
-  const expMonthInput = form.querySelector('input[name="experience_month"]');
-  expMonthInput.addEventListener('input', function() {
-    if (this.validity.rangeUnderflow || this.validity.rangeOverflow) {
-      this.setCustomValidity('Please enter a value between 0-11 months');
-    } else {
-      this.setCustomValidity('');
-    }
-    this.reportValidity();
-  });
-  
-  const currentSalaryInput = form.querySelector('input[name="current_salary"]');
-  const expectedSalaryInput = form.querySelector('input[name="expected_salary"]');
-  
-  function validateSalaries() {
-    const currentSalary = parseFloat(currentSalaryInput.value) || 0;
-    const expectedSalary = parseFloat(expectedSalaryInput.value) || 0;
+
+  // Toggle "Other" input fields based on select value
+  function toggleOtherInput(selectElement, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
     
-    if (expectedSalary > 0 && currentSalary > 0 && expectedSalary < currentSalary) {
-      expectedSalaryInput.setCustomValidity('Expected salary should be equal to or higher than current salary');
+    if (selectElement.value === 'Other') {
+      container.style.display = 'block';
+      const input = container.querySelector('input');
+      if (input) input.required = true;
     } else {
-      expectedSalaryInput.setCustomValidity('');
+      container.style.display = 'none';
+      const input = container.querySelector('input');
+      if (input) input.required = false;
     }
-    expectedSalaryInput.reportValidity();
   }
-  
-  currentSalaryInput.addEventListener('input', validateSalaries);
-  expectedSalaryInput.addEventListener('input', validateSalaries);
-  
-  // Calling tab validations
-  const callSelect = form.querySelector('select[name="call_connection"]');
-  const connectedFields = form.querySelector('#connectedFields');
-  
+
+  // Initialize all "Other" input fields
+  const otherInputMappings = [
+    { selectId: 'leadSourceSelect', containerId: 'otherLeadSourceContainer' },
+    { selectId: 'qualificationSelect', containerId: 'otherQualificationContainer' },
+    { selectId: 'workingStatusSelect', containerId: 'otherWorkingStatusContainer' },
+    { selectId: 'callConnection', containerId: 'otherCallConnectionContainer' },
+    { selectId: 'originLocation', containerId: 'otherOriginLocation' },
+    { selectId: 'leadGenerateSelect', containerId: 'otherLeadGenerateContainer' },
+    { selectId: 'interviewStatusSelect', containerId: 'otherInterviewStatusContainer' },
+    { selectId: 'selectionStatus', containerId: 'otherSelectionStatusContainer' }
+  ];
+
+  otherInputMappings.forEach(mapping => {
+    const select = document.getElementById(mapping.selectId);
+    if (select) {
+      select.addEventListener('change', function() {
+        toggleOtherInput(this, mapping.containerId);
+      });
+      // Initialize on load
+      toggleOtherInput(select, mapping.containerId);
+    }
+  });
+
+  // Call connection status handling
+  const callConnection = document.getElementById('callConnection');
+  const connectedFields = document.getElementById('connectedFields');
+
   function toggleConnectedFields() {
-    if (callSelect.value === 'Connected') {
+    if (callConnection && callConnection.value === 'Connected') {
       connectedFields.style.display = 'block';
-      connectedFields.querySelectorAll('input, select, textarea').forEach(el => {
+      connectedFields.querySelectorAll('[required]').forEach(el => {
         el.required = true;
       });
     } else {
       connectedFields.style.display = 'none';
-      connectedFields.querySelectorAll('input, select, textarea').forEach(el => {
+      connectedFields.querySelectorAll('[required]').forEach(el => {
         el.required = false;
       });
     }
   }
-  
-  toggleConnectedFields();
-  callSelect.addEventListener('change', toggleConnectedFields);
-  
-  const followUpDate = form.querySelector('input[name="next_follow_up_date"]');
-  if (!followUpDate.value) {
-    followUpDate.value = currentDate;
+
+  if (callConnection) {
+    callConnection.addEventListener('change', toggleConnectedFields);
+    // Initialize on load
+    toggleConnectedFields();
   }
-  followUpDate.min = currentDate;
-  
-  const remarkTextarea = form.querySelector('textarea[name="calling_remark"]');
-  const remarkCounter = document.getElementById('remarkCounter');
-  
-  remarkTextarea.addEventListener('input', function() {
-    const remaining = 500 - this.value.length;
-    remarkCounter.textContent = remaining;
-    
-    if (remaining < 0) {
-      this.setCustomValidity('Maximum 500 characters allowed');
-    } else {
-      this.setCustomValidity('');
-    }
-    this.reportValidity();
-  });
-  
-  remarkTextarea.dispatchEvent(new Event('input'));
-  
-  followUpDate.addEventListener('change', function() {
-    const selectedDate = new Date(this.value);
-    const today = new Date(currentDate);
-    
-    if (selectedDate < today) {
-      this.setCustomValidity('Follow-up date must be today or in the future');
-    } else {
-      this.setCustomValidity('');
-    }
-    this.reportValidity();
-  });
-  
-  // Selection tab validations
-  const selectionStatus = form.querySelector('#selectionStatus');
-  const joiningStatus = form.querySelector('#joiningStatus');
-  const selectionFields = form.querySelector('#selectionFields');
-  const joinedFields = form.querySelector('#joinedFields');
-  
-  const selectionDateInput = form.querySelector('input[name="selection_date"]');
-  const joiningDateInput = form.querySelector('input[name="candidate_joining_date"]');
-  const payoutDateInput = form.querySelector('input[name="payout_date"]');
-  
-  const salaryInput = form.querySelector('input[name="offered_salary"]');
-  const commissionInput = form.querySelector('input[name="emta_commission"]');
-  
-  if (!selectionDateInput.value) {
-    selectionDateInput.value = currentDate;
-  }
-  selectionDateInput.max = currentDate;
-  
+
+  // Selection status handling
+  const selectionStatus = document.getElementById('selectionStatus');
+  const selectionFields = document.getElementById('selectionFields');
+  const joiningStatus = document.getElementById('joiningStatus');
+  const joinedFields = document.getElementById('joinedFields');
+
   function toggleSelectionFields() {
+    if (!selectionStatus) return;
+
     const isSelected = selectionStatus.value === 'Selected';
-    const isJoined = joiningStatus && joiningStatus.value === 'Joined';
-    
     selectionFields.style.display = isSelected ? 'block' : 'none';
-    if (joiningStatus) joiningStatus.required = isSelected;
     
-    joinedFields.style.display = isSelected && isJoined ? 'block' : 'none';
-    
-    selectionFields.querySelectorAll('input, select').forEach(field => {
-      field.required = isSelected && field.name !== 'joining_status';
-    });
-    
-    joinedFields.querySelectorAll('input, select').forEach(field => {
-      field.required = isSelected && isJoined;
-    });
-  }
-  
-  function validateSelectionDates() {
-    const selectionDate = new Date(selectionDateInput.value);
-    const joiningDate = new Date(joiningDateInput.value);
-    const payoutDate = new Date(payoutDateInput.value);
-    
-    if (joiningDateInput.value && joiningDate < selectionDate) {
-      joiningDateInput.setCustomValidity('Joining date must be after selection date');
+    if (isSelected && joiningStatus && joiningStatus.value === 'Joined') {
+      joinedFields.style.display = 'block';
+      joinedFields.querySelectorAll('[required]').forEach(el => {
+        el.required = true;
+      });
     } else {
-      joiningDateInput.setCustomValidity('');
+      joinedFields.style.display = 'none';
+      joinedFields.querySelectorAll('[required]').forEach(el => {
+        el.required = false;
+      });
     }
-    joiningDateInput.reportValidity();
-    
-    if (payoutDateInput.value && payoutDate < joiningDate) {
-      payoutDateInput.setCustomValidity('Payout date must be after joining date');
-    } else {
-      payoutDateInput.setCustomValidity('');
-    }
-    payoutDateInput.reportValidity();
+  } 
+
+  if (selectionStatus) {
+    selectionStatus.addEventListener('change', toggleSelectionFields);
+    // Initialize on load
+    toggleSelectionFields();
   }
-  
-  selectionStatus.addEventListener('change', toggleSelectionFields);
+
   if (joiningStatus) {
     joiningStatus.addEventListener('change', toggleSelectionFields);
   }
+
+  // Date validation for selection and joining dates
+  const selectionDateInput = document.querySelector('input[name="selection_date"]');
+  const joiningDateInput = document.querySelector('input[name="candidate_joining_date"]');
+  const payoutDateInput = document.querySelector('input[name="payout_date"]');
+
+  function validateSelectionDates() {
+    if (selectionDateInput && selectionDateInput.value && joiningDateInput && joiningDateInput.value) {
+      const selectionDate = new Date(selectionDateInput.value);
+      const joiningDate = new Date(joiningDateInput.value);
+      
+      if (joiningDate < selectionDate) {
+        joiningDateInput.setCustomValidity('Joining date must be after selection date');
+      } else {
+        joiningDateInput.setCustomValidity('');
+      }
+      joiningDateInput.reportValidity();
+    }
+    
+    if (joiningDateInput && joiningDateInput.value && payoutDateInput && payoutDateInput.value) {
+      const joiningDate = new Date(joiningDateInput.value);
+      const payoutDate = new Date(payoutDateInput.value);
+      
+      if (payoutDate < joiningDate) {
+        payoutDateInput.setCustomValidity('Payout date must be after joining date');
+      } else {
+        payoutDateInput.setCustomValidity('');
+      }
+      payoutDateInput.reportValidity();
+    }
+  }
+
+  if (selectionDateInput) selectionDateInput.addEventListener('change', validateSelectionDates);
+  if (joiningDateInput) joiningDateInput.addEventListener('change', validateSelectionDates);
+  if (payoutDateInput) payoutDateInput.addEventListener('change', validateSelectionDates);
+
+  // Character counter for remarks
+  const remarkTextarea = document.querySelector('textarea[name="calling_remark"]');
+  const remarkCounter = document.getElementById('remarkCounter');
+
+  if (remarkTextarea && remarkCounter) {
+    remarkTextarea.addEventListener('input', function() {
+      const remaining = 500 - this.value.length;
+      remarkCounter.textContent = remaining;
+      
+      if (remaining < 0) {
+        this.setCustomValidity('Maximum 500 characters allowed');
+      } else {
+        this.setCustomValidity('');
+      }
+      this.reportValidity();
+    });
+    
+    // Initialize counter
+    remarkTextarea.dispatchEvent(new Event('input'));
+  }
+
+  // Salary validation
+  const currentSalaryInput = document.querySelector('input[name="current_salary"]');
+  const expectedSalaryInput = document.querySelector('input[name="expected_salary"]');
   
-  selectionDateInput.addEventListener('change', validateSelectionDates);
-  joiningDateInput.addEventListener('change', validateSelectionDates);
-  payoutDateInput.addEventListener('change', validateSelectionDates);
+  function validateSalaries() {
+    if (currentSalaryInput && expectedSalaryInput) {
+      const currentSalary = parseFloat(currentSalaryInput.value) || 0;
+      const expectedSalary = parseFloat(expectedSalaryInput.value) || 0;
+      
+      if (expectedSalary > 0 && currentSalary > 0 && expectedSalary < currentSalary) {
+        expectedSalaryInput.setCustomValidity('Expected salary should be equal to or higher than current salary');
+      } else {
+        expectedSalaryInput.setCustomValidity('');
+      }
+      expectedSalaryInput.reportValidity();
+    }
+  }
   
-  salaryInput.addEventListener('input', () => {
-    salaryInput.setCustomValidity(salaryInput.validity.rangeUnderflow ? 'Salary must be a positive number' : '');
-    salaryInput.reportValidity();
-  });
-  
-  commissionInput.addEventListener('input', () => {
-    commissionInput.setCustomValidity(commissionInput.validity.rangeUnderflow ? 'Commission must be a positive number' : '');
-    commissionInput.reportValidity();
-  });
-  
-  toggleSelectionFields();
-  
-  // Form submission validation
+  if (currentSalaryInput) currentSalaryInput.addEventListener('input', validateSalaries);
+  if (expectedSalaryInput) expectedSalaryInput.addEventListener('input', validateSalaries);
+
+  // File validation
+  function validateFileInput(input, maxSizeMB, validTypes, errorMessage) {
+    if (input.files.length > 0) {
+      const file = input.files[0];
+      const fileSize = file.size / 1024 / 1024; // in MB
+      
+      if (!validTypes.includes(file.type)) {
+        input.setCustomValidity(errorMessage);
+      } else if (fileSize > maxSizeMB) {
+        input.setCustomValidity(`File size should not exceed ${maxSizeMB}MB`);
+      } else {
+        input.setCustomValidity('');
+      }
+      input.reportValidity();
+    }
+  }
+
+  const photoInput = document.querySelector('input[name="candidate_photo"]');
+  if (photoInput) {
+    photoInput.addEventListener('change', function() {
+      validateFileInput(
+        this, 
+        2, 
+        ['image/jpeg', 'image/png', 'image/gif'], 
+        'Please upload an image file (JPEG, PNG, GIF)'
+      );
+    });
+  }
+
+  const resumeInput = document.querySelector('input[name="candidate_resume"]');
+  if (resumeInput) {
+    resumeInput.addEventListener('change', function() {
+      validateFileInput(
+        this, 
+        5, 
+        ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'], 
+        'Please upload a PDF or Word document'
+      );
+    });
+  }
+
+  // Form submission
   form.addEventListener('submit', function(event) {
-    if (!form.checkValidity()) {
+    if (!checkChanges() || !form.checkValidity()) {
       event.preventDefault();
       event.stopPropagation();
       
-      // Find the first invalid field in the active tab
-      const activeTab = document.querySelector('.tab-pane.active');
-      const firstInvalid = activeTab.querySelector(':invalid');
-      
+      // Find the first invalid field and scroll to it
+      const firstInvalid = form.querySelector(':invalid');
       if (firstInvalid) {
         firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
         firstInvalid.focus();
@@ -884,336 +968,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     form.classList.add('was-validated');
   }, false);
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Form elements
-  const form = document.getElementById('candidateForm');
-  const submitBtn = document.getElementById('submitFormButton');
-  
-  // Conditional fields
-  const callConnection = document.getElementById('callConnection');
-  const otherFieldsWrapper = document.getElementById('otherFields');
-  const selectionStatus = document.getElementById('selectionStatus');
-  const joiningStatus = document.getElementById('joiningStatus');
-  
-  // Other input containers
-  const otherInputContainers = [
-    { select: 'leadSourceSelect', container: 'otherLeadSourceContainer' },
-    { select: 'qualificationSelect', container: 'otherQualificationContainer' },
-    { select: 'workingStatusSelect', container: 'otherWorkingStatusContainer' },
-    { select: 'callConnection', container: 'otherCallConnectionContainer' },
-    { select: 'originLocation', container: 'otherOriginLocation' },
-    { select: 'leadGenerateSelect', container: 'otherLeadGenerateContainer' },
-    { select: 'interviewStatusSelect', container: 'otherInterviewStatusContainer' },
-    { select: 'selectionStatus', container: 'otherSelectionStatusContainer' }
-  ];
-
-  // Initialize dropdowns
-  initializeDropdowns(['sector', 'department', 'location']);
-
-  // Toggle fields based on call connection status
-  callConnection.addEventListener('change', function() {
-    toggleOtherFields();
-    toggleOtherInput(this, 'otherCallConnectionContainer');
-  });
-
-  // Toggle selection fields
-  selectionStatus.addEventListener('change', function() {
-    toggleSelectionFields();
-    toggleOtherInput(this, 'otherSelectionStatusContainer');
-  });
-
-  // Toggle joined fields
-  if (joiningStatus) {
-    joiningStatus.addEventListener('change', toggleSelectionFields);
-  }
-
-  // Initialize other input fields
-  otherInputContainers.forEach(item => {
-    const select = document.getElementById(item.select);
-    if (select) {
-      select.addEventListener('change', function() {
-        toggleOtherInput(this, item.container);
-      });
-      // Initialize on load
-      toggleOtherInput(select, item.container);
-    }
-  });
-
-  // Form submission
-  submitBtn.addEventListener('click', function(event) {
-    event.preventDefault();
-    
-    if (!validateForm()) {
-      event.stopPropagation();
-      return;
-    }
-    
-    submitForm();
-  });
-
-  // Real-time validation
-  form.querySelectorAll('input, select, textarea').forEach(input => {
-    input.addEventListener('input', validateInput);
-    input.addEventListener('blur', validateInput);
-  });
-
-  // Helper functions
-  function initializeDropdowns(types) {
-    types.forEach(type => {
-      const dropdown = document.getElementById(`${type}Dropdown`);
-      const checkboxes = document.querySelectorAll(`input[name="${type}"]`);
-      const searchInput = document.getElementById(`${type}Search`);
-      
-      if (checkboxes) {
-        checkboxes.forEach(checkbox => {
-          checkbox.addEventListener('change', () => updateDropdownButtonText(type));
-        });
-      }
-      
-      if (searchInput) {
-        searchInput.addEventListener('input', function() {
-          const searchTerm = this.value.toLowerCase();
-          const options = document.querySelectorAll(`#${type}Dropdown + .dropdown-menu .dropdown-item`);
-          
-          options.forEach(option => {
-            const text = option.textContent.toLowerCase();
-            option.style.display = text.includes(searchTerm) ? 'block' : 'none';
-          });
-        });
-      }
-      
-      updateDropdownButtonText(type);
-    });
-  }
-
-  function updateDropdownButtonText(type) {
-    const button = document.getElementById(`${type}Dropdown`);
-    const checkboxes = document.querySelectorAll(`input[name="${type}"]:checked`);
-    const selectedItems = Array.from(checkboxes).map(cb => cb.nextElementSibling.textContent);
-    
-    if (selectedItems.length === 0) {
-      button.textContent = `Select ${type}s...`;
-    } else if (selectedItems.length > 2) {
-      button.textContent = `${selectedItems.length} ${type}s selected`;
-    } else {
-      button.textContent = selectedItems.join(', ');
-    }
-  }
-
-  function toggleOtherFields() {
-    const isConnected = callConnection.value === 'Connected';
-    otherFieldsWrapper.style.display = isConnected ? 'flex' : 'none';
-    otherFieldsWrapper.querySelectorAll('select, textarea, input').forEach(el => {
-      el.disabled = !isConnected;
-      if (!isConnected) {
-        el.required = false;
-      } else {
-        if (el.name === 'calling_remark' || el.name === 'lead_generate' || 
-            el.name === 'send_for_interview' || el.name === 'next_follow_up_date') {
-          el.required = true;
-        }
-      }
-    });
-  }
-
-  function toggleSelectionFields() {
-    const isSelected = selectionStatus.value === 'Selected';
-    document.getElementById('selectionFields').style.display = isSelected ? 'flex' : 'none';
-    
-    if (isSelected && joiningStatus && joiningStatus.value === 'Joined') {
-      document.getElementById('joinedFields').style.display = 'flex';
-    } else {
-      document.getElementById('joinedFields').style.display = 'none';
-    }
-  }
-
-  function toggleOtherInput(selectElement, containerId) {
-    const container = document.getElementById(containerId);
-    if (selectElement.value === 'Other') {
-      container.style.display = 'block';
-      container.querySelector('input').required = true;
-    } else {
-      container.style.display = 'none';
-      container.querySelector('input').required = false;
-    }
-  }
-
-  function validateForm() {
-    let isValid = true;
-    
-    // Reset custom validity
-    form.querySelectorAll('input, select, textarea').forEach(input => {
-      input.setCustomValidity('');
-      input.classList.remove('is-invalid');
-    });
-    
-    // Basic validation
-    if (!form.checkValidity()) {
-      isValid = false;
-    }
-    
-    // Validate conditional fields
-    if (callConnection.value === 'Connected') {
-      otherFieldsWrapper.querySelectorAll('[required]').forEach(el => {
-        if (!el.value) {
-          el.classList.add('is-invalid');
-          isValid = false;
-        }
-      });
-    }
-    
-    if (selectionStatus.value === 'Selected') {
-      document.querySelectorAll('#selectionFields [required]').forEach(el => {
-        if (!el.value) {
-          el.classList.add('is-invalid');
-          isValid = false;
-        }
-      });
-    }
-    
-    // Validate "Other" fields
-    document.querySelectorAll('[id$="Container"]').forEach(container => {
-      if (container.style.display !== 'none' && !container.querySelector('input').value) {
-        container.querySelector('input').classList.add('is-invalid');
-        isValid = false;
-      }
-    });
-    
-    // Validate file sizes
-    if (!validateFileSize('candidate_photo', 10) || !validateFileSize('candidate_resume', 10)) {
-      isValid = false;
-    }
-    
-    // Validate salary
-    const currentSalary = parseFloat(form.querySelector('input[name="current_salary"]').value) || 0;
-    const expectedSalary = parseFloat(form.querySelector('input[name="expected_salary"]').value) || 0;
-    
-    if (expectedSalary > 0 && expectedSalary < currentSalary) {
-      const expectedSalaryInput = form.querySelector('input[name="expected_salary"]');
-      expectedSalaryInput.setCustomValidity('Expected salary should be ≥ current salary');
-      expectedSalaryInput.classList.add('is-invalid');
-      isValid = false;
-    }
-    
-    form.classList.add('was-validated');
-    return isValid;
-  }
-
-  function validateFileSize(fieldName, maxSizeMB) {
-    const fileInput = form.querySelector(`input[name="${fieldName}"]`);
-    if (fileInput.files.length > 0) {
-      const fileSize = fileInput.files[0].size / 1024 / 1024; // in MB
-      if (fileSize > maxSizeMB) {
-        fileInput.setCustomValidity(`File size should not exceed ${maxSizeMB}MB`);
-        fileInput.classList.add('is-invalid');
-        return false;
-      }
-    }
-    return true;
-  }
-
-  function validateInput() {
-    if (this.checkValidity()) {
-      this.classList.remove('is-invalid');
-    } else {
-      this.classList.add('is-invalid');
-    }
-    
-    // Special handling for expected salary
-    if (this.name === 'expected_salary') {
-      const currentSalary = parseFloat(form.querySelector('input[name="current_salary"]').value) || 0;
-      const expectedSalary = parseFloat(this.value) || 0;
-      
-      if (expectedSalary > 0 && expectedSalary < currentSalary) {
-        this.setCustomValidity('Expected salary should be ≥ current salary');
-        this.classList.add('is-invalid');
-      } else {
-        this.setCustomValidity('');
-      }
-    }
-  }
-
-  function submitForm() {
-    const formData = new FormData(form);
-    const originalBtnText = submitBtn.innerHTML;
-    
-    // Show loading state
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
-    
-    fetch(form.action, {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        showAlert('success', data.message);
-        
-        // Redirect or close modal after delay
-        setTimeout(() => {
-          if (window.location.pathname.includes('add')) {
-            window.location.href = data.redirect_url || window.location.href;
-          } else {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modal-candidate'));
-            if (modal) modal.hide();
-          }
-        }, 1500);
-      } else {
-        showAlert('danger', data.message || 'Error saving data');
-        
-        // Show field errors if any
-        if (data.errors) {
-          Object.entries(data.errors).forEach(([field, error]) => {
-            const input = form.querySelector(`[name="${field}"]`);
-            if (input) {
-              input.setCustomValidity(error);
-              input.classList.add('is-invalid');
-            }
-          });
-          form.classList.add('was-validated');
-        }
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      showAlert('danger', 'Error saving data. Please try again.');
-    })
-    .finally(() => {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalBtnText;
-    });
-  }
-  
-  function showAlert(type, message) {
-    // Remove any existing alerts
-    const existingAlert = form.querySelector('.alert');
-    if (existingAlert) {
-      existingAlert.remove();
-    }
-    
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-    alertDiv.innerHTML = `
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-    form.prepend(alertDiv);
-    
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => {
-      alertDiv.classList.remove('show');
-      setTimeout(() => alertDiv.remove(), 150);
-    }, 5000);
-  }
 });
 </script>
 <div class="modal modal-blur fade" id="modal-vendor-data" tabindex="-1" role="dialog" aria-hidden="true">
@@ -1227,11 +981,25 @@ document.addEventListener('DOMContentLoaded', function() {
         <form method="post" enctype="multipart/form-data" id="vendorDataForm" novalidate>
           {% csrf_token %}
           <div class="row">
+            <!-- admin status -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Admin Status <span class="text-danger">*</span></label>
+              <select class="form-select" name="admin_status" required>
+                <option value="" disabled selected>Select Admin Status</option>
+                <option value="Pending" {% if candidate.admin_status == "Pending" %}selected{% endif %}>Pending</option>
+                <option value="Complete" {% if candidate.admin_status == "Complete" %}selected{% endif %}>Complete</option>
+                <option value="Failed" {% if candidate.admin_status == "Failed" %}selected{% endif %}>Failed</option>
+                <option value="In Process" {% if candidate.admin_status == "In Process" %}selected{% endif %}>In Process</option>
+              </select>
+              <div class="invalid-feedback">
+                Please select admin status
+              </div>
+            </div>
             <!-- Vendor Commission -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Vendor Commission (₹) <span class="text-danger">*</span></label>
               <input type="number" name="vendor_commission" class="form-control" 
-                     value="{{ candidate.vendor_commission }}" required
+                     value="{{ candidate.vendor_commission|default:0 }}" 
                      min="0" step="1">
               <div class="invalid-feedback">
                 Please enter a valid commission amount (minimum ₹0)
@@ -1242,7 +1010,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="col-md-6 mb-3">
               <label class="form-label">Commission Generate Date <span class="text-danger">*</span></label>
               <input type="date" name="commission_generation_date" class="form-control" 
-                     value="{{ candidate.commission_generation_date|date:'Y-m-d' }}" required
+                     value="{{ candidate.commission_generation_date|date:'Y-m-d' }}" 
                      >
               <div class="invalid-feedback">
                 Please select a valid date
@@ -1253,7 +1021,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="col-md-6 mb-3">
               <label class="form-label">Expected Vendor Payout Date <span class="text-danger">*</span></label>
               <input type="date" name="vendor_payout_date" class="form-control" 
-                     value="{{ candidate.vendor_payout_date|date:'Y-m-d' }}" required
+                     value="{{ candidate.vendor_payout_date|date:'Y-m-d' }}" 
                      >
               <div class="invalid-feedback">
                 Please select a valid future date
@@ -1263,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <!-- Payment Status -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Payment Status <span class="text-danger">*</span></label>
-              <select class="form-select" name="vendor_commission_status" required>
+              <select class="form-select" name="vendor_commission_status" >
                 <option value="" disabled selected>Select Payment Status</option>
                 <option value="Complete" {% if candidate.vendor_commission_status == "Complete" %}selected{% endif %}>Complete</option>
                 <option value="Failed" {% if candidate.vendor_commission_status == "Failed" %}selected{% endif %}>Failed</option>

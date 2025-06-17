@@ -498,30 +498,65 @@
                     <div class="row">
                       <div class="col-md-6 mb-3">
                         <label class="form-label">First Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="first_name" value="{{ vendor.user.first_name }}" 
-                               pattern="[A-Za-z ]{2,50}" title="Only letters and spaces (2-50 characters)" required />
+                        <input type="text" class="form-control" name="first_name" id="firstName" value="{{ vendor.user.first_name }}" 
+                               pattern="[A-Za-z ]{2,50}" title="Only letters and spaces (2-50 characters)" required 
+                               onchange="confirmFieldChange('firstName', this.value)" />
                         <div class="invalid-feedback">Please enter a valid first name (2-50 letters)</div>
                       </div>
                       
                       <div class="col-md-6 mb-3">
                         <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="last_name" value="{{ vendor.user.last_name }}" 
-                               pattern="[A-Za-z ]{2,50}" title="Only letters and spaces (2-50 characters)" required />
+                        <input type="text" class="form-control" name="last_name" id="lastName" value="{{ vendor.user.last_name }}" 
+                               pattern="[A-Za-z ]{2,50}" title="Only letters and spaces (2-50 characters)" required 
+                               onchange="confirmFieldChange('lastName', this.value)" />
                         <div class="invalid-feedback">Please enter a valid last name (2-50 letters)</div>
                       </div>
                       
                       <div class="col-md-6 mb-3">
                         <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-                        <input type="tel" class="form-control" name="mobile_number" value="{{ vendor.mobile_number }}" 
-                               pattern="[0-9]{10}" title="10 digit mobile number" max = '10' required />
+                        <input type="tel" class="form-control" name="mobile_number" id="mobileNumber" value="{{ vendor.mobile_number }}" 
+                               pattern="[0-9]{10}" title="10 digit mobile number" max="10" required 
+                               onchange="confirmFieldChange('mobileNumber', this.value)" />
                         <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
                       </div>
                       
                       <div class="col-md-6 mb-3">
                         <label class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" name="email" value="{{ vendor.user.email }}" required />
+                        <input type="email" class="form-control" name="email" id="email" value="{{ vendor.user.email }}" required 
+                               onchange="confirmFieldChange('email', this.value)" />
                         <div class="invalid-feedback">Please enter a valid email address</div>
                       </div>
+
+                      <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                          // Store original values
+                          window.originalValues = {
+                            firstName: document.getElementById('firstName').value,
+                            lastName: document.getElementById('lastName').value,
+                            mobileNumber: document.getElementById('mobileNumber').value,
+                            email: document.getElementById('email').value
+                          };
+                        });
+
+                        function confirmFieldChange(field, newValue) {
+                          const originalValue = window.originalValues[field];
+                          if (newValue !== originalValue) {
+                            const fieldNames = {
+                              firstName: 'First Name',
+                              lastName: 'Last Name',
+                              mobileNumber: 'Mobile Number',
+                              email: 'Email'
+                            };
+                            
+                            if (confirm(`Are you sure you want to change the ${fieldNames[field]} from "${originalValue}" to "${newValue}"?`)) {
+                              window.originalValues[field] = newValue;
+                            } else {
+                              // Reset to original value
+                              document.getElementById(field).value = originalValue;
+                            }
+                          }
+                        }
+                      </script>
                       
                       <div class="col-md-6 mb-3">
                         <label class="form-label">Date of Birth</label>

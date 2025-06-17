@@ -94,12 +94,22 @@
                     </div>
                     <div>
                       <div class="font-weight-medium">
+                        {% if candidate.lead_source == 'EVMS' %}
+                        <a href="{% url 'employee_evms_candidate_profile' candidate.id %}" class="text-reset">
+                          {{ candidate.candidate_name }}
+                        </a>
+                        {% else %}
                         <a href="{% url 'employee_candidate_profile' candidate.id %}" class="text-reset">
                           {{ candidate.candidate_name }}
                         </a>
+                        {% endif %}
                       </div>
                       <div class="text-muted small">
+                        {% if candidate.lead_source == 'EVMS' %}
+                        <code>{{ candidate.refer_code }}-{{ candidate.unique_id }}</code>
+                        {% else %}
                         <code>{{ candidate.unique_code }}</code>
+                        {% endif %}
                       </div>
                     </div>
                   </div>
@@ -141,6 +151,26 @@
                   </div>
                 </td>
                 <td class="text-center">
+                  {% if candidate.lead_source == 'EVMS' %}
+                  <div class="btn-list justify-content-center">
+                    <a href="{% url 'employee_evms_candidate_profile' candidate.id %}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                        <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                      </svg>
+                    </a>
+                    {% if candidate.candidate_resume %}
+                    <a href="{{ candidate.candidate_resume.url }}" target="_blank" class="btn btn-sm btn-icon" title="View Resume" data-bs-toggle="tooltip">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+                        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
+                      </svg>
+                    </a>
+                    {% endif %}
+                  </div>
+                  {% else %}
                   <div class="btn-list justify-content-center">
                     <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -170,6 +200,7 @@
                     </a>
                     {% endif %}
                   </div>
+                  {% endif %}
                 </td>
               </tr>
               {% endfor %}

@@ -713,6 +713,7 @@ class Task(models.Model):
 
 class Candidate_registration(models.Model):
     employee_name = models.CharField(max_length=50)
+    register_time = models.DateTimeField(default=now)
     candidate_name = models.CharField(max_length=255)
     unique_code = models.CharField(max_length=255)
     candidate_mobile_number = models.CharField(max_length=15)
@@ -720,6 +721,7 @@ class Candidate_registration(models.Model):
     candidate_email_address = models.EmailField(blank=True, null=True)
     gender = models.CharField(max_length=10, blank=True, null=True)
     lead_source = models.CharField(max_length=255)
+    preferred_state = models.CharField(max_length=255, blank=True, null=True)
     preferred_location = models.CharField(max_length=255, blank=True, null=True)
     origin_location = models.CharField(max_length=255, blank=True, null=True)
     qualification = models.CharField(max_length=255, blank=True, null=True)
@@ -742,7 +744,6 @@ class Candidate_registration(models.Model):
     candidate_photo = models.FileField(upload_to='candidate-photo/') 
     candidate_resume = models.FileField(upload_to='candidate-resume/')
     remark = models.CharField(max_length=255,blank=True, null=True)
-    register_time = models.DateTimeField(default=now)
     submit_by = models.CharField(max_length=100, blank=True, null=True)
     selection_status = models.CharField(max_length=10, default='Pending')
     company_name = models.CharField(max_length=10, blank=True, null=True)

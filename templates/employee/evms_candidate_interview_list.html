@@ -1,0 +1,193 @@
+{% extends 'employee/performance-base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">
+                        Interview Schedule - {{ candidate.candidate_name }}
+                    </h2>
+                    <div class="text-muted mt-1">
+                        Code: {{ candidate.unique_code }} | Status: {{ candidate.selection_status }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h3 class="card-title">Schedule New Interview</h3>
+                                    <form method="post" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="candidate" value="{{ candidate.id }}">
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Company Name</label>
+                                            <select name="company_name" class="form-select" required>
+                                                <option value="" disabled selected>Select Company Name</option>
+                                                {% for vaca in companys %}
+                                                <option value="{{ vaca.company_name }}">{{ vaca.company_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Job Position</label>
+                                            {% comment %} <input type="text" name="job_position" class="form-control" required> {% endcomment %}
+                                            <select name="job_position" class="form-select" required>
+                                                <option value="" disabled selected>Select Job Position</option>
+                                                {% for vaca in vacancies %}
+                                                <option value="{{ vaca.job_profile }}">{{ vaca.job_profile }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Interview Date</label>
+                                                    <input type="date" name="interview_date" class="form-control" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Interview Time</label>
+                                                    <input type="time" name="interview_time" class="form-control" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Interview Mode</label>
+                                            <select name="interview_mode" class="form-select" required>
+                                                <option value="" disabled selected>Select Mode</option>
+                                                {% for mode in mode_choices %}
+                                                <option value="{{ mode.1 }}">{{ mode.1 }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Status</label>
+                                            <select name="status" class="form-select" required>
+                                                <option value="" disabled selected>Select Status</option>
+                                                {% for status in status_choices %}
+                                                <option value="{{ status.0 }}">{{ status.1 }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary w-100">Schedule Interview</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h3 class="card-title">Interview History</h3>
+                                        <div class="ms-auto">
+                                            <div class="dropdown">
+                                                <button class="btn btn-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown">
+                                                    Filter: {{ status_filter|title }}
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="?status=all">All</a></li>
+                                                    {% for status in status_choices %}
+                                                    <li><a class="dropdown-item" href="?status={{ status.0 }}">{{ status.1 }}</a></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-vcenter">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date & Time</th>
+                                                    <th>Company</th>
+                                                    <th>Position</th>
+                                                    <th>Mode</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for interview in interviews %}
+                                                <tr class="{% if interview.is_upcoming %}table-success{% endif %}">
+                                                    <td>
+                                                        {{ interview.interview_date|date:"M d, Y" }}<br>
+                                                        <small>{{ interview.interview_time|time:"H:i" }}</small>
+                                                    </td>
+                                                    <td>{{ interview.company_name }}</td>
+                                                    <td>{{ interview.job_position }}</td>
+                                                    <td>{{ interview.get_interview_mode_display }}</td>
+                                                    <td>
+                                                        <span class="badge text-white bg-{% if interview.status == 'scheduled' %}blue{% elif interview.status == 'completed' %}green{% elif interview.status == 'cancelled' %}red{% else %}orange{% endif %}">
+                                                            {{ interview.get_status_display }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <a href="{% url 'employee_evms_interview_detail' interview.id %}" class="btn btn-sm btn-primary">View</a>
+                                                        <a href="{% url 'employee_evms_delete_interview' interview.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">Delete</a>
+                                                        <form method="post" action="{% url 'employee_evms_interview_list' candidate.id %}" style="display: inline;">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="interview_id" value="{{ interview.id }}">
+                                                            <button type="submit" name="send_email" class="btn btn-sm btn-success mt-1">
+                                                                <i class="fas fa-envelope"></i> Send
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                {% empty %}
+                                                <tr>
+                                                    <td colspan="6" class="text-center py-4">No interviews scheduled yet</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {% if interviews.has_other_pages %}
+                                    <div class="mt-3">
+                                        <ul class="pagination">
+                                            {% if interviews.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ interviews.previous_page_number }}&status={{ status_filter }}">&laquo;</a>
+                                            </li>
+                                            {% endif %}
+                                            {% for num in interviews.paginator.page_range %}
+                                            <li class="page-item {% if interviews.number == num %}active{% endif %}">
+                                                <a class="page-link" href="?page={{ num }}&status={{ status_filter }}">{{ num }}</a>
+                                            </li>
+                                            {% endfor %}
+                                            {% if interviews.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ interviews.next_page_number }}&status={{ status_filter }}">&raquo;</a>
+                                            </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

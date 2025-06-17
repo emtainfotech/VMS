@@ -44,6 +44,13 @@ urlpatterns = [
     path('download-candidates/', download_candidate_details, name='download_candidates'),
     path('vendor/bank-details/<str:vendor_code>/', vendor_bank_details, name='vendor_bank_details'),
     path('vendor/process-payment/<str:vendor_code>/', process_payment, name='process_payment'),
+    path('evms-candidate-list/',admin_evms_candidate_list,name = 'admin_evms_candidate_list'),
+    path('evms-candidate-profile/<int:id>/',evms_candidate_profile,name = 'evms_candidate_profile'),
+    path('evms-candidate-chat-list/<int:candidate_id>/',admin_evms_candidate_chat_list,name = 'admin_evms_candidate_chat_list'),
+    path('evms-candidate-chat-list/<int:pk>/delete/',admin_evms_delete_chat,name = 'admin_evms_delete_chat'),
+    path('evms-candidate-interview-list/<int:candidate_id>/',admin_evms_interview_list,name = 'admin_evms_interview_list'),
+    path('evms-candidate-interview-detail/<int:interview_id>/',admin_evms_interview_detail,name = 'admin_evms_interview_detail'),
+    path('evms-candidate-interview-detail/<int:interview_id>/delete/',admin_evms_delete_interview,name = 'admin_evms_delete_interview'),
     
     
     path('admin/', admin.site.urls),

@@ -1,0 +1,191 @@
+{% extends 'employee/performance-base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">
+                        Communication History - {{ candidate.candidate_name }}
+                    </h2>
+                    <div class="text-muted mt-1">
+                        Candidate ID: {{ candidate.unique_code }} | Status: {{ candidate.selection_status }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h3 class="card-title">Candidate Info</h3>
+                                    <div class="mb-3">
+                                        <strong>Name:</strong> {{ candidate.candidate_name }}<br>
+                                        <strong>Email:</strong> {{ candidate.candidate_email_address | default:"-" }}<br>
+                                        <strong>Phone:</strong> {{ candidate.candidate_mobile_number }}<br>
+                                        <strong>Code:</strong> {{ candidate.unique_code }}<br>
+                                    </div>
+                                    <hr>
+                                    <h3 class="card-title">Add New Note</h3>
+                                    <form method="post" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="candidate" value="{{ candidate.id }}">
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Type</label>
+                                            <select name="chat_type" class="form-select">
+                                                <option value="internal">Internal Note</option>
+                                                <option value="candidate">Candidate Communication</option>
+                                                <option value="client">Client Communication</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Message</label>
+                                            <textarea name="chat_message" class="form-control" rows="4" required></textarea>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Next Follow-up (optional)</label>
+                                            <input type="datetime-local" name="next_followup" class="form-control">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Attachment (optional)</label>
+                                            <input type="file" name="attachment" class="form-control">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-check">
+                                                <input type="checkbox" name="is_important" class="form-check-input">
+                                                <span class="form-check-label">Mark as Important</span>
+                                            </label>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary w-100">Save Record</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h3 class="card-title">Communication History</h3>
+                                        <div class="ms-auto">
+                                            <div class="dropdown">
+                                                <button class="btn btn-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown">
+                                                    Filter
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="?type=all">All</a></li>
+                                                    <li><a class="dropdown-item" href="?type=internal">Internal Notes</a></li>
+                                                    <li><a class="dropdown-item" href="?type=candidate">Candidate Comms</a></li>
+                                                    <li><a class="dropdown-item" href="?type=client">Client Comms</a></li>
+                                                    <li><a class="dropdown-item" href="?type=important">Important</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="list-group list-group-flush">
+                                        {% for chat in chats %}
+                                        <div class="list-group-item {% if chat.is_important %}bg-important-lt{% endif %}">
+                                            <div class="row align-items-center">
+                                                <div class="col-auto">
+                                                    <span class="badge bg-{{ chat.get_chat_type_class }} text-white">
+                                                        {{ chat.get_chat_type_display }}
+                                                    </span>
+                                                </div>
+                                                <div class="col">
+                                                    <div class="text-truncate">
+                                                        <strong>{{ chat.employee_name }}</strong> - 
+                                                        <span class="text-muted">{{ chat.chat_date|date:"M d, Y H:i" }}</span>
+                                                    </div>
+                                                    <div class="text-muted mt-1">
+                                                        {{ chat.chat_message|linebreaksbr }}
+                                                    </div>
+                                                    {% if chat.attachment %}
+                                                    <div class="mt-2">
+                                                        <a href="{{ chat.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                                <path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5"></path>
+                                                            </svg>
+                                                            Attachment
+                                                        </a>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% if chat.next_followup %}
+                                                    <div class="mt-2">
+                                                        <span class="badge bg-yellow-lt">
+                                                            Follow-up: {{ chat.next_followup|date:"M d, Y H:i" }}
+                                                        </span>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="col-auto">
+                                                    <a href="{% url 'employee_evms_delete_chat' chat.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">
+                                                        Delete
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% empty %}
+                                        <div class="list-group-item">
+                                            <div class="text-center text-muted py-4">
+                                                No communication records found
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+
+                                    {% if chats.has_other_pages %}
+                                    <div class="mt-3">
+                                        <ul class="pagination">
+                                            {% if chats.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ chats.previous_page_number }}&type={{ chat_type_filter }}">&laquo;</a>
+                                            </li>
+                                            {% endif %}
+                                            {% for num in chats.paginator.page_range %}
+                                            <li class="page-item {% if chats.number == num %}active{% endif %}">
+                                                <a class="page-link" href="?page={{ num }}&type={{ chat_type_filter }}">{{ num }}</a>
+                                            </li>
+                                            {% endfor %}
+                                            {% if chats.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ chats.next_page_number }}&type={{ chat_type_filter }}">&raquo;</a>
+                                            </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-important-lt {
+        background-color:rgba(25, 194, 34, 0.74);
+    }
+    .bg-primary { background-color: #e8f4ff; }
+    .bg-success { background-color: #e8ffe8; }
+    .bg-pink { background-color: #ffe8f4; }
+    .bg-yellow-lt { background-color: #fff9db; }
+</style>
+{% endblock %}

@@ -1,3 +1,4 @@
+from itertools import chain
 from django.shortcuts import render, redirect,get_object_or_404
 from .models import *
 from django.contrib.auth.models import User
@@ -801,7 +802,8 @@ def employee_candidate_list(request):
             employee_name=logged_in_employee
         ).order_by('-id')
         
-        cand_candidates = Candidate.objects.all(
+        cand_candidates = Candidate.objects.filter(
+            employee_name=logged_in_employee
         ).order_by('-id')
         
         # Combine both querysets
@@ -890,6 +892,57 @@ def employee_candidate_registration(request) :
             return redirect('employee_candidate_list')
         
         suggested_unique_code = get_next_unique_code()
+
+        state = [
+        "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", 
+        "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", 
+        "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
+        "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+        # Union Territories
+        "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", 
+        "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+        ]
+
+        state_distict = {
+            "Andhra Pradesh": ["Anantapur", "Chittoor", "East Godavari", "Guntur", "Krishna", "Kurnool", "Nellore", "Prakasam", "Srikakulam", "Visakhapatnam", "Vizianagaram", "West Godavari"],  
+            "Arunachal Pradesh": ["Anjaw", "Changlang", "Dibang Valley", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang"],
+            "Assam": ["Barpeta", "Bongaigaon", "Cachar", "Charaideo", "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao", "Goalpara", "Golaghat", "Hailakandi", "Hazaribag", "Jorhat", "Kamrup Metropolitan", "Kamrup", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Moranha", "Nagaon", "Nalbari", "North Cachar Hills", "Sivasagar", "Sonitpur", "South Cachar Hills", "Tinsukia", "Udalguri", "West Karbi Anglong"],
+            "Bihar": ["Araria", "Aurangabad", "Bhojpur", "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran"],
+            "Chhattisgarh": ["Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur", "Bilaspur", "Dakshin Bastar Dantewada", "Dhamtari", "Durg", "Gariyaband", "Gaurela Pendra Marwahi", "Janjgir-Champa", "Jashpur", "Kabirdham", "Kanker", "Kondagaon", "Korba", "Koriya", "Mahasamund", "Mungeli", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur"],
+            "Goa": ["North Goa", "South Goa"],
+            "Gujarat": ["Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch", "Bhavnagar", "Botad", "Chhota Udaipur", "Dahod", "Dang", "Devbhoomi Dwarka", "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch", "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal", "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar", "Tapi", "Vadodara", "Valsad"],
+            "Haryana": ["Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram", "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh", "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa", "Sonipat", "Yamunanagar"],
+            "Himachal Pradesh": ["Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu", "Lahaul and Spiti", "Mandi", "Shimla", "Sirmaur", "Solan", "Una"],
+            "Jharkhand": ["Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum", "Garhwa", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamtara", "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu", "Ramgarh", "Ranchi", "Sahebganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum"],
+            "Karnataka": ["Bagalkot", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar", "Chamarajanagar", "Chikballapur", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi", "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi", "Uttara Kannada", "Vijayapura", "Yadgir"],
+            "Kerala": ["Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam", "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad"],
+            "Madhya Pradesh": ["Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal", "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni", "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch", "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh", "Ujjain", "Umaria", "Vidisha"],
+            "Maharashtra": ["Ahmednagar", "Akola", "Amravati", "Aurangabad", "Beed", "Bhandara", "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli", "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban", "Nagpur", "Nanded", "Nandurbar", "Nashik", "Osmanabad", "Palghar", "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara", "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal"],
+            "Manipur": ["Bishnupur", "Chandel", "Churachandpur", "Imphal East", "Imphal West", "Jiribam", "Kakching", "Kamjong", "Kangpokpi", "Noney", "Pherzawl", "Senapati", "Tamenglong", "Tengnoupal", "Thoubal", "Ukhrul"],
+            "Meghalaya": ["East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "North Garo Hills", "Ri Bhoi", "South Garo Hills", "South West Garo Hills", "South West Khasi Hills", "West Garo Hills", "West Jaintia Hills", "West Khasi Hills"],
+            "Mizoram": ["Aizawl", "Champhai", "Hnahthial", "Khawzawl", "Kolasib", "Lawngtlai", "Lunglei", "Mamit", "Saiha", "Saitual", "Serchhip"],
+            "Nagaland": ["Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung", "Mon", "Peren", "Phek", "Tuensang", "Wokha", "Zunheboto"],
+            "Odisha": ["Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Bhubaneswar", "Boudh", "Cuttack", "Deogarh", "Dhenkanal", "Gajapati", "Ganjam", "Jagatsinghpur", "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar", "Khordha", "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", "Puri", "Rayagada", "Sambalpur", "Subarnapur", "Sundargarh"],
+            "Punjab": ["Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka", "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana", "Mansa", "Moga", "Muktsar", "Nawanshahr", "Pathankot", "Patiala", "Rupnagar", "Sangrur", "SAS Nagar", "Tarn Taran"],
+            "Rajasthan": ["Ajmer", "Alwar", "Banswara", "Baran", "Barmer", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh", "Churu", "Dausa", "Dholpur", "Dungarpur", "Hanumangarh", "Jaipur", "Jaisalmer", "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Karauli", "Kota", "Nagaur", "Pali", "Pratapgarh", "Rajsamand", "Sawai Madhopur", "Sikar", "Sirohi", "Sri Ganganagar", "Tonk", "Udaipur"],
+            "Sikkim": ["East Sikkim", "North Sikkim", "South Sikkim", "West Sikkim"],
+            "Tamil Nadu": ["Ariyalur", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kanchipuram", "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Salem", "Sivaganga", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"],
+            "Telangana": ["Adilabad", "Bhadradri Kothagudem", "Hyderabad", "Jagtial", "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar", "Khammam", "Komaram Bheem Asifabad", "Mahabubabad", "Mahabubnagar", "Mancherial", "Medak", "Medchal-Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda", "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli", "Rajanna Sircilla", "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad", "Wanaparthy", "Warangal Rural", "Warangal Urban", "Yadadri Bhuvanagiri"],
+            "Tripura": ["Dhalai", "Gomati", "Khowai", "North Tripura", "Sepahijala", "South Tripura", "Unakoti", "West Tripura"],
+            "Uttar Pradesh": ["Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur", "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor", "Budaun", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah", "Etawah", "Ayodhya", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat", "Kanpur Nagar", "Kasganj", "Kaushambi", "Kushinagar", "Lakhimpur Kheri", "Lalitpur", "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau", "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh", "Prayagraj", "Rae Bareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar", "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra", "Sultanpur", "Unnao", "Varanasi"],
+            "Uttarakhand": ["Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", "Uttarkashi"],
+            "West Bengal": ["Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong", "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur", "Purulia", "South 24 Parganas", "Uttar Dinajpur"],
+            # Union Territories
+            "Andaman and Nicobar Islands": ["Nicobar", "North and Middle Andaman", "South Andaman"],
+            "Chandigarh": ["Chandigarh"],
+            "Dadra and Nagar Haveli and Daman and Diu": ["Dadra and Nagar Haveli", "Daman", "Diu"],
+            "Delhi": ["Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi", "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi"],
+            "Jammu and Kashmir": ["Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur"],
+            "Ladakh": ["Kargil", "Leh"],
+            "Lakshadweep": ["Lakshadweep"],
+            "Puducherry": ["Karaikal", "Mahe", "Puducherry", "Yanam"]
+        }
+
         districts = [
             "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
             "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
@@ -899,6 +952,7 @@ def employee_candidate_registration(request) :
             "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
             "Ujjain", "Umaria", "Vidisha"
         ]
+        
         job_sectors = [
         "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
         "Healthcare and Pharmaceuticals","Education and Training",
@@ -911,107 +965,16 @@ def employee_candidate_registration(request) :
         ]
         departments = [
         # IT (Information Technology)
-        "Software Development", "IT Support", "Web Development", 
-        "Network Administration", "Cybersecurity", 
-        "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)",
-
-        # BPO (Business Process Outsourcing)
-        "Customer Support", "Technical Support", "Voice Process", 
-        "Non-Voice Process", "Back Office Operations",
-
-        # Banking and Finance
-        "Investment Banking", "Retail Banking", "Loan Processing", 
-        "Risk Management", "Accounting and Auditing", 
-        "Financial Analysis", "Wealth Management",
-
-        # Healthcare and Pharmaceuticals
-        "Medical Representatives", "Clinical Research", "Nursing", 
+        "Software Development", "IT Support", "Web Development", "Network Administration", "Cybersecurity", "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)","Customer Support", "Technical Support", "Voice Process", "Non-Voice Process", "Back Office Operations","Investment Banking", "Retail Banking", "Loan Processing", 
+        "Risk Management", "Accounting and Auditing", "Medical Representatives", "Clinical Research", "Nursing", 
         "Medical Technicians", "Pharmacy Operations", 
-        "Healthcare Administration",
-
-        # Education and Training
-        "Teaching", "Curriculum Development", "Academic Counseling", 
-        "E-Learning Development", "Education Administration",
-
-        # Retail and E-commerce
-        "Store Operations", "Supply Chain Management", 
-        "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
-
-        # Manufacturing and Production
-        "Production Planning", "Quality Control", "Maintenance and Repair", 
-        "Operations Management", "Inventory Management",
-
-        # Real Estate and Construction
-        "Sales and Marketing", "Civil Engineering", "Project Management", 
-        "Interior Designing", "Surveying and Valuation",
-
-        # Hospitality and Tourism
-        "Hotel Management", "Travel Coordination", "Event Planning", 
-        "Food and Beverage Services", "Guest Relations",
-
-        # Media and Entertainment
-        "Content Writing", "Video Editing", "Graphic Designing", 
-        "Social Media Management", "Event Production",
-
-        # Telecommunications
-        "Network Installation", "Customer Support", "Telecom Engineering", 
-        "Technical Operations", "Business Development",
-
-        # Logistics and Supply Chain
-        "Logistics Coordination", "Warehouse Management", "Procurement", 
-        "Transportation Management", "Inventory Control",
-
-        # Marketing and Advertising
-        "Market Research", "Brand Management", "Advertising Sales", 
-        "Public Relations", "Digital Marketing",
-
-        # Human Resources
-        "Recruitment", "Employee Relations", "Payroll and Benefits", 
-        "Training and Development", "HR Analytics",
-
-        # Legal and Compliance
-        "Corporate Law", "Compliance Auditing", "Contract Management", 
-        "Intellectual Property Rights", "Legal Advisory",
-
-        # Engineering and Infrastructure
-        "Civil Engineering", "Mechanical Engineering", 
-        "Electrical Engineering", "Project Planning", "Structural Design",
-
-        # Automobile Industry
-        "Automotive Design", "Production and Assembly", "Sales and Service", 
-        "Supply Chain Management", "Quality Assurance",
-
-        # Fashion and Textile
-        "Fashion Design", "Merchandising", "Production Management", 
-        "Quality Control", "Retail Sales",
-
-        # FMCG (Fast Moving Consumer Goods)
-        "Sales and Marketing", "Supply Chain Operations", 
-        "Production Management", "Quality Control", "Brand Management",
-
-        # Agriculture and Farming
-        "Agribusiness Management", "Farm Operations", "Food Processing", 
-        "Agricultural Sales", "Quality Assurance",
-
-        # Insurance
-        "Sales and Business Development", "Underwriting", 
-        "Claims Management", "Actuarial Services", "Policy Administration",
-
-        # Government Sector
-        "Administrative Services", "Public Relations", 
-        "Policy Analysis", "Clerical Positions", "Field Operations",
-
-        # NGO and Social Services
-        "Community Development", "Fundraising", "Program Management", 
-        "Volunteer Coordination", "Policy Advocacy",
-
-        # Energy and Power
-        "Renewable Energy Operations", "Power Plant Engineering", 
-        "Energy Efficiency Management", "Electrical Design", "Maintenance",
-
-        # Aviation and Aerospace
-        "Flight Operations", "Ground Staff", "Aircraft Maintenance", 
-        "Cabin Crew", "Research and Development"
+        "Healthcare Administration","Teaching", "Curriculum Development", "Academic Counseling", "E-Learning Development", "Education Administration","Store Operations", "Supply Chain Management", "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
+        "Production Planning", "Quality Control", "Maintenance and Repair", "Operations Management", "Inventory Management","Sales and Marketing", "Civil Engineering", "Project Management", "Interior Designing", "Surveying and Valuation","Hotel Management", "Travel Coordination", "Event Planning", "Food and Beverage Services", "Guest Relations",
+        "Content Writing", "Video Editing", "Graphic Designing", "Social Media Management", "Event Production","Network Installation", "Customer Support", "Telecom Engineering", "Technical Operations", "Business Development","Logistics Coordination", "Warehouse Management", "Procurement", "Transportation Management", "Inventory Control","Market Research", "Brand Management", "Advertising Sales", "Public Relations", "Digital Marketing",
+        "Recruitment", "Employee Relations", "Payroll and Benefits", "Training and Development", "HR Analytics","Corporate Law", "Compliance Auditing", "Contract Management", "Intellectual Property Rights", "Legal Advisory","Civil Engineering", "Mechanical Engineering", "Electrical Engineering", "Project Planning", "Structural Design","Automotive Design", "Production and Assembly", "Sales and Service", 
+        "Supply Chain Management", "Quality Assurance","Fashion Design", "Merchandising", "Production Management", "Quality Control", "Retail Sales","Sales and Marketing", "Supply Chain Operations", "Production Management", "Quality Control", "Brand Management","Agribusiness Management", "Farm Operations", "Food Processing", "Agricultural Sales", "Quality Assurance",
+        "Sales and Business Development", "Underwriting", "Claims Management", "Actuarial Services", "Policy Administration","Administrative Services", "Public Relations", "Policy Analysis", "Clerical Positions", "Field Operations","Community Development", "Fundraising", "Program Management", "Volunteer Coordination", "Policy Advocacy",
+        "Renewable Energy Operations", "Power Plant Engineering", "Energy Efficiency Management", "Electrical Design", "Maintenance","Flight Operations", "Ground Staff", "Aircraft Maintenance", "Cabin Crew", "Research and Development"
         ]
 
 
@@ -1019,7 +982,9 @@ def employee_candidate_registration(request) :
             'suggested_unique_code':suggested_unique_code,
             'districts' : districts,
             'job_sectors' : job_sectors,
-            'departments' : departments
+            'departments' : departments,
+            'state' : state,
+            'state_distict' : state_distict
         }
         return render (request,'employee/candidate-registration.html',context)
     else:
@@ -1101,11 +1066,12 @@ def employee_candidate_profile(request, id):
             preferred_location = request.POST.getlist('preferred_location')
             sector = request.POST.getlist('sector')
             department = request.POST.getlist('department')
+            preferred_state = request.POST.getlist('preferred_state')
 
             preferred_location_str = ', '.join(preferred_location)
             sector_str = ', '.join(sector)
             department_str = ', '.join(department)
-
+            preferred_state_str = ', '.join(preferred_state)
             # Update all fields at once
             candidate.candidate_name = request.POST.get('candidate_name')
             candidate.candidate_mobile_number = request.POST.get('candidate_mobile_number')
@@ -1121,6 +1087,7 @@ def employee_candidate_profile(request, id):
             # Candidate Details
             candidate.candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
             candidate.preferred_location = preferred_location_str
+            candidate.preferred_state = preferred_state_str
             candidate.origin_location = request.POST.get('origin_location')
             candidate.qualification = request.POST.get('qualification')
             candidate.diploma = request.POST.get('diploma')
@@ -1970,7 +1937,8 @@ def employee_vendor_list(request) :
 @login_required
 def employee_evms_candidate_list(request) :
     if request.user.is_authenticated:
-        candidates = Candidate.objects.all().order_by('-id')
+        logged_in_employee = request.user.employee
+        candidates = Candidate.objects.filter(employee_name=logged_in_employee).order_by('-id')
         return render(request,'employee/employee-evms-candidate-list.html',{'candidates':candidates})
     else:
         # If the user is not an admin, show a 404 page
@@ -2082,6 +2050,13 @@ def employee_evms_candidate_profile(request, id):
     if request.user.is_authenticated:
         candidate = get_object_or_404(Candidate, id=id)
         employees = Employee.objects.all()
+        vacancies = VacancyDetails.objects.filter(
+            vacancy_status='Active'
+        ).select_related('company').values(
+            'id',
+            'job_profile',
+            'company__company_name'
+        )
         
         if request.method == 'POST':
             if 'submit_all' in request.POST:
@@ -2153,9 +2128,141 @@ def employee_evms_candidate_profile(request, id):
                 messages.success(request, 'Vendor releted details updated successfully!')
 
             return redirect('employee_evms_candidate_profile', id=id)
+        
+                
+        districts = [
+            "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
+            "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
+            "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni",
+            "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch",
+            "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni",
+            "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
+            "Ujjain", "Umaria", "Vidisha"
+        ]
+        job_sectors = [
+        "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
+        "Healthcare and Pharmaceuticals","Education and Training",
+        "Retail and E-commerce", "Manufacturing and Production","Real Estate and Construction", "Hospitality and Tourism",
+        "Media and Entertainment", "Telecommunications","Logistics and Supply Chain","Marketing and Advertising","Human Resources",
+        "Legal and Compliance","Engineering and Infrastructure","Automobile Industry",
+        "Fashion and Textile", "FMCG (Fast Moving Consumer Goods)",
+        "Agriculture and Farming", "Insurance","Government Sector","NGO and Social Services",
+        "Energy and Power","Aviation and Aerospace"
+        ]
+        departments = [
+        # IT (Information Technology)
+        "Software Development", "IT Support", "Web Development", 
+        "Network Administration", "Cybersecurity", 
+        "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)",
+
+        # BPO (Business Process Outsourcing)
+        "Customer Support", "Technical Support", "Voice Process", 
+        "Non-Voice Process", "Back Office Operations",
+
+        # Banking and Finance
+        "Investment Banking", "Retail Banking", "Loan Processing", 
+        "Risk Management", "Accounting and Auditing", 
+        "Financial Analysis", "Wealth Management",
+
+        # Healthcare and Pharmaceuticals
+        "Medical Representatives", "Clinical Research", "Nursing", 
+        "Medical Technicians", "Pharmacy Operations", 
+        "Healthcare Administration",
+
+        # Education and Training
+        "Teaching", "Curriculum Development", "Academic Counseling", 
+        "E-Learning Development", "Education Administration",
+
+        # Retail and E-commerce
+        "Store Operations", "Supply Chain Management", 
+        "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
+
+        # Manufacturing and Production
+        "Production Planning", "Quality Control", "Maintenance and Repair", 
+        "Operations Management", "Inventory Management",
+
+        # Real Estate and Construction
+        "Sales and Marketing", "Civil Engineering", "Project Management", 
+        "Interior Designing", "Surveying and Valuation",
+
+        # Hospitality and Tourism
+        "Hotel Management", "Travel Coordination", "Event Planning", 
+        "Food and Beverage Services", "Guest Relations",
+
+        # Media and Entertainment
+        "Content Writing", "Video Editing", "Graphic Designing", 
+        "Social Media Management", "Event Production",
+
+        # Telecommunications
+        "Network Installation", "Customer Support", "Telecom Engineering", 
+        "Technical Operations", "Business Development",
+
+        # Logistics and Supply Chain
+        "Logistics Coordination", "Warehouse Management", "Procurement", 
+        "Transportation Management", "Inventory Control",
+
+        # Marketing and Advertising
+        "Market Research", "Brand Management", "Advertising Sales", 
+        "Public Relations", "Digital Marketing",
+
+        # Human Resources
+        "Recruitment", "Employee Relations", "Payroll and Benefits", 
+        "Training and Development", "HR Analytics",
+
+        # Legal and Compliance
+        "Corporate Law", "Compliance Auditing", "Contract Management", 
+        "Intellectual Property Rights", "Legal Advisory",
+
+        # Engineering and Infrastructure
+        "Civil Engineering", "Mechanical Engineering", 
+        "Electrical Engineering", "Project Planning", "Structural Design",
+
+        # Automobile Industry
+        "Automotive Design", "Production and Assembly", "Sales and Service", 
+        "Supply Chain Management", "Quality Assurance",
+
+        # Fashion and Textile
+        "Fashion Design", "Merchandising", "Production Management", 
+        "Quality Control", "Retail Sales",
+
+        # FMCG (Fast Moving Consumer Goods)
+        "Sales and Marketing", "Supply Chain Operations", 
+        "Production Management", "Quality Control", "Brand Management",
+
+        # Agriculture and Farming
+        "Agribusiness Management", "Farm Operations", "Food Processing", 
+        "Agricultural Sales", "Quality Assurance",
+
+        # Insurance
+        "Sales and Business Development", "Underwriting", 
+        "Claims Management", "Actuarial Services", "Policy Administration",
+
+        # Government Sector
+        "Administrative Services", "Public Relations", 
+        "Policy Analysis", "Clerical Positions", "Field Operations",
+
+        # NGO and Social Services
+        "Community Development", "Fundraising", "Program Management", 
+        "Volunteer Coordination", "Policy Advocacy",
+
+        # Energy and Power
+        "Renewable Energy Operations", "Power Plant Engineering", 
+        "Energy Efficiency Management", "Electrical Design", "Maintenance",
+
+        # Aviation and Aerospace
+        "Flight Operations", "Ground Staff", "Aircraft Maintenance", 
+        "Cabin Crew", "Research and Development"
+        ]
+
+        
         context = {
             'candidate': candidate,
-            'employees' : employees
+            'employees' : employees,
+            'vacancies' : vacancies,
+            'activities': candidate.activities.all().order_by('-timestamp'),
+            'job_sectors' : job_sectors,
+            'departments' : departments,
+            'districts' : districts,
         }
         return render(request,'employee/evms-candidate-profile.html',context)
     else:
@@ -2428,24 +2535,56 @@ def ticket_view(request):
         return render(request, 'employee/404.html', status=404)
 
 
+# from datetime import datetime, timedelta
+# from django.shortcuts import render, redirect
+# from django.db.models import Count
+# from .models import Candidate_registration, Candidate, Candidate_Interview, Employee
+# from .utils import calculate_change, calculate_percentage, get_call_breakdown
+
+
+
+def calculate_change(current, previous):
+    if previous == 0:
+        return 100 if current > 0 else 0
+    return round(((current - previous) / previous) * 100, 2)
+
+def calculate_percentage(part, total):
+    return round((part / total) * 100, 2) if total > 0 else 0
+
+def get_call_breakdown(current_qs, previous_qs):
+    statuses = ['Yes', 'No', 'Busy', 'Not Reachable', 'Wrong Number']
+    breakdown = []
+
+    for status in statuses:
+        current_count = sum(1 for c in current_qs if getattr(c, 'call_connection', '') == status)
+        previous_count = sum(1 for c in previous_qs if getattr(c, 'call_connection', '') == status)
+
+        breakdown.append({
+            'status': status,
+            'current': current_count,
+            'previous': previous_count,
+            'change': calculate_change(current_count, previous_count)
+        })
+
+    return breakdown
 
 def employee_performance_dashboard(request):
     if not request.user.is_authenticated:
         return redirect('login')
-    
-    # Get time period filter (default to week)
+
     period = request.GET.get('period', 'week')
-    
-    # Get the logged-in employee's name
     logged_in_employee = Employee.objects.get(user=request.user)
     today = datetime.now().date()
-    
-    # Calculate date ranges based on period
+
+    interview_detail = Candidate_Interview.objects.filter(
+        candidate__employee_name=logged_in_employee,
+        interview_date=today
+    )
+
+    # Define date ranges
     if period == 'today':
-        start_date = today
-        end_date = today
-        previous_start = today - timedelta(days=1)
-        previous_end = today - timedelta(days=1)
+        start_date = end_date = today
+        previous_start = previous_end = today - timedelta(days=1)
         trend_interval = 'hourly'
     elif period == 'week':
         start_date = today - timedelta(days=today.weekday())
@@ -2455,172 +2594,145 @@ def employee_performance_dashboard(request):
         trend_interval = 'daily'
     elif period == 'month':
         start_date = today.replace(day=1)
-        end_date = (start_date.replace(month=start_date.month+1) - timedelta(days=1)
-                   if start_date.month < 12 
-                   else start_date.replace(year=start_date.year+1, month=1) - timedelta(days=1))
+        if start_date.month < 12:
+            end_date = start_date.replace(month=start_date.month + 1) - timedelta(days=1)
+        else:
+            end_date = start_date.replace(year=start_date.year + 1, month=1) - timedelta(days=1)
         previous_start = (start_date - timedelta(days=1)).replace(day=1)
         previous_end = start_date - timedelta(days=1)
         trend_interval = 'weekly'
     elif period == 'year':
         start_date = today.replace(month=1, day=1)
-        end_date = start_date.replace(year=start_date.year+1) - timedelta(days=1)
-        previous_start = start_date.replace(year=start_date.year-1)
+        end_date = start_date.replace(year=start_date.year + 1) - timedelta(days=1)
+        previous_start = start_date.replace(year=start_date.year - 1)
         previous_end = start_date - timedelta(days=1)
         trend_interval = 'monthly'
-    
-    # Base queryset for this employee
-    current_qs = Candidate_registration.objects.filter(
+
+    # Get individual querysets
+    current_qs_reg = Candidate_registration.objects.filter(
         employee_name=logged_in_employee,
         register_time__date__range=[start_date, end_date]
     )
-    previous_qs = Candidate_registration.objects.filter(
+    current_qs_can = Candidate.objects.filter(
+        employee_name=logged_in_employee,
+        register_time__date__range=[start_date, end_date]
+    )
+    current_qs = list(chain(current_qs_reg, current_qs_can))
+
+    previous_qs_reg = Candidate_registration.objects.filter(
         employee_name=logged_in_employee,
         register_time__date__range=[previous_start, previous_end]
     )
-    
-    # Calculate trend data based on period
+    previous_qs_can = Candidate.objects.filter(
+        employee_name=logged_in_employee,
+        register_time__date__range=[previous_start, previous_end]
+    )
+    previous_qs = list(chain(previous_qs_reg, previous_qs_can))
+
+    # Trend data
     trend_data = []
     trend_labels = []
-    
+
     if trend_interval == 'hourly':
-        for hour in range(0, 24):
+        for hour in range(24):
             trend_labels.append(f"{hour}:00")
-            trend_data.append(
-                current_qs.filter(
-                    register_time__hour=hour
-                ).count()
-            )
+            trend_data.append(sum(1 for c in current_qs if c.register_time.hour == hour))
     elif trend_interval == 'daily':
-        trend_dates = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
-        trend_labels = [date.strftime('%a %d') for date in trend_dates]
-        trend_data = [
-            current_qs.filter(register_time__date=date).count()
-            for date in trend_dates
-        ]
+        for i in range((end_date - start_date).days + 1):
+            day = start_date + timedelta(days=i)
+            trend_labels.append(day.strftime('%a %d'))
+            trend_data.append(sum(1 for c in current_qs if c.register_time.date() == day))
     elif trend_interval == 'weekly':
-        weeks_in_month = 5  # Maximum weeks to show
-        for i in range(weeks_in_month):
+        for i in range(5):
             week_start = start_date + timedelta(weeks=i)
             week_end = week_start + timedelta(days=6)
             if week_start.month != start_date.month:
                 break
             trend_labels.append(f"Week {i+1}")
-            trend_data.append(
-                current_qs.filter(
-                    register_time__date__range=[week_start, week_end]
-                ).count()
-            )
+            trend_data.append(sum(1 for c in current_qs if week_start <= c.register_time.date() <= week_end))
     elif trend_interval == 'monthly':
-        for month in range(1, 13):  # Fixed: Only loop through valid months 1-12
-            month_start = start_date.replace(month=month, day=1)
-            # Handle December -> January transition
+        for month in range(1, 13):
+            try:
+                month_start = start_date.replace(month=month, day=1)
+            except ValueError:
+                continue
             if month == 12:
-                month_end = month_start.replace(year=month_start.year+1, month=1) - timedelta(days=1)
+                month_end = month_start.replace(year=month_start.year + 1, month=1) - timedelta(days=1)
             else:
-                month_end = month_start.replace(month=month+1) - timedelta(days=1)
-            
-            # Ensure we don't go beyond current date
+                month_end = month_start.replace(month=month + 1) - timedelta(days=1)
             if month_start > today:
                 break
-                
             if month_end > today:
                 month_end = today
-                
             trend_labels.append(month_start.strftime('%b'))
-            trend_data.append(
-                current_qs.filter(
-                    register_time__date__range=[month_start, month_end]
-                ).count()
-            )
-    
-    # Performance metrics
-    total_current = current_qs.count()
-    total_previous = previous_qs.count()
-    
-    metrics = {
-        'period': period,
-        'total_candidates': total_current,
-        'total_change': calculate_change(total_current, total_previous),
-        
-        'selected_candidates': current_qs.filter(selection_status='Selected').count(),
-        'selection_rate': calculate_percentage(
-            current_qs.filter(selection_status='Selected').count(),
-            total_current
-        ),
-        'selection_change': calculate_change(
-            current_qs.filter(selection_status='Selected').count(),
-            previous_qs.filter(selection_status='Selected').count()
-        ),
-        
-        'interview_candidates': current_qs.filter(send_for_interview='Yes').count(),
-        'interview_rate': calculate_percentage(
-            current_qs.filter(send_for_interview='Yes').count(),
-            total_current
-        ),
-        'interview_change': calculate_change(
-            current_qs.filter(send_for_interview='Yes').count(),
-            previous_qs.filter(send_for_interview='Yes').count()
-        ),
-        
-        'lead_generation': current_qs.filter(lead_generate='Yes').count(),
-        'lead_change': calculate_change(
-            current_qs.filter(lead_generate='Yes').count(),
-            previous_qs.filter(lead_generate='Yes').count()
-        ),
-        
-        'today_candidates': Candidate_registration.objects.filter(
-            employee_name=logged_in_employee,
-            register_time__date=today
-        ).count(),
-    }
-    
-    # Status distribution
-    status_counts = current_qs.values('selection_status').annotate(
-        count=Count('id')
-    ).order_by('-count')
-    
-    status_distribution = []
-    for status in status_counts:
-        status_distribution.append({
-            'status': status['selection_status'],
-            'count': status['count'],
-            'percentage': calculate_percentage(status['count'], total_current)
-        })
-    
-    # Call connection stats
+            trend_data.append(sum(1 for c in current_qs if month_start <= c.register_time.date() <= month_end))
+
+    # Metrics
+    total_current = len(current_qs)
+    total_previous = len(previous_qs)
+
+    selected_current = sum(1 for c in current_qs if getattr(c, 'selection_status', '') == 'Selected')
+    selected_previous = sum(1 for c in previous_qs if getattr(c, 'selection_status', '') == 'Selected')
+
+    interview_current = sum(1 for c in current_qs if getattr(c, 'send_for_interview', '') == 'Yes')
+    interview_previous = sum(1 for c in previous_qs if getattr(c, 'send_for_interview', '') == 'Yes')
+
+    lead_current = sum(1 for c in current_qs if getattr(c, 'lead_generate', '') == 'Yes')
+    lead_previous = sum(1 for c in previous_qs if getattr(c, 'lead_generate', '') == 'Yes')
+
+    today_candidates = list(chain(
+        Candidate_registration.objects.filter(employee_name=logged_in_employee, register_time__date=today),
+        Candidate.objects.filter(employee_name=logged_in_employee, register_time__date=today)
+    ))
+
+    # Call stats
+    total_connected = sum(1 for c in current_qs if getattr(c, 'call_connection', '') == 'Yes')
+    total_failed = sum(1 for c in current_qs if getattr(c, 'call_connection', '') not in ('Yes', None, ''))
+    total_calls = sum(1 for c in current_qs if getattr(c, 'call_connection', '') != '')
+
     call_stats = {
-        'connected': current_qs.filter(call_connection='Yes').count(),
-        'failed': current_qs.exclude(call_connection='Yes').exclude(call_connection__isnull=True).count(),
-        'connect_rate': calculate_percentage(
-            current_qs.filter(call_connection='Yes').count(),
-            current_qs.exclude(call_connection__isnull=True).count()
-        ),
-        'fail_rate': calculate_percentage(
-            current_qs.exclude(call_connection='Yes').exclude(call_connection__isnull=True).count(),
-            current_qs.exclude(call_connection__isnull=True).count()
-        ),
+        'connected': total_connected,
+        'failed': total_failed,
+        'connect_rate': calculate_percentage(total_connected, total_calls),
+        'fail_rate': calculate_percentage(total_failed, total_calls),
         'breakdown': get_call_breakdown(current_qs, previous_qs)
     }
-    
-    # Recent candidates (last 5)
-    recent_candidates = current_qs.order_by('-register_time')[:5]
-    
-    # Today's candidates (for today view)
-    today_candidates = Candidate_registration.objects.filter(
-        employee_name=logged_in_employee,
-        register_time__date=today
-    ).order_by('-register_time')
-    
-    # Prepare chart data
+
+    status_counter = {}
+    for c in current_qs:
+        status = getattr(c, 'selection_status', 'Unknown')
+        if status:
+            status_counter[status] = status_counter.get(status, 0) + 1
+
+    status_distribution = [
+        {'status': key, 'count': value, 'percentage': calculate_percentage(value, total_current)}
+        for key, value in status_counter.items()
+    ]
+
+    recent_candidates = sorted(current_qs, key=lambda x: x.register_time, reverse=True)[:5]
+
     chart_data = {
         'trend_data': trend_data,
         'trend_labels': trend_labels,
         'status_series': [s['count'] for s in status_distribution],
         'status_labels': [s['status'] for s in status_distribution]
     }
-    
+
     return render(request, 'employee/employee-performance-dashboard.html', {
-        'metrics': metrics,
+        'metrics': {
+            'period': period,
+            'total_candidates': total_current,
+            'total_change': calculate_change(total_current, total_previous),
+            'selected_candidates': selected_current,
+            'selection_rate': calculate_percentage(selected_current, total_current),
+            'selection_change': calculate_change(selected_current, selected_previous),
+            'interview_candidates': interview_current,
+            'interview_rate': calculate_percentage(interview_current, total_current),
+            'interview_change': calculate_change(interview_current, interview_previous),
+            'lead_generation': lead_current,
+            'lead_change': calculate_change(lead_current, lead_previous),
+            'today_candidates': len(today_candidates),
+        },
         'status_distribution': status_distribution,
         'call_stats': call_stats,
         'recent_candidates': recent_candidates,
@@ -2631,33 +2743,35 @@ def employee_performance_dashboard(request):
         'status_labels': chart_data['status_labels'],
         'period': period,
         'today': today,
+        'interview_detail': interview_detail,
     })
 
-def calculate_percentage(part, whole):
-    return round((part / whole) * 100, 1) if whole > 0 else 0
 
-def calculate_change(current, previous):
-    return round(((current - previous) / previous * 100), 1) if previous > 0 else 0
+# def calculate_percentage(part, whole):
+#     return round((part / whole) * 100, 1) if whole > 0 else 0
 
-def get_call_breakdown(current_qs, previous_qs):
-    statuses = ['Yes', 'No', 'Busy', 'Not Reachable', 'Wrong Number']
-    breakdown = []
+# def calculate_change(current, previous):
+#     return round(((current - previous) / previous * 100), 1) if previous > 0 else 0
+
+# def get_call_breakdown(current_qs, previous_qs):
+#     statuses = ['Yes', 'No', 'Busy', 'Not Reachable', 'Wrong Number']
+#     breakdown = []
     
-    for status in statuses:
-        current_count = current_qs.filter(call_connection=status).count()
-        previous_count = previous_qs.filter(call_connection=status).count()
+#     for status in statuses:
+#         current_count = current_qs.filter(call_connection=status).count()
+#         previous_count = previous_qs.filter(call_connection=status).count()
         
-        breakdown.append({
-            'status': status,
-            'count': current_count,
-            'percentage': calculate_percentage(
-                current_count,
-                current_qs.exclude(call_connection__isnull=True).count()
-            ),
-            'trend': calculate_change(current_count, previous_count)
-        })
+#         breakdown.append({
+#             'status': status,
+#             'count': current_count,
+#             'percentage': calculate_percentage(
+#                 current_count,
+#                 current_qs.exclude(call_connection__isnull=True).count()
+#             ),
+#             'trend': calculate_change(current_count, previous_count)
+#         })
     
-    return breakdown
+#     return breakdown
     
 @login_required
 def employee_chart_data(request):
@@ -3064,14 +3178,33 @@ def work_hours_summary(request):
         return render(request, 'employee/404.html', status=404)
 
 @login_required
-def employee_selected_candidate(request) :
+def employee_selected_candidate(request):
     if request.user.is_authenticated:
         logged_in_employee = Employee.objects.get(user=request.user)
-        candidates = Candidate_registration.objects.filter(employee_name=logged_in_employee, selection_status='Selected').order_by('-id')
+        
+        # Get selected candidates from both databases
+        candidates_reg = Candidate_registration.objects.filter(
+            employee_name=logged_in_employee, 
+            selection_status='Selected'
+        ).order_by('-id')
+        
+        candidates_can = Candidate.objects.filter(
+            employee_name=logged_in_employee,
+            selection_status='Selected'
+        ).order_by('-id')
+        
+        # Combine both querysets and sort by register_time (descending)
+        # Combine both querysets
+        combined_candidates = list(candidates_reg) + list(candidates_can)
+        
+        # Sort by register_time (descending)
+        # combined_candidates.sort(key=lambda x: x.register_time, reverse=True)
+        combined_candidates.sort(key=lambda x: x.selection_date if x.selection_date else datetime.min.date(), reverse=True)
+        
         context = {
-            'candidates': candidates
+            'candidates': combined_candidates
         }
-        return render(request,'employee/selected-candidate.html',context)
+        return render(request, 'employee/selected-candidate.html', context)
     else:
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
@@ -3084,12 +3217,25 @@ def employee_follow_up_candidate(request):
         date_range_start = today - timedelta(days=2)  # 25th if today is 27th
         date_range_end = today + timedelta(days=3)    # 30th if today is 27th
         
-        candidates = Candidate_registration.objects.filter(
+        # Get candidates from both databases
+        candidates_reg = Candidate_registration.objects.filter(
             employee_name=logged_in_employee,
             next_follow_up_date__isnull=False,
             next_follow_up_date__gte=date_range_start,
             next_follow_up_date__lte=date_range_end
-        ).order_by('next_follow_up_date')  # Order by follow-up date
+        ).order_by('next_follow_up_date')
+        
+        candidates_can = Candidate.objects.filter(
+            employee_name=logged_in_employee,
+            next_follow_up_date__isnull=False,
+            next_follow_up_date__gte=date_range_start,
+            next_follow_up_date__lte=date_range_end
+        ).order_by('next_follow_up_date')
+        
+        # Combine both querysets
+         # Combine both querysets and sort by register_time (descending)
+        candidates = list(chain(candidates_reg, candidates_can))
+        candidates.sort(key=lambda x: x.next_follow_up_date if x.next_follow_up_date else datetime.min.date(), reverse=False)
         
         context = {
             'candidates': candidates,
@@ -3104,11 +3250,26 @@ def employee_follow_up_candidate(request):
 def employee_generated_leads(request):
     if request.user.is_authenticated:
         logged_in_employee = Employee.objects.get(user=request.user)
-        candidates = Candidate_registration.objects.filter(employee_name=logged_in_employee, lead_generate='Yes').order_by('-id')
+        
+        # Get candidates from both databases
+        candidates_reg = Candidate_registration.objects.filter(
+            employee_name=logged_in_employee,
+            lead_generate__in=['Yes', 'Converted']
+        ).order_by('-id')
+        
+        candidates_can = Candidate.objects.filter(
+            employee_name=logged_in_employee,
+            lead_generate__in=['Yes', 'Converted']
+        ).order_by('-id')
+        
+        # Combine both querysets
+        candidates = list(chain(candidates_reg, candidates_can))
+        candidates.sort(key=lambda x: x.register_time, reverse=True)
+        
         context = {
             'candidates': candidates
         }
-        return render(request,'employee/employee-lead-generate.html',context)
+        return render(request, 'employee/employee-lead-generate.html', context)
     else:
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
@@ -3120,14 +3281,16 @@ def evms_vendor_paylist(request):
         now = timezone.now()
         current_month = now.month
         current_year = now.year
-        
+
+        logged_in_employee = request.user.employee
         # Filter candidates with refer_code, pending commission, and payout date in current month
         remaining_pays = Candidate.objects.filter(
             vendor_commission_status='Pending',
             selection_status='Selected',
             refer_code__isnull=False,
             vendor_payout_date__month=current_month,
-            vendor_payout_date__year=current_year
+            vendor_payout_date__year=current_year,
+            employee_name=logged_in_employee
         ).order_by('-id')
         
         # Prepare data for template
@@ -3154,12 +3317,14 @@ def evms_vendor_paylist(request):
 @login_required
 def evms_vendor_transaction_history(request):
     if request.user.is_authenticated:
+        logged_in_employee = request.user.employee
         
         # Filter candidates with refer_code, pending commission, and payout date in current month
         remaining_pays = Candidate.objects.filter(
             vendor_commission_status__in=['Complete', 'Failed'],
             selection_status='Selected',
             refer_code__isnull=False,
+            employee_name=logged_in_employee
         ).order_by('-id')
         
         # Prepare data for template
@@ -3688,3 +3853,210 @@ def delete_company_contact(request, contact_id):
     messages.success(request, 'Contact person deleted successfully!')
     return redirect('company_contacts_list', company_id=company_id)
 
+
+@login_required
+def employee_evms_candidate_chat_list(request, candidate_id):
+    candidate = get_object_or_404(Candidate, id=candidate_id)
+    logged_in_employee = Employee.objects.get(user=request.user)
+    
+    # Handle form submission
+    if request.method == 'POST':
+        chat_message = request.POST.get('chat_message')
+        chat_type = request.POST.get('chat_type', 'internal')
+        is_important = request.POST.get('is_important') == 'on'
+        next_followup = request.POST.get('next_followup') or None
+        attachment = request.FILES.get('attachment')
+        
+        EVMS_Candidate_chat.objects.create(
+            candidate=candidate,
+            chat_message=chat_message,
+            employee_name=logged_in_employee,
+            chat_type=chat_type,
+            is_important=is_important,
+            next_followup=next_followup,
+            attachment=attachment,
+            created_by=request.user
+        )
+        messages.success(request, 'Chat record added successfully!')
+        return redirect('employee_evms_candidate_chat_list', candidate_id=candidate_id)
+    
+    # Filter chats
+    chat_type_filter = request.GET.get('type', 'all')
+    if chat_type_filter == 'all':
+        chats = EVMS_Candidate_chat.objects.filter(candidate=candidate)
+    elif chat_type_filter == 'important':
+        chats = EVMS_Candidate_chat.objects.filter(candidate=candidate, is_important=True)
+    else:
+        chats = EVMS_Candidate_chat.objects.filter(candidate=candidate, chat_type=chat_type_filter)
+    
+    # Pagination
+    paginator = Paginator(chats.order_by('-chat_date'), 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'candidate': candidate,
+        'chats': page_obj,
+        'chat_type_filter': chat_type_filter,
+    }
+    return render(request, 'employee/evms_candidate_chat_list.html', context)
+
+@login_required
+def employee_evms_delete_chat(request, pk):
+    chat = get_object_or_404(EVMS_Candidate_chat, pk=pk)
+    candidate_id = chat.candidate.id
+    chat.delete()
+    messages.success(request, 'Chat record deleted successfully!')
+    return redirect('employee_evms_candidate_chat_list', candidate_id=candidate_id)
+
+@login_required
+def employee_evms_interview_list(request, candidate_id):
+    candidate = get_object_or_404(Candidate, id=candidate_id)
+    companys = Company_registration.objects.all()
+    vacancies = VacancyDetails.objects.filter(vacancy_status='Active').order_by('-id')
+    
+    if request.method == 'POST':
+        if 'send_email' in request.POST:
+            # Handle email sending
+            interview_id = request.POST.get('interview_id')
+            interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id)
+            send_interview_email(request, interview)
+            messages.success(request, 'Interview details sent to candidate!')
+            return redirect('employee_evms_interview_list', candidate_id=candidate_id)
+        
+        # Handle form submission
+        interview_date = request.POST.get('interview_date')
+        interview_time = request.POST.get('interview_time')
+        company_name = request.POST.get('company_name')
+        job_position = request.POST.get('job_position')
+        status = request.POST.get('status')
+        interview_mode = request.POST.get('interview_mode')
+        notes = request.POST.get('notes')
+        
+        interview = EVMS_Candidate_Interview(
+            candidate=candidate,
+            interview_date=interview_date,
+            interview_time=interview_time,
+            company_name=company_name,
+            job_position=job_position,
+            status=status,
+            interview_mode=interview_mode,
+            notes=notes,
+            interviewer_name=request.POST.get('interviewer_name'),
+            interviewer_email=request.POST.get('interviewer_email'),
+            interviewer_phone=request.POST.get('interviewer_phone'),
+            location=request.POST.get('location'),
+            meeting_link=request.POST.get('meeting_link'),
+            feedback=request.POST.get('feedback'),
+            rating=request.POST.get('rating') or None,
+            is_technical=request.POST.get('is_technical') == 'on',
+            duration=request.POST.get('duration', 60),
+            requirements=request.POST.get('requirements'),
+            attachment=request.FILES.get('attachment'),
+            created_by=request.user
+        )
+        interview.save()
+        messages.success(request, 'Interview scheduled successfully!')
+        return redirect('employee_evms_interview_list', candidate_id=candidate_id)
+    
+    # Filter interviews
+    status_filter = request.GET.get('status', 'all')
+    if status_filter == 'all':
+        interviews = candidate.interviews.all()
+    else:
+        interviews = candidate.interviews.filter(status=status_filter)
+    
+    # Pagination
+    paginator = Paginator(interviews, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'candidate': candidate,
+        'interviews': page_obj,
+        'status_filter': status_filter,
+        'status_choices': EVMS_Candidate_Interview.INTERVIEW_STATUS,
+        'mode_choices': EVMS_Candidate_Interview.INTERVIEW_MODE,
+        'companys' : companys,
+        'vacancies' : vacancies
+    }
+    return render(request, 'employee/evms_candidate_interview_list.html', context)
+
+@login_required
+def send_evms_interview_email(request, interview):
+    """Helper function to send interview details email"""
+    subject = f"Interview Scheduled - {interview.company_name}"
+    
+    context = {
+        'interview': interview,
+        'candidate': interview.candidate,
+    }
+    
+    # Render HTML email template
+    html_message = render_to_string('emails/interview_scheduled.html', context)
+    
+    # Create email
+    email = EmailMessage(
+        subject,
+        html_message,
+        settings.DEFAULT_FROM_EMAIL,
+        [interview.candidate.candidate_email_address],
+    )
+    email.content_subtype = "html"  # Set content type to HTML
+    
+    # Attach file if exists
+    if interview.attachment:
+        email.attach_file(interview.attachment.path)
+    
+    # Send email
+    email.send()
+
+@login_required
+def employee_evms_interview_detail(request, interview_id):
+    interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id)
+    companys = Company_registration.objects.all()
+    
+    if request.method == 'POST':
+        # Handle update
+        interview.interview_date = request.POST.get('interview_date')
+        interview.interview_time = request.POST.get('interview_time')
+        interview.company_name = request.POST.get('company_name')
+        interview.job_position = request.POST.get('job_position')
+        interview.status = request.POST.get('status')
+        interview.interview_mode = request.POST.get('interview_mode')
+        interview.notes = request.POST.get('notes')
+        interview.interviewer_name = request.POST.get('interviewer_name')
+        interview.interviewer_email = request.POST.get('interviewer_email')
+        interview.interviewer_phone = request.POST.get('interviewer_phone')
+        interview.location = request.POST.get('location')
+        interview.meeting_link = request.POST.get('meeting_link')
+        interview.feedback = request.POST.get('feedback')
+        interview.rating = request.POST.get('rating') or None
+        interview.is_technical = request.POST.get('is_technical') == 'on'
+        interview.duration = request.POST.get('duration', 60)
+        interview.requirements = request.POST.get('requirements')
+        interview.updated_by=request.user
+        
+        if 'attachment' in request.FILES:
+            interview.attachment = request.FILES['attachment']
+        
+        interview.save()
+        messages.success(request, 'Interview updated successfully!')
+        return redirect('employee_evms_interview_detail', interview_id=interview.id)
+    
+    context = {
+        'interview': interview,
+        'status_choices': EVMS_Candidate_Interview.INTERVIEW_STATUS,
+        'mode_choices': EVMS_Candidate_Interview.INTERVIEW_MODE,
+        'companys' : companys
+    }
+    return render(request, 'employee/evms_candidate_interview_detail.html', context)
+
+
+@login_required
+def employee_evms_delete_interview(request, interview_id):
+    interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id)
+    candidate_id = interview.candidate.id
+    interview.delete()
+    messages.success(request, 'Interview deleted successfully!')
+    return redirect('employee_evms_interview_list', candidate_id=candidate_id)

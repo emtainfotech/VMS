@@ -52,7 +52,7 @@ def crm_admin_login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None and user.is_staff:
             login(request, user)
-            return redirect("admin_candidate_list")  
+            return redirect("crm_dashboard")  
         else:
             messages.error(request, "Invalid credentials or insufficient permissions.")
     return render(request, "hrms/admin-login.html")
@@ -64,7 +64,7 @@ def crm_admin_logout(request):
 @login_required
 def crm_dashboard(request):
     if request.user.is_staff or request.user.is_superuser:
-       # Time period filter
+        # Time period filter
         period = request.GET.get('period', 'month')
         custom_start = request.GET.get('start_date')
         custom_end = request.GET.get('end_date')
@@ -99,10 +99,13 @@ def crm_dashboard(request):
                 start_date = today.replace(month=1, day=1)
                 end_date = start_date.replace(year=start_date.year+1)
         
-        # Base queryset
-        current_qs = Candidate_registration.objects.all()
+        # Base querysets for both databases
+        current_qs_reg = Candidate_registration.objects.all()
+        current_qs_can = Candidate.objects.all()
+        
         if start_date and end_date:
-            current_qs = current_qs.filter(register_time__date__range=[start_date, end_date - timedelta(days=1)])
+            current_qs_reg = current_qs_reg.filter(register_time__date__range=[start_date, end_date - timedelta(days=1)])
+            current_qs_can = current_qs_can.filter(register_time__date__range=[start_date, end_date - timedelta(days=1)])
         
         # Calculate previous period date ranges for comparison
         prev_day = today - timedelta(days=1)
@@ -110,83 +113,177 @@ def crm_dashboard(request):
         prev_month_start = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
         prev_year_start = today.replace(year=today.year-1, month=1, day=1)
         
-        # Base querysets
-        current_qs = Candidate_registration.objects.all()
-        if start_date and end_date:
-            current_qs = current_qs.filter(register_time__date__range=[start_date, end_date - timedelta(days=1)])
+        # Previous period querysets for both databases
+        prev_day_qs_reg = Candidate_registration.objects.filter(register_time__date=prev_day)
+        prev_day_qs_can = Candidate.objects.filter(register_time__date=prev_day)
         
-        # Previous period querysets
-        prev_day_qs = Candidate_registration.objects.filter(
-            register_time__date=prev_day)
-        prev_week_qs = Candidate_registration.objects.filter(
+        prev_week_qs_reg = Candidate_registration.objects.filter(
             register_time__date__range=[prev_week_start, prev_week_start + timedelta(days=6)])
-        prev_month_qs = Candidate_registration.objects.filter(
+        prev_week_qs_can = Candidate.objects.filter(
+            register_time__date__range=[prev_week_start, prev_week_start + timedelta(days=6)])
+        
+        prev_month_qs_reg = Candidate_registration.objects.filter(
             register_time__date__range=[prev_month_start, 
                                     (prev_month_start.replace(month=prev_month_start.month+1) 
                                         if prev_month_start.month < 12 
                                         else prev_month_start.replace(year=prev_month_start.year+1, month=1)) - timedelta(days=1)])
-        prev_year_qs = Candidate_registration.objects.filter(
+        prev_month_qs_can = Candidate.objects.filter(
+            register_time__date__range=[prev_month_start, 
+                                    (prev_month_start.replace(month=prev_month_start.month+1) 
+                                        if prev_month_start.month < 12 
+                                        else prev_month_start.replace(year=prev_month_start.year+1, month=1)) - timedelta(days=1)])
+        
+        prev_year_qs_reg = Candidate_registration.objects.filter(
+            register_time__date__range=[prev_year_start, prev_year_start.replace(year=prev_year_start.year+1) - timedelta(days=1)])
+        prev_year_qs_can = Candidate.objects.filter(
             register_time__date__range=[prev_year_start, prev_year_start.replace(year=prev_year_start.year+1) - timedelta(days=1)])
         
-        # Employee performance metrics
-        employee_performance = current_qs.values('employee_name').annotate(
+        # Employee performance metrics for both databases
+        employee_performance_reg = list(current_qs_reg.values('employee_name').annotate(
             total_candidates=Count('id'),
             selected_candidates=Count('id', filter=Q(selection_status='Selected')),
             pending_candidates=Count('id', filter=Q(selection_status='Pending')),
             rejected_candidates=Count('id', filter=Q(selection_status='Rejected'))
-        ).order_by('-total_candidates')
+        ).order_by('-total_candidates'))
         
-        # Lead generation by employee (where lead_generate='Yes')
-        lead_generation = current_qs.filter(lead_generate='Yes').values('employee_name').annotate(
+        employee_performance_can = list(current_qs_can.values('employee_name').annotate(
+            total_candidates=Count('id'),
+            selected_candidates=Count('id', filter=Q(selection_status='Selected')),
+            pending_candidates=Count('id', filter=Q(selection_status='Pending')),
+            rejected_candidates=Count('id', filter=Q(selection_status='Rejected'))
+        ).order_by('-total_candidates'))
+        
+        # Combine and deduplicate employee performance data by employee_name
+        employee_performance_dict = {}
+        for entry in employee_performance_reg + employee_performance_can:
+            emp = entry['employee_name']
+            if emp not in employee_performance_dict:
+                employee_performance_dict[emp] = entry
+            else:
+                # Sum up the values if duplicate
+                employee_performance_dict[emp]['total_candidates'] += entry['total_candidates']
+                employee_performance_dict[emp]['selected_candidates'] += entry['selected_candidates']
+                employee_performance_dict[emp]['pending_candidates'] += entry['pending_candidates']
+                employee_performance_dict[emp]['rejected_candidates'] += entry['rejected_candidates']
+        employee_performance = sorted(employee_performance_dict.values(), key=lambda x: x['total_candidates'], reverse=True)
+
+        # Lead generation for both databases
+        lead_generation_reg = list(current_qs_reg.filter(lead_generate__in=['Yes', 'Converted']).values('employee_name').annotate(
             lead_count=Count('id')
-        ).order_by('-lead_count')
+        ).order_by('-lead_count'))
+        
+        lead_generation_can = list(current_qs_can.filter(lead_generate__in=['Yes', 'Converted']).values('employee_name').annotate(
+            lead_count=Count('id')
+        ).order_by('-lead_count'))
+        
+        # Combine and deduplicate lead generation data by employee_name
+        lead_generation_dict = {}
+        for entry in lead_generation_reg + lead_generation_can:
+            emp = entry['employee_name']
+            if emp not in lead_generation_dict:
+                lead_generation_dict[emp] = entry
+            else:
+                lead_generation_dict[emp]['lead_count'] += entry['lead_count']
+        lead_generation = sorted(lead_generation_dict.values(), key=lambda x: x['lead_count'], reverse=True)
+        
+        # Total lead generation
+        total_lead_generation = sum([entry['lead_count'] for entry in lead_generation])
 
-         # Lead generation by employee (where lead_generate='Yes')
-        total_lead_generation = current_qs.filter(lead_generate='Yes').count()
-
-        # Call connection status by employee
-        call_connection = current_qs.exclude(call_connection__isnull=True).exclude(call_connection__exact='').values(
+        # Call connection status for both databases
+        call_connection_reg = list(current_qs_reg.exclude(call_connection__isnull=True).exclude(call_connection__exact='').values(
             'employee_name', 'call_connection'
         ).annotate(
             count=Count('id')
-        ).order_by('employee_name', '-count')
+        ).order_by('employee_name', '-count'))
         
-        # Interview status (send_for_interview='Yes')
-        interview_candidates = current_qs.filter(send_for_interview='Yes').count()
+        call_connection_can = list(current_qs_can.exclude(call_connection__isnull=True).exclude(call_connection__exact='').values(
+            'employee_name', 'call_connection'
+        ).annotate(
+            count=Count('id')
+        ).order_by('employee_name', '-count'))
+        
+        # Combine and deduplicate call connection data by (employee_name, call_connection)
+        call_connection_dict = {}
+        for entry in call_connection_reg + call_connection_can:
+            key = (entry['employee_name'], entry['call_connection'])
+            if key not in call_connection_dict:
+                call_connection_dict[key] = entry
+            else:
+                call_connection_dict[key]['count'] += entry['count']
+        call_connection = sorted(call_connection_dict.values(), key=lambda x: (x['employee_name'], -x['count']))
+
+        # Interview status for both databases
+        interview_candidates = current_qs_reg.filter(send_for_interview='Yes').count() + current_qs_can.filter(send_for_interview='Yes').count()
         
         # Status counts with comparison percentages
-        def get_status_comparison(current, previous):
-            if previous > 0:
-                change = ((current - previous) / previous) * 100
+        def get_status_comparison(current_reg, current_can, previous_reg, previous_can):
+            current_total = current_reg + current_can
+            previous_total = previous_reg + previous_can
+            if previous_total > 0:
+                change = ((current_total - previous_total) / previous_total) * 100
                 return f"{change:+.1f}%"
-            elif current > 0:
+            elif current_total > 0:
                 return "+100%"
             else:
                 return "0%"
         
-        current_status = current_qs.values('selection_status').annotate(
+        # Current status for both databases
+        current_status_reg = list(current_qs_reg.values('selection_status').annotate(
             count=Count('id')
-        ).order_by('-count')
+        ).order_by('-count'))
         
+        current_status_can = list(current_qs_can.values('selection_status').annotate(
+            count=Count('id')
+        ).order_by('-count'))
+        
+        # Combine and deduplicate current status data by selection_status
+        current_status_dict = {}
+        for entry in current_status_reg + current_status_can:
+            status = entry['selection_status']
+            if status not in current_status_dict:
+                current_status_dict[status] = entry
+            else:
+                current_status_dict[status]['count'] += entry['count']
+        current_status = sorted(current_status_dict.values(), key=lambda x: -x['count'])
+        
+        # Status comparison for both databases
         status_comparison = {
             'day': get_status_comparison(
-                current_qs.count(), 
-                prev_day_qs.count()
+                prev_day_qs_reg.count(), prev_day_qs_can.count(),
+                prev_day_qs_reg.count(), prev_day_qs_can.count()
             ),
             'week': get_status_comparison(
-                current_qs.count(), 
-                prev_week_qs.count()
+                prev_week_qs_reg.count(), prev_week_qs_can.count(),
+                prev_week_qs_reg.count(), prev_week_qs_can.count()
             ),
             'month': get_status_comparison(
-                current_qs.count(), 
-                prev_month_qs.count()
+                prev_month_qs_reg.count(), prev_month_qs_can.count(),
+                prev_month_qs_reg.count(), prev_month_qs_can.count()
             ),
             'year': get_status_comparison(
-                current_qs.count(), 
-                prev_year_qs.count()
+                prev_year_qs_reg.count(), prev_year_qs_can.count(),
+                prev_year_qs_reg.count(), prev_year_qs_can.count()
             ),
         }
         
+        # Calculate total counts for both databases
+        total_candidates = current_qs_reg.count() + current_qs_can.count()
+        selected_candidates = (current_qs_reg.filter(selection_status='Selected').count() + 
+                             current_qs_can.filter(selection_status='Selected').count())
+        pending_candidates = (current_qs_reg.filter(selection_status='Pending').count() + 
+                             current_qs_can.filter(selection_status='Pending').count())
+        rejected_candidates = (current_qs_reg.filter(selection_status='Rejected').count() + 
+                             current_qs_can.filter(selection_status='Rejected').count())
+        
+        # Previous period counts for both databases
+        prev_day_count = prev_day_qs_reg.count() + prev_day_qs_can.count()
+        prev_week_count = prev_week_qs_reg.count() + prev_week_qs_can.count()
+        prev_month_count = prev_month_qs_reg.count() + prev_month_qs_can.count()
+        prev_year_count = prev_year_qs_reg.count() + prev_year_qs_can.count()
+
+        
+        
+        # Prepare context for template
         context = {
             'employee_performance': employee_performance,
             'lead_generation': lead_generation,
@@ -198,14 +295,14 @@ def crm_dashboard(request):
             'period': period,
             'start_date': start_date,
             'end_date': end_date - timedelta(days=1) if end_date else None,
-            'total_candidates': current_qs.count(),
-            'selected_candidates': current_qs.filter(selection_status='Selected').count(),
-            'pending_candidates': current_qs.filter(selection_status='Pending').count(),
-            'rejected_candidates': current_qs.filter(selection_status='Rejected').count(),
-            'prev_day_count': prev_day_qs.count(),
-            'prev_week_count': prev_week_qs.count(),
-            'prev_month_count': prev_month_qs.count(),
-            'prev_year_count': prev_year_qs.count(),
+            'total_candidates': total_candidates,
+            'selected_candidates': selected_candidates,
+            'pending_candidates': pending_candidates,
+            'rejected_candidates': rejected_candidates,
+            'prev_day_count': prev_day_count,
+            'prev_week_count': prev_week_count,
+            'prev_month_count': prev_month_count,
+            'prev_year_count': prev_year_count,
             'period': period,
             'start_date': start_date,
             'end_date': end_date - timedelta(days=1) if end_date else None,
@@ -895,17 +992,12 @@ def admin_candidate_bulk_upload(request):
 @login_required 
 def admin_candidate_list(request) :
     if request.user.is_staff or request.user.is_superuser:
-        candidates = Candidate_registration.objects.all().order_by('-id')
-        districts = [
-            "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
-            "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
-            "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni",
-            "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch",
-            "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni",
-            "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
-            "Ujjain", "Umaria", "Vidisha"
-        ]
-        return render (request,'crm/candidate-list.html',{'candidates':candidates,'districts':districts})
+        candidates_reg = Candidate_registration.objects.all().order_by('-id')
+        candidates_can = Candidate.objects.all().order_by('-id')
+        candidates = list(chain(candidates_reg, candidates_can))
+        candidates.sort(key=lambda x: x.register_time, reverse=True)
+        
+        return render (request,'crm/candidate-list.html',{'candidates':candidates})
     else:
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
@@ -1468,6 +1560,59 @@ def evms_candidate_profile(request,id) :
     if request.user.is_staff or request.user.is_superuser:
         candidate = get_object_or_404(Candidate, id=id)
         employees = Employee.objects.all()
+        vacancies = VacancyDetails.objects.filter(
+            vacancy_status='Active'
+        ).select_related('company').values(
+            'id',
+            'job_profile',
+            'company__company_name'
+        )
+        if request.method == 'POST':
+            # Store the original candidate data before any updates
+            original_candidate = Candidate.objects.get(id=id)
+            changes = {}
+
+            # Track changes for all fields at once
+            fields_to_track = [
+                # Personal Information
+                'candidate_name', 'candidate_mobile_number', 'candidate_email_address',
+                'gender', 'lead_source',
+                # Candidate Details
+                'candidate_alternate_mobile_number', 'preferred_location', 'origin_location',
+                'qualification', 'diploma', 'sector', 'department', 'experience_year',
+                'experience_month', 'current_company', 'current_working_status',
+                'current_salary', 'expected_salary', 'submit_by',
+                # Calling Remark
+                'call_connection', 'calling_remark', 'lead_generate',
+                'send_for_interview', 'next_follow_up_date',
+                # Selection Record
+                'selection_status', 'company_name', 'offered_salary',
+                'selection_date', 'candidate_joining_date', 'emta_commission',
+                'payout_date', 'selection_remark',
+                'other_lead_source', 'other_qualification', 'other_working_status',
+                'other_call_connection', 'other_lead_generate',
+                'other_interview_status', 'other_selection_status',
+                'other_origin_location'
+            ]
+            
+            # Check for changes in all fields
+            for field in fields_to_track:
+                new_value = request.POST.get(field)
+                old_value = getattr(original_candidate, field)
+                if str(old_value) != str(new_value):
+                    changes[field] = {'old': old_value, 'new': new_value}
+
+            # Handle file uploads
+            if 'candidate_photo' in request.FILES:
+                changes['candidate_photo'] = {
+                    'old': original_candidate.candidate_photo.name if original_candidate.candidate_photo else None,
+                    'new': request.FILES['candidate_photo'].name
+                }
+            if 'candidate_resume' in request.FILES:
+                changes['candidate_resume'] = {
+                    'old': original_candidate.candidate_resume.name if original_candidate.candidate_resume else None,
+                    'new': request.FILES['candidate_resume'].name
+                }
         if request.method == 'POST':
             if 'submit_all' in request.POST:
                 # Get list inputs and convert to string
@@ -1526,7 +1671,7 @@ def evms_candidate_profile(request,id) :
                 candidate.joining_status = request.POST.get('joining_status')
                 
                 # Handle form submission for bank details
-                candidate.admin_status = request.POST.get('admin_status')
+                
                 candidate.vendor_commission = request.POST.get('vendor_commission')
                 candidate.vendor_payout_date = request.POST.get('vendor_payout_date') or None
                 candidate.commission_generation_date = request.POST.get('commission_generation_date') or None
@@ -1553,6 +1698,7 @@ def evms_candidate_profile(request,id) :
 
             elif 'submit_vendor_related_data' in request.POST:
                 # Handle form submission for bank details
+                candidate.admin_status = request.POST.get('admin_status')
                 vendor_commission = request.POST.get('vendor_commission')
                 vendor_payout_date = request.POST.get('vendor_payout_date') or None
                 commission_generation_date = request.POST.get('commission_generation_date') or None
@@ -1587,6 +1733,7 @@ def evms_candidate_profile(request,id) :
             "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
             "Ujjain", "Umaria", "Vidisha"
         ]
+        
         job_sectors = [
         "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
         "Healthcare and Pharmaceuticals","Education and Training",
@@ -1597,6 +1744,7 @@ def evms_candidate_profile(request,id) :
         "Agriculture and Farming", "Insurance","Government Sector","NGO and Social Services",
         "Energy and Power","Aviation and Aerospace"
         ]
+        
         departments = [
         # IT (Information Technology)
         "Software Development", "IT Support", "Web Development", 
@@ -1708,7 +1856,9 @@ def evms_candidate_profile(request,id) :
             'employees' : employees,
             'districts': districts,
             'job_sectors': job_sectors,
-            'departments': departments
+            'departments': departments,
+            'vacancies': vacancies,
+            'activities': candidate.activities.all().order_by('-timestamp'),
         }
         return render(request,'crm/evms-candidate-profile.html',context)
     else:
@@ -2144,6 +2294,7 @@ def admin_vendor_profile(request, id):
                 vendor.mobile_number = request.POST.get('mobile_number')
                 vendor.date_of_birth = request.POST.get('date_of_birth')
                 vendor.profileVerification = request.POST.get('profileVerification')
+                vendor.verification_remark = request.POST.get('verification_remark')
                 
                 if 'vendor_profile_image' in request.FILES:
                     vendor.vendor_profile_image = request.FILES['vendor_profile_image']
@@ -2243,11 +2394,11 @@ def admin_evms_vendor_paylist(request):
         
         # Filter candidates with refer_code, pending commission, and payout date in current month
         remaining_pays = Candidate.objects.filter(
-            vendor_commission_status='Pending',
+            vendor_commission_status__in=['Pending', 'In Process', 'Failed'],
             selection_status='Selected',
             refer_code__isnull=False,
-            vendor_payout_date__month=current_month,
-            vendor_payout_date__year=current_year
+            # vendor_payout_date__month=current_month,
+            # vendor_payout_date__year=current_year
         ).order_by('-id')
         
         # Prepare data for template
@@ -2372,7 +2523,11 @@ def admin_export_vendors_to_excel(request):
 @login_required
 def selected_candidate(request) :
     if request.user.is_staff or request.user.is_superuser:
-        candidates = Candidate_registration.objects.filter(selection_status='Selected').order_by('-id')
+        logged_in_employee = request.user.employee
+        candidates_reg = Candidate_registration.objects.filter(selection_status='Selected',employee_name=logged_in_employee).order_by('-id')
+        candidates_can = Candidate.objects.filter(selection_status='Selected',employee_name=logged_in_employee).order_by('-id')
+        candidates = list(chain(candidates_reg, candidates_can))
+        candidates.sort(key=lambda x: x.selection_date if x.selection_date else datetime.min.date(), reverse=True)
         context = {
             'candidates': candidates
         }
@@ -2388,12 +2543,19 @@ def follow_up_candidate(request):
         date_range_start = today - timedelta(days=2)  # 25th if today is 27th
         date_range_end = today + timedelta(days=3)    # 30th if today is 27th
         
-        candidates = Candidate_registration.objects.filter(
+        candidates_reg = Candidate_registration.objects.filter(
             next_follow_up_date__isnull=False,
             next_follow_up_date__gte=date_range_start,
             next_follow_up_date__lte=date_range_end
         ).order_by('next_follow_up_date')  # Order by follow-up date
         
+        candidates_can = Candidate.objects.filter(
+            next_follow_up_date__isnull=False,
+            next_follow_up_date__gte=date_range_start,
+            next_follow_up_date__lte=date_range_end
+        ).order_by('next_follow_up_date')  # Order by follow-up date
+        candidates = list(chain(candidates_reg, candidates_can))
+        candidates.sort(key=lambda x: x.next_follow_up_date if x.next_follow_up_date else datetime.min.date(), reverse=False)
         context = {
             'candidates': candidates,
             'today': today
@@ -2406,7 +2568,10 @@ def follow_up_candidate(request):
 @login_required
 def generated_leads(request):
     if request.user.is_staff or request.user.is_superuser:
-        candidates = Candidate_registration.objects.filter(lead_generate='Yes').order_by('-id')
+        candidates_reg = Candidate_registration.objects.filter(lead_generate='Yes').order_by('-id')
+        candidates_can = Candidate.objects.filter(lead_generate='Yes').order_by('-id')
+        candidates = list(chain(candidates_reg, candidates_can))
+        candidates.sort(key=lambda x: x.register_time, reverse=True)
         context = {
             'candidates': candidates
         }
@@ -3224,3 +3389,208 @@ def process_payment(request, vendor_code):
             'message': str(e)
         }, status=400)    
 
+@login_required
+def admin_evms_candidate_chat_list(request, candidate_id):
+    candidate = get_object_or_404(Candidate, id=candidate_id)
+    logged_in_employee = Employee.objects.get(user=request.user)
+    
+    # Handle form submission
+    if request.method == 'POST':
+        chat_message = request.POST.get('chat_message')
+        chat_type = request.POST.get('chat_type', 'internal')
+        is_important = request.POST.get('is_important') == 'on'
+        next_followup = request.POST.get('next_followup') or None
+        attachment = request.FILES.get('attachment')
+        
+        EVMS_Candidate_chat.objects.create(
+            candidate=candidate,
+            chat_message=chat_message,
+            employee_name=logged_in_employee,
+            chat_type=chat_type,
+            is_important=is_important,
+            next_followup=next_followup,
+            attachment=attachment,
+            created_by=request.user
+        )
+        messages.success(request, 'Chat record added successfully!')
+        return redirect('admin_evms_candidate_chat_list', candidate_id=candidate_id)
+    
+    # Filter chats
+    chat_type_filter = request.GET.get('type', 'all')
+    if chat_type_filter == 'all':
+        chats = EVMS_Candidate_chat.objects.filter(candidate=candidate)
+    elif chat_type_filter == 'important':
+        chats = EVMS_Candidate_chat.objects.filter(candidate=candidate, is_important=True)
+    else:
+        chats = EVMS_Candidate_chat.objects.filter(candidate=candidate, chat_type=chat_type_filter)
+    
+    # Pagination
+    paginator = Paginator(chats.order_by('-chat_date'), 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'candidate': candidate,
+        'chats': page_obj,
+        'chat_type_filter': chat_type_filter,
+    }
+    return render(request, 'crm/evms_candidate_chat_list.html', context)
+
+@login_required
+def admin_evms_delete_chat(request, pk):
+    chat = get_object_or_404(EVMS_Candidate_chat, pk=pk)
+    candidate_id = chat.candidate.id
+    chat.delete()
+    messages.success(request, 'Chat record deleted successfully!')
+    return redirect('admin_evms_candidate_chat_list', candidate_id=candidate_id)
+
+@login_required
+def admin_evms_interview_list(request, candidate_id):
+    candidate = get_object_or_404(Candidate, id=candidate_id)
+    companys = Company_registration.objects.all()
+    vacancies = VacancyDetails.objects.filter(vacancy_status='Active').order_by('-id')
+    
+    if request.method == 'POST':
+        if 'send_email' in request.POST:
+            # Handle email sending
+            interview_id = request.POST.get('interview_id')
+            interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id)
+            send_interview_email(request, interview)
+            messages.success(request, 'Interview details sent to candidate!')
+            return redirect('admin_evms_interview_list', candidate_id=candidate_id)
+        
+        # Handle form submission
+        interview_date = request.POST.get('interview_date')
+        interview_time = request.POST.get('interview_time')
+        company_name = request.POST.get('company_name')
+        job_position = request.POST.get('job_position')
+        status = request.POST.get('status')
+        interview_mode = request.POST.get('interview_mode')
+        notes = request.POST.get('notes')
+        
+        interview = EVMS_Candidate_Interview(
+            candidate=candidate,
+            interview_date=interview_date,
+            interview_time=interview_time,
+            company_name=company_name,
+            job_position=job_position,
+            status=status,
+            interview_mode=interview_mode,
+            notes=notes,
+            interviewer_name=request.POST.get('interviewer_name'),
+            interviewer_email=request.POST.get('interviewer_email'),
+            interviewer_phone=request.POST.get('interviewer_phone'),
+            location=request.POST.get('location'),
+            meeting_link=request.POST.get('meeting_link'),
+            feedback=request.POST.get('feedback'),
+            rating=request.POST.get('rating') or None,
+            is_technical=request.POST.get('is_technical') == 'on',
+            duration=request.POST.get('duration', 60),
+            requirements=request.POST.get('requirements'),
+            attachment=request.FILES.get('attachment'),
+            created_by=request.user
+        )
+        interview.save()
+        messages.success(request, 'Interview scheduled successfully!')
+        return redirect('admin_evms_interview_list', candidate_id=candidate_id)
+    
+    # Filter interviews
+    status_filter = request.GET.get('status', 'all')
+    if status_filter == 'all':
+        interviews = candidate.interviews.all()
+    else:
+        interviews = candidate.interviews.filter(status=status_filter)
+    
+    # Pagination
+    paginator = Paginator(interviews, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'candidate': candidate,
+        'interviews': page_obj,
+        'status_filter': status_filter,
+        'status_choices': EVMS_Candidate_Interview.INTERVIEW_STATUS,
+        'mode_choices': EVMS_Candidate_Interview.INTERVIEW_MODE,
+        'companys' : companys,
+        'vacancies' : vacancies
+    }
+    return render(request, 'crm/evms_candidate_interview_list.html', context)
+
+@login_required
+def send_evms_interview_email(request, interview):
+    """Helper function to send interview details email"""
+    subject = f"Interview Scheduled - {interview.company_name}"
+    
+    context = {
+        'interview': interview,
+        'candidate': interview.candidate,
+    }
+    
+    # Render HTML email template
+    html_message = render_to_string('emails/interview_scheduled.html', context)
+    
+    # Create email
+    email = EmailMessage(
+        subject,
+        html_message,
+        settings.DEFAULT_FROM_EMAIL,
+        [interview.candidate.candidate_email_address],
+    )
+    email.content_subtype = "html"  # Set content type to HTML
+    
+    # Attach file if exists
+    if interview.attachment:
+        email.attach_file(interview.attachment.path)
+    
+    # Send email
+    email.send()
+
+@login_required
+def admin_evms_interview_detail(request, interview_id):
+    interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id)
+    companys = Company_registration.objects.all()
+    
+    if request.method == 'POST':
+        # Handle update
+        interview.interview_date = request.POST.get('interview_date')
+        interview.interview_time = request.POST.get('interview_time')
+        interview.company_name = request.POST.get('company_name')
+        interview.job_position = request.POST.get('job_position')
+        interview.status = request.POST.get('status')
+        interview.interview_mode = request.POST.get('interview_mode')
+        interview.notes = request.POST.get('notes')
+        interview.interviewer_name = request.POST.get('interviewer_name')
+        interview.interviewer_email = request.POST.get('interviewer_email')
+        interview.interviewer_phone = request.POST.get('interviewer_phone')
+        interview.location = request.POST.get('location')
+        interview.meeting_link = request.POST.get('meeting_link')
+        interview.feedback = request.POST.get('feedback')
+        interview.rating = request.POST.get('rating') or None
+        interview.is_technical = request.POST.get('is_technical') == 'on'
+        interview.duration = request.POST.get('duration', 60)
+        interview.requirements = request.POST.get('requirements')
+        interview.updated_by=request.user
+        
+        if 'attachment' in request.FILES:
+            interview.attachment = request.FILES['attachment']
+        
+        interview.save()
+        messages.success(request, 'Interview updated successfully!')
+        return redirect('admin_evms_interview_detail', interview_id=interview.id)
+    
+    context = {
+        'interview': interview,
+        'status_choices': EVMS_Candidate_Interview.INTERVIEW_STATUS,
+        'mode_choices': EVMS_Candidate_Interview.INTERVIEW_MODE,
+        'companys' : companys
+    }
+    return render(request, 'crm/evms_candidate_interview_detail.html', context)
+
+@login_required
+def admin_evms_delete_interview(request, interview_id):
+    interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id)
+    candidate_id = interview.candidate.id
+    interview.delete()
+    messages.success(request, 'Interview deleted successfully!')
+    return redirect('admin_evms_interview_list', candidate_id=candidate_id)
