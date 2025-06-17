@@ -448,6 +448,7 @@
           const interviewRows = document.querySelectorAll('.interview-row');
           const alarmModal = new bootstrap.Modal(document.getElementById('alarmModal'));
           let alarmIntervals = {};
+          let soundInterval;
           
           // Create audio element for notification sound
           const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
@@ -474,14 +475,14 @@
               if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
                 if (!alarmIntervals[interviewId]) {
                   showAlarm(row);
-                  // Play notification sound
-                  notificationSound.play().catch(error => console.log('Error playing sound:', error));
+                  // Play notification sound every 30 seconds
+                  soundInterval = setInterval(() => {
+                    notificationSound.play().catch(error => console.log('Error playing sound:', error));
+                  }, 30000);
                   
                   // Set interval to show alarm every 5 minutes
                   alarmIntervals[interviewId] = setInterval(() => {
                     showAlarm(row);
-                    // Play notification sound on each interval
-                    notificationSound.play().catch(error => console.log('Error playing sound:', error));
                   }, 5 * 60 * 1000);
                 }
               }
@@ -500,6 +501,15 @@
             `;
             
             alarmModal.show();
+          }
+
+          // Function to stop the alarm sound
+          function stopAlarmSound() {
+            if (soundInterval) {
+              clearInterval(soundInterval);
+              notificationSound.pause();
+              notificationSound.currentTime = 0;
+            }
           }
 
           // Check every minute
@@ -523,6 +533,7 @@
         <!-- Filled by JS -->
       </div>
       <div class="modal-footer">
+        <button type="button" class="btn btn-danger" onclick="stopAlarmSound()">Stop Alarm</button>
         <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
       </div>
     </div>
