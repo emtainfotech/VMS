@@ -475,14 +475,17 @@
               if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
                 if (!alarmIntervals[interviewId]) {
                   showAlarm(row);
-                  // Play notification sound every 30 seconds
-                  soundInterval = setInterval(() => {
-                    notificationSound.play().catch(error => console.log('Error playing sound:', error));
-                  }, 30000);
+                  
+                  // Play 30-second notification sound
+                  notificationSound.currentTime = 0;
+                  notificationSound.play().catch(error => console.log('Error playing sound:', error));
                   
                   // Set interval to show alarm every 5 minutes
                   alarmIntervals[interviewId] = setInterval(() => {
                     showAlarm(row);
+                    // Play sound again when alarm shows
+                    notificationSound.currentTime = 0;
+                    notificationSound.play().catch(error => console.log('Error playing sound:', error));
                   }, 5 * 60 * 1000);
                 }
               }
