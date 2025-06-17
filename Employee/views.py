@@ -1297,7 +1297,7 @@ def employee_company_registration(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
             # Capture company data
-            employee_name = request.POST.get('employee_name')
+            # employee_name = request.POST.get('employee_name')
             company_name = request.POST.get('company_name')
             company_logo = request.FILES.get('company_logo')
             company_location = ', '.join(request.POST.getlist('company_location'))
@@ -1317,7 +1317,7 @@ def employee_company_registration(request):
             company, created = Company_registration.objects.get_or_create(
                 company_unique_code=company_unique_code,
                 defaults={
-                    'employee_name': employee_name,
+                    # 'employee_name': employee_name,
                     'company_name': company_name,
                     'company_logo': company_logo,
                     'company_location': company_location,
