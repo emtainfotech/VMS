@@ -41,16 +41,10 @@
                                 </div>
                                 
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-12">
                                         <div class="mb-3">
                                             <label class="form-label">Interview Date</label>
-                                            <input type="date" name="interview_date" class="form-control" value="{{ interview.interview_date|date:'Y-m-d' }}" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Interview Time</label>
-                                            <input type="time" name="interview_time" class="form-control" value="{{ interview.interview_time|time:'H:i' }}" required>
+                                            <input type="datetime-local" name="interview_date_time" class="form-control" value="{{ interview.interview_date_time|date:'Y-m-d H:i' }}" required>
                                         </div>
                                     </div>
                                 </div>

@@ -214,9 +214,9 @@ class CandidateChatAdmin(admin.ModelAdmin):
 
 @admin.register(Candidate_Interview)
 class CandidateInterviewAdmin(admin.ModelAdmin):
-    list_display = ('candidate', 'company_name', 'interview_date', 'status')
+    list_display = ('candidate', 'company_name', 'interview_date_time', 'status')
     search_fields = ('candidate__candidate_name', 'company_name')
-    list_filter = ('status', 'interview_date', 'company_name')
+    list_filter = ('status', 'interview_date_time', 'company_name')
 
 @admin.register(Company_registration)
 class CompanyRegistrationAdmin(admin.ModelAdmin):

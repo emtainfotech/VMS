@@ -2577,28 +2577,45 @@ def employee_performance_dashboard(request):
     logged_in_employee = Employee.objects.get(user=request.user)
     today = datetime.now().date()
 
-    interview_detail = Candidate_Interview.objects.filter(
-        candidate__employee_name=logged_in_employee,
-        interview_date=today
-    )
-    
     today_follow_up = timezone.now().date()
     date_range_start = today_follow_up - timedelta(days=2)  # 25th if today_follow_up is 27th
     date_range_end = today_follow_up + timedelta(days=3)    # 30th if today is 27th
+
+    # Get candidates from both databases
+    interview_detail_reg = Candidate_Interview.objects.filter(
+        candidate__employee_name=logged_in_employee,
+        interview_date_time__date=today,
+        status__in=['Scheduled', 'Rescheduled']
+    ).order_by('interview_date_time')
+    
+    interview_detail_can = EVMS_Candidate_Interview.objects.filter(
+        candidate__employee_name=logged_in_employee,
+        interview_date_time__date=today,
+        status__in=['Scheduled', 'Rescheduled']
+    ).order_by('interview_date_time')
+    
+    # Combine both querysets
+        # Combine both querysets and sort by register_time (descending)
+    interview_detail = list(chain(interview_detail_reg, interview_detail_can))
+    interview_detail.sort(key=lambda x: x.interview_date_time if x.interview_date_time else datetime.min.date(), reverse=False)
+    
+    
     
     # Get candidates from both databases
     follow_up_candidates_reg = Candidate_registration.objects.filter(
         employee_name=logged_in_employee,
         next_follow_up_date_time__isnull=False,
         next_follow_up_date_time__gte=date_range_start,
-        next_follow_up_date_time__lte=date_range_end
+        next_follow_up_date_time__lte=date_range_end,
+        lead_generate='No'
     ).order_by('next_follow_up_date_time')
     
     follow_up_candidates_can = Candidate.objects.filter(
         employee_name=logged_in_employee,
         next_follow_up_date_time__isnull=False,
         next_follow_up_date_time__gte=date_range_start,
-        next_follow_up_date_time__lte=date_range_end
+        next_follow_up_date_time__lte=date_range_end,
+        lead_generate='No'
     ).order_by('next_follow_up_date_time')
     
     # Combine both querysets
@@ -3511,8 +3528,7 @@ def interview_list(request, candidate_id):
             return redirect('interview_list', candidate_id=candidate_id)
         
         # Handle form submission
-        interview_date = request.POST.get('interview_date')
-        interview_time = request.POST.get('interview_time')
+        interview_date_time = request.POST.get('interview_date_time')
         company_name = request.POST.get('company_name')
         job_position = request.POST.get('job_position')
         status = request.POST.get('status')
@@ -3521,8 +3537,7 @@ def interview_list(request, candidate_id):
         
         interview = Candidate_Interview(
             candidate=candidate,
-            interview_date=interview_date,
-            interview_time=interview_time,
+            interview_date_time=interview_date_time,
             company_name=company_name,
             job_position=job_position,
             status=status,
@@ -3602,8 +3617,7 @@ def interview_detail(request, interview_id):
     
     if request.method == 'POST':
         # Handle update
-        interview.interview_date = request.POST.get('interview_date')
-        interview.interview_time = request.POST.get('interview_time')
+        interview.interview_date_time = request.POST.get('interview_date_time')
         interview.company_name = request.POST.get('company_name')
         interview.job_position = request.POST.get('job_position')
         interview.status = request.POST.get('status')
@@ -3953,8 +3967,7 @@ def employee_evms_interview_list(request, candidate_id):
             return redirect('employee_evms_interview_list', candidate_id=candidate_id)
         
         # Handle form submission
-        interview_date = request.POST.get('interview_date')
-        interview_time = request.POST.get('interview_time')
+        interview_date_time = request.POST.get('interview_date_time')
         company_name = request.POST.get('company_name')
         job_position = request.POST.get('job_position')
         status = request.POST.get('status')
@@ -3963,8 +3976,7 @@ def employee_evms_interview_list(request, candidate_id):
         
         interview = EVMS_Candidate_Interview(
             candidate=candidate,
-            interview_date=interview_date,
-            interview_time=interview_time,
+            interview_date_time=interview_date_time,
             company_name=company_name,
             job_position=job_position,
             status=status,
@@ -4046,8 +4058,7 @@ def employee_evms_interview_detail(request, interview_id):
     
     if request.method == 'POST':
         # Handle update
-        interview.interview_date = request.POST.get('interview_date')
-        interview.interview_time = request.POST.get('interview_time')
+        interview.interview_date_time = request.POST.get('interview_date_time')
         interview.company_name = request.POST.get('company_name')
         interview.job_position = request.POST.get('job_position')
         interview.status = request.POST.get('status')

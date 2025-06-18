@@ -348,7 +348,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <span class="d-block detail-label">Next Follow-Up</span>
-                                <span class="detail-value">{{ candidate.next_follow_up_date|date:"M d, Y"|default:"-" }}</span>
+                                <span class="detail-value">{{ candidate.next_follow_up_date_time|date:"M d, Y H:i"|default:"-" }}</span>
                             </div>
                         </div>
                         <div class="col-md-6">

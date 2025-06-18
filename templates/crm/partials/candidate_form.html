@@ -552,7 +552,7 @@
             <!-- Next Follow-Up Date -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Next Follow-Up Date <span class="text-danger">*</span></label>
-              <input type="date" class="form-control" name="next_follow_up_date" value="{{ candidate.next_follow_up_date|date:'Y-m-d' }}" min="{{ today|date:'Y-m-d' }}" required disabled>
+              <input type="datetime-local" class="form-control" name="next_follow_up_date_time" value="{{ candidate.next_follow_up_date_time|date:'Y-m-d H:i' }}"  required disabled>
               <div class="invalid-feedback">Please select a valid future date</div>
             </div>
             

@@ -286,14 +286,17 @@ class EVMS_Candidate_chat(models.Model):
     
 class EVMS_Candidate_Interview(models.Model):
     INTERVIEW_STATUS = [
-        ('scheduled', 'Scheduled'),
-        ('completed', 'Completed'),
-        ('rescheduled', 'Rescheduled'),
-        ('cancelled', 'Cancelled'),
-        ('no_show', 'No Show'),
-        ('selected', 'Selected'),
-        ('rejected', 'Rejected'),
-        ('on_hold', 'On Hold'),
+        ('Scheduled', 'Scheduled'),
+        ('Completed', 'Completed'),
+        ('Rescheduled', 'Rescheduled'),
+        ('Cancelled', 'Cancelled'),
+        ('No Show', 'No Show'),
+        ('Selected', 'Selected'),
+        ('Rejected', 'Rejected'),
+        ('On Hold', 'On Hold'),
+        ('Pending', 'Pending'),
+        ('In Process', 'In Process'),
+        ('Failed', 'Failed'),
     ]
     
     INTERVIEW_MODE = [
@@ -313,8 +316,7 @@ class EVMS_Candidate_Interview(models.Model):
     ]
 
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name='interviews')
-    interview_date = models.DateField(blank=True, null=True)
-    interview_time = models.TimeField(blank=True, null=True)
+    interview_date_time = models.DateTimeField(blank=True, null=True)
     company_name = models.CharField(max_length=255)
     job_position = models.CharField(max_length=255)
     interviewer_name = models.CharField(max_length=255, blank=True, null=True)
@@ -345,21 +347,21 @@ class EVMS_Candidate_Interview(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        ordering = ['-interview_date', '-interview_time']
+        ordering = ['-interview_date_time']
         verbose_name = 'Candidate Interview'
         verbose_name_plural = 'Candidate Interviews'
 
     def get_interview_datetime(self):
-        if self.interview_date and self.interview_time:
-            return datetime.combine(self.interview_date, self.interview_time)
+        if self.interview_date_time:
+            return self.interview_date_time
         return None
 
     
     def __str__(self):
-        return f"{self.candidate.name} - {self.company_name} ({self.interview_date})"
+        return f"{self.candidate.name} - {self.company_name} ({self.interview_date_time})"
 
     def get_interview_datetime(self):
-        return datetime.combine(self.interview_date, self.interview_time)
+        return self.interview_date_time
 
 
         

@@ -52,16 +52,10 @@
                                         </div>
                                         
                                         <div class="row">
-                                            <div class="col-md-6">
+                                            <div class="col-md-12">
                                                 <div class="mb-3">
                                                     <label class="form-label">Interview Date</label>
-                                                    <input type="date" name="interview_date" class="form-control" required>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label">Interview Time</label>
-                                                    <input type="time" name="interview_time" class="form-control" required>
+                                                    <input type="datetime-local" name="interview_date_time" class="form-control" required>
                                                 </div>
                                             </div>
                                         </div>
@@ -128,8 +122,7 @@
                                                 {% for interview in interviews %}
                                                 <tr class="{% if interview.is_upcoming %}table-success{% endif %}">
                                                     <td>
-                                                        {{ interview.interview_date|date:"M d, Y" }}<br>
-                                                        <small>{{ interview.interview_time|time:"H:i" }}</small>
+                                                        {{ interview.interview_date_time|date:"M d, Y H:i" }}
                                                     </td>
                                                     <td>{{ interview.company_name }}</td>
                                                     <td>{{ interview.job_position }}</td>

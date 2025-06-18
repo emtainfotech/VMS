@@ -99,6 +99,50 @@ def crm_dashboard(request):
                 start_date = today.replace(month=1, day=1)
                 end_date = start_date.replace(year=start_date.year+1)
         
+        today_follow_up = timezone.now().date()
+        date_range_start = today_follow_up - timedelta(days=2)  # 25th if today_follow_up is 27th
+        date_range_end = today_follow_up + timedelta(days=3)    # 30th if today is 27th
+
+        # Get candidates from both databases
+        interview_detail_reg = Candidate_Interview.objects.filter(
+            interview_date_time__date=today,
+            status__in=['Scheduled', 'Rescheduled']
+        ).order_by('interview_date_time')
+        
+        interview_detail_can = EVMS_Candidate_Interview.objects.filter(
+            interview_date_time__date=today,
+            status__in=['Scheduled', 'Rescheduled']
+        ).order_by('interview_date_time')
+        
+        # Combine both querysets
+            # Combine both querysets and sort by register_time (descending)
+        interview_detail = list(chain(interview_detail_reg, interview_detail_can))
+        interview_detail.sort(key=lambda x: x.interview_date_time if x.interview_date_time else datetime.min.date(), reverse=False)
+        
+        
+        
+        # Get candidates from both databases
+        follow_up_candidates_reg = Candidate_registration.objects.filter(
+            next_follow_up_date_time__isnull=False,
+            next_follow_up_date_time__gte=date_range_start,
+            next_follow_up_date_time__lte=date_range_end,
+            lead_generate='No'
+        ).order_by('next_follow_up_date_time')
+        
+        follow_up_candidates_can = Candidate.objects.filter(
+            next_follow_up_date_time__isnull=False,
+            next_follow_up_date_time__gte=date_range_start,
+            next_follow_up_date_time__lte=date_range_end,
+            lead_generate='No'
+        ).order_by('next_follow_up_date_time')
+        
+        # Combine both querysets
+            # Combine both querysets and sort by register_time (descending)
+        follow_up_candidates = list(chain(follow_up_candidates_reg, follow_up_candidates_can))
+        follow_up_candidates.sort(key=lambda x: x.next_follow_up_date_time if x.next_follow_up_date_time else datetime.min.date(), reverse=False)
+        
+
+
         # Base querysets for both databases
         current_qs_reg = Candidate_registration.objects.all()
         current_qs_can = Candidate.objects.all()
@@ -308,6 +352,8 @@ def crm_dashboard(request):
             'end_date': end_date - timedelta(days=1) if end_date else None,
             'custom_start': custom_start,
             'custom_end': custom_end,
+            'interview_detail': interview_detail,
+            'follow_up_candidates': follow_up_candidates,
         }
         return render(request, 'crm/crm-dashboard.html', context)
     else:
@@ -345,7 +391,7 @@ def admin_candidate_profile(request, id):
                 'current_salary', 'expected_salary', 'submit_by',
                 # Calling Remark
                 'call_connection', 'calling_remark', 'lead_generate',
-                'send_for_interview', 'next_follow_up_date',
+                'send_for_interview', 'next_follow_up_date_time',
                 # Selection Record
                 'selection_status', 'company_name', 'offered_salary',
                 'selection_date', 'candidate_joining_date', 'emta_commission',
@@ -419,7 +465,7 @@ def admin_candidate_profile(request, id):
             candidate.calling_remark = request.POST.get('calling_remark')
             candidate.lead_generate = request.POST.get('lead_generate')
             candidate.send_for_interview = request.POST.get('send_for_interview')
-            candidate.next_follow_up_date = request.POST.get('next_follow_up_date') or None
+            candidate.next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
 
             # Selection Record
             candidate.selection_status = request.POST.get('selection_status')
@@ -635,7 +681,7 @@ def admin_candidate_registration(request):
             calling_remark = request.POST.get('calling_remark')
             lead_generate = request.POST.get('lead_generate')
             send_for_interview = request.POST.get('send_for_interview')
-            next_follow_up_date = request.POST.get('next_follow_up_date') or None
+            next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
             remark = request.POST.get('remark')
             submit_by = request.POST.get('submit_by')
             preferred_location_str = ', '.join(preferred_location)
@@ -685,7 +731,7 @@ def admin_candidate_registration(request):
                 calling_remark=calling_remark,
                 lead_generate=lead_generate,
                 send_for_interview=send_for_interview,
-                next_follow_up_date=next_follow_up_date,
+                next_follow_up_date_time=next_follow_up_date_time,
                 candidate_photo=candidate_photo,
                 candidate_resume=candidate_resume,
                 remark=remark,
@@ -1584,7 +1630,7 @@ def evms_candidate_profile(request,id) :
                 'current_salary', 'expected_salary', 'submit_by',
                 # Calling Remark
                 'call_connection', 'calling_remark', 'lead_generate',
-                'send_for_interview', 'next_follow_up_date',
+                'send_for_interview', 'next_follow_up_date_time',
                 # Selection Record
                 'selection_status', 'company_name', 'offered_salary',
                 'selection_date', 'candidate_joining_date', 'emta_commission',
@@ -1658,7 +1704,7 @@ def evms_candidate_profile(request,id) :
                 candidate.calling_remark = request.POST.get('calling_remark')
                 candidate.lead_generate = request.POST.get('lead_generate')
                 candidate.send_for_interview = request.POST.get('send_for_interview')
-                candidate.next_follow_up_date = request.POST.get('next_follow_up_date') or None
+                candidate.next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
                 
                 # Handle form submission for bank details
                 candidate.selection_status = request.POST.get('selection_status')
@@ -2879,8 +2925,7 @@ def admin_interview_list(request, candidate_id):
             return redirect('admin_interview_list', candidate_id=candidate_id)
         
         # Handle form submission
-        interview_date = request.POST.get('interview_date')
-        interview_time = request.POST.get('interview_time')
+        interview_date_time = request.POST.get('interview_date_time')
         company_name = request.POST.get('company_name')
         job_position = request.POST.get('job_position')
         status = request.POST.get('status')
@@ -2889,8 +2934,7 @@ def admin_interview_list(request, candidate_id):
         
         interview = Candidate_Interview(
             candidate=candidate,
-            interview_date=interview_date,
-            interview_time=interview_time,
+            interview_date_time=interview_date_time,
             company_name=company_name,
             job_position=job_position,
             status=status,
@@ -2972,8 +3016,7 @@ def admin_interview_detail(request, interview_id):
     
     if request.method == 'POST':
         # Handle update
-        interview.interview_date = request.POST.get('interview_date')
-        interview.interview_time = request.POST.get('interview_time')
+        interview.interview_date_time = request.POST.get('interview_date_time')
         interview.company_name = request.POST.get('company_name')
         interview.job_position = request.POST.get('job_position')
         interview.status = request.POST.get('status')
@@ -3460,8 +3503,7 @@ def admin_evms_interview_list(request, candidate_id):
             return redirect('admin_evms_interview_list', candidate_id=candidate_id)
         
         # Handle form submission
-        interview_date = request.POST.get('interview_date')
-        interview_time = request.POST.get('interview_time')
+        interview_date_time = request.POST.get('interview_date_time')
         company_name = request.POST.get('company_name')
         job_position = request.POST.get('job_position')
         status = request.POST.get('status')
@@ -3470,8 +3512,7 @@ def admin_evms_interview_list(request, candidate_id):
         
         interview = EVMS_Candidate_Interview(
             candidate=candidate,
-            interview_date=interview_date,
-            interview_time=interview_time,
+            interview_date_time=interview_date_time,
             company_name=company_name,
             job_position=job_position,
             status=status,
@@ -3553,8 +3594,7 @@ def admin_evms_interview_detail(request, interview_id):
     
     if request.method == 'POST':
         # Handle update
-        interview.interview_date = request.POST.get('interview_date')
-        interview.interview_time = request.POST.get('interview_time')
+        interview.interview_date_time = request.POST.get('interview_date_time')
         interview.company_name = request.POST.get('company_name')
         interview.job_position = request.POST.get('job_position')
         interview.status = request.POST.get('status')

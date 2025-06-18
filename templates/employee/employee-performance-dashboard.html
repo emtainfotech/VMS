@@ -378,7 +378,6 @@
         </div>
       </div>
 
-      <!-- Interview Detail -->
       <div class="row mt-4">
         <div class="col-lg-6">
           <div class="card">
@@ -393,25 +392,25 @@
                       <th>Candidate</th>
                       <th>Status</th>
                       <th>Time</th>
-                      <th>Mode</th>
-                      <th>Location</th>
-                      <th>Notes</th>
                       <th class="w-1"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {% for interview in interview_detail %}
-                    <tr class="interview-row" data-date="{{ interview.interview_date }}" data-time="{{ interview.interview_time }}">
+                    <tr class="interview-row" data-date="{{ interview.interview_date_time|date:'Y-m-d' }}" data-interview-id="{{ interview.id }}">
                       <td>{{ interview.candidate.candidate_name }}</td>
                       <td>{{ interview.status }}</td>
-                      <td class="interview-time">{{ interview.interview_time|time:"g:i A" }}</td>
-                      <td>{{ interview.interview_mode }}</td>
-                      <td>{{ interview.location }}</td>
-                      <td>{{ interview.notes }}</td>
+                      <td class="interview-time" data-time="{{ interview.interview_date_time|date:'H:i' }}">{{ interview.interview_date_time|date:"M d, Y H:i" }}</td>
                       <td>
-                        <a href="{% url 'interview_detail' interview.id %}" class="btn btn-link">
-                          View
-                        </a>
+                        {% if interview.candidate.lead_source == 'EVMS' %}
+                          <a href="{% url 'employee_evms_candidate_profile' interview.candidate.id %}" class="btn btn-link">
+                            View
+                          </a>
+                        {% else %}
+                          <a href="{% url 'employee_candidate_profile' interview.candidate.id %}" class="btn btn-link">
+                            View
+                          </a>
+                        {% endif %}
                       </td>
                     </tr>
                     {% empty %}
@@ -441,7 +440,7 @@
             </div>
           </div>
         </div>
-
+      
         <div class="col-lg-6">
           <div class="card">
             <div class="card-header">
@@ -461,25 +460,26 @@
                   </thead>
                   <tbody>
                     {% for follow_up in follow_up_candidates %}
-                    <tr class="followup-row" data-date="{{ follow_up.next_follow_up_date_time|date:"Y-m-d" }}" data-time="{{ follow_up.next_follow_up_date_time|time:"H:i" }}" data-followup-id="{{ follow_up.id }}">
+                    <tr class="followup-row" data-date="{{ follow_up.next_follow_up_date_time|date:'Y-m-d' }}" data-followup-id="{{ follow_up.id }}">
                       <td>{{ follow_up.candidate_name }}</td>
-                      <td> {% if follow_up.lead_source == 'EVMS' %}
-                        {{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}
+                      <td>
+                        {% if follow_up.lead_source == 'EVMS' %}
+                          {{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}
                         {% else %}
-                        {{ follow_up.unique_code|default:"-" }}
+                          {{ follow_up.unique_code|default:"-" }}
                         {% endif %}
                       </td>
                       <td>{{ follow_up.candidate_mobile_number|default:"-" }}</td>
-                      <td class="followup-time">{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td>
+                      <td class="followup-time" data-time="{{ follow_up.next_follow_up_date_time|date:'H:i' }}">{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td>
                       <td>
                         {% if follow_up.lead_source == 'EVMS' %}
-                        <a href="{% url 'employee_evms_candidate_profile' follow_up.id %}" class="btn btn-link">
-                          View
-                        </a>
+                          <a href="{% url 'employee_evms_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
+                            View
+                          </a>
                         {% else %}
-                        <a href="{% url 'employee_candidate_profile' follow_up.id %}" class="btn btn-link">
-                          View
-                        </a>
+                          <a href="{% url 'employee_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
+                            View
+                          </a>
                         {% endif %}
                       </td>
                     </tr>
@@ -510,198 +510,390 @@
             </div>
           </div>
         </div>
+      </div>
+      
 
-        <!-- Follow Up Alarm Modal -->
-        <div class="modal fade" id="followUpAlarmModal" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">Follow Up Reminder</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <p>It's time for your follow up with <span id="followUpCandidateName"></span></p>
-                <p>Unique Code: <span id="followUpUniqueCode"></span></p>
-                <p>Mobile: <span id="followUpMobile"></span></p>
-                <p>Follow Up Time: <span id="followUpTime"></span></p>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <a href="#" id="followUpViewLink" class="btn btn-primary">View Details</a>
-              </div>
+    </div>
+  </div>
+</div>
+
+ 
+<style>
+  .notification-container {
+    position: fixed;
+    /* bottom: 20px;
+    right: 20px; */
+    z-index: 9999;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 15px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+  }
+  
+  .notification-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 350px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    animation: slideIn 0.3s ease-out;
+    transform-origin: right bottom;
+  }
+  
+  @keyframes slideIn {
+    from { transform: translateX(100%) scale(0.9); opacity: 0; }
+    to { transform: translateX(0) scale(1); opacity: 1; }
+  }
+  
+  .notification-header {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 8px 8px 0 0;
+    color: white;
+  }
+  
+  .followup-header {
+    background: #4a6bdf;
+  }
+  
+  .interview-header {
+    background: #ff9800;
+  }
+  
+  .notification-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .notification-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+  
+  .notification-body {
+    padding: 16px;
+    color: #333;
+  }
+  
+  .notification-details {
+    margin-top: 12px;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+  }
+  
+  .detail-label {
+    font-weight: 600;
+    color: #555;
+    display: inline-block;
+    width: 100px;
+  }
+  
+  .detail-value {
+    color: #222;
+  }
+  
+  .notification-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 16px;
+    border-top: 1px solid #eee;
+    gap: 8px;
+  }
+  
+  .notification-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    transition: all 0.2s;
+  }
+  
+  .notification-btn.primary {
+    background: #4a6bdf;
+    color: white;
+  }
+  
+  .notification-btn.warning {
+    background: #ff9800;
+    color: white;
+  }
+  
+  .notification-btn.secondary {
+    background: #f0f0f0;
+    color: #333;
+  }
+  
+  .notification-btn.danger {
+    background: #f44336;
+    color: white;
+  }
+  
+  .notification-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .notification-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+  }
+  
+  .notification-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+</style>
+<!-- Notification Container -->
+<div class="notification-container" id="notificationContainer"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Notification system setup
+    const notificationContainer = document.getElementById('notificationContainer');
+    let activeNotifications = new Set();
+    let notificationQueue = [];
+    let isProcessingQueue = false;
+    
+    // Audio elements
+    const followUpSound = new Audio('/static/128-Laal Pari - Housefull 5 128 Kbps.mp3');
+    const interviewSound = new Audio('/static/128-Laal Pari - Housefull 5 128 Kbps.mp3');
+    followUpSound.volume = 0.5;
+    interviewSound.volume = 0.5;
+
+    // ===== FOLLOW UP NOTIFICATIONS =====
+    const followUpRows = document.querySelectorAll('.followup-row');
+    let followUpAlarmIntervals = {};
+
+    // ===== INTERVIEW NOTIFICATIONS =====
+    const interviewRows = document.querySelectorAll('.interview-row');
+    let interviewAlarmIntervals = {};
+
+    // ===== COMMON NOTIFICATION FUNCTIONS =====
+    function isValidNotification(data) {
+      // Make sure required fields exist and have values
+      const requiredFields = ['id', 'candidateName', 'time'];
+      return requiredFields.every(field => 
+        data[field] !== undefined && 
+        data[field] !== null && 
+        data[field].toString().trim() !== ''
+      );
+    }
+
+    function createNotificationCard(type, data) {
+      if (!isValidNotification(data)) {
+        console.log('Invalid notification data:', data);
+        return null;
+      }
+      
+      const notificationId = 'notification-' + Date.now() + '-' + data.id;
+      const headerClass = type === 'followup' ? 'followup-header' : 'interview-header';
+      const btnClass = type === 'followup' ? 'primary' : 'warning';
+      
+      const card = document.createElement('div');
+      card.className = 'notification-card';
+      card.id = notificationId;
+      
+      if (type === 'followup') {
+        card.innerHTML = `
+          <div class="notification-header ${headerClass}">
+            <h5 class="notification-title">⏰ Follow Up Reminder</h5>
+            <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">×</button>
+          </div>
+          <div class="notification-body">
+            <p>It's time for your follow up with <strong>${data.candidateName}</strong></p>
+            <div class="notification-details">
+              <div><span class="detail-label">Unique Code:</span> <span class="detail-value">${data.uniqueCode || '-'}</span></div>
+              <div><span class="detail-label">Mobile:</span> <span class="detail-value">${data.mobile || '-'}</span></div>
+              <div><span class="detail-label">Follow Up Time:</span> <span class="detail-value">${data.time}</span></div>
             </div>
           </div>
-        </div>
+          <div class="notification-footer">
+            <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">Close</button>
+            <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'followup'); removeNotification('${notificationId}', '${data.id}', 'followup')">View Details</a>
+          </div>
+        `;
+      } else { // Interview
+        card.innerHTML = `
+          <div class="notification-header ${headerClass}">
+            <h5 class="notification-title">🎤 Interview Alert</h5>
+            <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">×</button>
+          </div>
+          <div class="notification-body">
+            <p>Interview with <strong>${data.candidateName}</strong> is scheduled in 15 minutes!</p>
+            <div class="notification-details">
+              <div><span class="detail-label">Time:</span> <span class="detail-value">${data.time}</span></div>
+              <div><span class="detail-label">Location:</span> <span class="detail-value">${data.location || 'Not specified'}</span></div>
+              ${data.position ? `<div><span class="detail-label">Position:</span> <span class="detail-value">${data.position}</span></div>` : ''}
+            </div>
+          </div>
+          <div class="notification-footer">
+            <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">Close</button>
+            <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'interview'); removeNotification('${notificationId}', '${data.id}', 'interview')">View Details</a>
+          </div>
+        `;
+      }
+      
+      return { card, notificationId, id: data.id, type };
+    }
 
-        <script>
-          document.addEventListener('DOMContentLoaded', function() {
-            const followUpRows = document.querySelectorAll('.followup-row');
-            const followUpAlarmModal = new bootstrap.Modal(document.getElementById('followUpAlarmModal'));
-            let followUpAlarmIntervals = {};
-            
-            // Create audio element for notification sound
-            const followUpNotificationSound = new Audio('/static/128-Laal Pari - Housefull 5 128 Kbps.mp3');
-            followUpNotificationSound.volume = 0.5;
+    function showNotification(type, data) {
+      const notification = createNotificationCard(type, data);
+      if (!notification) return;
+      
+      const { card, notificationId, id } = notification;
+      notificationContainer.prepend(card);
+      activeNotifications.add(notificationId);
+      
+      // Play appropriate sound
+      const sound = type === 'followup' ? followUpSound : interviewSound;
+      sound.currentTime = 0;
+      sound.play().catch(error => console.log('Error playing sound:', error));
+      
+      // Auto-remove after timeout
+      const timeout = type === 'followup' ? 60000 : 30000;
+      setTimeout(() => {
+        if (activeNotifications.has(notificationId)) {
+          removeNotification(notificationId, id, type);
+        }
+      }, timeout);
+    }
 
-            function checkFollowUpTime() {
-              const now = new Date();
-              const currentDate = now.toISOString().split('T')[0];
-              const currentTime = now.getHours() * 60 + now.getMinutes();
+    function processQueue() {
+      if (notificationQueue.length === 0 || isProcessingQueue) return;
+      
+      isProcessingQueue = true;
+      const { type, data } = notificationQueue.shift();
+      showNotification(type, data);
+      
+      setTimeout(() => {
+        isProcessingQueue = false;
+        if (notificationQueue.length > 0) {
+          processQueue();
+        }
+      }, 1000);
+    }
 
-              followUpRows.forEach(row => {
-                const followUpDate = row.dataset.date;
-                const followUpTime = row.dataset.time;
-                const [hours, minutes] = followUpTime.split(':').map(Number);
-                const followUpDateTime = hours * 60 + minutes;
-                const followUpId = row.dataset.followupId;
+    // ===== GLOBAL FUNCTIONS =====
+    window.removeNotification = function(notificationId, id, type) {
+      const notification = document.getElementById(notificationId);
+      if (notification) {
+        notification.style.animation = 'slideIn 0.3s ease-out reverse';
+        setTimeout(() => {
+          notification.remove();
+          activeNotifications.delete(notificationId);
+        }, 250);
+      }
+      
+      if (type === 'interview') {
+        stopNotificationSound('interview');
+      }
+    };
 
-                // Check if follow up is today and within 15 minutes
-                if (followUpDate === currentDate) {
-                  const timeUntilFollowUp = followUpDateTime - currentTime;
-                  
-                  if (timeUntilFollowUp > 0 && timeUntilFollowUp <= 30) {
-                    if (!followUpAlarmIntervals[followUpId]) {
-                      showFollowUpAlarm(row);
-                      
-                      // Play notification sound
-                      followUpNotificationSound.currentTime = 0;
-                      followUpNotificationSound.play().catch(error => console.log('Error playing sound:', error));
-                      
-                      // Set interval to show alarm every 5 minutes
-                      followUpAlarmIntervals[followUpId] = setInterval(() => {
-                        showFollowUpAlarm(row);
-                        followUpNotificationSound.currentTime = 0;
-                        followUpNotificationSound.play().catch(error => console.log('Error playing sound:', error));
-                      }, 5 * 60 * 1000);
-                    }
-                  }
-                }
-              });
-            }
+    window.stopNotificationAlarm = function(id, type) {
+      if (type === 'followup' && followUpAlarmIntervals[id]) {
+        clearInterval(followUpAlarmIntervals[id]);
+        delete followUpAlarmIntervals[id];
+      } else if (type === 'interview' && interviewAlarmIntervals[id]) {
+        clearInterval(interviewAlarmIntervals[id]);
+        delete interviewAlarmIntervals[id];
+      }
+    };
 
-            function showFollowUpAlarm(row) {
-              const candidateName = row.cells[0].textContent;
-              const uniqueCode = row.cells[1].textContent.trim();
-              const mobile = row.cells[2].textContent;
-              const followUpTime = row.cells[3].textContent;
-              const viewLink = row.querySelector('a').href;
+    window.stopNotificationSound = function(type) {
+      const sound = type === 'followup' ? followUpSound : interviewSound;
+      sound.pause();
+      sound.currentTime = 0;
+    };
 
-              document.getElementById('followUpCandidateName').textContent = candidateName;
-              document.getElementById('followUpUniqueCode').textContent = uniqueCode;
-              document.getElementById('followUpMobile').textContent = mobile;
-              document.getElementById('followUpTime').textContent = followUpTime;
-              document.getElementById('followUpViewLink').href = viewLink;
+    // ===== COMBINED TIME CHECK =====
+    function checkAllNotifications() {
+      const now = new Date();
+      const currentDate = now.toISOString().split('T')[0];
+      const currentTime = now.getHours() * 60 + now.getMinutes();
 
-              followUpAlarmModal.show();
-            }
+      // Check follow-ups (within 30 minutes)
+      followUpRows.forEach(row => {
+        const followUpDate = row.dataset.date;
+        const followUpTime = row.querySelector('.followup-time').getAttribute('data-time');
+        const [hours, minutes] = followUpTime.split(':').map(Number);
+        const followUpDateTime = hours * 60 + minutes;
+        const followUpId = row.dataset.followupId;
 
-            // Check follow up times every minute
-            setInterval(checkFollowUpTime, 60 * 1000);
-            // Initial check
-            checkFollowUpTime();
-          });
-        </script>
-      </div>
-
-      <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          const interviewRows = document.querySelectorAll('.interview-row');
-          const alarmModal = new bootstrap.Modal(document.getElementById('alarmModal'));
-          let alarmIntervals = {};
-          let soundInterval;
+        if (followUpDate === currentDate) {
+          const timeUntilFollowUp = followUpDateTime - currentTime;
           
-          // Create audio element for notification sound
-          const notificationSound = new Audio('/static/128-Laal Pari - Housefull 5 128 Kbps.mp3');
-          notificationSound.volume = 0.5;
-
-          function checkInterviewTime() {
-            const now = new Date();
-            const currentTime = now.getHours() * 60 + now.getMinutes();
-
-            interviewRows.forEach(row => {
-              const timeStr = row.querySelector('.interview-time').textContent;
-              const [time, period] = timeStr.split(' ');
-              let [hours, minutes] = time.split(':').map(Number);
+          if (timeUntilFollowUp > 0 && timeUntilFollowUp <= 30) {
+            if (!followUpAlarmIntervals[followUpId]) {
+              const data = {
+                id: followUpId,
+                candidateName: row.cells[0].textContent,
+                uniqueCode: row.cells[1].textContent.trim(),
+                mobile: row.cells[2].textContent,
+                time: row.querySelector('.followup-time').textContent,
+                viewLink: row.querySelector('a')?.href
+              };
               
-              // Convert to 24-hour format
-              if (period === 'PM' && hours !== 12) hours += 12;
-              if (period === 'AM' && hours === 12) hours = 0;
-              
-              const interviewTime = hours * 60 + minutes;
-              const timeUntilInterview = interviewTime - currentTime;
-              const interviewId = row.dataset.interviewId;
-
-              // Check if interview is within 15 minutes
-              if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
-                if (!alarmIntervals[interviewId]) {
-                  showAlarm(row);
-                  
-                  // Play 30-second notification sound
-                  notificationSound.currentTime = 0;
-                  notificationSound.play().catch(error => console.log('Error playing sound:', error));
-                  
-                  // Set interval to show alarm every 5 minutes
-                  alarmIntervals[interviewId] = setInterval(() => {
-                    showAlarm(row);
-                    // Play sound again when alarm shows
-                    notificationSound.currentTime = 0;
-                    notificationSound.play().catch(error => console.log('Error playing sound:', error));
-                  }, 5 * 60 * 1000);
-                }
+              if (isValidNotification(data)) {
+                notificationQueue.push({ type: 'followup', data });
+                followUpAlarmIntervals[followUpId] = setInterval(() => {
+                  notificationQueue.push({ type: 'followup', data });
+                }, 5 * 60 * 1000);
               }
-            });
-          }
-
-          function showAlarm(row) {
-            const candidateName = row.cells[0].textContent;
-            const interviewTime = row.querySelector('.interview-time').textContent;
-            const location = row.cells[4].textContent;
-            
-            document.getElementById('alarmModalBody').innerHTML = `
-              <p>Interview with <strong>${candidateName}</strong> is scheduled in 15 minutes!</p>
-              <p>Time: ${interviewTime}</p>
-              <p>Location: ${location}</p>
-            `;
-            
-            alarmModal.show();
-          }
-
-          // Function to stop the alarm sound
-          function stopAlarmSound() {
-            if (soundInterval) {
-              clearInterval(soundInterval);
-              notificationSound.pause();
-              notificationSound.currentTime = 0;
             }
           }
+        }
+      });
 
-          // Check every minute
-          setInterval(checkInterviewTime, 60 * 1000);
-          // Initial check
-          checkInterviewTime();
-        });
-      </script>
-    </div>
-  </div>
-</div>
+      // Check interviews (within 15 minutes)
+      interviewRows.forEach(row => {
+        const interviewDate = row.dataset.date;
+        const interviewTimeStr = row.querySelector('.interview-time').getAttribute('data-time');
+        const [hours, minutes] = interviewTimeStr.split(':').map(Number);
+        const interviewTime = hours * 60 + minutes;
+        const timeUntilInterview = interviewTime - currentTime;
+        const interviewId = row.dataset.interviewId;
 
-<!-- Interview Alert Modal -->
-<div class="modal fade" id="alarmModal" tabindex="-1" aria-labelledby="alarmModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-warning">
-        <h5 class="modal-title" id="alarmModalLabel">Interview Alert</h5>
-      </div>
-      <div class="modal-body" id="alarmModalBody">
-        <!-- Filled by JS -->
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-danger" onclick="stopAlarmSound()">Stop Alarm</button>
-        <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
-      </div>
-    </div>
-  </div>
-</div>
+        if (interviewDate === currentDate) {
+          if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
+            if (!interviewAlarmIntervals[interviewId]) {
+              const data = {
+                id: interviewId,
+                candidateName: row.cells[0].textContent,
+                time: row.querySelector('.interview-time').textContent,
+                location: row.cells[4]?.textContent || 'Not specified',
+                position: row.cells[3]?.textContent,
+                viewLink: row.querySelector('a')?.href
+              };
+              
+              if (isValidNotification(data)) {
+                notificationQueue.push({ type: 'interview', data });
+                interviewAlarmIntervals[interviewId] = setInterval(() => {
+                  notificationQueue.push({ type: 'interview', data });
+                }, 5 * 60 * 1000);
+              }
+            }
+          }
+        }
+      });
+
+      // Process any queued notifications
+      processQueue();
+    }
+
+    // ===== INITIALIZE CHECKS =====
+    setInterval(checkAllNotifications, 60 * 1000);
+    checkAllNotifications();
+  });
+</script>
 
 <!-- Charting Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
