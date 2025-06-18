@@ -131,16 +131,18 @@
                 <td>
                   <div class="d-flex align-items-center">
                     <div class="me-2">
-                      {% if candidate.next_follow_up_date == today %}
+                      {% if candidate.next_follow_up_date_time|date:"Y-m-d" == today|date:"Y-m-d" %}
                         <span class="badge bg-orange-lt">Today</span>
-                      {% elif candidate.next_follow_up_date < today %}
+                      {% elif candidate.next_follow_up_date_time|date:"Y-m-d" < today|date:"Y-m-d" %}
                         <span class="badge bg-red-lt">Overdue</span>
+                      {% elif candidate.next_follow_up_date_time|date:"Y-m-d" == today|date:"Y-m-d"|add:"1" %}
+                        <span class="badge bg-blue-lt">Tomorrow</span>
                       {% else %}
                         <span class="badge bg-green-lt">Upcoming</span>
                       {% endif %}
                     </div>
                     <div>
-                      {{ candidate.next_follow_up_date|date:"M d, Y" }}
+                      {{ candidate.next_follow_up_date_time|date:"M d, Y H:i" }}
                     </div>
                   </div>
                 </td>

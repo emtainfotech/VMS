@@ -220,9 +220,9 @@
                             </p>
                             <p class="mb-2">
                                 <strong>Next Follow-Up:</strong><br>
-                                {% if candidate.next_follow_up_date %}
+                                {% if candidate.next_follow_up_date_time %}
                                 <span class="badge bg-info text-dark">
-                                    {{ candidate.next_follow_up_date }}
+                                    {{ candidate.next_follow_up_date_time|date:"M d, Y H:i" }}
                                 </span>
                                 {% else %}
                                 Not scheduled

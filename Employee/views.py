@@ -1032,7 +1032,7 @@ def employee_candidate_profile(request, id):
                 'current_salary', 'expected_salary', 'submit_by',
                 # Calling Remark
                 'call_connection', 'calling_remark', 'lead_generate',
-                'send_for_interview', 'next_follow_up_date',
+                'send_for_interview', 'next_follow_up_date_time',
                 # Selection Record
                 'selection_status', 'company_name', 'offered_salary',
                 'selection_date', 'candidate_joining_date', 'emta_commission',
@@ -1108,7 +1108,7 @@ def employee_candidate_profile(request, id):
             candidate.calling_remark = request.POST.get('calling_remark')
             candidate.lead_generate = request.POST.get('lead_generate')
             candidate.send_for_interview = request.POST.get('send_for_interview')
-            candidate.next_follow_up_date = request.POST.get('next_follow_up_date') or None
+            candidate.next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
 
             # Selection Record
             candidate.selection_status = request.POST.get('selection_status')
@@ -2045,6 +2045,7 @@ def employee_vendor_candidate_list(request, id):
     else:
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
+
 @login_required
 def employee_evms_candidate_profile(request, id):
     if request.user.is_authenticated:
@@ -2091,7 +2092,7 @@ def employee_evms_candidate_profile(request, id):
                 candidate.calling_remark = request.POST.get('calling_remark')
                 candidate.lead_generate = request.POST.get('lead_generate')
                 candidate.send_for_interview = request.POST.get('send_for_interview')
-                candidate.next_follow_up_date = request.POST.get('next_follow_up_date') or None
+                candidate.next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
                 candidate.submit_by = request.POST.get('submit_by')
 
                 candidate.selection_status = request.POST.get('selection_status')
@@ -2344,14 +2345,14 @@ def evms_vendor_candidate_profile(request,id) :
                 calling_remark = request.POST.get('calling_remark')
                 lead_generate = request.POST.get('lead_generate')
                 send_for_interview = request.POST.get('send_for_interview')
-                next_follow_up_date = request.POST.get('next_follow_up_date')
+                next_follow_up_date_time = request.POST.get('next_follow_up_date_time')
                 submit_by = request.POST.get('submit_by')
 
                 candidate.call_connection = call_connection
                 candidate.calling_remark = calling_remark
                 candidate.lead_generate = lead_generate
                 candidate.send_for_interview = send_for_interview
-                candidate.next_follow_up_date = next_follow_up_date
+                candidate.next_follow_up_date_time = next_follow_up_date_time
                 candidate.submit_by = submit_by
                 candidate.save()
                 
@@ -2580,6 +2581,32 @@ def employee_performance_dashboard(request):
         candidate__employee_name=logged_in_employee,
         interview_date=today
     )
+    
+    today_follow_up = timezone.now().date()
+    date_range_start = today_follow_up - timedelta(days=2)  # 25th if today_follow_up is 27th
+    date_range_end = today_follow_up + timedelta(days=3)    # 30th if today is 27th
+    
+    # Get candidates from both databases
+    follow_up_candidates_reg = Candidate_registration.objects.filter(
+        employee_name=logged_in_employee,
+        next_follow_up_date_time__isnull=False,
+        next_follow_up_date_time__gte=date_range_start,
+        next_follow_up_date_time__lte=date_range_end
+    ).order_by('next_follow_up_date_time')
+    
+    follow_up_candidates_can = Candidate.objects.filter(
+        employee_name=logged_in_employee,
+        next_follow_up_date_time__isnull=False,
+        next_follow_up_date_time__gte=date_range_start,
+        next_follow_up_date_time__lte=date_range_end
+    ).order_by('next_follow_up_date_time')
+    
+    # Combine both querysets
+        # Combine both querysets and sort by register_time (descending)
+    follow_up_candidates = list(chain(follow_up_candidates_reg, follow_up_candidates_can))
+    follow_up_candidates.sort(key=lambda x: x.next_follow_up_date_time if x.next_follow_up_date_time else datetime.min.date(), reverse=False)
+    
+
 
     # Define date ranges
     if period == 'today':
@@ -2744,6 +2771,7 @@ def employee_performance_dashboard(request):
         'period': period,
         'today': today,
         'interview_detail': interview_detail,
+        'follow_up_candidates': follow_up_candidates,
     })
 
 
@@ -3220,22 +3248,22 @@ def employee_follow_up_candidate(request):
         # Get candidates from both databases
         candidates_reg = Candidate_registration.objects.filter(
             employee_name=logged_in_employee,
-            next_follow_up_date__isnull=False,
-            next_follow_up_date__gte=date_range_start,
-            next_follow_up_date__lte=date_range_end
-        ).order_by('next_follow_up_date')
+            next_follow_up_date_time__isnull=False,
+            next_follow_up_date_time__gte=date_range_start,
+            next_follow_up_date_time__lte=date_range_end
+        ).order_by('next_follow_up_date_time')
         
         candidates_can = Candidate.objects.filter(
             employee_name=logged_in_employee,
-            next_follow_up_date__isnull=False,
-            next_follow_up_date__gte=date_range_start,
-            next_follow_up_date__lte=date_range_end
-        ).order_by('next_follow_up_date')
+            next_follow_up_date_time__isnull=False,
+            next_follow_up_date_time__gte=date_range_start,
+            next_follow_up_date_time__lte=date_range_end
+        ).order_by('next_follow_up_date_time')
         
         # Combine both querysets
          # Combine both querysets and sort by register_time (descending)
         candidates = list(chain(candidates_reg, candidates_can))
-        candidates.sort(key=lambda x: x.next_follow_up_date if x.next_follow_up_date else datetime.min.date(), reverse=False)
+        candidates.sort(key=lambda x: x.next_follow_up_date_time if x.next_follow_up_date_time else datetime.min.date(), reverse=False)
         
         context = {
             'candidates': candidates,

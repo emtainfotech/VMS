@@ -100,7 +100,7 @@ class Candidate(models.Model):
     calling_remark = models.CharField(max_length=255, blank=True, null=True)
     lead_generate = models.CharField(max_length=255, blank=True, null=True)
     send_for_interview = models.CharField(max_length=255, blank=True, null=True)
-    next_follow_up_date = models.DateField(blank=True, null=True)
+    next_follow_up_date_time = models.DateTimeField(blank=True, null=True)
     candidate_photo = models.FileField(upload_to='candidate-photo/', blank=True, null=True)
     candidate_resume = models.FileField(upload_to='candidate-resume/', blank=True, null=True)
     remark = models.CharField(max_length=255,blank=True, null=True)
