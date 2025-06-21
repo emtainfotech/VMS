@@ -81,7 +81,31 @@
     .timeline-content {
       padding-left: 20px;
     }
-</style>
+    .fixed-candidate-info {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 1030;
+        background-color: #ffffff;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border: 1px solid #e0e0e0;
+        width: 280px;
+        transition: top 0.3s ease-in-out;
+    }
+    .fixed-candidate-info h5 {
+        font-weight: 600;
+        color: #333;
+    }
+  </style>
+
+<div class="fixed-candidate-info">
+    <h5 class="mb-1">{{ candidate.candidate_name }}</h5>
+    <p class="mb-0 text-muted small">
+        <i class="bi bi-telephone-fill me-2"></i>{{ candidate.candidate_mobile_number }}
+    </p>
+</div>
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center py-3">
