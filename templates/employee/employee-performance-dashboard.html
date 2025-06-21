@@ -653,7 +653,6 @@
     background: transparent;
   }
 </style>
-<!-- Notification Container -->
 <div class="notification-container" id="notificationContainer"></div>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -663,6 +662,18 @@
     let notificationQueue = [];
     let isProcessingQueue = false;
     
+    // Load snoozed notifications from localStorage
+    let snoozedNotifications = JSON.parse(localStorage.getItem('snoozedNotifications')) || {};
+    
+    // Clean up expired snoozes on load
+    const now = Date.now();
+    for (const id in snoozedNotifications) {
+      if (snoozedNotifications[id] < now) {
+        delete snoozedNotifications[id];
+      }
+    }
+    localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
+
     // Audio elements
     const followUpSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
     const interviewSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
@@ -717,6 +728,7 @@
             </div>
           </div>
           <div class="notification-footer">
+            <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'followup')">Snooze (5 min)</button>
             <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">Close</button>
             <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'followup'); removeNotification('${notificationId}', '${data.id}', 'followup')">View Details</a>
           </div>
@@ -736,6 +748,7 @@
             </div>
           </div>
           <div class="notification-footer">
+            <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'interview')">Snooze (5 min)</button>
             <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">Close</button>
             <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'interview'); removeNotification('${notificationId}', '${data.id}', 'interview')">View Details</a>
           </div>
@@ -746,6 +759,11 @@
     }
 
     function showNotification(type, data) {
+      // Check if this notification is currently snoozed
+      if (snoozedNotifications[data.id] && snoozedNotifications[data.id] > Date.now()) {
+        return;
+      }
+      
       const notification = createNotificationCard(type, data);
       if (!notification) return;
       
@@ -798,6 +816,24 @@
       }
     };
 
+    window.snoozeNotification = function(notificationId, id, type) {
+      // Stop the sound immediately
+      window.stopNotificationSound(type);
+      
+      // Remove the current notification
+      window.removeNotification(notificationId, id, type);
+      
+      // Set snooze time (5 minutes from now)
+      snoozedNotifications[id] = Date.now() + (5 * 60 * 1000);
+      localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
+      
+      // Clear the snooze after 5 minutes
+      setTimeout(() => {
+        delete snoozedNotifications[id];
+        localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
+      }, 5 * 60 * 1000);
+    };
+
     window.stopNotificationAlarm = function(id, type) {
       if (type === 'followup' && followUpAlarmIntervals[id]) {
         clearInterval(followUpAlarmIntervals[id]);
@@ -832,7 +868,7 @@
           const timeUntilFollowUp = followUpDateTime - currentTime;
           
           if (timeUntilFollowUp > 0 && timeUntilFollowUp <= 30) {
-            if (!followUpAlarmIntervals[followUpId]) {
+            if (!followUpAlarmIntervals[followUpId] && !(snoozedNotifications[followUpId] && snoozedNotifications[followUpId] > Date.now())) {
               const data = {
                 id: followUpId,
                 candidateName: row.cells[0].textContent,
@@ -864,7 +900,7 @@
 
         if (interviewDate === currentDate) {
           if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
-            if (!interviewAlarmIntervals[interviewId]) {
+            if (!interviewAlarmIntervals[interviewId] && !(snoozedNotifications[interviewId] && snoozedNotifications[interviewId] > Date.now())) {
               const data = {
                 id: interviewId,
                 candidateName: row.cells[0].textContent,

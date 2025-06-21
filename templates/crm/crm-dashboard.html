@@ -894,245 +894,282 @@
     }
   </style>
   <!-- Notification Container -->
-  <div class="notification-container" id="notificationContainer"></div>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Notification system setup
-      const notificationContainer = document.getElementById('notificationContainer');
-      let activeNotifications = new Set();
-      let notificationQueue = [];
-      let isProcessingQueue = false;
+<div class="notification-container" id="notificationContainer"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Notification system setup
+    const notificationContainer = document.getElementById('notificationContainer');
+    let activeNotifications = new Set();
+    let notificationQueue = [];
+    let isProcessingQueue = false;
+    
+    // Load snoozed notifications from localStorage
+    let snoozedNotifications = JSON.parse(localStorage.getItem('snoozedNotifications')) || {};
+    
+    // Clean up expired snoozes on load
+    const now = Date.now();
+    for (const id in snoozedNotifications) {
+      if (snoozedNotifications[id] < now) {
+        delete snoozedNotifications[id];
+      }
+    }
+    localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
+
+    // Audio elements
+    const followUpSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    const interviewSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    followUpSound.volume = 0.5;
+    interviewSound.volume = 0.5;
+
+    // ===== FOLLOW UP NOTIFICATIONS =====
+    const followUpRows = document.querySelectorAll('.followup-row');
+    let followUpAlarmIntervals = {};
+
+    // ===== INTERVIEW NOTIFICATIONS =====
+    const interviewRows = document.querySelectorAll('.interview-row');
+    let interviewAlarmIntervals = {};
+
+    // ===== COMMON NOTIFICATION FUNCTIONS =====
+    function isValidNotification(data) {
+      // Make sure required fields exist and have values
+      const requiredFields = ['id', 'candidateName', 'time'];
+      return requiredFields.every(field => 
+        data[field] !== undefined && 
+        data[field] !== null && 
+        data[field].toString().trim() !== ''
+      );
+    }
+
+    function createNotificationCard(type, data) {
+      if (!isValidNotification(data)) {
+        console.log('Invalid notification data:', data);
+        return null;
+      }
       
-      // Audio elements
-      const followUpSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-      const interviewSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-      followUpSound.volume = 0.5;
-      interviewSound.volume = 0.5;
-  
-      // ===== FOLLOW UP NOTIFICATIONS =====
-      const followUpRows = document.querySelectorAll('.followup-row');
-      let followUpAlarmIntervals = {};
-  
-      // ===== INTERVIEW NOTIFICATIONS =====
-      const interviewRows = document.querySelectorAll('.interview-row');
-      let interviewAlarmIntervals = {};
-  
-      // ===== COMMON NOTIFICATION FUNCTIONS =====
-      function isValidNotification(data) {
-        // Make sure required fields exist and have values
-        const requiredFields = ['id', 'candidateName', 'time'];
-        return requiredFields.every(field => 
-          data[field] !== undefined && 
-          data[field] !== null && 
-          data[field].toString().trim() !== ''
-        );
+      const notificationId = 'notification-' + Date.now() + '-' + data.id;
+      const headerClass = type === 'followup' ? 'followup-header' : 'interview-header';
+      const btnClass = type === 'followup' ? 'primary' : 'warning';
+      
+      const card = document.createElement('div');
+      card.className = 'notification-card';
+      card.id = notificationId;
+      
+      if (type === 'followup') {
+        card.innerHTML = `
+          <div class="notification-header ${headerClass}">
+            <h5 class="notification-title">⏰ Follow Up Reminder</h5>
+            <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">×</button>
+          </div>
+          <div class="notification-body">
+            <p>It's time for your follow up with <strong>${data.candidateName}</strong></p>
+            <div class="notification-details">
+              <div><span class="detail-label">Unique Code:</span> <span class="detail-value">${data.uniqueCode || '-'}</span></div>
+              <div><span class="detail-label">Mobile:</span> <span class="detail-value">${data.mobile || '-'}</span></div>
+              <div><span class="detail-label">Follow Up Time:</span> <span class="detail-value">${data.time}</span></div>
+            </div>
+          </div>
+          <div class="notification-footer">
+            <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'followup')">Snooze (5 min)</button>
+            <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">Close</button>
+            <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'followup'); removeNotification('${notificationId}', '${data.id}', 'followup')">View Details</a>
+          </div>
+        `;
+      } else { // Interview
+        card.innerHTML = `
+          <div class="notification-header ${headerClass}">
+            <h5 class="notification-title">🎤 Interview Alert</h5>
+            <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">×</button>
+          </div>
+          <div class="notification-body">
+            <p>Interview with <strong>${data.candidateName}</strong> is scheduled in 15 minutes!</p>
+            <div class="notification-details">
+              <div><span class="detail-label">Time:</span> <span class="detail-value">${data.time}</span></div>
+              <div><span class="detail-label">Location:</span> <span class="detail-value">${data.location || 'Not specified'}</span></div>
+              ${data.position ? `<div><span class="detail-label">Position:</span> <span class="detail-value">${data.position}</span></div>` : ''}
+            </div>
+          </div>
+          <div class="notification-footer">
+            <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'interview')">Snooze (5 min)</button>
+            <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">Close</button>
+            <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'interview'); removeNotification('${notificationId}', '${data.id}', 'interview')">View Details</a>
+          </div>
+        `;
       }
-  
-      function createNotificationCard(type, data) {
-        if (!isValidNotification(data)) {
-          console.log('Invalid notification data:', data);
-          return null;
-        }
-        
-        const notificationId = 'notification-' + Date.now() + '-' + data.id;
-        const headerClass = type === 'followup' ? 'followup-header' : 'interview-header';
-        const btnClass = type === 'followup' ? 'primary' : 'warning';
-        
-        const card = document.createElement('div');
-        card.className = 'notification-card';
-        card.id = notificationId;
-        
-        if (type === 'followup') {
-          card.innerHTML = `
-            <div class="notification-header ${headerClass}">
-              <h5 class="notification-title">⏰ Follow Up Reminder</h5>
-              <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">×</button>
-            </div>
-            <div class="notification-body">
-              <p>It's time for your follow up with <strong>${data.candidateName}</strong></p>
-              <div class="notification-details">
-                <div><span class="detail-label">Unique Code:</span> <span class="detail-value">${data.uniqueCode || '-'}</span></div>
-                <div><span class="detail-label">Mobile:</span> <span class="detail-value">${data.mobile || '-'}</span></div>
-                <div><span class="detail-label">Follow Up Time:</span> <span class="detail-value">${data.time}</span></div>
-              </div>
-            </div>
-            <div class="notification-footer">
-              <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">Close</button>
-              <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'followup'); removeNotification('${notificationId}', '${data.id}', 'followup')">View Details</a>
-            </div>
-          `;
-        } else { // Interview
-          card.innerHTML = `
-            <div class="notification-header ${headerClass}">
-              <h5 class="notification-title">🎤 Interview Alert</h5>
-              <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">×</button>
-            </div>
-            <div class="notification-body">
-              <p>Interview with <strong>${data.candidateName}</strong> is scheduled in 15 minutes!</p>
-              <div class="notification-details">
-                <div><span class="detail-label">Time:</span> <span class="detail-value">${data.time}</span></div>
-                <div><span class="detail-label">Location:</span> <span class="detail-value">${data.location || 'Not specified'}</span></div>
-                ${data.position ? `<div><span class="detail-label">Position:</span> <span class="detail-value">${data.position}</span></div>` : ''}
-              </div>
-            </div>
-            <div class="notification-footer">
-              <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">Close</button>
-              <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'interview'); removeNotification('${notificationId}', '${data.id}', 'interview')">View Details</a>
-            </div>
-          `;
-        }
-        
-        return { card, notificationId, id: data.id, type };
+      
+      return { card, notificationId, id: data.id, type };
+    }
+
+    function showNotification(type, data) {
+      // Check if this notification is currently snoozed
+      if (snoozedNotifications[data.id] && snoozedNotifications[data.id] > Date.now()) {
+        return;
       }
-  
-      function showNotification(type, data) {
-        const notification = createNotificationCard(type, data);
-        if (!notification) return;
-        
-        const { card, notificationId, id } = notification;
-        notificationContainer.prepend(card);
-        activeNotifications.add(notificationId);
-        
-        // Play appropriate sound
-        const sound = type === 'followup' ? followUpSound : interviewSound;
-        sound.currentTime = 0;
-        sound.play().catch(error => console.log('Error playing sound:', error));
-        
-        // Auto-remove after timeout
-        const timeout = type === 'followup' ? 60000 : 30000;
+      
+      const notification = createNotificationCard(type, data);
+      if (!notification) return;
+      
+      const { card, notificationId, id } = notification;
+      notificationContainer.prepend(card);
+      activeNotifications.add(notificationId);
+      
+      // Play appropriate sound
+      const sound = type === 'followup' ? followUpSound : interviewSound;
+      sound.currentTime = 0;
+      sound.play().catch(error => console.log('Error playing sound:', error));
+      
+      // Auto-remove after timeout
+      const timeout = type === 'followup' ? 60000 : 30000;
+      setTimeout(() => {
+        if (activeNotifications.has(notificationId)) {
+          removeNotification(notificationId, id, type);
+        }
+      }, timeout);
+    }
+
+    function processQueue() {
+      if (notificationQueue.length === 0 || isProcessingQueue) return;
+      
+      isProcessingQueue = true;
+      const { type, data } = notificationQueue.shift();
+      showNotification(type, data);
+      
+      setTimeout(() => {
+        isProcessingQueue = false;
+        if (notificationQueue.length > 0) {
+          processQueue();
+        }
+      }, 1000);
+    }
+
+    // ===== GLOBAL FUNCTIONS =====
+    window.removeNotification = function(notificationId, id, type) {
+      const notification = document.getElementById(notificationId);
+      if (notification) {
+        notification.style.animation = 'slideIn 0.3s ease-out reverse';
         setTimeout(() => {
-          if (activeNotifications.has(notificationId)) {
-            removeNotification(notificationId, id, type);
-          }
-        }, timeout);
+          notification.remove();
+          activeNotifications.delete(notificationId);
+        }, 250);
       }
-  
-      function processQueue() {
-        if (notificationQueue.length === 0 || isProcessingQueue) return;
-        
-        isProcessingQueue = true;
-        const { type, data } = notificationQueue.shift();
-        showNotification(type, data);
-        
-        setTimeout(() => {
-          isProcessingQueue = false;
-          if (notificationQueue.length > 0) {
-            processQueue();
-          }
-        }, 1000);
+      
+      if (type === 'interview') {
+        stopNotificationSound('interview');
       }
-  
-      // ===== GLOBAL FUNCTIONS =====
-      window.removeNotification = function(notificationId, id, type) {
-        const notification = document.getElementById(notificationId);
-        if (notification) {
-          notification.style.animation = 'slideIn 0.3s ease-out reverse';
-          setTimeout(() => {
-            notification.remove();
-            activeNotifications.delete(notificationId);
-          }, 250);
-        }
-        
-        if (type === 'interview') {
-          stopNotificationSound('interview');
-        }
-      };
-  
-      window.stopNotificationAlarm = function(id, type) {
-        if (type === 'followup' && followUpAlarmIntervals[id]) {
-          clearInterval(followUpAlarmIntervals[id]);
-          delete followUpAlarmIntervals[id];
-        } else if (type === 'interview' && interviewAlarmIntervals[id]) {
-          clearInterval(interviewAlarmIntervals[id]);
-          delete interviewAlarmIntervals[id];
-        }
-      };
-  
-      window.stopNotificationSound = function(type) {
-        const sound = type === 'followup' ? followUpSound : interviewSound;
-        sound.pause();
-        sound.currentTime = 0;
-      };
-  
-      // ===== COMBINED TIME CHECK =====
-      function checkAllNotifications() {
-        const now = new Date();
-        const currentDate = now.toISOString().split('T')[0];
-        const currentTime = now.getHours() * 60 + now.getMinutes();
-  
-        // Check follow-ups (within 30 minutes)
-        followUpRows.forEach(row => {
-          const followUpDate = row.dataset.date;
-          const followUpTime = row.querySelector('.followup-time').getAttribute('data-time');
-          const [hours, minutes] = followUpTime.split(':').map(Number);
-          const followUpDateTime = hours * 60 + minutes;
-          const followUpId = row.dataset.followupId;
-  
-          if (followUpDate === currentDate) {
-            const timeUntilFollowUp = followUpDateTime - currentTime;
-            
-            if (timeUntilFollowUp > 0 && timeUntilFollowUp <= 30) {
-              if (!followUpAlarmIntervals[followUpId]) {
-                const data = {
-                  id: followUpId,
-                  candidateName: row.cells[0].textContent,
-                  uniqueCode: row.cells[1].textContent.trim(),
-                  mobile: row.cells[2].textContent,
-                  time: row.querySelector('.followup-time').textContent,
-                  viewLink: row.querySelector('a')?.href
-                };
-                
-                if (isValidNotification(data)) {
+    };
+
+    window.snoozeNotification = function(notificationId, id, type) {
+      // Stop the sound immediately
+      window.stopNotificationSound(type);
+      
+      // Remove the current notification
+      window.removeNotification(notificationId, id, type);
+      
+      // Set snooze time (5 minutes from now)
+      snoozedNotifications[id] = Date.now() + (5 * 60 * 1000);
+      localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
+      
+      // Clear the snooze after 5 minutes
+      setTimeout(() => {
+        delete snoozedNotifications[id];
+        localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
+      }, 5 * 60 * 1000);
+    };
+
+    window.stopNotificationAlarm = function(id, type) {
+      if (type === 'followup' && followUpAlarmIntervals[id]) {
+        clearInterval(followUpAlarmIntervals[id]);
+        delete followUpAlarmIntervals[id];
+      } else if (type === 'interview' && interviewAlarmIntervals[id]) {
+        clearInterval(interviewAlarmIntervals[id]);
+        delete interviewAlarmIntervals[id];
+      }
+    };
+
+    window.stopNotificationSound = function(type) {
+      const sound = type === 'followup' ? followUpSound : interviewSound;
+      sound.pause();
+      sound.currentTime = 0;
+    };
+
+    // ===== COMBINED TIME CHECK =====
+    function checkAllNotifications() {
+      const now = new Date();
+      const currentDate = now.toISOString().split('T')[0];
+      const currentTime = now.getHours() * 60 + now.getMinutes();
+
+      // Check follow-ups (within 30 minutes)
+      followUpRows.forEach(row => {
+        const followUpDate = row.dataset.date;
+        const followUpTime = row.querySelector('.followup-time').getAttribute('data-time');
+        const [hours, minutes] = followUpTime.split(':').map(Number);
+        const followUpDateTime = hours * 60 + minutes;
+        const followUpId = row.dataset.followupId;
+
+        if (followUpDate === currentDate) {
+          const timeUntilFollowUp = followUpDateTime - currentTime;
+          
+          if (timeUntilFollowUp > 0 && timeUntilFollowUp <= 30) {
+            if (!followUpAlarmIntervals[followUpId] && !(snoozedNotifications[followUpId] && snoozedNotifications[followUpId] > Date.now())) {
+              const data = {
+                id: followUpId,
+                candidateName: row.cells[0].textContent,
+                uniqueCode: row.cells[1].textContent.trim(),
+                mobile: row.cells[2].textContent,
+                time: row.querySelector('.followup-time').textContent,
+                viewLink: row.querySelector('a')?.href
+              };
+              
+              if (isValidNotification(data)) {
+                notificationQueue.push({ type: 'followup', data });
+                followUpAlarmIntervals[followUpId] = setInterval(() => {
                   notificationQueue.push({ type: 'followup', data });
-                  followUpAlarmIntervals[followUpId] = setInterval(() => {
-                    notificationQueue.push({ type: 'followup', data });
-                  }, 5 * 60 * 1000);
-                }
+                }, 5 * 60 * 1000);
               }
             }
           }
-        });
-  
-        // Check interviews (within 15 minutes)
-        interviewRows.forEach(row => {
-          const interviewDate = row.dataset.date;
-          const interviewTimeStr = row.querySelector('.interview-time').getAttribute('data-time');
-          const [hours, minutes] = interviewTimeStr.split(':').map(Number);
-          const interviewTime = hours * 60 + minutes;
-          const timeUntilInterview = interviewTime - currentTime;
-          const interviewId = row.dataset.interviewId;
-  
-          if (interviewDate === currentDate) {
-            if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
-              if (!interviewAlarmIntervals[interviewId]) {
-                const data = {
-                  id: interviewId,
-                  candidateName: row.cells[0].textContent,
-                  time: row.querySelector('.interview-time').textContent,
-                  location: row.cells[4]?.textContent || 'Not specified',
-                  position: row.cells[3]?.textContent,
-                  viewLink: row.querySelector('a')?.href
-                };
-                
-                if (isValidNotification(data)) {
+        }
+      });
+
+      // Check interviews (within 15 minutes)
+      interviewRows.forEach(row => {
+        const interviewDate = row.dataset.date;
+        const interviewTimeStr = row.querySelector('.interview-time').getAttribute('data-time');
+        const [hours, minutes] = interviewTimeStr.split(':').map(Number);
+        const interviewTime = hours * 60 + minutes;
+        const timeUntilInterview = interviewTime - currentTime;
+        const interviewId = row.dataset.interviewId;
+
+        if (interviewDate === currentDate) {
+          if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
+            if (!interviewAlarmIntervals[interviewId] && !(snoozedNotifications[interviewId] && snoozedNotifications[interviewId] > Date.now())) {
+              const data = {
+                id: interviewId,
+                candidateName: row.cells[0].textContent,
+                time: row.querySelector('.interview-time').textContent,
+                location: row.cells[4]?.textContent || 'Not specified',
+                position: row.cells[3]?.textContent,
+                viewLink: row.querySelector('a')?.href
+              };
+              
+              if (isValidNotification(data)) {
+                notificationQueue.push({ type: 'interview', data });
+                interviewAlarmIntervals[interviewId] = setInterval(() => {
                   notificationQueue.push({ type: 'interview', data });
-                  interviewAlarmIntervals[interviewId] = setInterval(() => {
-                    notificationQueue.push({ type: 'interview', data });
-                  }, 5 * 60 * 1000);
-                }
+                }, 5 * 60 * 1000);
               }
             }
           }
-        });
-  
-        // Process any queued notifications
-        processQueue();
-      }
-  
-      // ===== INITIALIZE CHECKS =====
-      setInterval(checkAllNotifications, 60 * 1000);
-      checkAllNotifications();
-    });
-  </script>
+        }
+      });
+
+      // Process any queued notifications
+      processQueue();
+    }
+
+    // ===== INITIALIZE CHECKS =====
+    setInterval(checkAllNotifications, 60 * 1000);
+    checkAllNotifications();
+  });
+</script>
   
 {% endblock %}
