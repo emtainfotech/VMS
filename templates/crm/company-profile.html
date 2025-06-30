@@ -176,8 +176,10 @@
   <div class="d-flex justify-content-between py-3">
     <h4>Company Details</h4>
     <div>
-      <a href="{% url 'admin_company_communication_list' company.id %}" class="btn btn-sm btn-outline-primary">Communication Record</a>
       <a href="{% url 'admin_company_contacts_list' company.id %}" class="btn btn-sm btn-outline-primary">Employee Details</a>
+      <a href="{% url 'admin_company_communication_list' company.id %}" class="btn btn-sm btn-outline-primary">Communication Record</a>
+      <a href="{% url 'selected_candidate_in_company' company.id %}" class="btn btn-sm btn-outline-primary">Selected Candidates</a>
+      <a href="{% url 'bulk_candidate_invoice_generate' company.id %}" class="btn btn-sm btn-outline-primary">Generate Invoices</a>
     </div>
   </div>
   
@@ -564,6 +566,25 @@
                 Please provide a company location (5-200 characters).
               </div>
             </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">State Code</label>
+              <input type="text" class="form-control" name="state_code" value="{{ company.state_code }}" 
+                     required minlength="2" maxlength="5" />
+              <div class="invalid-feedback">
+                Please provide a valid state code (2-5 characters).
+              </div>
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Company Address</label>
+              <input type="text" class="form-control" name="company_address" value="{{ company.company_address }}" 
+                     required minlength="5" maxlength="200" />
+              <div class="invalid-feedback">
+                Please provide a company address (5-200 characters).
+              </div>
+            </div>
             
             <div class="col-md-6 mb-3">
               <label class="form-label">Company Unique Code</label>
@@ -583,6 +604,25 @@
                 Please provide a valid email address.
               </div>
             </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Company Pan Number</label>
+              <input type="text" class="form-control" name="pan_number" value="{{ company.pan_number }}" 
+                     required minlength="10" maxlength="15"  title="Only numbers, +, - are allowed" />
+              <div class="invalid-feedback">
+                Please provide a valid Pan number (10-15 characters).
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Company GST Number</label>
+              <input type="text" class="form-control" name="gst_number" value="{{ company.gst_number }}" 
+                     required minlength="15" maxlength="15"  title="Only numbers, +, - are allowed" />
+              <div class="invalid-feedback">
+                Please provide a valid GST number (15 characters).
+              </div>
+            </div>
+
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

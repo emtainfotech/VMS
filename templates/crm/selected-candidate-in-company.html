@@ -7,9 +7,9 @@
     <div class="container-xl">
       <div class="row g-2 align-items-center">
         <div class="col">
-          <h2 class="page-title">Follow Up Candidates</h2>
+          <h2 class="page-title">Selected Candidates</h2>
           <div class="text-muted mt-1">
-            <span id="total-candidates">{{ candidates|length }}</span> candidates requiring follow up
+            <span id="total-candidates">{{ candidates|length }}</span> selected candidates
           </div>
         </div>
         <div class="col-auto ms-auto d-print-none">
@@ -49,13 +49,13 @@
             <div class="col-12 col-md-6 ms-md-auto">
               <div class="d-flex align-items-center justify-content-end">
                 <div class="me-3 text-nowrap">
-                  <label for="statusFilter" class="form-label">Follow Up Status:</label>
+                  <label for="companyFilter" class="form-label">Company:</label>
                 </div>
-                <select id="statusFilter" class="form-select">
-                  <option value="">All</option>
-                  <option value="today">Due Today</option>
-                  <option value="overdue">Overdue</option>
-                  <option value="upcoming">Upcoming</option>
+                <select id="companyFilter" class="form-select">
+                  <option value="">All Companies</option>
+                  {% for company in companies|dictsort:"company_name" %}
+                    <option value="{{ company.company_name }}">{{ company.company_name }}</option>
+                  {% endfor %}
                 </select>
               </div>
             </div>
@@ -63,23 +63,24 @@
         </div>
 
         <div class="table-responsive">
-          <table class="table table-vcenter table-hover table-nowrap" id="followUpTable">
+          <table class="table table-vcenter table-hover table-nowrap" id="selectedCandidatesTable">
             <thead>
               <tr>
                 <th class="w-1">#</th>
                 <th>Candidate</th>
                 <th>Contact</th>
                 <th>Employee</th>
-                <th>Registered</th>
-                <th>Follow Up Date</th>
-                <th>Status</th>
+                <th>Company</th>
+                <th>Selection Date</th>
+                <th>Joining Date</th>
+                <th>Salary</th>
                 <th class="text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for candidate in candidates %}
-               <tr data-status="{% if candidate.next_follow_up_date_time == today %}today{% elif candidate.next_follow_up_date_time < today %}overdue{% else %}upcoming{% endif %}"
-                  data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }}">
+              <tr data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }} {{ candidate.company_name|lower }}"
+                  data-company="{{ candidate.company_name }}">
                 <td>{{ forloop.counter }}</td>
                 <td>
                   <div class="d-flex align-items-center">
@@ -120,34 +121,34 @@
                     {% endif %}
                   </div>
                 </td>
-                <td class="text-muted">
-                  {{ candidate.employee_name }}
-                </td>
-                <td class="text-muted" title="{{ candidate.register_time|date:'DATETIME_FORMAT' }}">
-                  {{ candidate.register_time|date:"M d, Y" }}
+                <td>
+                  <span class="badge ">
+                    {{ candidate.employee_name|default:"-" }}
+                  </span>
                 </td>
                 <td>
-                  <div class="d-flex align-items-center">
-                    <div class="me-2">
-                      {% if candidate.next_follow_up_date_time|date:"Y-m-d" == today|date:"Y-m-d" %}
-                        <span class="badge bg-orange-lt">Today</span>
-                      {% elif candidate.next_follow_up_date_time|date:"Y-m-d" < today|date:"Y-m-d" %}
-                        <span class="badge bg-red-lt">Overdue</span>
-                      {% elif candidate.next_follow_up_date_time|date:"Y-m-d" == today|date:"Y-m-d"|add:"1" %}
-                        <span class="badge bg-blue-lt">Tomorrow</span>
-                      {% else %}
-                        <span class="badge bg-green-lt">Upcoming</span>
-                      {% endif %}
-                    </div>
-                    <div>
-                      {{ candidate.next_follow_up_date_time|date:"M d, Y H:i" }}
-                    </div>
+                  <span class="badge bg-blue-lt">
+                    {{ candidate.company_name|default:"-" }}
+                  </span>
+                </td>
+                <td>
+                  <div class="text-muted">
+                    {{ candidate.selection_date|date:"M d, Y"|default:"-" }}
                   </div>
                 </td>
                 <td>
-                  <span class="status-badge status-{{ candidate.selection_status|lower }}">
-                    {{ candidate.selection_status }}
-                  </span>
+                  <div class="text-muted">
+                    {{ candidate.candidate_joining_date|date:"M d, Y"|default:"Not joined" }}
+                  </div>
+                </td>
+                <td>
+                  <div class="font-weight-medium">
+                    {% if candidate.offered_salary %}
+                    ₹{{ candidate.offered_salary }}
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                  </div>
                 </td>
                 <td class="text-center">
                   <div class="btn-list justify-content-center">
@@ -156,12 +157,6 @@
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
                         <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
-                      </svg>
-                    </a>
-                    <a href="tel:{{ candidate.candidate_mobile_number }}" class="btn btn-sm btn-icon" title="Call Candidate" data-bs-toggle="tooltip">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2" />
                       </svg>
                     </a>
                     {% if candidate.candidate_resume %}
@@ -173,6 +168,14 @@
                         <path d="M9 9l1 0"></path>
                         <path d="M9 13l6 0"></path>
                         <path d="M9 17l6 0"></path>
+                      </svg>
+                    </a>
+                    <a href="{{ candidate.candidate_resume.url }}" download class="btn btn-sm btn-icon" title="Download Resume" data-bs-toggle="tooltip">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+                        <path d="M7 11l5 5l5 -5"></path>
+                        <path d="M12 4l0 12"></path>
                       </svg>
                     </a>
                     {% endif %}
@@ -218,46 +221,21 @@
 </div>
 
 <style>
-  .status-badge {
-    display: inline-block;
+  .avatar-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f1f5f9;
+  }
+  
+  .badge.bg-blue-lt {
+    background-color: rgba(65, 138, 221, 0.1);
+    color: #418add;
     padding: 0.25rem 0.5rem;
-    border-radius: 50rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    line-height: 1;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: baseline;
-  }
-  
-  .status-pending {
-    background-color: rgba(253, 126, 20, 0.1);
-    color: #fd7e14;
-  }
-  
-  .status-selected {
-    background-color: rgba(32, 201, 151, 0.1);
-    color: #20c997;
-  }
-  
-  .status-rejected {
-    background-color: rgba(250, 82, 82, 0.1);
-    color: #fa5252;
-  }
-  
-  .badge.bg-orange-lt {
-    background-color: rgba(253, 126, 20, 0.1);
-    color: #fd7e14;
-  }
-  
-  .badge.bg-red-lt {
-    background-color: rgba(250, 82, 82, 0.1);
-    color: #fa5252;
-  }
-  
-  .badge.bg-green-lt {
-    background-color: rgba(32, 201, 151, 0.1);
-    color: #20c997;
   }
   
   @media (max-width: 768px) {
@@ -281,16 +259,16 @@
   
     // Search and filter functionality
     const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
-    const followUpTable = document.getElementById('followUpTable');
-    const rows = followUpTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    const companyFilter = document.getElementById('companyFilter');
+    const selectedCandidatesTable = document.getElementById('selectedCandidatesTable');
+    const rows = selectedCandidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
     const totalCountEl = document.getElementById('totalCount');
     const showingFromEl = document.getElementById('showingFrom');
     const showingToEl = document.getElementById('showingTo');
     
     function filterCandidates() {
       const searchTerm = searchInput.value.toLowerCase();
-      const statusFilterValue = statusFilter.value;
+      const companyFilterValue = companyFilter.value.toLowerCase();
       let visibleCount = 0;
       
       for (let i = 0; i < rows.length; i++) {
@@ -301,21 +279,17 @@
         const cells = row.getElementsByTagName('td');
         for (let j = 0; j < cells.length - 1; j++) { // Skip last column (actions)
           rowTextContent += ' ' + cells[j].textContent.toLowerCase();
-          
-          // Include title attributes if they exist
-          if (cells[j].hasAttribute('title')) {
-            rowTextContent += ' ' + cells[j].getAttribute('title').toLowerCase();
-          }
         }
         
         // Also include data attributes if they exist
         const searchContent = row.getAttribute('data-search') || '';
-        const rowStatus = row.getAttribute('data-status') || '';
+        const rowCompany = row.getAttribute('data-company') || '';
         
         const matchesSearch = rowTextContent.includes(searchTerm) || searchContent.includes(searchTerm);
-        const matchesStatus = statusFilterValue === '' || rowStatus === statusFilterValue;
+        const matchesCompany = companyFilterValue === '' || 
+                            rowCompany.toLowerCase().includes(companyFilterValue);
         
-        if (matchesSearch && matchesStatus) {
+        if (matchesSearch && matchesCompany) {
           row.style.display = '';
           visibleCount++;
         } else {
@@ -343,18 +317,15 @@
     
     // Event listeners
     searchInput.addEventListener('input', filterCandidates);
-    statusFilter.addEventListener('change', filterCandidates);
+    companyFilter.addEventListener('change', filterCandidates);
     
-    {% comment %} // Make search case-insensitive and trim whitespace
-    searchInput.addEventListener('keyup', function(e) {
-      this.value = this.value.toLowerCase().trim();
-    }); {% endcomment %}
+    
     
     // Initial filter
     filterCandidates();
     
     // Make table rows clickable (except when clicking on buttons)
-    document.querySelectorAll('#followUpTable tbody tr').forEach(row => {
+    document.querySelectorAll('#selectedCandidatesTable tbody tr').forEach(row => {
       row.addEventListener('click', (e) => {
         // Check if the click was on a button, link, or input
         if (e.target.tagName === 'A' || e.target.closest('a') || 

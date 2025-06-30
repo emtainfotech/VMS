@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Invoice - EMTA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            background: #fff;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 20px auto;
+            border: 2px solid #000;
+            background: white;
+            position: relative;
+        }
+
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            opacity: 0.1;
+            font-size: 120px;
+            font-weight: bold;
+            color: #4169E1;
+            letter-spacing: 10px;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px;
+            background: #f8f8f8;
+            border-bottom: 2px solid #000;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .company-details {
+            padding: 15px;
+            border-bottom: 2px solid #000;
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        .company-details p {
+            margin: 2px 0;
+        }
+
+        .invoice-info {
+            display: flex;
+            border-bottom: 2px solid #000;
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        .invoice-info div {
+            flex: 1;
+            padding: 10px;
+            border-right: 2px solid #000;
+        }
+
+        .invoice-info div:last-child {
+            border-right: none;
+        }
+
+        .billing-section {
+            display: flex;
+            border-bottom: 2px solid #000;
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        .billing-details {
+            flex: 1;
+            padding: 10px;
+            border-right: 2px solid #000;
+        }
+
+        .billing-details:last-child {
+            border-right: none;
+        }
+
+        .billing-details h3 {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-decoration: underline;
+        }
+
+        .billing-details p {
+            margin: 2px 0;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 2px solid #000;
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        .items-table th,
+        .items-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .items-table th {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .items-table td:nth-child(3),
+        .items-table td:nth-child(6) {
+            text-align: left;
+            padding-left: 5px;
+        }
+
+        .totals-section {
+            display: flex;
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        .totals-left {
+            flex: 2;
+            padding: 15px;
+            border-right: 2px solid #000;
+        }
+
+        .totals-right {
+            flex: 1;
+            padding: 0;
+        }
+
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            font-size: 11px;
+        }
+
+        .totals-table .label {
+            background: #f0f0f0;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .totals-table .amount {
+            text-align: right;
+        }
+
+        .bank-details {
+            padding: 15px;
+            border-top: 2px solid #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        .bank-info h4 {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .signature-section {
+            text-align: right;
+        }
+
+        .signature-box {
+            border: 1px solid #000;
+            width: 150px;
+            height: 60px;
+            display: inline-block;
+            text-align: center;
+            vertical-align: middle;
+            line-height: 60px;
+            font-size: 10px;
+        }
+
+        .amount-words {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        @media print {
+            .invoice-container {
+                border: 2px solid #000;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- EMTA Watermark -->
+        <div class="watermark">EMTA</div>
+        
+        <!-- Header -->
+        <div class="header">
+            <h1>Tax Invoice</h1>
+        </div>
+
+        <!-- Company Details -->
+        <div class="company-details">
+            <p><strong>GST ID:</strong> 23BZGPR2311R1Z3</p>
+            <p><strong>Name:</strong> Elite Manpower and Training Academy - EMTA</p>
+            <p><strong>Address:</strong> 155 (A), First Floor, Mangal City Mall, Vijayanagar, Indore- 452010</p>
+            <p><strong>State:</strong> Madhya Pradesh</p>
+            <p><strong>Contact No:</strong> +91-7999632217, 9630247772</p>
+            <p><strong>PAN Card No.:</strong> BZGPR2311R</p>
+            <p><strong>Email:</strong> HR@emta.co.in/ MD@emta.co.in / hr01@emta.co.in</p>
+        </div>
+
+        <!-- Invoice Info -->
+        <div class="invoice-info">
+            <div>
+                <strong>Serial No. of Invoice:</strong> June-25-0027
+            </div>
+            <div>
+                <strong>Date of Invoice:</strong> 14/06/2025
+            </div>
+        </div>
+
+        <!-- Billing Section -->
+        <div class="billing-section">
+            <div class="billing-details">
+                <h3>Details of Receiver (Billed to)</h3>
+                <p><strong>Name:</strong> Unified Collaboration Services LLP</p>
+                <p><strong>Address:</strong> International Infotech Park, Tower 6, L206 & L208, Above Vashi Railway Station Vashi, Navi Mumbai 400 703</p>
+                <p><strong>State:</strong> Maharashtra</p>
+                <p><strong>PAN:</strong> AAEFU0278J</p>
+                <p><strong>State Code:</strong> 27</p>
+                <p><strong>GST ID:</strong> 27AAEFU0278J1ZX</p>
+            </div>
+            <div class="billing-details">
+                <h3>Details of Consignee (Shipped to)</h3>
+                <p><strong>Name:</strong> Unified Collaboration Services LLP</p>
+                <p><strong>Address:</strong> International Infotech Park, Tower 6, L206 & L208, Above Vashi Railway Station Vashi, Navi Mumbai 400 703</p>
+                <p><strong>State:</strong> Maharashtra</p>
+                <p><strong>PAN:</strong> AAEFU0278J</p>
+                <p><strong>State Code:</strong> 27</p>
+                <p><strong>GST ID:</strong> 27AAEFU0278J1ZX</p>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>S.No.</th>
+                    <th>Emp. Code</th>
+                    <th>Emp. Name</th>
+                    <th>Designation</th>
+                    <th>DOJ</th>
+                    <th>Process</th>
+                    <th>HSN/SAC</th>
+                    <th>Rate as per Contract</th>
+                    <th>Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>NA</td>
+                    <td>Mr.Ayush Sinha</td>
+                    <td>Career Counsellor</td>
+                    <td>06-05-2025</td>
+                    <td>VC Now – IIM Indore Process Voice</td>
+                    <td></td>
+                    <td>10,000</td>
+                    <td>10,000</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Totals Section -->
+        <div class="totals-section">
+            <div class="totals-left">
+                <div class="amount-words">
+                    <strong>Invoice Amount in words:</strong> Eleven Thousand Eight hundred rupees only.
+                </div>
+            </div>
+            <div class="totals-right">
+                <table class="totals-table">
+                    <tr>
+                        <td class="label">Total Invoice Value</td>
+                        <td class="amount">10,000</td>
+                    </tr>
+                    <tr>
+                        <td class="label">CGST @ 9%</td>
+                        <td class="amount">0</td>
+                    </tr>
+                    <tr>
+                        <td class="label">SGST @ 9%</td>
+                        <td class="amount">0</td>
+                    </tr>
+                    <tr>
+                        <td class="label">IGST @ 18%</td>
+                        <td class="amount">1,800</td>
+                    </tr>
+                    <tr>
+                        <td class="label"><strong>Grand Total</strong></td>
+                        <td class="amount"><strong>11,800</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bank Details -->
+        <div class="bank-details">
+            <div class="bank-info">
+                <h4>Bank Transfer Details</h4>
+                <p><strong>For:</strong></p>
+                <p><strong>Favoring Name:</strong> Elite Manpower and Training Academy - EMTA</p>
+                <p><strong>Bank Name:</strong> HDFC Bank Ltd.</p>
+                <p><strong>Bank Account No.:</strong> 50200069965721</p>
+                <p><strong>IFSC:</strong> HDFC0001772</p>
+            </div>
+            <div class="signature-section">
+                <div class="signature-box">
+                    Stamp<br>Authorized Signatory
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to print invoice
+        function printInvoice() {
+            window.print();
+        }
+
+        // Function to update invoice data (for dynamic use)
+        function updateInvoice(data) {
+            // This function can be used to dynamically populate the invoice
+            // with different data while maintaining the same design
+            console.log('Invoice updated with:', data);
+        }
+
+        // Add print button functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // You can add a print button if needed
+            const printBtn = document.createElement('button');
+            printBtn.textContent = 'Print Invoice';
+            printBtn.style.cssText = 'position: fixed; top: 10px; right: 10px; padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; z-index: 1000;';
+            printBtn.onclick = printInvoice;
+            document.body.appendChild(printBtn);
+        });
+    </script>
+</body>
+</html>

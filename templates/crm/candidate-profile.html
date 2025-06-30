@@ -239,6 +239,11 @@
                                 <span class="d-block detail-label">Preferred Location</span>
                                 <span class="detail-value">{{ candidate.preferred_location|default:"-" }}</span>
                             </div>
+
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Preferred State</span>
+                                <span class="detail-value">{{ candidate.preferred_state|default:"-" }}</span>
+                            </div>
                             
                             <div class="mb-3">
                                 <span class="d-block detail-label">Highest Qualification</span>
@@ -450,6 +455,59 @@
                     </div>
                 </div>
                 
+            </div>
+        </div>
+
+        <!-- Invoice Details Card -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center ">
+                    <h5 class="mb-0">Invoice Details</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-invoice-data">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Invoice Status</span>
+                                <span class="detail-value">
+                                    {% if candidate.invoice_status == 'Other' and candidate.other_invoice_status %}
+                                        {{ candidate.other_invoice_status }}
+                                    {% else %}
+                                        {{ candidate.invoice_status|default:"-" }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Invoice Date</span>
+                                <span class="detail-value">{{ candidate.invoice_date|date:"M d, Y"|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Invoice Amount</span>
+                                <span class="detail-value">{{ candidate.invoice_amount|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Invoice Attachment</span>
+                                <span class="detail-value">
+                                    {% if candidate.invoice_attachment %}
+                                    <a href="{{candidate.invoice_attachment.url}}" target="_blank" class="text-primary">
+                                        <i class="bi bi-file-earmark-text"></i> View Attachment
+                                    </a>
+                                    {% else %}
+                                    <span class="empty-value">No Attachment</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Invoice Remark</span>
+                                <span class="detail-value">{{ candidate.invoice_remark|default:"-" }}</span>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

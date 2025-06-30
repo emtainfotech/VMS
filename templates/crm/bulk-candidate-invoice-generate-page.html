@@ -1,0 +1,1352 @@
+{% extends "crm/base.html" %}
+
+{% block content %}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        {% comment %} body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            background: #fff;
+            padding: 20px;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto 30px;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        } {% endcomment %}
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        {% comment %} .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 12px;
+        } {% endcomment %}
+
+        {% comment %} .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        } {% endcomment %}
+
+        {% comment %} .btn {
+            padding: 8px 15px;
+            background: #4361ee;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn:hover {
+            background: #3a56d4;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        } {% endcomment %}
+
+        .table th,
+        .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-size: 11px;
+        }
+
+        .table th {
+            {% comment %} background: #f0f0f0; {% endcomment %}
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* New Invoice Design */
+        .invoice-container {
+            max-width: 800px;
+            margin: 20px auto;
+            border: 2px solid #000;
+            background: #fff;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            opacity: 0.1;
+            font-size: 120px;
+            font-weight: bold;
+            color: #4169E1;
+            letter-spacing: 10px;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px;
+            {% comment %} background: #f8f8f8; {% endcomment %}
+            border-bottom: 2px solid #000;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .company-details {
+            padding: 15px;
+            border-bottom: 2px solid #000;
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        .company-details p {
+            margin: 2px 0;
+        }
+
+        .invoice-info {
+            display: flex;
+            border-bottom: 2px solid #000;
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        .invoice-info div {
+            flex: 1;
+            padding: 10px;
+            border-right: 2px solid #000;
+        }
+
+        .invoice-info div:last-child {
+            border-right: none;
+        }
+
+        .billing-section {
+            display: flex;
+            border-bottom: 2px solid #000;
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        .billing-details {
+            flex: 1;
+            padding: 10px;
+            border-right: 2px solid #000;
+        }
+
+        .billing-details:last-child {
+            border-right: none;
+        }
+
+        .billing-details h3 {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-decoration: underline;
+        }
+
+        .billing-details p {
+            margin: 2px 0;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 2px solid #000;
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        .items-table th,
+        .items-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .items-table th {
+            {% comment %} background: #f0f0f0; {% endcomment %}
+            font-weight: bold;
+        }
+
+        .totals-section {
+            display: flex;
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        .totals-left {
+            flex: 2;
+            padding: 15px;
+            border-right: 2px solid #000;
+        }
+
+        .totals-right {
+            flex: 1;
+            padding: 0;
+        }
+
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            font-size: 11px;
+        }
+
+        .totals-table .label {
+            background: #f0f0f0;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .totals-table .amount {
+            text-align: right;
+        }
+
+        .bank-details {
+            padding: 15px;
+            border-top: 2px solid #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: relative;
+            z-index: 1;
+            background: white;
+        }
+
+        .bank-info h4 {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .signature-section {
+            text-align: right;
+        }
+
+        .signature-box {
+            border: 1px solid #000;
+            width: 150px;
+            height: 60px;
+            display: inline-block;
+            text-align: center;
+            vertical-align: middle;
+            line-height: 60px;
+            font-size: 10px;
+        }
+
+        .amount-words {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        @media print {
+            .invoice-container {
+                border: 2px solid #000;
+                margin: 0;
+            }
+
+            .form-container {
+                display: none;
+            }
+        }
+
+        /* Modern Form Styles */
+        .form-container {
+            min-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            {% comment %} background: #fff; {% endcomment %}
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .form-header h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-accordion {
+            margin-top: 20px;
+        }
+
+        .accordion-item {
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+
+        .accordion-item.active .accordion-content {
+            display: block;
+        }
+
+        .accordion-item.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-header {
+            padding: 15px 20px;
+            {% comment %} background: #f8f9fa; {% endcomment %}
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-header:hover {
+            {% comment %} background: #e9ecef; {% endcomment %}
+        }
+
+        .accordion-header h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-content {
+            padding: 20px;
+            {% comment %} background: #fff; {% endcomment %}
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-with-icon i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 15px 10px 35px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+            {% comment %} background-color: #f8f9fa; {% endcomment %}
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4361ee;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+            {% comment %} background-color: #fff; {% endcomment %}
+        }
+
+        textarea.form-control {
+            min-height: 80px;
+            resize: vertical;
+            padding-top: 10px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: middle;
+        }
+
+        .table input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .table input:focus {
+            outline: none;
+            border-color: #4361ee;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4361ee;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a56d4;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .form-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .form-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <div class="form-container ">
+        <div class="form-header">
+            <h2>📄 Invoice Generator</h2>
+            <div class="form-actions">
+                <button id="generateInvoice" class="btn-primary">
+                    <i class="fas fa-file-invoice"></i> Generate Invoice
+                </button>
+                <button id="printInvoice" class="btn-secondary hidden">
+                    <i class="fas fa-print"></i> Print Invoice
+                </button>
+            </div>
+        </div>
+
+        <div class="form-accordion">
+            <!-- Company Information -->
+            <div class="accordion-item active">
+                <div class="accordion-header">
+                    <h3><i class="fas fa-building"></i> Company Information</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="companyName">Company Name</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-signature"></i>
+                                <input type="text" id="companyName" class="form-control"
+                                    value="Elite Manpower and Training Academy - EMTA">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="companyAddress">Address</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <textarea id="companyAddress"
+                                    class="form-control">155 (A), First Floor, Mangal City Mall, Vijayanagar, Indore- 452010</textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="companyState">State</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-globe-asia"></i>
+                                <input type="text" id="companyState" class="form-control" value="Madhya Pradesh">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="companyContact">Contact No</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-phone-alt"></i>
+                                <input type="text" id="companyContact" class="form-control"
+                                    value="+91-7999632217, 9630247772">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="companyPAN">PAN Card No.</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-id-card"></i>
+                                <input type="text" id="companyPAN" class="form-control" value="BZGPR2311R">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="companyGST">GST ID</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-receipt"></i>
+                                <input type="text" id="companyGST" class="form-control" value="23BZGPR2311R1Z3">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="companyEmail">Email</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="companyEmail" class="form-control"
+                                    value="HR@emta.co.in/ MD@emta.co.in / hr01@emta.co.in">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Details -->
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <h3><i class="fas fa-file-alt"></i> Invoice Details</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="invoiceNumber">Invoice Number</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-hashtag"></i>
+                                <input type="text" id="invoiceNumber" class="form-control" value="June-25-0027">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="invoiceDate">Invoice Date</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                                <input type="date" id="invoiceDate" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Information -->
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <h3><i class="fas fa-users"></i> Client Information</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="clientName">Client Name</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user-tie"></i>
+                                <input type="text" id="clientName" class="form-control"
+                                    value="{{ company.company_name }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="clientAddress">Address</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-map-marked-alt"></i>
+                                <textarea id="clientAddress"
+                                    class="form-control">{{ company.interview_address }}</textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="clientState">State</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-map-pin"></i>
+                                <input type="text" id="clientState" class="form-control" value="{{ company.company_location }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="clientPAN">PAN</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-id-card"></i>
+                                <input type="text" id="clientPAN" class="form-control" value="{{ company.pan_number }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="clientStateCode">State Code</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-code"></i>
+                                <input type="text" id="clientStateCode" class="form-control" value="{{ company.state_code }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="clientGST">GST ID</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-barcode"></i>
+                                <input type="text" id="clientGST" class="form-control" value="{{ company.gst_number }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bank Details -->
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <h3><i class="fas fa-university"></i> Bank Details</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="bankName">Bank Name</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-landmark"></i>
+                                <input type="text" id="bankName" class="form-control" value="HDFC Bank Ltd.">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="accountName">Account Name</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user-circle"></i>
+                                <input type="text" id="accountName" class="form-control"
+                                    value="Elite Manpower and Training Academy - EMTA">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="accountNumber">Account Number</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-credit-card"></i>
+                                <input type="text" id="accountNumber" class="form-control" value="50200069965721">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ifscCode">IFSC Code</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-qrcode"></i>
+                                <input type="text" id="ifscCode" class="form-control" value="HDFC0001772">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Items -->
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <h3><i class="fas fa-list-ol"></i> Invoice Items</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="table-responsive">
+                        <table id="itemsTable" class="table">
+                            <thead>
+                                <tr>
+                                    <th>S.No.</th>
+                                    <th>Emp. Code</th>
+                                    <th>Emp. Name</th>
+                                    <th>Designation</th>
+                                    <th>DOJ</th>
+                                    <th>Process</th>
+                                    <th>HSN/SAC</th>
+                                    <th>Rate</th>
+                                    <th>Amount</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for candidate in candidates %}
+                                <tr>
+                                    <td>1</td>
+                                    {% if candidate.lead_source == 'EVMS' %}
+                                    <td><input type="text" value="{{ candidate.refer_code }} - {{ candidate.unique_id }}" class="form-control item-empcode"></td>
+                                    {% else %}
+                                    <td><input type="text" value="{{ candidate.unique_code }}" class="form-control item-empcode"></td>
+                                    {% endif %}
+                                    <td><input type="text" value="{{ candidate.candidate_name }}" class="form-control item-empname">
+                                    </td>
+                                    <td><input type="text" value="Career Counsellor"
+                                            class="form-control item-designation"></td>
+                                    <td><input type="text" value="{{ candidate.candidate_joining_date }}" class="form-control item-doj"></td>
+                                    <td><input type="text" value="{{ candidate.job_title }}"
+                                            class="form-control item-process"></td>
+                                    <td><input type="text" value="Voice" class="form-control item-hsn"></td>
+                                    <td><input type="number" value="{{ candidate.emta_commission }}" class="form-control item-rate"></td>
+                                    <td><input type="number" value="{{ candidate.emta_commission }}" class="form-control item-total" readonly>
+                                    </td>
+                                    <td><button type="button" class="btn-danger remove-item"><i
+                                                class="fas fa-trash-alt"></i></button></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="button" id="addItem" class="btn-success">
+                        <i class="fas fa-plus-circle"></i> Add Item
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tax Details -->
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <h3><i class="fas fa-percentage"></i> Tax Details</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="cgstRate">CGST Rate (%)</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                                <input type="number" id="cgstRate" class="form-control" value="9">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="sgstRate">SGST Rate (%)</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                                <input type="number" id="sgstRate" class="form-control" value="9">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="igstRate">IGST Rate (%)</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                                <input type="number" id="igstRate" class="form-control" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="invoicePreview" class="invoice-container hidden">
+        <!-- EMTA Watermark -->
+        <div class="watermark">EMTA</div>
+
+        <!-- Header -->
+        <div class="header">
+            <h1>Tax Invoice</h1>
+        </div>
+
+        <!-- Company Details -->
+        <div class="company-details">
+            <p><strong>GST ID:</strong> <span id="previewGST">23BZGPR2311R1Z3</span></p>
+            <p><strong>Name:</strong> <span id="previewCompanyName">Elite Manpower and Training Academy - EMTA</span>
+            </p>
+            <p><strong>Address:</strong> <span id="previewCompanyAddress">155 (A), First Floor, Mangal City Mall,
+                    Vijayanagar, Indore- 452010</span></p>
+            <p><strong>State:</strong> <span id="previewCompanyState">Madhya Pradesh</span></p>
+            <p><strong>Contact No:</strong> <span id="previewCompanyContact">+91-7999632217, 9630247772</span></p>
+            <p><strong>PAN Card No.:</strong> <span id="previewCompanyPAN">BZGPR2311R</span></p>
+            <p><strong>Email:</strong> <span id="previewCompanyEmail">HR@emta.co.in/ MD@emta.co.in /
+                    hr01@emta.co.in</span></p>
+        </div>
+
+        <!-- Invoice Info -->
+        <div class="invoice-info">
+            <div>
+                <strong>Serial No. of Invoice:</strong> <span id="previewInvoiceNumber">June-25-0027</span>
+            </div>
+            <div>
+                <strong>Date of Invoice:</strong> <span id="previewInvoiceDate">14/06/2025</span>
+            </div>
+        </div>
+
+        <!-- Billing Section -->
+        <div class="billing-section">
+            <div class="billing-details">
+                <h3>Details of Receiver (Billed to)</h3>
+                <p><strong>Name:</strong> <span id="previewClientName">Unified Collaboration Services LLP</span></p>
+                <p><strong>Address:</strong> <span id="previewClientAddress">International Infotech Park, Tower 6, L206
+                        & L208, Above Vashi Railway Station Vashi, Navi Mumbai 400 703</span></p>
+                <p><strong>State:</strong> <span id="previewClientState">Maharashtra</span></p>
+                <p><strong>PAN:</strong> <span id="previewClientPAN">AAEFU0278J</span></p>
+                <p><strong>State Code:</strong> <span id="previewClientStateCode">27</span></p>
+                <p><strong>GST ID:</strong> <span id="previewClientGST">27AAEFU0278J1ZX</span></p>
+            </div>
+            <div class="billing-details">
+                <h3>Details of Consignee (Shipped to)</h3>
+                <p><strong>Name:</strong> <span id="previewConsigneeName">Unified Collaboration Services LLP</span></p>
+                <p><strong>Address:</strong> <span id="previewConsigneeAddress">International Infotech Park, Tower 6,
+                        L206 & L208, Above Vashi Railway Station Vashi, Navi Mumbai 400 703</span></p>
+                <p><strong>State:</strong> <span id="previewConsigneeState">Maharashtra</span></p>
+                <p><strong>PAN:</strong> <span id="previewConsigneePAN">AAEFU0278J</span></p>
+                <p><strong>State Code:</strong> <span id="previewConsigneeStateCode">27</span></p>
+                <p><strong>GST ID:</strong> <span id="previewConsigneeGST">27AAEFU0278J1ZX</span></p>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>S.No.</th>
+                    <th>Emp. Code</th>
+                    <th>Emp. Name</th>
+                    <th>Designation</th>
+                    <th>DOJ</th>
+                    <th>Process</th>
+                    <th>HSN/SAC</th>
+                    <th>Rate as per Contract</th>
+                    <th>Total Amount</th>
+                </tr>
+            </thead>
+            <tbody id="previewItems">
+                <!-- Items will be added here dynamically -->
+            </tbody>
+        </table>
+
+        <!-- Totals Section -->
+        <div class="totals-section">
+            <div class="totals-left">
+                <div class="amount-words">
+                    <strong>Invoice Amount in words:</strong> <span id="previewAmountWords">Eleven Thousand Eight
+                        hundred rupees only.</span>
+                </div>
+            </div>
+            <div class="totals-right">
+                <table class="totals-table">
+                    <tr>
+                        <td class="label">Total Invoice Value</td>
+                        <td class="amount" id="previewSubtotal">10,000</td>
+                    </tr>
+                    <tr>
+                        <td class="label">CGST @ <span id="previewCgstRate">9</span>%</td>
+                        <td class="amount" id="previewCgstAmount">900</td>
+                    </tr>
+                    <tr>
+                        <td class="label">SGST @ <span id="previewSgstRate">9</span>%</td>
+                        <td class="amount" id="previewSgstAmount">900</td>
+                    </tr>
+                    <tr>
+                        <td class="label">IGST @ <span id="previewIgstRate">18</span>%</td>
+                        <td class="amount" id="previewIgstAmount">1,800</td>
+                    </tr>
+                    <tr>
+                        <td class="label"><strong>Grand Total</strong></td>
+                        <td class="amount"><strong id="previewGrandTotal">11,800</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bank Details -->
+        <div class="bank-details">
+            <div class="bank-info">
+                <h4>Bank Transfer Details</h4>
+                <p><strong>For:</strong> <span id="previewForCompany">Elite Manpower and Training Academy - EMTA</span>
+                </p>
+                <p><strong>Favoring Name:</strong> <span id="previewAccountName">Elite Manpower and Training Academy -
+                        EMTA</span></p>
+                <p><strong>Bank Name:</strong> <span id="previewBankName">HDFC Bank Ltd.</span></p>
+                <p><strong>Bank Account No.:</strong> <span id="previewAccountNumber">50200069965721</span></p>
+                <p><strong>IFSC:</strong> <span id="previewIfscCode">HDFC0001772</span></p>
+            </div>
+            <div class="signature-section">
+                <div class="signature-box">
+                    Stamp<br>Authorized Signatory
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+       document.addEventListener('DOMContentLoaded', function() {
+    // Initialize accordion functionality
+    const accordionHeaders = document.querySelectorAll('.accordion-header');
+    accordionHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            const item = this.parentElement;
+            const isActive = item.classList.contains('active');
+            
+            // Close all accordion items
+            document.querySelectorAll('.accordion-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Open clicked item if it was closed
+            if (!isActive) {
+                item.classList.add('active');
+            }
+        });
+    });
+
+    // Set today's date as default
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    document.getElementById('invoiceDate').value = formattedDate;
+    
+    // Add item row
+    document.getElementById('addItem').addEventListener('click', function() {
+        const tbody = document.querySelector('#itemsTable tbody');
+        const rows = tbody.querySelectorAll('tr');
+        const newRow = document.createElement('tr');
+        
+        newRow.innerHTML = `
+            <td>${rows.length + 1}</td>
+            <td><input type="text" value="NA" class="form-control item-empcode"></td>
+            <td><input type="text" value="" class="form-control item-empname"></td>
+            <td><input type="text" value="" class="form-control item-designation"></td>
+            <td><input type="text" value="" class="form-control item-doj"></td>
+            <td><input type="text" value="" class="form-control item-process"></td>
+            <td><input type="text" value="" class="form-control item-hsn"></td>
+            <td><input type="number" value="0" class="form-control item-rate"></td>
+            <td><input type="number" value="0" class="form-control item-total" readonly></td>
+            <td><button type="button" class="btn-danger remove-item"><i class="fas fa-trash-alt"></i></button></td>
+        `;
+        
+        tbody.appendChild(newRow);
+        
+        // Add event listeners to new row
+        addItemRowListeners(newRow);
+    });
+    
+    // Remove item row
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-item')) {
+            const row = e.target.closest('tr');
+            row.remove();
+            
+            // Update serial numbers
+            const tbody = document.querySelector('#itemsTable tbody');
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+            });
+        }
+    });
+    
+    // Calculate total when rate changes
+    function addItemRowListeners(row) {
+        const rateInput = row.querySelector('.item-rate');
+        const totalInput = row.querySelector('.item-total');
+        
+        rateInput.addEventListener('input', function() {
+            totalInput.value = this.value || 0;
+        });
+    }
+    
+    // Add listeners to initial row
+    addItemRowListeners(document.querySelector('#itemsTable tbody tr'));
+    
+    // Generate invoice
+    document.getElementById('generateInvoice').addEventListener('click', function() {
+        // Get all form values
+        const formData = {
+            companyName: document.getElementById('companyName').value,
+            companyAddress: document.getElementById('companyAddress').value,
+            companyState: document.getElementById('companyState').value,
+            companyContact: document.getElementById('companyContact').value,
+            companyPAN: document.getElementById('companyPAN').value,
+            companyGST: document.getElementById('companyGST').value,
+            companyEmail: document.getElementById('companyEmail').value,
+            invoiceNumber: document.getElementById('invoiceNumber').value,
+            invoiceDate: document.getElementById('invoiceDate').value,
+            clientName: document.getElementById('clientName').value,
+            clientAddress: document.getElementById('clientAddress').value,
+            clientState: document.getElementById('clientState').value,
+            clientPAN: document.getElementById('clientPAN').value,
+            clientStateCode: document.getElementById('clientStateCode').value,
+            clientGST: document.getElementById('clientGST').value,
+            bankName: document.getElementById('bankName').value,
+            accountName: document.getElementById('accountName').value,
+            accountNumber: document.getElementById('accountNumber').value,
+            ifscCode: document.getElementById('ifscCode').value,
+            cgstRate: parseFloat(document.getElementById('cgstRate').value) || 0,
+            sgstRate: parseFloat(document.getElementById('sgstRate').value) || 0,
+            igstRate: parseFloat(document.getElementById('igstRate').value) || 0
+        };
+
+        // Get all items data
+        const items = [];
+        let subtotal = 0;
+        document.querySelectorAll('#itemsTable tbody tr').forEach(row => {
+            const item = {
+                empCode: row.querySelector('.item-empcode').value,
+                empName: row.querySelector('.item-empname').value,
+                designation: row.querySelector('.item-designation').value,
+                doj: row.querySelector('.item-doj').value,
+                process: row.querySelector('.item-process').value,
+                hsn: row.querySelector('.item-hsn').value,
+                rate: parseFloat(row.querySelector('.item-rate').value) || 0,
+                total: parseFloat(row.querySelector('.item-total').value) || 0
+            };
+            items.push(item);
+            subtotal += item.total;
+        });
+
+        // Calculate taxes and totals
+        const cgstAmount = subtotal * (formData.cgstRate / 100);
+        const sgstAmount = subtotal * (formData.sgstRate / 100);
+        const igstAmount = subtotal * (formData.igstRate / 100);
+        const grandTotal = subtotal + cgstAmount + sgstAmount + igstAmount;
+
+        // Update preview with all data
+        updatePreview(formData, items, {
+            subtotal,
+            cgstAmount,
+            sgstAmount,
+            igstAmount,
+            grandTotal
+        });
+
+        // Show preview and print button
+        document.getElementById('invoicePreview').style.display = 'block';
+        document.getElementById('printInvoice').classList.remove('hidden');
+        
+        // Scroll to preview
+        document.getElementById('invoicePreview').scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+
+        // Show success message
+        showToast('Invoice generated successfully!', 'success');
+    });
+    
+    // Print invoice
+    document.getElementById('printInvoice').addEventListener('click', function() {
+        const originalContents = document.body.innerHTML;
+        const printContents = document.getElementById('invoicePreview').outerHTML;
+        
+        document.body.innerHTML = printContents;
+        window.print();
+        document.body.innerHTML = originalContents;
+        
+        // Re-add event listeners
+        document.getElementById('printInvoice').addEventListener('click', arguments.callee);
+    });
+    
+    // Helper functions
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+    
+    function formatNumber(num) {
+        return num.toLocaleString('en-IN', { 
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2 
+        });
+    }
+    
+    function numberToWords(num) {
+        const single = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+        const double = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+        
+        let str = '';
+        let rupees = Math.floor(num);
+        let paise = Math.round((num - rupees) * 100);
+        
+        if (rupees > 0) {
+            if (rupees >= 10000000) {
+                str += numberToWords(Math.floor(rupees / 10000000)) + ' Crore ';
+                rupees %= 10000000;
+            }
+            if (rupees >= 100000) {
+                str += numberToWords(Math.floor(rupees / 100000)) + ' Lakh ';
+                rupees %= 100000;
+            }
+            if (rupees >= 1000) {
+                str += numberToWords(Math.floor(rupees / 1000)) + ' Thousand ';
+                rupees %= 1000;
+            }
+            if (rupees >= 100) {
+                str += numberToWords(Math.floor(rupees / 100)) + ' Hundred ';
+                rupees %= 100;
+            }
+            if (rupees > 0) {
+                if (rupees < 10) {
+                    str += single[rupees] + ' ';
+                } else if (rupees < 20) {
+                    str += double[rupees - 10] + ' ';
+                } else {
+                    str += tens[Math.floor(rupees / 10)] + ' ';
+                    if (rupees % 10 > 0) {
+                        str += single[rupees % 10] + ' ';
+                    }
+                }
+            }
+        }
+        
+        if (paise > 0) {
+            str += 'and ' + numberToWords(paise) + ' Paise ';
+        }
+        
+        return str.trim() + (str ? ' Rupees Only' : 'Zero Rupees');
+    }
+
+    function updatePreview(formData, items, totals) {
+        // Company info
+        document.getElementById('previewCompanyName').textContent = formData.companyName;
+        document.getElementById('previewCompanyAddress').textContent = formData.companyAddress;
+        document.getElementById('previewCompanyState').textContent = formData.companyState;
+        document.getElementById('previewCompanyContact').textContent = formData.companyContact;
+        document.getElementById('previewCompanyPAN').textContent = formData.companyPAN;
+        document.getElementById('previewGST').textContent = formData.companyGST;
+        document.getElementById('previewCompanyEmail').textContent = formData.companyEmail;
+        
+        // Invoice info
+        document.getElementById('previewInvoiceNumber').textContent = formData.invoiceNumber;
+        document.getElementById('previewInvoiceDate').textContent = formatDate(formData.invoiceDate);
+        
+        // Client info
+        document.getElementById('previewClientName').textContent = formData.clientName;
+        document.getElementById('previewClientAddress').textContent = formData.clientAddress;
+        document.getElementById('previewClientState').textContent = formData.clientState;
+        document.getElementById('previewClientPAN').textContent = formData.clientPAN;
+        document.getElementById('previewClientStateCode').textContent = formData.clientStateCode;
+        document.getElementById('previewClientGST').textContent = formData.clientGST;
+        
+        // Consignee info (same as client)
+        document.getElementById('previewConsigneeName').textContent = formData.clientName;
+        document.getElementById('previewConsigneeAddress').textContent = formData.clientAddress;
+        document.getElementById('previewConsigneeState').textContent = formData.clientState;
+        document.getElementById('previewConsigneePAN').textContent = formData.clientPAN;
+        document.getElementById('previewConsigneeStateCode').textContent = formData.clientStateCode;
+        document.getElementById('previewConsigneeGST').textContent = formData.clientGST;
+        
+        // Bank info
+        document.getElementById('previewBankName').textContent = formData.bankName;
+        document.getElementById('previewAccountName').textContent = formData.accountName;
+        document.getElementById('previewAccountNumber').textContent = formData.accountNumber;
+        document.getElementById('previewIfscCode').textContent = formData.ifscCode;
+        document.getElementById('previewForCompany').textContent = formData.companyName;
+        
+        // Tax rates
+        document.getElementById('previewCgstRate').textContent = formData.cgstRate;
+        document.getElementById('previewSgstRate').textContent = formData.sgstRate;
+        document.getElementById('previewIgstRate').textContent = formData.igstRate;
+        
+        // Items
+        const previewItems = document.getElementById('previewItems');
+        previewItems.innerHTML = '';
+        
+        items.forEach((item, index) => {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.empCode}</td>
+                <td>${item.empName}</td>
+                <td>${item.designation}</td>
+                <td>${item.doj}</td>
+                <td>${item.process}</td>
+                <td>${item.hsn}</td>
+                <td>${formatNumber(item.rate)}</td>
+                <td>${formatNumber(item.total)}</td>
+            `;
+            previewItems.appendChild(newRow);
+        });
+        
+        // Totals
+        document.getElementById('previewSubtotal').textContent = formatNumber(totals.subtotal);
+        document.getElementById('previewCgstAmount').textContent = formatNumber(totals.cgstAmount);
+        document.getElementById('previewSgstAmount').textContent = formatNumber(totals.sgstAmount);
+        document.getElementById('previewIgstAmount').textContent = formatNumber(totals.igstAmount);
+        document.getElementById('previewGrandTotal').textContent = formatNumber(totals.grandTotal);
+        
+        // Amount in words
+        document.getElementById('previewAmountWords').textContent = numberToWords(totals.grandTotal);
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    // Add Font Awesome if not already loaded
+    if (!document.querySelector('#font-awesome')) {
+        const faLink = document.createElement('link');
+        faLink.id = 'font-awesome';
+        faLink.rel = 'stylesheet';
+        faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
+        document.head.appendChild(faLink);
+    }
+
+    // Add toast styles if not already present
+    if (!document.querySelector('#toast-styles')) {
+        const style = document.createElement('style');
+        style.id = 'toast-styles';
+        style.textContent = `
+            .toast {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 6px;
+                color: white;
+                font-size: 14px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                transform: translateY(100px);
+                opacity: 0;
+                transition: all 0.3s ease;
+                z-index: 1000;
+            }
+            .toast.show {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            .toast-success {
+                background: #28a745;
+            }
+            .toast-error {
+                background: #dc3545;
+            }
+            .toast-info {
+                background: #17a2b8;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+});
+</script>
+
+{% endblock content %}

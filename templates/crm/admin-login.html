@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Admin Login - EVMS</title>
+  
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="/static/m.png" type="image/x-icon">
+  
+  <!-- CSS -->
+  <link href="/static/dist/css/tabler.min.css" rel="stylesheet" />
+  <link href="/static/dist/css/tabler-flags.min.css" rel="stylesheet" />
+  <link href="/static/dist/css/tabler-payments.min.css" rel="stylesheet" />
+  <link href="/static/dist/css/tabler-vendors.min.css" rel="stylesheet" />
+  <link href="/static/dist/css/demo.min.css" rel="stylesheet" />
+  
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --tblr-font-sans-serif: 'Inter', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+      --tblr-primary: #4361ee;
+      --tblr-primary-hover: #3a56d4;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+      font-feature-settings: 'cv03', 'cv04', 'cv11';
+      min-height: 100vh;
+    }
+    
+    .login-card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    
+    .login-header {
+      background-color: var(--tblr-primary);
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    
+    .form-control {
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      border: 1px solid #e0e4e8;
+    }
+    
+    .btn-primary {
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--tblr-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+    }
+    
+    .password-toggle {
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .password-toggle:hover {
+      color: var(--tblr-primary);
+    }
+    
+    .logo-container {
+      margin-bottom: 2rem;
+    }
+    
+    .logo {
+      height: 48px;
+      width: auto;
+    }
+    
+    .alert-message {
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page page-center">
+    <div class="container container-tight py-5">
+      <div class="text-center logo-container">
+        <a href="/" class="navbar-brand-autodark">
+          <img src="https://emta.co.in/f.png" alt="Company Logo" class="logo">
+        </a>
+      </div>
+      
+      <div class="login-card">
+        <div class="login-header">
+          <h2 class="h2 text-center mb-0">Welcome Back</h2>
+          <p class="text-white text-opacity-75 mb-0">Sign in to your admin account</p>
+        </div>
+        
+        <div class="card-body p-4 p-sm-5">
+          {% if messages %}
+            <div class="alert alert-danger alert-message mb-4">
+              {% for message in messages %}
+                <div class="d-flex align-items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-alert-circle me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
+                    <path d="M12 8v4"></path>
+                    <path d="M12 16h.01"></path>
+                  </svg>
+                  <span>{{ message }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          
+          <form method="POST" autocomplete="off" novalidate>
+            {% csrf_token %}
+            
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Username</label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"></path>
+                    <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
+                  </svg>
+                </span>
+                <input type="text" class="form-control" name="username" placeholder="Enter your username" autocomplete="off" required>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Password</label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-lock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z"></path>
+                    <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"></path>
+                    <path d="M8 13v-4a4 4 0 1 1 8 0v4"></path>
+                  </svg>
+                </span>
+                <input type="password" class="form-control" name="password" id="password-field" placeholder="Enter your password" autocomplete="off" required>
+                <span class="input-group-text password-toggle" id="toggle-password">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"></path>
+                  </svg>
+                </span>
+              </div>
+            </div>
+            
+            <div class="mb-4 d-flex justify-content-between align-items-center">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="remember-me">
+                <label class="form-check-label" for="remember-me">Remember me</label>
+              </div>
+              <a href="#" class="text-decoration-none">Forgot password?</a>
+            </div>
+            
+            <div class="form-footer">
+              <button type="submit" class="btn btn-primary w-100 py-2">
+                <span class="me-2">Sign In</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrow-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M5 12l14 0"></path>
+                  <path d="M13 18l6 -6"></path>
+                  <path d="M13 6l6 6"></path>
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="text-center text-secondary mt-4">
+        <p class="mb-0">© 2023 EVMS. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="/static/dist/js/tabler.min.js"></script>
+  <script src="/static/dist/js/demo.min.js"></script>
+  
+  <script>
+    // Password toggle functionality
+    document.getElementById('toggle-password').addEventListener('click', function() {
+      const passwordField = document.getElementById('password-field');
+      const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordField.setAttribute('type', type);
+      
+      // Toggle icon
+      this.querySelector('svg').innerHTML = type === 'password' ? 
+        '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/>' :
+        '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M13.11 8.343l.87 -.868a4.5 4.5 0 0 1 6.37 6.36l-2.12 2.121"/><path d="M13.11 15.657l.87 .868a4.5 4.5 0 0 1 -6.37 -6.36l2.12 -2.121"/><path d="M3 3l18 18"/>';
+    });
+    
+    // Add animation to form inputs on focus
+    document.querySelectorAll('.form-control').forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.querySelector('.input-group-text').style.borderColor = '#4361ee';
+      });
+      input.addEventListener('blur', function() {
+        this.parentElement.querySelector('.input-group-text').style.borderColor = '';
+      });
+    });
+  </script>
+</body>
+</html>

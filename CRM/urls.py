@@ -7,6 +7,7 @@ from django.urls import path
 
 urlpatterns = [
     path('',crm_admin_login,name = 'crm_admin_login'),
+    path('login',crm_admin_login,name = 'crm_admin_login'),
     path('admin-logout/', crm_admin_logout, name='crm_admin_logout'),
     path('crm-dashboard/',crm_dashboard,name = 'crm_dashboard'),
     path('admin-candidate-registration/',admin_candidate_registration,name = 'admin_candidate_registration'),
@@ -51,8 +52,12 @@ urlpatterns = [
     path('evms-candidate-interview-list/<int:candidate_id>/',admin_evms_interview_list,name = 'admin_evms_interview_list'),
     path('evms-candidate-interview-detail/<int:interview_id>/',admin_evms_interview_detail,name = 'admin_evms_interview_detail'),
     path('evms-candidate-interview-detail/<int:interview_id>/delete/',admin_evms_delete_interview,name = 'admin_evms_delete_interview'),
-    
-    
+    path('admin-invoice-list/',admin_invoice_list,name = 'admin_invoice_list'),
+    path('admin-invoice-detail/<int:candidate_id>/', generate_candidate_invoice, name='generate_candidate_invoice'),
+    path('admin-company-selected-candidates/<int:company_id>/', selected_candidate_in_company, name='selected_candidate_in_company'),
+    path('bulk-candidate-invoice-generate/<int:company_id>/', bulk_candidate_invoice_generate, name='bulk_candidate_invoice_generate'),
+    path('admin-invoice-bulk-generate/<int:company_id>/', generate_bulk_candidate_invoice, name='generate_bulk_candidate_invoice'),
+
     path('admin/', admin.site.urls),
 ]
 

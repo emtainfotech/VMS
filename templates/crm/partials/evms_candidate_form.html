@@ -199,6 +199,50 @@
                     Please enter a valid 10-digit mobile number
                   </div>
                 </div>
+
+                <div class="col-md-6 mb-3">
+              <label class="form-label">Preferred State</label>
+              <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                        id="stateDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                  {% if candidate.state %}
+                    {% if candidate.state|length > 2 %}
+                      {{ candidate.state|length }} states selected
+                    {% else %}
+                      {{ candidate.state|join:", " }}
+                    {% endif %}
+                  {% else %}
+                    Select states...
+                  {% endif %}
+                </button>
+                <ul class="dropdown-menu w-100 p-2" aria-labelledby="stateDropdown">
+                  <li>
+                    <div class="px-2 mb-2">
+                      <input type="text" class="form-control search-input" 
+                             placeholder="Search states..." 
+                             id="stateSearch">
+                    </div>
+                  </li>
+                  <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+                    {% for S in state %}
+                    <li class="dropdown-item">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="preferred_state" 
+                               value="{{ S }}" id="loc-{{ forloop.counter }}"
+                               {% if S in candidate.preferred_state %}checked{% endif %}>
+                        <label class="form-check-label w-100" for="loc-{{ forloop.counter }}">
+                          {{ S }}
+                        </label>
+                      </div>
+                    </li>
+                    {% endfor %}
+                  </div>
+                </ul>
+              </div>
+              <div class="invalid-feedback">
+                Please select at least one location
+              </div>
+            </div>
                 
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Preferred Location</label>
@@ -567,19 +611,31 @@
               </div>
 
               <div class="row" id="selectionFields" style="display: none;">
-                <div class="col-md-12 mb-3">
-                  <label class="form-label">Company Name <span class="text-danger">*</span></label>
-                  <select class="form-select" name="company_name">
-                    {% for v in vacancies %}
-                      <option value="{{ v.company__company_name }}"
-                        {% if candidate.company_name == v.company__company_name %}selected{% endif %}>
-                        {{ v.job_profile }} - {{ v.company__company_name }}
-                      </option>
-                    {% endfor %}
-                    <option value="Other" {% if candidate.company_name == "Other" %}selected{% endif %}>Other</option>
-                  </select>
-                  <div class="invalid-feedback">Please enter company name</div>
-                </div>
+                <div class="col-md-6 mb-3">
+              <label class="form-label">Company Name</label>
+              <select class="form-select" name="company_name">
+                {% for c in companies %}
+                  <option value="{{ c.company_name }}"
+                    {% if candidate.company_name == c.company_name %}selected{% endif %}>
+                    {{ c.company_name }}
+                  </option>
+                {% endfor %}
+                <option value="Other" {% if candidate.company_name == "Other" %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Job Profile</label>
+              <select class="form-select" name="job_title">
+                {% for v in vacancies %}
+                  <option value="{{ v.job_profile }}"
+                    {% if candidate.job_title == v.job_profile %}selected{% endif %}>
+                    {{ v.job_profile }} - {{ v.company__company_name }}
+                  </option>
+                {% endfor %}
+                <option value="Other" {% if candidate.job_title == "Other" %}selected{% endif %}>Other</option>
+              </select>
+            </div>
 
                 <div class="col-md-12 mb-3">
                   <label class="form-label">Selection Date <span class="text-danger">*</span></label>
@@ -1100,6 +1156,193 @@ document.addEventListener('DOMContentLoaded', function() {
         // Client-side form validation
         document.addEventListener('DOMContentLoaded', function() {
           const form = document.getElementById('vendorDataForm');
+          const today = new Date().toISOString().split('T')[0];
+          
+          
+          
+          // Set max date for payment done date (today)
+          const paymentDoneDateInput = form.querySelector('input[name="payment_done_by_date"]');
+          paymentDoneDateInput.max = today;
+          
+          form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+            
+            // Additional validation for commission when status is Complete
+            const commission = parseFloat(form.querySelector('input[name="vendor_commission"]').value);
+            const status = form.querySelector('select[name="vendor_commission_status"]').value;
+            
+            if (status === "Complete") {
+              // Validate commission is positive
+              if (isNaN(commission) || commission <= 0) {
+                const commissionInput = form.querySelector('input[name="vendor_commission"]');
+                commissionInput.setCustomValidity('Commission must be positive when status is Complete');
+                commissionInput.classList.add('is-invalid');
+                event.preventDefault();
+              }
+              
+              // Validate payment done by 
+              const paymentDoneBy = form.querySelector('input[name="payment_done_by"]').value;
+              if (!paymentDoneBy) {
+                const paymentDoneByInput = form.querySelector('input[name="payment_done_by"]');
+                paymentDoneByInput.setCustomValidity('Payment processor name is required when status is Complete');
+                paymentDoneByInput.classList.add('is-invalid');
+                event.preventDefault();
+              }
+              
+              // Validate payment done date is not empty
+              const paymentDoneDate = form.querySelector('input[name="payment_done_by_date"]').value;
+              if (!paymentDoneDate) {
+                const paymentDoneDateInput = form.querySelector('input[name="payment_done_by_date"]');
+                paymentDoneDateInput.setCustomValidity('Payment date is required when status is Complete');
+                paymentDoneDateInput.classList.add('is-invalid');
+                event.preventDefault();
+              }
+            }
+            
+            form.classList.add('was-validated');
+          }, false);
+          
+          // Clear validation when inputs change
+          form.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('change', function() {
+              this.setCustomValidity('');
+              this.classList.remove('is-invalid');
+            });
+          });
+          
+          // Auto-fill payment done by with current user's name if empty
+          const paymentDoneByInput = form.querySelector('input[name="payment_done_by"]');
+          if (!paymentDoneByInput.value) {
+            paymentDoneByInput.value = "{{ request.user.get_full_name }}";
+          }
+          
+          // Auto-fill payment done date with today if empty and status is Complete
+          const statusSelect = form.querySelector('select[name="vendor_commission_status"]');
+          statusSelect.addEventListener('change', function() {
+            if (this.value === "Complete" && !paymentDoneDateInput.value) {
+              paymentDoneDateInput.value = today;
+            }
+          });
+        });
+        </script>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="modal-invoice-data" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Invoice Data</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" enctype="multipart/form-data" id="invoiceDataForm" novalidate>
+          {% csrf_token %}
+          <div class="row">
+
+            <!-- Invoice Number -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Invoice Number</label>
+              <input type="text" name="invoice_number" class="form-control" 
+                     value="{{ candidate.invoice_number|default:'' }}">
+              <div class="invalid-feedback">
+                Please enter a valid invoice number
+              </div>
+            </div>
+            
+            <!-- Invoice Status -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Invoice Status <span class="text-danger">*</span></label>
+              <select class="form-select" name="invoice_status" >
+                <option value="" disabled selected>Select Invoice Status</option>
+                <option value="Complete" {% if candidate.invoice_status == "Complete" %}selected{% endif %}>Complete</option>
+                <option value="Failed" {% if candidate.invoice_status == "Failed" %}selected{% endif %}>Failed</option>
+                <option value="In Process" {% if candidate.invoice_status == "In Process" %}selected{% endif %}>In Process</option>
+                <option value="Pending" {% if candidate.invoice_status == "Pending" %}selected{% endif %}>Pending</option>
+              </select>
+              <div class="invalid-feedback">
+                Please select invoice status
+              </div>
+            </div>
+
+            <!-- Invoice Paid Status -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Invoice Paid Status <span class="text-danger">*</span></label>
+              <select class="form-select" name="invoice_paid_status" >
+                <option value="" disabled selected>Select Invoice Paid Status</option>
+                <option value="Paid" {% if candidate.invoice_paid_status == "Paid" %}selected{% endif %}>Paid</option>
+                <option value="Unpaid" {% if candidate.invoice_paid_status == "Unpaid" %}selected{% endif %}>Unpaid</option>
+                <option value="Hold" {% if candidate.invoice_paid_status == "Hold" %}selected{% endif %}>Hold</option>
+              </select>
+              <div class="invalid-feedback">
+                Please select invoice paid status
+              </div>
+            </div>
+
+            <!-- Invoice Date -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Invoice Date</label>
+              <input type="date" name="invoice_date" class="form-control" 
+                     value="{{ candidate.invoice_date|date:'Y-m-d' }}"
+                     max="{% now 'Y-m-d' %}">
+              <div class="invalid-feedback">
+                Please select a valid date (cannot be future date)
+              </div>
+            </div>
+
+            <!-- Invoice Amount -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Invoice Amount</label>
+              <input type="number" name="invoice_amount" class="form-control" 
+                     value="{{ candidate.invoice_amount|default:0 }}"
+                     max="{% now 'Y-m-d' %}">
+              <div class="invalid-feedback">
+                Please enter a valid invoice amount (minimum ₹0)
+              </div>
+            </div>
+
+            <!-- Payment Receipt Upload -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Invoice Attachment</label>
+              <input type="file" name="invoice_attachment" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+              {% if candidate.invoice_attachment %}
+                <div class="mt-2">
+                  <small class="text-muted">Current file: 
+                    <a href="{{ candidate.invoice_attachment.url }}" target="_blank">View Attachment</a>
+                  </small>
+                </div>
+              {% endif %}
+              <div class="invalid-feedback">
+                Please upload a valid invoice attachment (PDF, JPG, PNG)
+              </div>
+            </div>
+
+            <!-- Invoice Remark -->
+            <div class="col-md-12 mb-3">
+              <label class="form-label">Invoice Remark <span class="text-danger">*</span></label>
+              <textarea class="form-control" name="invoice_remark" rows="3" required maxlength="500">{{ candidate.invoice_remark }}</textarea>
+              <div class="invalid-feedback">
+                Please enter Invoice Remark (max 500 characters)
+              </div>
+            </div>
+          </div>
+          
+          <!-- Submit and Cancel Buttons -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" name="invoice_releted_data" class="btn btn-primary">Submit</button>
+          </div>
+        </form>
+
+        <script>
+        // Client-side form validation
+        document.addEventListener('DOMContentLoaded', function() {
+          const form = document.getElementById('invoiceDataForm');
           const today = new Date().toISOString().split('T')[0];
           
           

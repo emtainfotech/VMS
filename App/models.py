@@ -747,6 +747,7 @@ class Candidate_registration(models.Model):
     submit_by = models.CharField(max_length=100, blank=True, null=True)
     selection_status = models.CharField(max_length=10, default='Pending')
     company_name = models.CharField(max_length=10, blank=True, null=True)
+    job_title = models.CharField(max_length=255, blank=True, null=True)
     offered_salary = models.CharField(max_length=255, blank=True, null=True)
     joining_status = models.CharField(max_length=10, blank=True, null=True)
     selection_date = models.DateField(blank=True, null=True)
@@ -762,6 +763,13 @@ class Candidate_registration(models.Model):
     other_interview_status = models.CharField(max_length=255, blank=True, null=True)
     other_selection_status = models.CharField(max_length=255, blank=True, null=True)
     other_origin_location = models.CharField(max_length=255, blank=True, null=True)
+    invoice_status = models.CharField(max_length=255, blank=True, null=True)
+    invoice_paid_status = models.CharField(max_length=255, blank=True, null=True)
+    invoice_number = models.CharField(max_length=255, blank=True, null=True)
+    invoice_date = models.DateField(blank=True, null=True)
+    invoice_amount = models.CharField(max_length=255, blank=True, null=True)
+    invoice_remark = models.CharField(max_length=255, blank=True, null=True)
+    invoice_attachment = models.FileField(upload_to='invoice_attachments/', null=True, blank=True)
     created_by = models.ForeignKey(Employee, related_name='candidate_registration_created', on_delete=models.SET_NULL, null=True, blank=True)
     updated_by = models.ForeignKey(Employee, related_name='candidate_registration_updated', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -954,6 +962,7 @@ class Company_registration(models.Model):
     handled_by = models.CharField(max_length=50, blank=True, null=True)
     opened_by = models.CharField(max_length=50, blank=True, null=True)
     company_name = models.CharField(max_length=255, blank=True, null=True)
+    company_address = models.CharField(max_length=255, blank=True, null=True)
     company_logo = models.FileField(upload_to='Company-Logo/', blank=True, null=True)
     company_location = models.CharField(max_length=255, blank=True, null=True)
     company_unique_code = models.CharField(max_length=255, blank=True, null=True)
@@ -966,6 +975,9 @@ class Company_registration(models.Model):
     invoice_generation_date = models.CharField(max_length=10, blank=True, null=True)
     payout_date = models.CharField(max_length=10, blank=True, null=True)
     payment_condiation = models.CharField(max_length=255, blank=True, null=True)
+    pan_number = models.CharField(max_length=20, blank=True, null=True)
+    state_code = models.CharField(max_length=10, blank=True, null=True)
+    gst_number = models.CharField(max_length=20, blank=True, null=True)
     remark = models.CharField(max_length=255, blank=True, null=True)
     created_by = models.ForeignKey(User, related_name='company_registration_created', on_delete=models.SET_NULL, null=True, blank=True)
     updated_by = models.ForeignKey(User, related_name='company_registration_updated', on_delete=models.SET_NULL, null=True, blank=True)
@@ -1307,7 +1319,8 @@ class company_communication(models.Model):
     #     if self.follow_up_date:
     #         return self.follow_up_date <= timezone.now().date()
     #     return False
-    
+   
+
 class Ticket(models.Model):
     TICKET_STATUS = [
         ('Open', 'Open'),
