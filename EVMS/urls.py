@@ -7,7 +7,7 @@ from django.urls import path
 
 urlpatterns = [
     path('',home_view,name = 'home_view'),
-    path('vendor-signup/',vendor_signup,name = 'vendor_signup'),
+    path('signup/',vendor_signup,name = 'vendor_signup'),
     path('vendor-login/',vendor_login,name = 'vendor_login'),
     path('vendor-logout/', vendor_logout, name='vendor_logout'),
     path('vendor-dashboard/',vendor_dashboard,name = 'vendor_dashboard'),
