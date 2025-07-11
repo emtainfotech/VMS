@@ -71,10 +71,24 @@ def vendor_signup(request):
             username = request.POST.get('username')
             password1 = request.POST.get('password1')
             password2 = request.POST.get('password2')
-            name_of_father = request.POST.get('name_of_father')
-            if name_of_father:
-                return HttpResponseForbidden()
+            recaptcha_response = request.POST.get('g-recaptcha-response')
 
+            # Verify reCAPTCHA
+            secret_key = '6LcIgH8rAAAAALGUZOk-qm4AgESKTq5Oq8Stz6au'
+            verify_url = 'https://www.google.com/recaptcha/api/siteverify'
+            data = {
+                'secret': secret_key,
+                'response': recaptcha_response
+            }
+            r = requests.post(verify_url, data=data)
+            result = r.json()
+
+            if result.get('success'):
+                pass
+            else:
+                messages.error(request, "reCAPTCHA failed ❌")
+                return render(request, 'evms/vendor-signup.html')
+            
 
             
             # Basic validation
