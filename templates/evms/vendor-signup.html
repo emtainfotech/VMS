@@ -261,16 +261,7 @@
                         <p class="text-red-500 text-sm mt-1 hidden" id="passwordError">Passwords do not match.</p>
                     </div>
 
-                    <div class="captcha-container">
-                        <div class="flex items-center justify-center mb-2">
-                            <div id="captchaText" class="captcha-text"></div>
-                            <button type="button" id="refreshCaptcha" class="refresh-captcha">
-                                <i class='bx bx-refresh text-2xl'></i>
-                            </button>
-                        </div>
-                        <input type="text" id="captchaInput" class="captcha-input" placeholder="Enter CAPTCHA" required>
-                        <input type="hidden" id="captchaAnswer" name="captcha_answer">
-                    </div>
+                    <div class="g-recaptcha" data-sitekey="6LcIgH8rAAAAAG6J68p5IsUasQPbIJUwk8FvqlSJ"></div>
 
                     <div class="mb-6">
                         <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-200">
@@ -624,5 +615,6 @@
             }
         }
     </script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>
 </html>
