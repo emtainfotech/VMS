@@ -73,14 +73,34 @@ def vendor_signup(request):
             
             # Basic validation
             errors = []
-            if not username:
-                errors.append('Username must be set')
+            # First name validation
+            if not first_name or not first_name.isalpha() or len(first_name) > 30:
+                errors.append('First name is required and should contain only letters (max 30 characters).')
+            # Last name validation (optional, but if present, only letters)
+            if last_name and (not last_name.isalpha() or len(last_name) > 30):
+                errors.append('Last name should contain only letters (max 30 characters).')
+            # Mobile number validation
+            if not mobile_number or not mobile_number.isdigit() or len(mobile_number) != 10:
+                errors.append('Mobile number is required and must be 10 digits.')
+            elif Vendor.objects.filter(mobile_number=mobile_number).exists():
+                errors.append('Mobile number is already registered.')
+            # Email validation
+            email_regex = r'^([\w\.-]+)@([\w\.-]+)\.([a-zA-Z]{2,})$'
+            if not email or not re.match(email_regex, email):
+                errors.append('A valid email address is required.')
+            elif User.objects.filter(email=email).exists():
+                errors.append('Email is already taken')
+            # Username validation
+            if not username or len(username) < 4 or len(username) > 30 or ' ' in username:
+                errors.append('Username is required, must be 4-30 characters, and contain no spaces.')
+            elif User.objects.filter(username=username).exists():
+                errors.append('Username is already taken')
+            # Password validation
+            if not password1 or len(password1) < 8:
+                errors.append('Password must be at least 8 characters long.')
             if password1 != password2:
                 errors.append('Passwords do not match')
-            if User.objects.filter(username=username).exists():
-                errors.append('Username is already taken')
-            if User.objects.filter(email=email).exists():
-                errors.append('Email is already taken')
+            # Optionally, add more password strength checks here
             
             if errors:
                 return JsonResponse({
@@ -788,6 +808,42 @@ def candidate_form(request):
         sector_str = ', '.join(sector)
         preferred_location_str = ', '.join(preferred_location)
         
+        # Server-side validation
+        errors = []
+        import re
+        # Candidate name: required, only letters and spaces
+        if not candidate_name or not re.match(r'^[A-Za-z ]+$', candidate_name) or len(candidate_name) > 50:
+            errors.append('Candidate name is required and should contain only letters and spaces (max 50 characters).')
+        # Mobile number: required, only digits, exactly 10
+        if not candidate_mobile_number or not candidate_mobile_number.isdigit() or len(candidate_mobile_number) != 10:
+            errors.append('Mobile number is required and must be exactly 10 digits.')
+        # Email: required, valid format
+        email_regex = r'^([\w\.-]+)@([\w\.-]+)\.([a-zA-Z]{2,})$'
+        if not candidate_email_address or not re.match(email_regex, candidate_email_address):
+            errors.append('A valid email address is required.')
+        # Qualification: required
+        if not qualification:
+            errors.append('Qualification is required.')
+        # Sector: required
+        if not sector:
+            errors.append('At least one sector must be selected.')
+        # Job type: required
+        if not job_type:
+            errors.append('Job type is required.')
+        # Preferred location: required
+        if not preferred_location:
+            errors.append('At least one preferred location must be selected.')
+        # Resume: required
+        if not candidate_resume:
+            errors.append('Candidate resume is required.')
+        # Photo: required
+        if not candidate_photo:
+            errors.append('Candidate photo is required.')
+
+        if errors:
+            messages.error(request, " ".join(errors))
+            return render(request, 'evms/candidate-apply-form.html', {'initial_data': {'refer_code': refer_code}})
+
         # Get all employees for round robin assignment
         employees = Employee.objects.all()
         if employees.exists():
