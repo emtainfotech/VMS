@@ -847,7 +847,7 @@ def employee_candidate_registration(request) :
             calling_remark = request.POST.get('calling_remark')
             lead_generate = request.POST.get('lead_generate')
             send_for_interview = request.POST.get('send_for_interview')
-            next_follow_up_date = request.POST.get('next_follow_up_date') or None
+            next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
             remark = request.POST.get('remark')
             submit_by = request.POST.get('submit_by')
             preferred_location_str = ', '.join(preferred_location)
@@ -881,7 +881,7 @@ def employee_candidate_registration(request) :
                 calling_remark=calling_remark,
                 lead_generate=lead_generate,
                 send_for_interview=send_for_interview,
-                next_follow_up_date = next_follow_up_date,
+                next_follow_up_date_time = next_follow_up_date_time,
                 candidate_photo=candidate_photo,
                 candidate_resume=candidate_resume,
                 remark=remark,
