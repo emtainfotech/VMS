@@ -104,7 +104,6 @@
                 <th>Contact</th>
                 <th>Selection Status</th>
                 <th>Experience</th>
-                <th>Current Status</th>
                 <th>Employee</th>
                 <th>Registered</th>
                 <th class="text-center">Actions</th>
@@ -200,14 +199,6 @@
                     {{ candidate.experience_year|default:"0" }}y {{ candidate.experience_month|default:"0" }}m
                     {% else %}
                     Fresher
-                    {% endif %}
-                  </div>
-                </td>
-                <td>
-                  <div class="text-muted">
-                    {{ candidate.current_working_status }}
-                    {% if candidate.current_company %}
-                    <div class="small">at {{ candidate.current_company }}</div>
                     {% endif %}
                   </div>
                 </td>
