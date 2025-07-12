@@ -1139,14 +1139,7 @@ def admin_candidate_bulk_upload(request):
                         if isinstance(department, str):
                             department = [d.strip() for d in department.split(',') if d.strip()]
                         
-                        # Handle date fields
-                        next_follow_up_date_time = row.get('next_follow_up_date_time')
-                        if pd.notna(next_follow_up_date_time):
-                            if isinstance(next_follow_up_date_time, str):
-                                next_follow_up_date_time = parse_date(next_follow_up_date_time)
-                            else:
-                                next_follow_up_date_time = next_follow_up_date_time.datetime()
-                        
+                       
                         # Get employee name from Excel or use empty string
                         employee_name = row.get('employee_name', '')
                         
@@ -1154,7 +1147,7 @@ def admin_candidate_bulk_upload(request):
                         candidate = Candidate_registration(
                             employee_name=row.get('employee_name', ''),
                             candidate_name=row['candidate_name'].strip(),
-                            unique_code=row.get('unique_code', admin_get_next_unique_code()),
+                            unique_code=row.get('unique_code', admin_get_next_unique_code(request)),
                             candidate_mobile_number=mobile_number,
                             candidate_alternate_mobile_number=str(row.get('candidate_alternate_mobile_number', '')).strip(),
                             candidate_email_address=str(row.get('candidate_email_address', '')).strip(),
@@ -1176,7 +1169,6 @@ def admin_candidate_bulk_upload(request):
                             calling_remark=row.get('calling_remark', ''),
                             lead_generate=row.get('lead_generate', 'No'),
                             send_for_interview=row.get('send_for_interview', 'No'),
-                            next_follow_up_date_time=next_follow_up_date_time,
                             remark=row.get('remark', ''),
                         )
                         
@@ -1200,7 +1192,7 @@ def admin_candidate_bulk_upload(request):
                     if len(error_messages) > 5:
                         messages.info(request, f'... and {len(error_messages)-5} more errors.')
                 
-                return redirect('admin_candidate_list')
+                return redirect('admin_candidate_bulk_upload')
             
             except Exception as e:
                 messages.error(request, f'Error processing file: {str(e)}')
