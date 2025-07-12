@@ -1221,6 +1221,13 @@ def admin_candidate_list(request) :
     if request.user.is_staff or request.user.is_superuser:
         candidates_reg = Candidate_registration.objects.all().order_by('-id')
         candidates_can = Candidate.objects.all().order_by('-id')
+        
+        # Add model type to each candidate for identification
+        for candidate in candidates_reg:
+            candidate.model_type = 'registration'
+        for candidate in candidates_can:
+            candidate.model_type = 'candidate'
+        
         candidates = list(chain(candidates_reg, candidates_can))
         candidates.sort(key=lambda x: x.register_time, reverse=True)
         
@@ -1228,6 +1235,57 @@ def admin_candidate_list(request) :
     else:
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
+
+@login_required
+def delete_candidate(request, candidate_id, model_type=None):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
+    try:
+        candidate = None
+        candidate_type = None
+        
+        # If model_type is provided, check only that specific model
+        if model_type == 'registration':
+            try:
+                candidate = Candidate_registration.objects.get(id=candidate_id)
+                candidate_type = 'registration'
+            except Candidate_registration.DoesNotExist:
+                pass
+        elif model_type == 'candidate':
+            try:
+                candidate = Candidate.objects.get(id=candidate_id)
+                candidate_type = 'candidate'
+            except Candidate.DoesNotExist:
+                pass
+        else:
+            # Fallback: try both models if no model_type specified
+            try:
+                candidate = Candidate_registration.objects.get(id=candidate_id)
+                candidate_type = 'registration'
+            except Candidate_registration.DoesNotExist:
+                try:
+                    candidate = Candidate.objects.get(id=candidate_id)
+                    candidate_type = 'candidate'
+                except Candidate.DoesNotExist:
+                    pass
+        
+        if candidate:
+            # Store candidate info for success message
+            candidate_name = candidate.candidate_name
+            candidate_mobile = candidate.candidate_mobile_number
+            
+            # Delete the candidate
+            candidate.delete()
+            
+            messages.success(request, f'Candidate "{candidate_name}" ({candidate_mobile}) has been deleted successfully from {candidate_type} model.')
+        else:
+            messages.error(request, f'Candidate with ID {candidate_id} not found in {model_type if model_type else "either"} model.')
+            
+    except Exception as e:
+        messages.error(request, f'Error deleting candidate: {str(e)}')
+    
+    return redirect('admin_candidate_list')
     
 @login_required   
 def admin_company_list(request) :

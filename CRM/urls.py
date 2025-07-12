@@ -13,6 +13,7 @@ urlpatterns = [
     path('admin-candidate-registration/',admin_candidate_registration,name = 'admin_candidate_registration'),
     path('candidate-list/',admin_candidate_list,name = 'admin_candidate_list'),
     path('candidate-details/<int:id>/', admin_candidate_profile, name='admin_candidate_profile'),
+    path('candidate/<int:candidate_id>/<str:model_type>/delete/', delete_candidate, name='delete_candidate'),
     path('admin-company-list/',admin_company_list,name = 'admin_company_list'),
     path('admin-company-registration/',admin_company_registration,name = 'admin_company_registration'),
     path('admin-company-profile/<int:id>/', admin_company_profile, name='admin_company_profile'),
