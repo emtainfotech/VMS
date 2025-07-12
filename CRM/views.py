@@ -1140,12 +1140,12 @@ def admin_candidate_bulk_upload(request):
                             department = [d.strip() for d in department.split(',') if d.strip()]
                         
                         # Handle date fields
-                        next_follow_up_date = row.get('next_follow_up_date')
-                        if pd.notna(next_follow_up_date):
-                            if isinstance(next_follow_up_date, str):
-                                next_follow_up_date = parse_date(next_follow_up_date)
+                        next_follow_up_date_time = row.get('next_follow_up_date_time')
+                        if pd.notna(next_follow_up_date_time):
+                            if isinstance(next_follow_up_date_time, str):
+                                next_follow_up_date_time = parse_date(next_follow_up_date_time)
                             else:
-                                next_follow_up_date = next_follow_up_date.date()
+                                next_follow_up_date_time = next_follow_up_date_time.datetime()
                         
                         # Get employee name from Excel or use empty string
                         employee_name = row.get('employee_name', '')
@@ -1176,7 +1176,7 @@ def admin_candidate_bulk_upload(request):
                             calling_remark=row.get('calling_remark', ''),
                             lead_generate=row.get('lead_generate', 'No'),
                             send_for_interview=row.get('send_for_interview', 'No'),
-                            next_follow_up_date=next_follow_up_date,
+                            next_follow_up_date_time=next_follow_up_date_time,
                             remark=row.get('remark', ''),
                         )
                         
@@ -2448,14 +2448,14 @@ def evms_vendor_candidate_profile(request,id) :
                 calling_remark = request.POST.get('calling_remark')
                 lead_generate = request.POST.get('lead_generate')
                 send_for_interview = request.POST.get('send_for_interview')
-                next_follow_up_date = request.POST.get('next_follow_up_date')
+                next_follow_up_date_time = request.POST.get('next_follow_up_date_time')
                 submit_by = request.POST.get('submit_by')
 
                 candidate.call_connection = call_connection
                 candidate.calling_remark = calling_remark
                 candidate.lead_generate = lead_generate
                 candidate.send_for_interview = send_for_interview
-                candidate.next_follow_up_date = next_follow_up_date
+                candidate.next_follow_up_date_time = next_follow_up_date_time
                 candidate.submit_by = submit_by
                 candidate.save()
                 
