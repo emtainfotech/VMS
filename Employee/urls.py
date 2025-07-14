@@ -70,7 +70,8 @@ urlpatterns = [
     path('evms/interview/<int:interview_id>/delete/', employee_evms_delete_interview, name='employee_evms_delete_interview'),
     path('evms/candidate/<int:candidate_id>/chats/', employee_evms_candidate_chat_list, name='employee_evms_candidate_chat_list'),
     path('evms/chat/<int:pk>/delete/', employee_evms_delete_chat, name='employee_evms_delete_chat'),
-    
+    path('employee-assignment/', employee_assign_candidate, name='employee_assign_candidate'),
+
     path('admin/', admin.site.urls),
 ]
 

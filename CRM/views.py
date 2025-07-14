@@ -367,6 +367,7 @@ def admin_candidate_profile(request, id):
     if request.user.is_staff or request.user.is_superuser:
         candidate = get_object_or_404(Candidate_registration.objects.prefetch_related('activities__employee'), id=id)
         logged_in_employee = Employee.objects.get(user=request.user)
+        employees = Employee.objects.all().order_by('-id')
         vacancies = VacancyDetails.objects.filter(
             vacancy_status='Active'
         ).select_related('company').values(
@@ -763,6 +764,7 @@ def admin_candidate_profile(request, id):
             'companies': companies,
             'state': state,
             'state_district': state_district,
+            'employees': employees,
         }
             
         return render(request, 'crm/candidate-profile.html', context)
@@ -4317,3 +4319,12 @@ def generate_bulk_candidate_invoice(request, company_id):
         'candidates': candidates
     }
     return render(request, 'crm/bulk-candidate-invoice-generate-page.html', context)
+
+
+def admin_assign_candidate(request) :
+    candidates_reg = Candidate_registration.objects.filter(employee_assigned__isnull=False)
+    candidates_can = Candidate.objects.filter(employee_assigned__isnull=False)
+    candidates = list(chain(candidates_reg, candidates_can))
+    candidates.sort(key=lambda x: x.selection_date or date.min, reverse=True)
+
+    return render(request, 'crm/candidate-assignment.html', { 'candidates' : candidates })

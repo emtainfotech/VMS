@@ -4270,3 +4270,13 @@ def employee_evms_delete_interview(request, interview_id):
     interview.delete()
     messages.success(request, 'Interview deleted successfully!')
     return redirect('employee_evms_interview_list', candidate_id=candidate_id)
+
+
+def employee_assign_candidate(request) :
+    logged_in_employee = get_object_or_404(Employee, user=request.user)
+    candidates_reg = Candidate_registration.objects.filter( employee_assigned=logged_in_employee)
+    candidates_can = Candidate.objects.filter( employee_assigned=logged_in_employee)
+    candidates = list(chain(candidates_reg, candidates_can))
+    candidates.sort(key=lambda x: x.selection_date or date.min, reverse=True)
+
+    return render(request, 'employee/candidate-assignment.html', { 'candidates' : candidates })

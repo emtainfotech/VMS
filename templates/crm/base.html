@@ -382,6 +382,21 @@
                     <span class="nav-link-title">Follow Up</span>
                   </a>
                 </li>
+
+                <li class="nav-item {% if request.path == '/crm/candidate-assignment/' %}active{% endif %}">
+                  <a class="nav-link" href="{% url 'admin_assign_candidate' %}">
+                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                      <!-- Follow Up Icon -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M20 12a8 8 0 1 0 -8 8"/>
+                        <path d="M12 12v4l3 3"/>
+                        <path d="M16 12h3"/>
+                      </svg>
+                    </span>
+                    <span class="nav-link-title">Candidate Assignment</span>
+                  </a>
+                </li>
       
                 <li class="nav-item {% if request.path == '/crm/leads/' %}active{% endif %}">
                   <a class="nav-link" href="{% url 'generated_leads' %}">
