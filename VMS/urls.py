@@ -1,11 +1,11 @@
-from django.contrib import admin
-from django.urls import path
-from django.http import HttpResponseNotFound
 
-def fallback_view(request):
-    return HttpResponseNotFound("Invalid subdomain or route.")
+from django.contrib import admin
+from django.urls import path,include
 
 urlpatterns = [
+    path('', include('EVMS.urls')),
+    path('hrms/', include('App.urls')),
+    path('employee/', include('Employee.urls')),
+    path('crm/', include('CRM.urls')),
     path('admin/', admin.site.urls),
-    path('', fallback_view),  # Acts as a fallback if no subdomain matched
 ]
