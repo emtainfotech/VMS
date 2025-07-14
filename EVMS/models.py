@@ -72,6 +72,7 @@ class Vendor_bank_details(models.Model) :
 
 class Candidate(models.Model):
     employee_name = models.CharField(max_length=50)
+    employee_assigned = models.CharField(max_length=50)
     register_time = models.DateTimeField(default=now)
     refer_code = models.CharField(max_length=50, blank=True, null=True)
     candidate_name = models.CharField(max_length=255, blank=True, null=True)

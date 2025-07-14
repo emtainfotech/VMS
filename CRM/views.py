@@ -390,7 +390,7 @@ def admin_candidate_profile(request, id):
                 'candidate_alternate_mobile_number', 'preferred_location', 'origin_location',
                 'qualification', 'diploma', 'sector', 'department', 'experience_year',
                 'experience_month', 'current_company', 'current_working_status',
-                'current_salary', 'expected_salary', 'submit_by',
+                'current_salary', 'expected_salary', 'submit_by', 'employee_assigned',
                 # Calling Remark
                 'call_connection', 'calling_remark', 'lead_generate',
                 'send_for_interview', 'next_follow_up_date_time',
@@ -449,6 +449,7 @@ def admin_candidate_profile(request, id):
                 candidate.candidate_email_address = request.POST.get('candidate_email_address')
                 candidate.gender = request.POST.get('gender')
                 candidate.lead_source = request.POST.get('lead_source')
+                candidate.employee_assigned = request.POST.get('employee_assigned')
 
                 if 'candidate_photo' in request.FILES:
                     candidate.candidate_photo = request.FILES['candidate_photo']
@@ -1978,7 +1979,7 @@ def evms_candidate_profile(request,id) :
                 'candidate_alternate_mobile_number', 'preferred_location', 'origin_location',
                 'qualification', 'diploma', 'sector', 'department', 'experience_year',
                 'experience_month', 'current_company', 'current_working_status',
-                'current_salary', 'expected_salary', 'submit_by',
+                'current_salary', 'expected_salary', 'submit_by', 'employee_assigned',
                 # Calling Remark
                 'call_connection', 'calling_remark', 'lead_generate',
                 'send_for_interview', 'next_follow_up_date_time',
@@ -2024,6 +2025,7 @@ def evms_candidate_profile(request,id) :
                 # Handle Employee fields
                 candidate.candidate_name = request.POST.get('candidate_name')
                 candidate.employee_name = request.POST.get('employee_name')
+                candidate.employee_assigned = request.POST.get('employee_assigned')
                 candidate.candidate_mobile_number = request.POST.get('candidate_mobile_number')
                 candidate.candidate_email_address = request.POST.get('candidate_email_address')
                 candidate.gender = request.POST.get('gender')

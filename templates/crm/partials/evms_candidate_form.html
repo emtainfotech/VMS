@@ -186,6 +186,22 @@
                     </div>
                   </div>
                 </div>
+
+                <div class="col-md-6 mb-3">
+              <label class="form-label">Assign To</label>
+              <select class="form-select" name="employee_assigned" required>
+                <option value="" disabled>Select Employee</option>
+               {% for employee in employees %}
+                        <option value="{{ employee.first_name }} {{ employee.last_name }} ({{ employee.employee_id }})" 
+                                {% if candidate.employee_name == employee.first_name|add:" "|add:employee.last_name|add:" ("|add:employee.employee_id|add:")"  %}selected{% endif %}>
+                          {{ employee.first_name }} {{ employee.last_name }} ({{ employee.employee_id }})
+                        </option>
+                      {% endfor %}
+              </select>
+              <div class="invalid-feedback">
+                Please select employee to assign
+              </div>
+            </div>
               </div>
               <hr class="my-4">
               <h5 class="text-secondary mb-4 sticky-section-header">Candidate Details</h5>

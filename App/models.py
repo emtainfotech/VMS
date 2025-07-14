@@ -713,6 +713,7 @@ class Task(models.Model):
 
 class Candidate_registration(models.Model):
     employee_name = models.CharField(max_length=50)
+    employee_assigned = models.CharField(max_length=50)
     register_time = models.DateTimeField(default=now)
     candidate_name = models.CharField(max_length=255)
     unique_code = models.CharField(max_length=255)
