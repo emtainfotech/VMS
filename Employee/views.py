@@ -1033,9 +1033,9 @@ def get_next_unique_code():
 @login_required
 def employee_candidate_profile(request, id):
     if request.user.is_authenticated:
-        logged_in_employee = Employee.objects.get(user=request.user)
+        # logged_in_employee = Employee.objects.get(user=request.user)
         candidate = get_object_or_404(Candidate_registration.objects.prefetch_related('activities__employee'), 
-                                    id=id, employee_name=logged_in_employee)
+                                    id=id)
         vacancies = VacancyDetails.objects.filter(
             vacancy_status='Active'
         ).select_related('company').values(
@@ -1160,14 +1160,14 @@ def employee_candidate_profile(request, id):
             candidate.other_selection_status = request.POST.get('other_selection_status')
             candidate.other_origin_location = request.POST.get('other_origin_location')
 
-            candidate.updated_by = logged_in_employee
+            # candidate.updated_by = logged_in_employee
             candidate.save()
 
             # Create activity log if there were changes
             if changes:
                 CandidateActivity.objects.create(
                     candidate=candidate,
-                    employee=logged_in_employee,
+                    # employee=logged_in_employee,
                     action='updated',
                     changes=changes,
                     remark="Updated via unified form"
@@ -1346,7 +1346,7 @@ def employee_candidate_profile(request, id):
         ]
 
         context = {
-            'logged_in_employee': logged_in_employee,
+            # 'logged_in_employee': logged_in_employee,
             'candidate': candidate,
             'today': timezone.now().date(),
             'districts': districts,
