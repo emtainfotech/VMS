@@ -57,6 +57,7 @@ def sitemap_view(request) :
 def robot_txt_view(request) :
     return render(request, 'evms/robots.txt', {})
 
+
 def vendor_signup(request):
     if request.method == 'POST':
         form_type = request.POST.get('form_type')
@@ -71,28 +72,17 @@ def vendor_signup(request):
             username = request.POST.get('username')
             password1 = request.POST.get('password1')
             password2 = request.POST.get('password2')
-            recaptcha_response = request.POST.get('g-recaptcha-response')
-
-            # Verify reCAPTCHA
-            secret_key = '6LcIgH8rAAAAALGUZOk-qm4AgESKTq5Oq8Stz6au'
-            verify_url = 'https://www.google.com/recaptcha/api/siteverify'
-            data = {
-                'secret': secret_key,
-                'response': recaptcha_response
-            }
-            r = requests.post(verify_url, data=data)
-            result = r.json()
-
-            if result.get('success'):
-                pass
-            else:
-                messages.error(request, "reCAPTCHA failed ❌")
-                return render(request, 'evms/vendor-signup.html')
-            
-
             
             # Basic validation
             errors = []
+            if not username:
+                errors.append('Username must be set')
+            if password1 != password2:
+                errors.append('Passwords do not match')
+            if User.objects.filter(username=username).exists():
+                errors.append('Username is already taken')
+            if User.objects.filter(email=email).exists():
+                errors.append('Email is already taken')
             # First name validation
             if not first_name or not first_name.isalpha() or len(first_name) > 30:
                 errors.append('First name is required and should contain only letters (max 30 characters).')
@@ -120,7 +110,6 @@ def vendor_signup(request):
                 errors.append('Password must be at least 8 characters long.')
             if password1 != password2:
                 errors.append('Passwords do not match')
-            # Optionally, add more password strength checks here
             
             if errors:
                 return JsonResponse({
