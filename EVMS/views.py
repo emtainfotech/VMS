@@ -828,10 +828,11 @@ def candidate_form(request):
         # Mobile number: required, only digits, exactly 10
         if not candidate_mobile_number or not candidate_mobile_number.isdigit() or len(candidate_mobile_number) != 10:
             errors.append('Mobile number is required and must be exactly 10 digits.')
-        # Email: required, valid format
+        # Email: optional, but if provided, must be valid format
         email_regex = r'^([\w\.-]+)@([\w\.-]+)\.([a-zA-Z]{2,})$'
-        if not candidate_email_address or not re.match(email_regex, candidate_email_address):
-            errors.append('A valid email address is required.')
+        if candidate_email_address:
+            if not re.match(email_regex, candidate_email_address):
+                errors.append('A valid email address is required.')
         # Qualification: required
         if not qualification:
             errors.append('Qualification is required.')
@@ -847,9 +848,6 @@ def candidate_form(request):
         # Resume: required
         if not candidate_resume:
             errors.append('Candidate resume is required.')
-        # Photo: required
-        if not candidate_photo:
-            errors.append('Candidate photo is required.')
 
         if errors:
             messages.error(request, " ".join(errors))
