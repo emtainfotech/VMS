@@ -817,24 +817,7 @@ def candidate_form(request):
         sector_str = ', '.join(sector)
         preferred_location_str = ', '.join(preferred_location)
 
-        recaptcha_response = request.POST.get('g-recaptcha-response')
-
-        # Verify reCAPTCHA
-        secret_key = '6LcIgH8rAAAAALGUZOk-qm4AgESKTq5Oq8Stz6au'
-        verify_url = 'https://www.google.com/recaptcha/api/siteverify'
-        data = {
-            'secret': secret_key,
-            'response': recaptcha_response
-        }
-        r = requests.post(verify_url, data=data)
-        result = r.json()
-
-        if result.get('success'):
-            pass
-        else:
-            messages.error(request, "reCAPTCHA failed ❌")
-            return render(request, 'evms/candidate-apply-form.html', {'initial_data': {'refer_code': refer_code}})
-        
+    
         
         # Server-side validation
         errors = []
