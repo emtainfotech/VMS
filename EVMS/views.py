@@ -89,6 +89,44 @@ def vendor_signup(request):
                 messages.error(request, "reCAPTCHA failed ❌")
                 return render(request, 'evms/vendor-signup.html')
             
+
+            
+            # Basic validation
+            errors = []
+            # First name validation
+            if not first_name or not first_name.isalpha() or len(first_name) > 30:
+                errors.append('First name is required and should contain only letters (max 30 characters).')
+            # Last name validation (optional, but if present, only letters)
+            if last_name and (not last_name.isalpha() or len(last_name) > 30):
+                errors.append('Last name should contain only letters (max 30 characters).')
+            # Mobile number validation
+            if not mobile_number or not mobile_number.isdigit() or len(mobile_number) != 10:
+                errors.append('Mobile number is required and must be 10 digits.')
+            elif Vendor.objects.filter(mobile_number=mobile_number).exists():
+                errors.append('Mobile number is already registered.')
+            # Email validation
+            email_regex = r'^([\w\.-]+)@([\w\.-]+)\.([a-zA-Z]{2,})$'
+            if not email or not re.match(email_regex, email):
+                errors.append('A valid email address is required.')
+            elif User.objects.filter(email=email).exists():
+                errors.append('Email is already taken')
+            # Username validation
+            if not username or len(username) < 4 or len(username) > 30 or ' ' in username:
+                errors.append('Username is required, must be 4-30 characters, and contain no spaces.')
+            elif User.objects.filter(username=username).exists():
+                errors.append('Username is already taken')
+            # Password validation
+            if not password1 or len(password1) < 8:
+                errors.append('Password must be at least 8 characters long.')
+            if password1 != password2:
+                errors.append('Passwords do not match')
+            # Optionally, add more password strength checks here
+            
+            if errors:
+                return JsonResponse({
+                    'status': 'error',
+                    'messages': errors
+                }, status=400)
             
             # Store data in session for OTP verification
             request.session['signup_data'] = {

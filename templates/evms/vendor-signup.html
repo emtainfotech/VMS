@@ -376,73 +376,40 @@
 
         document.getElementById('register').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            const password1 = document.getElementById('password1');
-            const password2 = document.getElementById('password2');
-            const passwordError = document.getElementById('passwordError');
-            const captchaInput = document.getElementById('captchaInput');
-            const captchaAnswer = document.getElementById('captchaAnswer');
-            
-            document.getElementById('errorMessages').classList.add('hidden');
-            passwordError.classList.add('hidden');
-            password1.classList.remove('error-border');
-            password2.classList.remove('error-border');
-            
-            if (password1.value !== password2.value) {
-                passwordError.classList.remove('hidden');
-                password1.classList.add('error-border');
-                password2.classList.add('error-border');
-                return;
-            }
+            const form = this;
+            const formData = new FormData(form);
 
-            if (captchaInput.value.toLowerCase() !== captchaAnswer.value.toLowerCase()) {
-                showError('Invalid CAPTCHA. Please try again.');
-                updateCaptcha();
-                return;
-            }
-            
-            const formData = new FormData(this);
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Sending OTP...';
-            
-            fetch(this.action, {
+            fetch(form.action, {
                 method: 'POST',
                 body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => { throw err; });
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                if (data.status === 'success') {
-                    document.getElementById('signupForm').style.display = 'none';
-                    document.getElementById('otpForm').style.display = 'block';
-                    
-                    const email = formData.get('email');
-                    document.getElementById('userEmail').textContent = email;
-                    document.getElementById('storedEmail').value = email;
-                    
-                    startOTPTimer();
-                } else {
-                    showError(data.message || 'Error submitting form');
+                const errorBox = document.getElementById('errorMessages');
+                const errorText = document.getElementById('errorText');
+                errorBox.classList.remove('hidden');
+                if (data.status === 'error') {
+                    // Show all errors (array or string)
+                    if (Array.isArray(data.messages)) {
+                        errorText.innerHTML = data.messages.map(msg => `<li>${msg}</li>`).join('');
+                    } else {
+                        errorText.textContent = data.message || 'An error occurred.';
+                    }
+                } else if (data.status === 'success') {
+                    errorText.innerHTML = `<li>${data.message}</li>`;
+                    // Optionally, show OTP form here
+                    // document.getElementById('signupForm').style.display = 'none';
+                    // document.getElementById('otpForm').style.display = 'block';
                 }
             })
-            .catch(error => {
-                if (error.messages) {
-                    showError(error.messages.join('\n'));
-                } else {
-                    showError('An error occurred. Please try again.');
-                }
-            })
-            .finally(() => {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Register';
+            .catch(() => {
+                const errorBox = document.getElementById('errorMessages');
+                const errorText = document.getElementById('errorText');
+                errorBox.classList.remove('hidden');
+                errorText.textContent = 'Something went wrong. Please try again.';
             });
         });
 
