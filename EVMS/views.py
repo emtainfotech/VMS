@@ -59,11 +59,37 @@ def robot_txt_view(request) :
 
 
 def vendor_signup(request):
+    # HoneyPot Field Protection
+    if request.method == 'POST' and request.POST.get('website', ''):  # Hidden honeypot field
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Registration failed'
+        }, status=400)
+    
+    # Time-based Protection (minimum form fill time)
+    if request.method == 'POST':
+        form_load_time = request.session.get('form_load_time')
+        if form_load_time and (time.time() - form_load_time) < 3:  # Less than 3 seconds to submit
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Form submitted too quickly'
+            }, status=400)
+    
     if request.method == 'POST':
         form_type = request.POST.get('form_type')
         
         # Initial signup form submission
         if form_type == 'signup':
+            # Rate limiting protection
+            signup_attempts = request.session.get('signup_attempts', 0)
+            if signup_attempts > 5:  # More than 5 attempts in session
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Too many registration attempts. Please try again later.'
+                }, status=429)
+            
+            request.session['signup_attempts'] = signup_attempts + 1
+            
             # Validate form data
             first_name = request.POST.get('first_name')
             last_name = request.POST.get('last_name')
@@ -161,6 +187,16 @@ def vendor_signup(request):
                 request.POST.get('otp6', '')
             ])
             
+            # OTP expiration (5 minutes)
+            otp_created_at = request.session.get('otp_created_at', 0)
+            if time.time() - otp_created_at > 300:  # 5 minutes in seconds
+                clear_signup_session(request)
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'OTP expired. Please request a new one.',
+                    'redirect': reverse('vendor_signup')
+                }, status=400)
+            
             # Check if OTP matches
             if stored_otp and user_otp == stored_otp:
                 signup_data = request.session.get('signup_data')
@@ -217,6 +253,7 @@ def vendor_signup(request):
                 }, status=400)
     
     # GET request - show initial form
+    request.session['form_load_time'] = time.time()  # Track when form was loaded
     suggested_username = get_next_username()
     return render(request, 'evms/vendor-signup.html', {
         'suggested_username': suggested_username
