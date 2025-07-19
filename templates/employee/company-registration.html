@@ -130,16 +130,19 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Status of Proposal</label>
-                                        <select class="form-control form-select" name='status_of_proposal' required>
+                                        <select class="form-control form-select" name='status_of_proposal' required onchange="validateField(this)">
                                             <option value="None">None</option>
-                                            <option value="Lead Generate">Lead Generate</option>
-                                            <option value="Follow-Up">Follow-Up</option>
-                                            <option value="Shortlisted for Banking Counselling">Shortlisted for Banking Counselling</option>
-                                            <option value="RNR">RNR</option>
+                                            <option value="Proposal Accepted">Proposal Accepted</option>
+                                            <option value="Proposal Under Discussion">Proposal Under Discussion</option>
+                                            <option value="On Hold(by Us)">On Hold(by Us)</option>
+                                            <option value="On Hold(by Company)">On Hold(by Company)</option>
+                                            <option value="Revised Proposal to Sent">Revised Proposal to Sent</option>
+                                            <option value="Follow-Up Required">Follow-Up Required</option>
+                                            <option value="Proposal to be Sent">Proposal to be Sent</option>
+                                            <!-- <option value="RNR">RNR</option>
                                             <option value="Switch Off">Switch Off</option>
                                             <option value="Not Intrested">Not Intrested</option>
                                             <option value="Sharing Resume">Sharing Resume</option>
-                                            <option value="Hold">Hold</option>
                                             <option value="Not Eligeble">Not Eligeble</option>
                                             <option value="Call Back">Call Back</option>
                                             <option value="Coming Tomorrow">Coming Tomorrow</option>
@@ -149,7 +152,7 @@
                                             <option value="Call After Some Time">Call After Some Time</option>
                                             <option value="No Incoming">No Incoming</option>
                                             <option value="Temporary Not Available">Temporary Not Available</option>
-                                            <option value="Out Of Town">Out Of Town</option>
+                                            <option value="Out Of Town">Out Of Town</option> -->
                                         </select>
                                     </div>
                                 </div>
