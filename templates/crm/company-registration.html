@@ -239,8 +239,8 @@
                         }
                         
                         // Special handling for company code (max 5 characters)
-                        if (field.name === 'company_unique_code' && field.value.length > 5) {
-                            field.value = field.value.slice(0, 5);
+                        if (field.name === 'company_unique_code' && field.value.length > 6) {
+                            field.value = field.value.slice(0, 6);
                             validateField(field);
                         }
                     }
