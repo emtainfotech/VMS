@@ -2587,7 +2587,7 @@ def admin_company_registration(request):
     if request.user.is_staff or request.user.is_superuser:
         if request.method == 'POST':
             # Capture company data
-            employee_name = request.POST.get('employee_name')
+            # employee_name = request.POST.get('employee_name')
             company_name = request.POST.get('company_name')
             company_logo = request.FILES.get('company_logo')
             company_location = ', '.join(request.POST.getlist('company_location'))
@@ -2608,7 +2608,7 @@ def admin_company_registration(request):
                 company_unique_code=company_unique_code,
                 created_by = request.user,
                 defaults={
-                    'employee_name': employee_name,
+                    # 'employee_name': employee_name,
                     'company_name': company_name,
                     'company_logo': company_logo,
                     'company_location': company_location,
