@@ -1380,9 +1380,6 @@ def employee_company_registration(request):
             company_contact_person_designation = request.POST.get('company_contact_person_designation')
             interview_address = request.POST.get('interview_address')
             status_of_proposal = request.POST.get('status_of_proposal')
-            invoice_generation_date = request.POST.get('invoice_generation_date') or None
-            payout_date = request.POST.get('payout_date') or None
-            payment_condiation = request.POST.get('payment_condiation')
             remark = request.POST.get('remark')
 
             # Create or update company
@@ -1399,16 +1396,12 @@ def employee_company_registration(request):
                     'company_contact_person_designation': company_contact_person_designation,
                     'interview_address': interview_address,
                     'status_of_proposal': status_of_proposal,
-                    'invoice_generation_date': invoice_generation_date,
-                    'payout_date': payout_date,
-                    'payment_condiation': payment_condiation,
                     'remark': remark,
                 }
             )
 
             # If company exists but fields are different, update them
             if not created:
-                company.employee_name = employee_name
                 company.company_name = company_name
                 if company_logo:
                     company.company_logo = company_logo
@@ -1419,9 +1412,6 @@ def employee_company_registration(request):
                 company.company_contact_person_designation = company_contact_person_designation
                 company.interview_address = interview_address
                 company.status_of_proposal = status_of_proposal
-                company.invoice_generation_date = invoice_generation_date
-                company.payout_date = payout_date
-                company.payment_condiation = payment_condiation
                 company.remark = remark
                 company.save()
 
