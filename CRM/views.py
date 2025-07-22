@@ -2624,7 +2624,7 @@ def admin_company_registration(request):
 
             # If company exists but fields are different, update them
             if not created:
-                company.employee_name = employee_name
+                # company.employee_name = employee_name
                 company.company_name = company_name
                 if company_logo:
                     company.company_logo = company_logo
@@ -2635,9 +2635,6 @@ def admin_company_registration(request):
                 company.company_contact_person_designation = company_contact_person_designation
                 company.interview_address = interview_address
                 company.status_of_proposal = status_of_proposal
-                company.invoice_generation_date = invoice_generation_date
-                company.payout_date = payout_date
-                company.payment_condiation = payment_condiation
                 company.remark = remark
                 company.save()
 
