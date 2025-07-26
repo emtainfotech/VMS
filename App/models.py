@@ -973,6 +973,7 @@ class Company_registration(models.Model):
     company_contact_person_designation = models.CharField(max_length=255, blank=True, null=True)
     interview_address = models.CharField(max_length=255, blank=True, null=True)
     status_of_proposal = models.CharField(max_length=100, blank=True, null=True)
+    attech_proposal = models.FileField(upload_to='Company-Proposals/', blank=True, null=True)
     invoice_generation_date = models.CharField(max_length=10, blank=True, null=True)
     payout_date = models.CharField(max_length=10, blank=True, null=True)
     payment_condiation = models.CharField(max_length=255, blank=True, null=True)
@@ -1059,6 +1060,18 @@ class VacancyDetails(models.Model):
     status_of_incentive = models.CharField(max_length=255, blank=True, null=True)
     replacement_criteria_days = models.CharField(max_length=255, blank=True, null=True)
     replacement_criteria = models.CharField(max_length=255, blank=True, null=True)
+    job_opening_origin_other = models.CharField(max_length=255, blank=True, null=True)
+    interview_rounds = models.CharField(max_length=255, blank=True, null=True)
+    working_shift = models.CharField(max_length=255, blank=True, null=True)
+    working_shift_other = models.CharField(max_length=255, blank=True, null=True)
+    cab_facility = models.CharField(max_length=255, blank=True, null=True)
+    cab_facility_other = models.CharField(max_length=255, blank=True, null=True)
+    no_of_vacancies = models.CharField(max_length=255, blank=True, null=True)
+    batch_date = models.CharField(max_length=255, blank=True, null=True)
+    lingual_proficiency = models.CharField(max_length=255, blank=True, null=True)
+    incentive_details = models.TextField(blank=True, null=True)
+    minimum_salary_type = models.CharField(max_length=50, blank=True, null=True)
+    maximum_salary_type = models.CharField(max_length=50, blank=True, null=True)
     
     # New payment-related fields
     PAYMENT_MODE_CHOICES = [

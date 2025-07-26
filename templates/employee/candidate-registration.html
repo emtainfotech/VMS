@@ -82,7 +82,7 @@
                                 <div class="col-sm-6 col-md-2">
                                     <div class="mb-3">
                                         <div class="form-label">Gender</div>
-                                        <select name="gender" class="form-select" required>
+                                        <select name="gender" class="form-select" >
                                             <option value="" disabled selected>Select Gender</option>
                                             <option value="Male" {% if Candidate_registration.gender == "Male" %}selected{% endif %}>Male</option>
                                             <option value="Female" {% if Candidate_registration.gender == "Female" %}selected{% endif %}>Female</option>
@@ -120,7 +120,7 @@
                                     <div class="mb-3">
                                         <label class="form-label">Preferred Location</label>
                                         <select type="text" class="form-select" placeholder="Select tags" 
-                                                id="select-prefered-location" name="preferred_location" multiple required>
+                                                id="select-prefered-location" name="preferred_location" multiple >
                                             {% for district in districts %}
                                             <option value="{{ district }}" {% if Candidate_registration.preferred_location == district %}selected{% endif %}>
                                                 {{ district }}
@@ -135,7 +135,7 @@
                                 <div class="col-sm-6 col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label">Origin Location</label>
-                                        <select type="text" class="form-select" name='origin_location' required>
+                                        <select type="text" class="form-select" name='origin_location' >
                                             <option value="" disabled selected>Select Origin location</option>
                                             {% for district in districts %}
                                             <option value="{{ district }}" {% if Candidate_registration.origin_location == district %}selected{% endif %}>
@@ -151,7 +151,7 @@
                                 <div class="col-sm-6 col-md-3">
                                     <div class="mb-3">
                                         <div class="form-label">Qualification</div>
-                                        <select class="form-select" name='qualification' required>
+                                        <select class="form-select" name='qualification'>
                                             <option value="" disabled selected>Select highest qualification</option>
                                             <option value="Secondary School" {% if Candidate_registration.qualification == "Secondary School" %}selected{% endif %}>Secondary School</option>
                                             <option value="Higher Secondary School" {% if Candidate_registration.qualification == "Higher Secondary School" %}selected{% endif %}>Higher Secondary School</option>
@@ -177,7 +177,7 @@
                                     <div class="mb-3">
                                         <label class="form-label">Sector</label>
                                         <select type="text" class="form-select" placeholder="Select tags" 
-                                                id="select-sector" name='sector' multiple required>
+                                                id="select-sector" name='sector' multiple >
                                             {% for job_sector in job_sectors %}
                                             <option value="{{ job_sector }}" {% if Candidate_registration.sector == job_sector %}selected{% endif %}>
                                                 {{ job_sector }}
@@ -193,7 +193,7 @@
                                     <div class="mb-3">
                                         <label class="form-label">Department</label>
                                         <select type="text" class="form-select" placeholder="Select tags" 
-                                                id="select-department" name='department' multiple required>
+                                                id="select-department" name='department' multiple >
                                             {% for department in departments %}
                                             <option value="{{ department }}" {% if Candidate_registration.department == department %}selected{% endif %}>
                                                 {{ department }}
@@ -236,7 +236,7 @@
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label">Current Working Status</label>
-                                        <select class="form-control form-select" name='current_working_status' required>
+                                        <select class="form-control form-select" name='current_working_status' >
                                             <option value="" disabled selected>Select Status</option>
                                             <option value="Employed" {% if Candidate_registration.current_working_status == "Employed" %}selected{% endif %}>Employed</option>
                                             <option value="Un-Employed" {% if Candidate_registration.current_working_status == "Un-Employed" %}selected{% endif %}>Un-Employed</option>
@@ -334,7 +334,7 @@
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label">Lead Generate</label>
-                                        <select class="form-control form-select" name='lead_generate' required>
+                                        <select class="form-control form-select" name='lead_generate'>
                                             <option value="" disabled selected>Select Status</option>
                                             <option value="No" {% if Candidate_registration.lead_generate == "No" %}selected{% endif %}>No</option>
                                             <option value="Yes" {% if Candidate_registration.lead_generate == "Yes" %}selected{% endif %}>Yes</option>

@@ -1407,7 +1407,19 @@ def admin_company_profile(request, id):
                         salary_transfer_date=request.POST.get('salary_transfer_date') or None,
                         expected_payment_date=request.POST.get('expected_payment_date') or None,
                         candidate_salary_transfer_date=request.POST.get('candidate_salary_transfer_date') or None,
-                        created_by=request.user
+                        created_by=request.user,
+                        job_opening_origin_other = request.POST.get('job_opening_origin_other'),
+                        interview_rounds = request.POST.get('interview_rounds'),
+                        working_shift = request.POST.get('working_shift'),
+                        working_shift_other = request.POST.get('working_shift_other'),
+                        cab_facility = request.POST.get('cab_facility'),
+                        cab_facility_other = request.POST.get('cab_facility_other'),
+                        no_of_vacancies = request.POST.get('no_of_vacancies'),
+                        batch_date = request.POST.get('batch_date'),
+                        lingual_proficiency = request.POST.get('lingual_proficiency'),
+                        incentive_details = request.POST.get('incentive_details'),
+                        minimum_salary_type = request.POST.get('minimum_salary_type'),
+                        maximum_salary_type = request.POST.get('maximum_salary_type'),
                     )
                     vacancy.save(user=request.user, form_name=form_name)
                     messages.success(request, 'Vacancy added successfully!')
@@ -1431,42 +1443,46 @@ def admin_company_profile(request, id):
                     vacancy.company_vacancy_unique_code = request.POST.get('company_vacancy_unique_code')
                     vacancy.vacancy_opening_date = request.POST.get('vacancy_opening_date') or None
                     vacancy.vacancy_status = request.POST.get('vacancy_status', 'Pending')
-                    vacancy.payroll = request.POST.get('payroll')
-                    vacancy.third_party_name = request.POST.get('third_party_name')
-                    vacancy.job_opening_origin = request.POST.get('job_opening_origin')
-                    vacancy.sector_type = request.POST.get('sector_type')
-                    vacancy.department_name = request.POST.get('department_name')
-                    vacancy.fresher_status = request.POST.get('fresher_status')
-                    vacancy.minimum_age = request.POST.get('minimum_age')
-                    vacancy.maximum_age = request.POST.get('maximum_age')
-                    vacancy.gender = request.POST.get('gender')
-                    vacancy.minimum_experience = request.POST.get('minimum_experience')
-                    vacancy.maximum_experience = request.POST.get('maximum_experience')
-                    vacancy.minimum_education_qualification = request.POST.get('minimum_education_qualification')
-                    vacancy.specialization = request.POST.get('specialization')
-                    vacancy.minimum_salary_range = request.POST.get('minimum_salary_range')
-                    vacancy.maximum_salary_range = request.POST.get('maximum_salary_range')
+                    vacancy.payroll = request.POST.get('payroll', '')
+                    vacancy.third_party_name = request.POST.get('third_party_name', '')
+                    vacancy.job_opening_origin = request.POST.get('job_opening_origin', '')
+                    vacancy.sector_type = request.POST.get('sector_type', '')
+                    vacancy.department_name = request.POST.get('department_name', '')
+                    vacancy.fresher_status = request.POST.get('fresher_status', '')
+                    vacancy.minimum_age = request.POST.get('minimum_age', '')
+                    vacancy.maximum_age = request.POST.get('maximum_age', '')
+                    vacancy.gender = request.POST.get('gender', '')
+                    vacancy.minimum_experience = request.POST.get('minimum_experience', '')
+                    vacancy.maximum_experience = request.POST.get('maximum_experience', '')
+                    vacancy.minimum_education_qualification = request.POST.get('minimum_education_qualification', '')
+                    vacancy.specialization = request.POST.get('specialization', '')
+                    vacancy.minimum_salary_range = request.POST.get('minimum_salary_range', '')
+                    vacancy.maximum_salary_range = request.POST.get('maximum_salary_range', '')
                     vacancy.vacancy_closing_date = request.POST.get('vacancy_closing_date') or None
-                    vacancy.special_instruction = request.POST.get('special_instruction')
-                    vacancy.company_usp = request.POST.get('company_usp')
-                    vacancy.status_of_incentive = request.POST.get('status_of_incentive')
-                    vacancy.replacement_criteria_days = request.POST.get('replacement_criteria_days')
-                    vacancy.replacement_criteria = request.POST.get('replacement_criteria')
+                    vacancy.special_instruction = request.POST.get('special_instruction', '')
+                    vacancy.company_usp = request.POST.get('company_usp', '')
+                    vacancy.status_of_incentive = request.POST.get('status_of_incentive', '')
+                    vacancy.replacement_criteria_days = request.POST.get('replacement_criteria_days', '')
+                    vacancy.replacement_criteria = request.POST.get('replacement_criteria', '')
                     vacancy.updated_by = request.user
                     
                     # Payment fields
-                    vacancy.payment_mode = request.POST.get('payment_mode')
-                    vacancy.company_pay_type = request.POST.get('company_pay_type')
-                    vacancy.flat_amount = request.POST.get('flat_amount') or None
-                    
+                    vacancy.payment_mode = request.POST.get('payment_mode', '')
+                    vacancy.company_pay_type = request.POST.get('company_pay_type', '')
+                    keys = request.POST.getlist('flat_amount_key')
+                    values = request.POST.getlist('flat_amount_value')
+
+                    # Convert to JSON string for storing in CharField
+                    vacancy.flat_amount = request.POST.get('flat_amount'),
+
                     try:
-                        vacancy.percentage_of_ctc = float(request.POST.get('percentage_of_ctc')) if request.POST.get('percentage_of_ctc') else None
-                        vacancy.pay_per_days = int(request.POST.get('pay_per_days')) if request.POST.get('pay_per_days') else None
+                        vacancy.percentage_of_ctc = float(request.POST.get('percentage_of_ctc', '')) if request.POST.get('percentage_of_ctc', '') else None
+                        vacancy.pay_per_days = int(request.POST.get('pay_per_days', '')) if request.POST.get('pay_per_days', '') else None
                     except ValueError:
                         pass
-                    
-                    vacancy.salary_transfer_date = request.POST.get('salary_transfer_date') or None
-                    vacancy.expected_payment_date = request.POST.get('expected_payment_date') or None
+
+                    vacancy.salary_transfer_date = request.POST.get('salary_transfer_date', '') or None
+                    vacancy.expected_payment_date = request.POST.get('expected_payment_date', '') or None
                     vacancy.candidate_salary_transfer_date = request.POST.get('candidate_salary_transfer_date') or None
                     
                     vacancy.save(user=request.user, form_name=form_name)
@@ -2598,6 +2614,7 @@ def admin_company_registration(request):
             company_contact_person_designation = request.POST.get('company_contact_person_designation')
             interview_address = request.POST.get('interview_address')
             status_of_proposal = request.POST.get('status_of_proposal')
+            attech_proposal = request.FILES.get('attech_proposal') 
             remark = request.POST.get('remark')
 
             # Create or update company
@@ -2615,6 +2632,7 @@ def admin_company_registration(request):
                     'company_contact_person_designation': company_contact_person_designation,
                     'interview_address': interview_address,
                     'status_of_proposal': status_of_proposal,
+                    'attech_proposal': attech_proposal,
                     'remark': remark,
                     
                 }
@@ -2636,10 +2654,20 @@ def admin_company_registration(request):
                 company.interview_address = interview_address
                 company.status_of_proposal = status_of_proposal
                 company.remark = remark
+                if attech_proposal:
+                    company.attech_proposal = attech_proposal
                 company.save()
 
-            # Redirect to the same page after saving
-            return redirect('admin_company_registration')
+            # Return JSON response for AJAX handling
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Company added successfully!',
+                    'redirect_url': reverse('admin_company_list')
+                })
+            
+            messages.success(request, 'Company added successfully!')
+            return redirect('admin_company_list')
         
         districts = [
             "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",

@@ -833,7 +833,7 @@
             <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Job Opening Origin</label>
-                <select name="job_opening_origin" class="form-select" required>
+                <select name="job_opening_origin" class="form-select" id="jobOpeningOriginSelect" required>
                   <option value="">Select Origin</option>
                   <option value="EVMS">EVMS</option>
                   <option value="Walk-In">Walk-In</option>
@@ -846,11 +846,39 @@
                   <option value="Indeed">Indeed</option>
                   <option value="Facebook">Facebook</option>
                   <option value="Linkedin">Linkedin</option>
-                  <option value="Personal Refference">Personal Refference</option>
+                  <option value="Personal Reference">Personal Reference</option>
+                  <option value="Employee Reference">Employee Reference</option>
                   <option value="Other">Other</option>
                 </select>
               </div>
             </div>
+
+            <div class="col-md-6" id="jobOpeningOriginOtherField" style="display: none;">
+              <div class="mb-3">
+                <label class="form-label">Please Specify Job Opening Origin</label>
+                <input type="text" name="job_opening_origin_other" class="form-control" placeholder="Enter details">
+              </div>
+            </div>
+
+            <script>
+            // filepath: e:\Projects\EVMS\VMS\templates\crm\company-profile.html
+            document.addEventListener('DOMContentLoaded', function() {
+              var originSelect = document.getElementById('jobOpeningOriginSelect');
+              var otherField = document.getElementById('jobOpeningOriginOtherField');
+              if (originSelect) {
+                originSelect.addEventListener('change', function() {
+                  if (this.value === 'Other') {
+                    otherField.style.display = 'block';
+                    otherField.querySelector('input').setAttribute('required', 'required');
+                  } else {
+                    otherField.style.display = 'none';
+                    otherField.querySelector('input').removeAttribute('required');
+                    otherField.querySelector('input').value = '';
+                  }
+                });
+              }
+            });
+            </script>
             <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Sector</label>
@@ -935,6 +963,116 @@
             </div>
             <div class="col-md-4">
               <div class="mb-3">
+                <label class="form-label">Interview Rounds</label>
+                <input type="text" name="interview_rounds" class="form-control">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Working Shift & Off's</label>
+                <select name="working_shift" class="form-select" required>
+                  <option value="" disabled selected>Select Shift</option>
+                  <option value="Day">Day</option>
+                  <option value="Night">Night</option>
+                  <option value="Flexible">Flexible</option>
+                  <option value="Rotational">Rotational</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-md-4" id="workingShiftOtherField" style="display: none;">
+              <div class="mb-3">
+                <label class="form-label">Please Specify Working Shift</label>
+                <input type="text" name="working_shift_other" class="form-control" placeholder="Enter details">
+              </div>
+            </div>
+
+            <script>
+            // filepath: e:\Projects\EVMS\VMS\templates\crm\company-profile.html
+            document.addEventListener('DOMContentLoaded', function() {
+              var workingShiftSelect = document.querySelector('select[name="working_shift"]');
+              var otherField = document.getElementById('workingShiftOtherField');
+              if (workingShiftSelect) {
+                workingShiftSelect.addEventListener('change', function() {
+                  if (this.value === 'Other') {
+                    otherField.style.display = 'block';
+                    otherField.querySelector('input').setAttribute('required', 'required');
+                  } else {
+                    otherField.style.display = 'none';
+                    otherField.querySelector('input').removeAttribute('required');
+                    otherField.querySelector('input').value = '';
+                  }
+                });
+              }
+            });
+            </script>
+
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Cab Facility</label>
+                <select name="cab_facility" class="form-select" id="cabFacilitySelect" required>
+                  <option value="" disabled selected>Select Cab Facility</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-md-4" id="cabFacilityOtherField" style="display: none;">
+              <div class="mb-3">
+                <label class="form-label">Please Specify Cab Facility</label>
+                <input type="text" name="cab_facility_other" class="form-control" placeholder="Enter details">
+              </div>
+            </div>
+
+            <script>
+            // filepath: e:\Projects\EVMS\VMS\templates\crm\company-profile.html
+            document.addEventListener('DOMContentLoaded', function() {
+              var cabSelect = document.getElementById('cabFacilitySelect');
+              var otherField = document.getElementById('cabFacilityOtherField');
+              cabSelect.addEventListener('change', function() {
+                if (this.value === 'Others') {
+                  otherField.style.display = 'block';
+                  otherField.querySelector('input').setAttribute('required', 'required');
+                } else {
+                  otherField.style.display = 'none';
+                  otherField.querySelector('input').removeAttribute('required');
+                  otherField.querySelector('input').value = '';
+                }
+              });
+            });
+</script>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">No of Vacancies</label>
+                <input type="text" name="no_of_vacancies" class="form-control">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Batch Date</label>
+                <input type="date" name="batch_date" class="form-control">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Lingual Proficiency/ certifications</label>
+                <input type="text" name="lingual_proficiency" class="form-control">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Specialization</label>
+                <input type="text" name="specialization" class="form-control">
+              </div>
+            </div>
+            
+
+            <div class="col-md-4">
+              <div class="mb-3">
                 <label class="form-label">Qualification</label>
                 <select name="minimum_education_qualification" class="form-select" required>
                   <option value="">Select Qualification</option>
@@ -956,27 +1094,77 @@
             <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">Status of Incentive</label>
-                <select name="status_of_incentive" class="form-select" required>
+                <select name="status_of_incentive" class="form-select" id="statusOfIncentiveSelect" required>
                   <option value="No">No</option>
                   <option value="Yes">Yes</option>
                 </select>
               </div>
             </div>
-            <div class="col-md-6">
+                             
+            <div class="col-md-6" id="incentiveDetailsField" style="display: none;">
               <div class="mb-3">
-                <label class="form-label">Min Salary</label>
-                <input type="number" name="minimum_salary_range" class="form-control" min="0" step="1" required>
+                <label class="form-label">Incentive Details</label>
+                <input type="text" name="incentive_details" class="form-control" placeholder="Enter incentive details">
               </div>
             </div>
-            <div class="col-md-6">
+
+            <script>
+            // filepath: e:\Projects\EVMS\VMS\templates\crm\company-profile.html
+            document.addEventListener('DOMContentLoaded', function() {
+              var select = document.getElementById('statusOfIncentiveSelect');
+              var detailsField = document.getElementById('incentiveDetailsField');
+              select.addEventListener('change', function() {
+                if (this.value === 'Yes') {
+                  detailsField.style.display = 'block';
+                  detailsField.querySelector('input').setAttribute('required', 'required');
+                } else {
+                  detailsField.style.display = 'none';
+                  detailsField.querySelector('input').removeAttribute('required');
+                  detailsField.querySelector('input').value = '';
+                }
+              });
+            });
+            </script>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Min Salary (₹)</label>
+              <div class="input-group">
+                <input type="number" class="form-control" name="minimum_salary_range"
+                 min="0">
+                <select class="form-select" name="minimum_salary_type">
+                  <option value="(CTC)">CTC</option>
+                  <option value="(Per Month)">Per Month</option>
+                  <option value="(In Hand)">In Hand</option>
+                  <option value="(Per Annum)">Per Annum</option>
+                </select>
+              </div>
+              <div class="invalid-feedback">
+                Please enter a valid salary
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Max Salary (₹)</label>
+              <div class="input-group">
+                <input type="number" class="form-control" name="maximum_salary_range" min="0">
+                <select class="form-select" name="maximum_salary_type">
+                  <option value="(CTC)">CTC</option>
+                  <option value="(Per Month)">Per Month</option>
+                  <option value="(In Hand)">In Hand</option>
+                  <option value="(Per Annum)">Per Annum</option>
+                </select>
+              </div>
+              <div class="invalid-feedback">
+                Please enter a valid salary
+              </div>
+            </div>
+            <!-- <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Max Salary</label>
                 <input type="number" name="maximum_salary_range" class="form-control" min="0" step="1">
               </div>
-            </div>
+            </div> -->
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Special Instructions</label>
+                <label class="form-label">Special Hiring Instructions</label>
                 <input type="text" name="special_instruction" class="form-control">
               </div>
             </div>
@@ -1054,14 +1242,69 @@
       </div>
       
       <!-- Flat Amount Field -->
-      <div class="row" id="flatAmountField" style="display: none;">
-        <div class="col-md-6">
-          <div class="mb-3">
-            <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
-            <input type="text" name="flat_amount" class="form-control">
-          </div>
+<div class="row" id="flatAmountField" style="display: none;">
+  <div class="col-md-6">
+    <div class="mb-3">
+      <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
+      <input type="hidden" name="flat_amount" class="form-control" id="flatAmountJson">
+      <div id="flatAmountRows">
+        <div class="d-flex mb-2 flat-amount-row">
+          <input type="text" class="form-control me-2 flat-amount-key" placeholder="No of Candidates">
+          <input type="text" class="form-control me-2 flat-amount-value" placeholder="Pay">
+          <button type="button" class="btn btn-success flat-amount-add">+</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const container = document.getElementById("flatAmountField");
+  const rowsContainer = container.querySelector("#flatAmountRows");
+  const hiddenInput = container.querySelector("#flatAmountJson");
+
+  // Delegated event listener
+  rowsContainer.addEventListener("click", function (e) {
+    if (e.target.classList.contains("flat-amount-add")) {
+      const newRow = document.createElement("div");
+      newRow.className = "d-flex mb-2 flat-amount-row";
+      newRow.innerHTML = `
+        <input type="text" class="form-control me-2 flat-amount-key" placeholder="No of Candidates">
+        <input type="text" class="form-control me-2 flat-amount-value" placeholder="Pay">
+        <button type="button" class="btn btn-danger flat-amount-remove">–</button>
+      `;
+      rowsContainer.appendChild(newRow);
+    }
+
+    if (e.target.classList.contains("flat-amount-remove")) {
+      e.target.closest(".flat-amount-row")?.remove();
+    }
+  });
+
+  // On form submit — convert fields to dictionary string
+  const form = container.closest("form");
+  if (form) {
+    form.addEventListener("submit", function () {
+      const keys = container.querySelectorAll(".flat-amount-key");
+      const values = container.querySelectorAll(".flat-amount-value");
+
+      const data = {};
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i].value.trim();
+        const value = values[i].value.trim();
+        if (key && value) {
+          data[key] = value;
+        }
+      }
+
+      // Set JSON string in hidden input field
+      hiddenInput.value = JSON.stringify(data);
+    });
+  }
+})();
+</script>
+
       
       <!-- Percentage of CTC Field -->
       <div class="row" id="percentageCtcField" style="display: none;">
@@ -1178,6 +1421,50 @@
               </div>
             </div>
           </div>
+          <div class="card-body">
+  <div class="row">
+    <div class="col-md-6">
+      <div class="info-item mb-3">
+        <span class="info-label"><i class="fas fa-clock me-2 text-muted"></i>Working Shift & Off's Details:</span>
+        <span class="info-value">
+          {% if vacancy.working_shift_other %}
+            {{ vacancy.working_shift_other }}
+          {% else %}
+            {{ vacancy.working_shift }}
+          {% endif %}
+        </span>
+      </div>
+      <div class="info-item mb-3">
+        <span class="info-label"><i class="fas fa-clipboard-list me-2 text-muted"></i>Interview Rounds:</span>
+        <span class="info-value">{{ vacancy.interview_rounds }}</span>
+      </div>
+      <div class="info-item mb-3">
+        <span class="info-label"><i class="fas fa-car me-2 text-muted"></i>Cab Facility:</span>
+        <span class="info-value">
+          {% if vacancy.cab_facility_other %}
+            {{ vacancy.cab_facility_other }}
+          {% else %}
+            {{ vacancy.cab_facility }}
+          {% endif %}
+        </span>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="info-item mb-3">
+        <span class="info-label"><i class="fas fa-users me-2 text-muted"></i>No of Vacancies:</span>
+        <span class="info-value">{{ vacancy.no_of_vacancies }}</span>
+      </div>
+      <div class="info-item mb-3">
+        <span class="info-label"><i class="fas fa-calendar-day me-2 text-muted"></i>Batch Date:</span>
+        <span class="info-value">{{ vacancy.batch_date|date:"d M Y"|default:"-" }}</span>
+      </div>
+      <div class="info-item mb-3">
+        <span class="info-label"><i class="fas fa-language me-2 text-muted"></i>Lingual Proficiency/ certifications:</span>
+        <span class="info-value">{{ vacancy.lingual_proficiency }}</span>
+      </div>
+    </div>
+  </div>
+</div>
         </div>
 
         <!-- Salary and Experience Card -->
@@ -1192,7 +1479,7 @@
               <div class="col-md-6">
                 <div class="info-item mb-3">
                   <span class="info-label"><i class="fas fa-rupee-sign me-2 text-muted"></i>Salary Range:</span>
-                  <span class="info-value">₹{{ vacancy.minimum_salary_range }} - ₹{{ vacancy.maximum_salary_range }}</span>
+                  <span class="info-value">₹{{ vacancy.minimum_salary_range }} - ₹{{ vacancy.maximum_salary_range }}({{ vacancy.minimum_salary_type }})</span>
                 </div>
                 <div class="info-item mb-3">
                   <span class="info-label"><i class="fas fa-graduation-cap me-2 text-muted"></i>Education:</span>
@@ -1229,6 +1516,10 @@
                   <span class="info-label"><i class="fas fa-gift me-2 text-muted"></i>Incentive:</span>
                   <span class="info-value">
                     {{ vacancy.status_of_incentive }}
+                    {% if vacancy.incentive_details %}
+                      ({{ vacancy.incentive_details }})
+                    
+                    {% endif %}
                   </span>
                 </div>
               </div>
@@ -1265,9 +1556,39 @@
                   
                   {% if vacancy.company_pay_type == 'Flat' %}
                     <div class="info-item mb-3">
-                      <span class="info-label"><i class="fas fa-rupee-sign me-2 text-muted"></i>Flat Amount:</span>
-                      <span class="info-value">₹{{ vacancy.flat_amount | default:'not decided' }}</span>
+                      <span class="info-label">
+                        <i class="fas fa-rupee-sign me-2 text-muted"></i>Flat Amount:
+                      </span>
+                      <span class="info-value" id="flatAmountData" data-amount='{{ vacancy.flat_amount|default:"{}" }}'>
+                        Loading...
+                      </span>
                     </div>
+
+                    <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const flatAmountElem = document.getElementById("flatAmountData");
+    let flatAmountString = flatAmountElem.dataset.amount;
+
+    try {
+      // Parse if it's a JSON string
+      const data = JSON.parse(flatAmountString.replace(/&quot;/g, '"'));
+
+      // Create formatted output
+      let output = "";
+      for (const key in data) {
+        if (data.hasOwnProperty(key)) {
+          output += `${key} Candidates - ₹${data[key]}<br>`;
+        }
+      }
+
+      flatAmountElem.innerHTML = output || "not decided";
+    } catch (e) {
+      flatAmountElem.textContent = "not decided";
+    }
+  });
+</script>
+
+
                   {% elif vacancy.company_pay_type == 'Percentage of CTC' %}
                     <div class="info-item mb-3">
                       <span class="info-label"><i class="fas fa-percent me-2 text-muted"></i>Percentage of CTC:</span>
@@ -1431,7 +1752,126 @@
                 {% endfor %}
               </select>
             </div>
-          </div>
+          
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Interview Rounds</label>
+                <input type="text" name="interview_rounds" value="{{ vacancy.interview_rounds }}" class="form-control">
+              </div>
+            </div>
+            <div class="col-md-4">
+  <div class="mb-3">
+    <label class="form-label">Working Shift & Off's</label>
+    <select name="working_shift" class="form-select" required id="workingShiftSelect">
+      <option value="" disabled selected>Select Shift</option>
+      <option value="Day" {% if vacancy.working_shift == 'Day' %}selected{% endif %}>Day</option>
+      <option value="Night" {% if vacancy.working_shift == 'Night' %}selected{% endif %}>Night</option>
+      <option value="Flexible" {% if vacancy.working_shift == 'Flexible' %}selected{% endif %}>Flexible</option>
+      <option value="Rotational" {% if vacancy.working_shift == 'Rotational' %}selected{% endif %}>Rotational</option>
+      <option value="Other" {% if vacancy.working_shift == 'Other' %}selected{% endif %}>Other</option>
+    </select>
+  </div>
+</div>
+
+<div class="col-md-4" id="workingShiftOtherContainer" style="display: none;">
+  <div class="mb-3">
+    <label class="form-label">Please Specify Working Shift</label>
+    <input type="text" name="working_shift_other" class="form-control" id="workingShiftOtherInput" value="{{ vacancy.working_shift_other }}" placeholder="Enter details">
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const shiftSelector = document.getElementById('workingShiftSelect');
+  const shiftOtherContainer = document.getElementById('workingShiftOtherContainer');
+  const shiftOtherInput = document.getElementById('workingShiftOtherInput');
+
+  if (shiftSelector) {
+    shiftSelector.addEventListener('change', function() {
+      if (this.value === 'Other') {
+        shiftOtherContainer.style.display = 'block';
+        shiftOtherInput.setAttribute('required', 'required');
+      } else {
+        shiftOtherContainer.style.display = 'none';
+        shiftOtherInput.removeAttribute('required');
+        shiftOtherInput.value = '';
+      }
+    });
+
+    // Initialize on page load if 'Other' is already selected
+    if (shiftSelector.value === 'Other') {
+      shiftOtherContainer.style.display = 'block';
+      shiftOtherInput.setAttribute('required', 'required');
+    }
+  }
+});
+</script>
+
+            <div class="col-md-4">
+  <div class="mb-3">
+    <label class="form-label">Cab Facility</label>
+    <select name="cab_facility" class="form-select" id="cabFacilitySelect" required>
+      <option value="" disabled selected>Select Cab Facility</option>
+      <option value="Yes" {% if vacancy.cab_facility == 'Yes' %}selected{% endif %}>Yes</option>
+      <option value="No" {% if vacancy.cab_facility == 'No' %}selected{% endif %}>No</option>
+      <option value="Paid" {% if vacancy.cab_facility == 'Paid' %}selected{% endif %}>Paid</option>
+      <option value="Others" {% if vacancy.cab_facility == 'Others' %}selected{% endif %}>Others</option>
+    </select>
+  </div>
+</div>
+
+<div class="col-md-4" id="cabFacilityOtherContainer" style="display: none;">
+  <div class="mb-3">
+    <label class="form-label">Please Specify Cab Facility</label>
+    <input type="text" name="cab_facility_other" id="cabFacilityOtherInput" value="{{ vacancy.cab_facility_other }}" class="form-control" placeholder="Enter details">
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const cabSelector = document.getElementById('cabFacilitySelect');
+  const cabOtherContainer = document.getElementById('cabFacilityOtherContainer');
+  const cabOtherInput = document.getElementById('cabFacilityOtherInput');
+
+  if (cabSelector) {
+    cabSelector.addEventListener('change', function() {
+      if (this.value === 'Others') {
+        cabOtherContainer.style.display = 'block';
+        cabOtherInput.setAttribute('required', 'required');
+      } else {
+        cabOtherContainer.style.display = 'none';
+        cabOtherInput.removeAttribute('required');
+        cabOtherInput.value = '';
+      }
+    });
+
+    // Initialize on page load if 'Others' is already selected
+    if (cabSelector.value === 'Others') {
+      cabOtherContainer.style.display = 'block';
+      cabOtherInput.setAttribute('required', 'required');
+    }
+  }
+});
+</script>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">No of Vacancies</label>
+                <input type="text" name="no_of_vacancies" class="form-control" value="{{ vacancy.no_of_vacancies }}">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Batch Date</label>
+                <input type="date" name="batch_date" class="form-control" value="{{ vacancy.batch_date|date:'Y-m-d' }}">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Lingual Proficiency/ certifications</label>
+                <input type="text" name="lingual_proficiency" class="form-control" value="{{ vacancy.lingual_proficiency }}">
+              </div>
+            </div>
+            </div>
           
           <div class="row">
             <div class="col-md-6 mb-3">
@@ -1452,6 +1892,17 @@
             <div class="col-md-6 mb-3">
               <label class="form-label">Maximum Experience (years)</label>
               <input type="number" class="form-control" name="maximum_experience" value="{{ vacancy.maximum_experience }}" step="0.1">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Minimum Age (years)</label>
+              <input type="number" class="form-control" name="minimum_age" value="{{ vacancy.minimum_age }}" step="0.1">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Maximum Age (years)</label>
+              <input type="number" class="form-control" name="maximum_age" value="{{ vacancy.maximum_age }}" step="0.1">
             </div>
           </div>
           
@@ -1518,16 +1969,117 @@
         </div>
       </div>
       
-      <!-- Flat Amount Field -->
-      <div class="row" id="flatAmountFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Flat' %}block{% else %}none{% endif %};">
-        <div class="col-md-6">
-          <div class="mb-3">
-            <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
-            <input type="text" name="flat_amount" class="form-control" value="{{ vacancy.flat_amount|default:'' }}" 
-                   {% if vacancy.company_pay_type == 'Flat' %}required{% endif %}>
-          </div>
+<!-- Flat Amount Field -->
+<div class="row" id="flatAmountFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Flat' %}block{% else %}none{% endif %};">
+  <div class="col-md-6">
+    <div class="mb-3">
+      <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
+      <input type="hidden" name="flat_amount" class="form-control" id="flatAmountJsonEdit{{ vacancy.id }}" 
+             value="{{ vacancy.flat_amount|default:'{}'|escapejs }}">
+      <div id="flatAmountRowsEdit{{ vacancy.id }}">
+        <!-- Default empty row -->
+        <div class="d-flex mb-2 flat-amount-row">
+          <input type="text" class="form-control me-2 flat-amount-key" placeholder="No of Candidates">
+          <input type="text" class="form-control me-2 flat-amount-value" placeholder="Pay">
+          <button type="button" class="btn btn-success flat-amount-add">+</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const container = document.getElementById("flatAmountFieldEdit{{ vacancy.id }}");
+  if (!container) return;
+
+  const rowsContainer = container.querySelector("#flatAmountRowsEdit{{ vacancy.id }}");
+  const hiddenInput = container.querySelector("#flatAmountJsonEdit{{ vacancy.id }}");
+
+  // Function to add a new row
+  function addNewRow(key = '', value = '', isFirst = false) {
+    const newRow = document.createElement("div");
+    newRow.className = "d-flex mb-2 flat-amount-row";
+    newRow.innerHTML = `
+      <input type="text" class="form-control me-2 flat-amount-key" placeholder="No of Candidates" value="${key}">
+      <input type="text" class="form-control me-2 flat-amount-value" placeholder="Pay" value="${value}">
+      <button type="button" class="btn ${isFirst ? 'btn-success flat-amount-add' : 'btn-danger flat-amount-remove'}">
+        ${isFirst ? '+' : '–'}
+      </button>
+    `;
+    rowsContainer.appendChild(newRow);
+  }
+
+  // Delegated event listener for add/remove buttons
+  rowsContainer.addEventListener("click", function (e) {
+    if (e.target.classList.contains("flat-amount-add")) {
+      addNewRow();
+    }
+
+    if (e.target.classList.contains("flat-amount-remove")) {
+      e.target.closest(".flat-amount-row")?.remove();
+    }
+  });
+
+  // On form submit — convert fields to dictionary string
+  const form = container.closest("form");
+  if (form) {
+    form.addEventListener("submit", function () {
+      const keys = container.querySelectorAll(".flat-amount-key");
+      const values = container.querySelectorAll(".flat-amount-value");
+
+      const data = {};
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i].value.trim();
+        const value = values[i].value.trim();
+        if (key && value) {
+          data[key] = value;
+        }
+      }
+
+      // Set JSON string in hidden input field (without parentheses)
+      hiddenInput.value = JSON.stringify(data);
+    });
+  }
+
+  // Initialize with existing data
+  function initializeFlatAmountData() {
+    try {
+      // Remove any surrounding parentheses if present
+      let jsonString = hiddenInput.value.trim();
+      if (jsonString.startsWith('(') && jsonString.endsWith(')')) {
+        jsonString = jsonString.slice(1, -1);
+      }
+      
+      const existingData = JSON.parse(jsonString || '{}');
+      const entries = Object.entries(existingData);
+      
+      // Clear default empty row if we have existing data
+      if (entries.length > 0) {
+        rowsContainer.innerHTML = '';
+      }
+      
+      // Add rows for each key-value pair
+      entries.forEach(([key, value], index) => {
+        addNewRow(key, value, index === 0);
+      });
+      
+      // If no data, ensure we have at least one empty row
+      if (entries.length === 0) {
+        addNewRow('', '', true);
+      }
+    } catch (e) {
+      console.error("Error parsing flat amount data", e);
+      // Fallback to single empty row if parsing fails
+      rowsContainer.innerHTML = '';
+      addNewRow('', '', true);
+    }
+  }
+  
+  // Initialize when DOM is ready
+  initializeFlatAmountData();
+})();
+</script>
       
       <!-- Percentage of CTC Field -->
       <div class="row" id="percentageCtcFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Percentage of CTC' %}block{% else %}none{% endif %};">
@@ -2157,6 +2709,7 @@ paymentModeRadios.forEach(radio => {
     }
   });
 });
+
 
 // Company pay type selection handler for add vacancy
 const companyPayTypeRadios = document.querySelectorAll('input[name="company_pay_type"]');

@@ -36,6 +36,7 @@ from django.http import HttpResponse
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.urls import reverse
 
 
 def employee_login(request):
@@ -1380,6 +1381,7 @@ def employee_company_registration(request):
             company_contact_person_designation = request.POST.get('company_contact_person_designation')
             interview_address = request.POST.get('interview_address')
             status_of_proposal = request.POST.get('status_of_proposal')
+            attech_proposal = request.FILES.get('attech_proposal')
             remark = request.POST.get('remark')
 
             # Create or update company
@@ -1396,6 +1398,7 @@ def employee_company_registration(request):
                     'company_contact_person_designation': company_contact_person_designation,
                     'interview_address': interview_address,
                     'status_of_proposal': status_of_proposal,
+                    'attech_proposal': attech_proposal,
                     'remark': remark,
                 }
             )
@@ -1412,10 +1415,20 @@ def employee_company_registration(request):
                 company.company_contact_person_designation = company_contact_person_designation
                 company.interview_address = interview_address
                 company.status_of_proposal = status_of_proposal
+                if attech_proposal:
+                    company.attech_proposal = attech_proposal
                 company.remark = remark
                 company.save()
 
-            # Redirect to the same page after saving
+            # Return JSON response for AJAX handling
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Company added successfully!',
+                    'redirect_url': reverse('employee_company_list')
+                })
+            
+            messages.success(request, 'Company added successfully!')
             return redirect('employee_company_list')
         
         districts = [
