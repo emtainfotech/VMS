@@ -807,6 +807,13 @@ def admin_candidate_registration(request):
             preferred_location_str = ', '.join(preferred_location)
             sector_str = ', '.join(sector)
             department_str = ', '.join(department)
+            other_lead_source = request.POST.get('other_lead_source')
+            other_qualification = request.POST.get('other_qualification')
+            other_origin_location = request.POST.get('other_origin_location')
+            other_preferred_location = request.POST.get('other_preferred_location')
+            other_qualification = request.POST.get('other_qualification')
+            other_sector = request.POST.get('other_sector')
+            other_department = request.POST.get('other_department')
             
             # Check for duplicates
             duplicate_mobile = Candidate_registration.objects.filter(
@@ -855,6 +862,12 @@ def admin_candidate_registration(request):
                 candidate_photo=candidate_photo,
                 candidate_resume=candidate_resume,
                 remark=remark,
+                other_lead_source=other_lead_source,
+                other_qualification=other_qualification,
+                other_origin_location=other_origin_location,
+                other_preferred_location=other_preferred_location,
+                other_sector=other_sector,
+                other_department=other_department   
             )
             
             return JsonResponse({'status': 'success', 'redirect_url': reverse('admin_candidate_list')})

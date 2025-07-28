@@ -93,78 +93,152 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Lead Source -->
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Lead Source</label>
-                                        <select name="lead_source" class="form-select" required>
-                                            <option value="" disabled selected>Select Lead Source</option>
-                                            <option value="EVMS" {% if Candidate_registration.lead_source == "EVMS" %}selected{% endif %}>EVMS</option>
-                                            <option value="Walk-In" {% if Candidate_registration.lead_source == "Walk-In" %}selected{% endif %}>Walk-In</option>
-                                            <option value="Job Hai" {% if Candidate_registration.lead_source == "Job Hai" %}selected{% endif %}>Job Hai</option>
-                                            <option value="Naukari" {% if Candidate_registration.lead_source == "Naukari" %}selected{% endif %}>Naukari</option>
-                                            <option value="Apna" {% if Candidate_registration.lead_source == "Apna" %}selected{% endif %}>Apna</option>
-                                            <option value="Expertia" {% if Candidate_registration.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
-                                            <option value="Instagram" {% if Candidate_registration.lead_source == "Instagram" %}selected{% endif %}>Instagram</option>
-                                            <option value="Website" {% if Candidate_registration.lead_source == "Website" %}selected{% endif %}>Website</option>
-                                            <option value="Indeed" {% if Candidate_registration.lead_source == "Indeed" %}selected{% endif %}>Indeed</option>
-                                            <option value="Facebook" {% if Candidate_registration.lead_source == "Facebook" %}selected{% endif %}>Facebook</option>
-                                            <option value="Linkedin" {% if Candidate_registration.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
-                                            <option value="Personal Refference" {% if Candidate_registration.lead_source == "Personal Refference" %}selected{% endif %}>Personal Refference</option>
-                                            <option value="Other" {% if Candidate_registration.lead_source == "Other" %}selected{% endif %}>Other</option>
-                                        </select>
-                                        <div class="invalid-feedback">Please select a lead source.</div>
-                                    </div>
-                                </div>
+                               <!-- Lead Source -->
+<div class="col-sm-6 col-md-3">
+  <div class="mb-3">
+    <label class="form-label">Lead Source</label>
+    <select name="lead_source" class="form-select" id="lead_source_select" required>
+      <option value="" disabled selected>Select Lead Source</option>
+      <option value="EVMS" {% if Candidate_registration.lead_source == "EVMS" %}selected{% endif %}>EVMS</option>
+      <option value="Walk-In" {% if Candidate_registration.lead_source == "Walk-In" %}selected{% endif %}>Walk-In</option>
+      <option value="Job Hai" {% if Candidate_registration.lead_source == "Job Hai" %}selected{% endif %}>Job Hai</option>
+      <option value="Naukari" {% if Candidate_registration.lead_source == "Naukari" %}selected{% endif %}>Naukari</option>
+      <option value="Apna" {% if Candidate_registration.lead_source == "Apna" %}selected{% endif %}>Apna</option>
+      <option value="Expertia" {% if Candidate_registration.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
+      <option value="Instagram" {% if Candidate_registration.lead_source == "Instagram" %}selected{% endif %}>Instagram</option>
+      <option value="Website" {% if Candidate_registration.lead_source == "Website" %}selected{% endif %}>Website</option>
+      <option value="Indeed" {% if Candidate_registration.lead_source == "Indeed" %}selected{% endif %}>Indeed</option>
+      <option value="Facebook" {% if Candidate_registration.lead_source == "Facebook" %}selected{% endif %}>Facebook</option>
+      <option value="Linkedin" {% if Candidate_registration.lead_source == "Linkedin" %}selected{% endif %}>Linkedin</option>
+      <option value="Other" {% if Candidate_registration.lead_source == "Other" %}selected{% endif %}>Other</option>
+    </select>
+    <div class="invalid-feedback">Please select a lead source.</div>
+
+    <!-- Other Lead Source input -->
+    <input type="text" name="other_lead_source" id="lead_source_other_input" class="form-control mt-2"
+           placeholder="Please specify..." 
+           style="display: none;"
+           >
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const leadSourceSelect = document.getElementById("lead_source_select");
+    const otherInput = document.getElementById("lead_source_other_input");
+
+    function toggleOtherInput() {
+      if (leadSourceSelect.value === "Other") {
+        otherInput.style.display = "block";
+        otherInput.required = true;
+      } else {
+        otherInput.style.display = "none";
+        otherInput.required = false;
+      }
+    }
+
+    leadSourceSelect.addEventListener("change", toggleOtherInput);
+    toggleOtherInput(); // call on load for edit mode
+  });
+</script>
+
                                 
                                 <!-- Preferred Location -->
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Preferred Location</label>
-                                        <select type="text" class="form-select" placeholder="Select tags" 
-                                                id="select-prefered-location" name="preferred_location" multiple required>
-                                            {% for district in districts %}
-                                            <option value="{{ district }}" {% if Candidate_registration.preferred_location == district %}selected{% endif %}>
-                                                {{ district }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="invalid-feedback">Please select at least one preferred location.</div>
-                                    </div>
-                                </div>
+<div class="col-sm-6 col-md-3">
+  <div class="mb-3">
+    <label class="form-label">Preferred Location</label>
+    <select class="form-select" id="select-prefered-location" name="preferred_location" multiple  placeholder="Select Prefered Location" >
+      {% for district in districts %}
+      <option value="{{ district }}" {% if Candidate_registration.preferred_location == district %}selected{% endif %}>
+        {{ district }}
+      </option>
+      {% endfor %}
+      <option value="Other" id="other-location-option">Other</option>
+    </select>
+    
+    <!-- Hidden input shown when 'Other' is selected -->
+    <input type="text" id="other-location-input" name="other_preferred_location"
+           class="form-control mt-2 d-none" placeholder="Enter other location" 
+           value="{% if Candidate_registration.other_preferred_location %}{{ Candidate_registration.other_preferred_location }}{% endif %}" />
+    
+    <div class="invalid-feedback">Please select at least one preferred location.</div>
+  </div>
+</div>
+
                                 
                                 <!-- Origin Location -->
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Origin Location</label>
-                                        <select type="text" class="form-select" name='origin_location' required>
-                                            <option value="" disabled selected>Select Origin location</option>
-                                            {% for district in districts %}
-                                            <option value="{{ district }}" {% if Candidate_registration.origin_location == district %}selected{% endif %}>
-                                                {{ district }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="invalid-feedback">Please select an origin location.</div>
-                                    </div>
-                                </div>
+<div class="col-sm-6 col-md-3">
+  <div class="mb-3">
+    <label class="form-label">Origin Location</label>
+    <select type="text" class="form-select" name="origin_location" id="originLocationSelect" >
+      <option value="" disabled selected>Select Origin location</option>
+      {% for district in districts %}
+      <option value="{{ district }}" {% if Candidate_registration.origin_location == district %}selected{% endif %}>
+        {{ district }}
+      </option>
+      {% endfor %}
+      <option value="Others" {% if Candidate_registration.origin_location == "Others" %}selected{% endif %}>Others</option>
+    </select>
+    <div class="invalid-feedback">Please select an origin location.</div>
+  </div>
+</div>
+
+<!-- Hidden 'Other Origin Location' Field -->
+<div class="col-sm-6 col-md-3" id="otherOriginField" style="display: none;">
+  <div class="mb-3">
+    <label class="form-label">Please specify other location</label>
+    <input type="text" class="form-control" name="other_origin_location" placeholder="Enter other origin location">
+  </div>
+</div>
+
+<script>
+// Toggle 'Other Origin Location' input field
+document.getElementById('originLocationSelect').addEventListener('change', function () {
+  const otherField = document.getElementById('otherOriginField');
+  if (this.value === 'Others') {
+    otherField.style.display = 'block';
+  } else {
+    otherField.style.display = 'none';
+  }
+});
+</script>
+
                                 
                                 <!-- Qualification -->
-                                <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <div class="form-label">Qualification</div>
-                                        <select class="form-select" name='qualification' required>
-                                            <option value="" disabled selected>Select highest qualification</option>
-                                            <option value="Secondary School" {% if Candidate_registration.qualification == "Secondary School" %}selected{% endif %}>Secondary School</option>
-                                            <option value="Higher Secondary School" {% if Candidate_registration.qualification == "Higher Secondary School" %}selected{% endif %}>Higher Secondary School</option>
-                                            <option value="Graduate" {% if Candidate_registration.qualification == "Graduate" %}selected{% endif %}>Graduate</option>
-                                            <option value="Post-Graduate" {% if Candidate_registration.qualification == "Post-Graduate" %}selected{% endif %}>Post-Graduate</option>
-                                            <option value="Ph.D." {% if Candidate_registration.qualification == "Ph.D." %}selected{% endif %}>Ph.D.</option>
-                                            <option value="Others" {% if Candidate_registration.qualification == "Others" %}selected{% endif %}>Others</option>
-                                        </select>
-                                        <div class="invalid-feedback">Please select a qualification.</div>
-                                    </div>
-                                </div>
+<div class="col-sm-6 col-md-3">
+  <div class="mb-3">
+    <div class="form-label">Qualification</div>
+    <select class="form-select" name="qualification" id="qualificationSelect" >
+      <option value="" disabled selected>Select highest qualification</option>
+      <option value="Secondary School" {% if Candidate_registration.qualification == "Secondary School" %}selected{% endif %}>Secondary School</option>
+      <option value="Higher Secondary School" {% if Candidate_registration.qualification == "Higher Secondary School" %}selected{% endif %}>Higher Secondary School</option>
+      <option value="Graduate" {% if Candidate_registration.qualification == "Graduate" %}selected{% endif %}>Graduate</option>
+      <option value="Post-Graduate" {% if Candidate_registration.qualification == "Post-Graduate" %}selected{% endif %}>Post-Graduate</option>
+      <option value="Ph.D." {% if Candidate_registration.qualification == "Ph.D." %}selected{% endif %}>Ph.D.</option>
+      <option value="Others" {% if Candidate_registration.qualification == "Others" %}selected{% endif %}>Others</option>
+    </select>
+    <div class="invalid-feedback">Please select a qualification.</div>
+  </div>
+</div>
+
+<!-- Hidden 'Other Qualification' Field -->
+<div class="col-sm-6 col-md-3" id="otherQualificationField" style="display: none;">
+  <div class="mb-3">
+    <label class="form-label">Please specify</label>
+    <input type="text" class="form-control" name="other_qualification" placeholder="Enter your qualification">
+  </div>
+</div>
+
+<script>
+document.getElementById('qualificationSelect').addEventListener('change', function () {
+  const otherField = document.getElementById('otherQualificationField');
+  if (this.value === 'Others') {
+    otherField.style.display = 'block';
+  } else {
+    otherField.style.display = 'none';
+  }
+});
+</script>
+
                                 
                                 <!-- Diploma -->
                                 <div class="col-sm-6 col-md-3">
@@ -174,37 +248,83 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Sector -->
-                                <div class="col-sm-6 col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label">Sector</label>
-                                        <select type="text" class="form-select" placeholder="Select tags" 
-                                                id="select-sector" name='sector' multiple required>
-                                            {% for job_sector in job_sectors %}
-                                            <option value="{{ job_sector }}" {% if Candidate_registration.sector == job_sector %}selected{% endif %}>
-                                                {{ job_sector }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="invalid-feedback">Please select at least one sector.</div>
-                                    </div>
-                                </div>
-                                
+                               <!-- Sector -->
+<div class="col-sm-6 col-md-4">
+  <div class="mb-3">
+    <label class="form-label">Sector</label>
+    <select type="text" class="form-select" placeholder="Select Sectors"
+            id="select-sector" name="sector" multiple >
+      {% for job_sector in job_sectors %}
+      <option value="{{ job_sector }}" {% if Candidate_registration.sector == job_sector %}selected{% endif %}>
+        {{ job_sector }}
+      </option>
+      {% endfor %}
+      <option value="Others">Others</option>
+    </select>
+    <div class="invalid-feedback">Please select at least one sector.</div>
+  </div>
+</div>
+
+<!-- Hidden 'Other Sector' Field -->
+<div class="col-sm-6 col-md-4" id="otherSectorField" style="display: none;">
+  <div class="mb-3">
+    <label class="form-label">Please specify other sector</label>
+    <input type="text" class="form-control" name="other_sector" placeholder="Enter other sector">
+  </div>
+</div>
+
+<script>
+document.getElementById('select-sector').addEventListener('change', function () {
+  const selectedOptions = Array.from(this.selectedOptions).map(opt => opt.value);
+  const otherField = document.getElementById('otherSectorField');
+
+  if (selectedOptions.includes('Others')) {
+    otherField.style.display = 'block';
+  } else {
+    otherField.style.display = 'none';
+  }
+});
+</script>
+
                                 <!-- Department -->
-                                <div class="col-sm-6 col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label">Department</label>
-                                        <select type="text" class="form-select" placeholder="Select tags" 
-                                                id="select-department" name='department' multiple required>
-                                            {% for department in departments %}
-                                            <option value="{{ department }}" {% if Candidate_registration.department == department %}selected{% endif %}>
-                                                {{ department }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="invalid-feedback">Please select at least one department.</div>
-                                    </div>
-                                </div>
+<div class="col-sm-6 col-md-4">
+  <div class="mb-3">
+    <label class="form-label">Department</label>
+    <select type="text" class="form-select" placeholder="Select Departments"
+            id="select-department" name="department" multiple >
+      {% for department in departments %}
+      <option value="{{ department }}" {% if Candidate_registration.department == department %}selected{% endif %}>
+        {{ department }}
+      </option>
+      {% endfor %}
+      <option value="Others">Others</option>
+    </select>
+    <div class="invalid-feedback">Please select at least one department.</div>
+  </div>
+</div>
+
+<!-- Hidden 'Other Department' Field -->
+<div class="col-sm-6 col-md-4" id="otherDepartmentField" style="display: none;">
+  <div class="mb-3">
+    <label class="form-label">Please specify other department</label>
+    <input type="text" class="form-control" name="other_department" placeholder="Enter other department">
+  </div>
+</div>
+
+<script>
+// Toggle "Other Department" input
+document.getElementById('select-department').addEventListener('change', function () {
+  const selectedOptions = Array.from(this.selectedOptions).map(opt => opt.value);
+  const otherField = document.getElementById('otherDepartmentField');
+
+  if (selectedOptions.includes('Others')) {
+    otherField.style.display = 'block';
+  } else {
+    otherField.style.display = 'none';
+  }
+});
+</script>
+
                                 
                                 
                                 <!-- Experience (Year) -->
@@ -239,7 +359,7 @@
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label">Current Working Status</label>
-                                        <select class="form-control form-select" name='current_working_status' required>
+                                        <select class="form-control form-select" name='current_working_status' >
                                             <option value="" disabled selected>Select Status</option>
                                             <option value="Employed" {% if Candidate_registration.current_working_status == "Employed" %}selected{% endif %}>Employed</option>
                                             <option value="Un-Employed" {% if Candidate_registration.current_working_status == "Un-Employed" %}selected{% endif %}>Un-Employed</option>
@@ -279,16 +399,90 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Candidate Resume -->
-                                <div class="col-sm-6 col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Candidate Resume</label>
-                                        <input type="file" name='candidate_resume' class="form-control" 
-                                               accept=".pdf,.doc,.docx" />
-                                        <small class="text-muted">Max size: 5MB, Formats: PDF, DOC, DOCX</small>
-                                        <div class="invalid-feedback">Please upload a valid resume (PDF/DOC/DOCX, max 5MB).</div>
-                                    </div>
-                                </div>
+                                <!-- Resume Upload -->
+<div class="col-sm-6 col-md-6">
+  <div class="mb-3">
+    <label class="form-label">Candidate Resume</label>
+    <input type="file" name="candidate_resume" class="form-control" id="candidateResumeInput"
+           accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*">
+    <small class="text-muted">Max size: 5MB, Formats: PDF, DOC, DOCX, Image</small>
+    <div id="resumeLinkWrapper" class="mt-2 position-relative"></div>
+  </div>
+</div>
+
+<style>
+.preview-popup {
+  position: absolute;
+  top: 25px;
+  left: 0;
+  width: 300px;
+  max-height: 300px;
+  z-index: 999;
+  background: white;
+  border: 1px solid #ccc;
+  display: none;
+  padding: 5px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.preview-popup img,
+.preview-popup embed {
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+}
+</style>
+
+<script>
+document.getElementById('candidateResumeInput').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    const wrapper = document.getElementById('resumeLinkWrapper');
+    wrapper.innerHTML = '';
+
+    if (!file) return;
+
+    const fileType = file.type;
+    const fileURL = URL.createObjectURL(file);
+
+    const link = document.createElement('a');
+    link.href = fileURL;
+    link.target = '_blank';
+    link.textContent = 'View Resume';
+    link.className = 'text-primary text-decoration-underline';
+    link.style.cursor = 'pointer';
+
+    const popup = document.createElement('div');
+    popup.className = 'preview-popup';
+
+    // Detect and build preview
+    if (fileType.startsWith('image/')) {
+        const img = document.createElement('img');
+        img.src = fileURL;
+        popup.appendChild(img);
+    } else if (fileType === 'application/pdf') {
+        const embed = document.createElement('embed');
+        embed.src = fileURL;
+        embed.type = 'application/pdf';
+        embed.style.height = '280px';
+        popup.appendChild(embed);
+    } else {
+        const msg = document.createElement('p');
+        msg.textContent = 'Preview not available for this file type.';
+        msg.className = 'text-muted';
+        popup.appendChild(msg);
+    }
+
+    // Hover behavior
+    link.addEventListener('mouseenter', () => popup.style.display = 'block');
+    link.addEventListener('mouseleave', () => popup.style.display = 'none');
+    popup.addEventListener('mouseenter', () => popup.style.display = 'block');
+    popup.addEventListener('mouseleave', () => popup.style.display = 'none');
+
+    wrapper.appendChild(link);
+    wrapper.appendChild(popup);
+});
+</script>
+
                                 
                                 <hr>
                                 
@@ -337,7 +531,7 @@
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label">Lead Generate</label>
-                                        <select class="form-control form-select" name='lead_generate' required>
+                                        <select class="form-control form-select" name='lead_generate' >
                                             <option value="" disabled selected>Select Status</option>
                                             <option value="No" {% if Candidate_registration.lead_generate == "No" %}selected{% endif %}>No</option>
                                             <option value="Yes" {% if Candidate_registration.lead_generate == "Yes" %}selected{% endif %}>Yes</option>
@@ -350,7 +544,7 @@
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label">Send For Interview</label>
-                                        <select class="form-control form-select" name='send_for_interview' required>
+                                        <select class="form-control form-select" name='send_for_interview' >
                                             <option value="" disabled selected>Select Status</option>
                                             <option value="No" {% if Candidate_registration.send_for_interview == "No" %}selected{% endif %}>No</option>
                                             <option value="Yes" {% if Candidate_registration.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
@@ -363,7 +557,7 @@
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label">Next Follow-Up Date</label>
-                                        <input type="date" name='next_follow_up_date' class="form-control" 
+                                        <input type="datetime-local" name='next_follow_up_date_time' class="form-control" 
                                                min="{{ today|date:'Y-m-d' }}">
                                         <div class="invalid-feedback">Please select a valid future date.</div>
                                     </div>

@@ -854,8 +854,14 @@ def employee_candidate_registration(request) :
             preferred_location_str = ', '.join(preferred_location)
             sector_str = ', '.join(sector)
             department_str = ', '.join(department)
-            
-            
+            other_lead_source = request.POST.get('other_lead_source')
+            other_qualification = request.POST.get('other_qualification')
+            other_origin_location = request.POST.get('other_origin_location')
+            other_preferred_location = request.POST.get('other_preferred_location')
+            other_qualification = request.POST.get('other_qualification')
+            other_sector = request.POST.get('other_sector')
+            other_department = request.POST.get('other_department')
+           
             # Save to database
             Candidate_registration.objects.create(
                 employee_name=logged_in_employee,
@@ -886,8 +892,13 @@ def employee_candidate_registration(request) :
                 candidate_photo=candidate_photo,
                 candidate_resume=candidate_resume,
                 remark=remark,
-                submit_by=submit_by
-                
+                submit_by=submit_by,
+                other_lead_source = other_lead_source,
+                other_qualification = other_qualification,
+                other_origin_location = other_origin_location,
+                other_preferred_location = other_preferred_location,
+                other_sector = other_sector,
+                other_department = other_department
             )
         
             return redirect('employee_candidate_list')
