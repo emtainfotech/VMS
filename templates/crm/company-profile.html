@@ -1975,7 +1975,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="mb-3">
       <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
       <input type="hidden" name="flat_amount" class="form-control" id="flatAmountJsonEdit{{ vacancy.id }}" 
-             value="{{ vacancy.flat_amount|default:'{}'|escapejs }}">
+             value="{{ vacancy.flat_amount|default:'{}' }}">
       <div id="flatAmountRowsEdit{{ vacancy.id }}">
         <!-- Default empty row -->
         <div class="d-flex mb-2 flat-amount-row">

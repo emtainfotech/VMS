@@ -414,53 +414,62 @@
                                     <th class="text-end">Success Rate</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {% regroup call_connection by employee_name as employee_list %}
-                                {% for employee in employee_list %}
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar avatar-sm me-2 bg-primary bg-opacity-10 text-white">
-                                                <i class="fas fa-headset"></i>
-                                            </div>
-                                            <span>{{ employee.grouper }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-end fw-bold">
-                                        {% for item in employee.list %}
-                                            {% if item.call_connection == 'Yes' %}
-                                                {{ item.count }}
-                                            {% endif %}
-                                        {% endfor %}
-                                    </td>
-                                    <td class="text-end">
-                                        {% for item in employee.list %}
-                                            {% if item.call_connection != 'Yes' %}
-                                                {{ item.count }}
-                                            {% endif %}
-                                        {% endfor %}
-                                    </td>
-                                    <td class="text-end fw-bold text-success">
-                                        {% with yes_count=employee.list|dictsort:"call_connection"|first %}
-                                        {% with total=employee.list|length %}
-                                            {% if total > 0 %}
-                                                {{ yes_count.count|floatformat:1 }}%
-                                            {% else %}
-                                                0%
-                                            {% endif %}
-                                        {% endwith %}
-                                        {% endwith %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center py-4 text-muted">
-                                        <i class="fas fa-exclamation-circle me-1"></i>
-                                        No call connection data available
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
+                            <tbody id="call-data-body">
+    {% regroup call_connection by employee_name as employee_list %}
+    {% for employee in employee_list %}
+    <tr class="call-row">
+        <td>
+            <div class="d-flex align-items-center">
+                <div class="avatar avatar-sm me-2 bg-primary bg-opacity-10 text-white">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <span class="employee-name">{{ employee.grouper }}</span>
+            </div>
+        </td>
+        <td class="yes-connected-total text-end fw-bold"></td>
+        <td class="other-calls-total text-end"></td>
+        <td class="percentage text-end fw-bold text-success"></td>
+
+        <!-- hidden data for JS -->
+        <td class="d-none call-data">
+            {% for item in employee.list %}
+                <span data-connection="{{ item.call_connection }}" data-count="{{ item.count }}"></span>
+            {% endfor %}
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const rows = document.querySelectorAll(".call-row");
+
+    rows.forEach(row => {
+        let yesConnectedTotal = 0;
+        let otherCallsTotal = 0;
+
+        // Loop through hidden spans
+        row.querySelectorAll(".call-data span").forEach(span => {
+            const type = span.dataset.connection.trim();
+            const count = parseInt(span.dataset.count) || 0;
+
+            if (type === "Yes" || type === "Connected") {
+                yesConnectedTotal += count;
+            } else {
+                otherCallsTotal += count;
+            }
+        });
+
+        const total = yesConnectedTotal + otherCallsTotal;
+        const percentage = total ? ((yesConnectedTotal / total) * 100).toFixed(1) : "0.0";
+
+        // Fill in calculated values
+        row.querySelector(".yes-connected-total").textContent = yesConnectedTotal;
+        row.querySelector(".other-calls-total").textContent = otherCallsTotal;
+        row.querySelector(".percentage").textContent = `${percentage}%`;
+    });
+});
+</script>
+
                         </table>
                     </div>
                 </div>
