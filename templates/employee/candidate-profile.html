@@ -122,334 +122,357 @@
     
     <div class="row g-4">
         <!-- Personal Information Card -->
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center ">
-                    <h5 class="mb-0">Personal Information</h5>
-                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#unified-candidate-modal">
-                        <i class="bi bi-pencil"></i> Edit
-                    </a>
+<div class="col-lg-6">
+    <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Personal Information</h5>
+            <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#unified-candidate-modal">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-column flex-md-row gap-4 align-items-start">
+                <!-- Candidate Photo -->
+                <div class="text-center">
+                    {% if candidate.candidate_photo %}
+                    <img src="{{ candidate.candidate_photo.url }}" 
+                         class="rounded-circle object-cover border" 
+                         style="width: 120px; height: 120px;" 
+                         alt="Candidate Photo">
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center rounded-circle border" 
+                         style="width: 120px; height: 120px;">
+                        <span class="text-muted small">No Photo</span>
+                    </div>
+                    {% endif %}
                 </div>
-                <div class="card-body">
-                    <div class="d-flex flex-column flex-md-row gap-4 align-items-start">
-                        <!-- Candidate Photo -->
-                        <div class="text-center">
-    
-    
-                            {% if candidate.candidate_photo %}
-                            <img src="{{candidate.candidate_photo.url}}" 
-                                 class="rounded-circle object-cover border" 
-                                 style="width: 120px; height: 120px;" 
-                                 alt="Candidate Photo">
-                            {% else %}
-                            <div class="d-flex align-items-center justify-content-center  rounded-circle border" 
-                                 style="width: 120px; height: 120px;">
-                                <span class="text-muted small">No Photo</span>
+                
+                <!-- Candidate Details -->
+                <div class="flex-grow-1">
+                    <h3 class="mb-2">{{ candidate.candidate_name|default:"-" }}</h3>
+                    <p class="text-muted mb-3 small">ID: {{ candidate.unique_code|default:"-" }}</p>
+                    <p class="text-muted mb-3 small">Assigned Employee: {{ candidate.employee_assigned|default:"-" }}</p>
+                    <p class="text-muted mb-3 small">Submitted By: {{ candidate.submit_by|default:"-" }}</p>
+                    
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Mobile Number</span>
+                                <span class="detail-value">{{ candidate.candidate_mobile_number|default:"-" }}</span>
+                            </div>
+                            {% if candidate.candidate_alternate_mobile_number %}
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Alternate Mobile</span>
+                                <span class="detail-value">{{ candidate.candidate_alternate_mobile_number|default:"-" }}</span>
                             </div>
                             {% endif %}
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Email</span>
+                                <span class="detail-value">{{ candidate.candidate_email_address|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Gender</span>
+                                <span class="detail-value">{{ candidate.gender|default:"-" }}</span>
+                            </div>
+                            <div class="mb-3">
+                        <span class="d-block detail-label">Address</span>
+                        {% if candidate.other_origin_location %}
+                            <span class="detail-value">{{ candidate.other_origin_location }}</span>
+                        {% else %}
+                            <span class="detail-value">{{ candidate.origin_location|default:"-" }}</span>
+                        {% endif %}
+                    </div>
                         </div>
-                        
-                        <!-- Candidate Details -->
-                        <div class="flex-grow-1">
-                            <h3 class="mb-2">{{ candidate.candidate_name|default:"-" }}</h3>
-                            <p class="text-muted mb-3 small">ID: {{ candidate.unique_code|default:"-" }}</p>
-                            
-                            <div class="row g-2">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <span class="d-block detail-label">Mobile Number</span>
-                                        <span class="detail-value">{{ candidate.candidate_mobile_number|default:"-" }}</span>
-                                    </div>
-                                    <div class="mb-3">
-                                        <span class="d-block detail-label">Alternate Mobile</span>
-                                        <span class="detail-value">{{ candidate.candidate_alternate_mobile_number|default:"-" }}</span>
-                                    </div>
-                                    <div class="mb-3">
-                                        <span class="d-block detail-label">Email</span>
-                                        <span class="detail-value">{{ candidate.candidate_email_address|default:"-" }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <span class="d-block detail-label">Gender</span>
-                                        <span class="detail-value">{{ candidate.gender|default:"-" }}</span>
-                                    </div>
-                                    <div class="mb-3">
-                                        <span class="d-block detail-label">Source</span>
-                                        <span class="detail-value">
-                                            {% if candidate.lead_source == 'Other' and candidate.other_lead_source %}
-                                                {{ candidate.other_lead_source }}
-                                            {% else %}
-                                                {{ candidate.lead_source|default:"-" }}
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                    <div class="mb-3">
-                                        <span class="d-block detail-label">Registered</span>
-                                        <span class="detail-value">{{ candidate.register_time|date:"M d, Y"|default:"-" }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
+                        <div class="col-md-6">
                             <div class="mb-3">
-                                <span class="d-block detail-label">Address</span>
-                                {% if candidate.other_origin_location %}
-                                    <span class="detail-value">{{ candidate.other_origin_location }}</span>
-                                {% else %}
-                                    <span class="detail-value">{{ candidate.origin_location|default:"-" }}</span>
-                                {% endif %}
-                            </div>
-
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Resume</span>
+                                <span class="d-block detail-label">Source</span>
                                 <span class="detail-value">
-                                    {% if candidate.candidate_resume %}
-                                    <a href="{{candidate.candidate_resume.url}}" target="_blank" class="text-primary">
-                                        <i class="bi bi-file-earmark-text"></i> View Resume
-                                    </a>
+                                    {% if candidate.lead_source == 'Other' and candidate.other_lead_source %}
+                                        {{ candidate.other_lead_source }}
                                     {% else %}
-                                    <span class="empty-value">No Resume</span>
+                                        {{ candidate.lead_source|default:"-" }}
                                     {% endif %}
                                 </span>
                             </div>
-                            
+                            <div class="mb-3">
+                                <span class="d-block detail-label">Registered</span>
+                                <span class="detail-value">{{ candidate.register_time|date:"M d, Y H:i"|default:"-" }}</span>
+                            </div>
                             <div class="mb-3">
                                 <span class="d-block detail-label">Follow-Up By</span>
                                 <span class="detail-value">{{ candidate.employee_name|default:"-" }}</span>
                             </div>
-                        </div>
+                            <div class="mb-3">
+                        <span class="d-block detail-label">Resume</span>
+                        <span class="detail-value">
+                            {% if candidate.candidate_resume %}
+                            <a href="{{ candidate.candidate_resume.url }}" target="_blank" class="text-primary">
+                                <i class="bi bi-file-earmark-text"></i> View Resume
+                            </a>
+                            {% else %}
+                            <span class="empty-value">No Resume</span>
+                            {% endif %}
+                        </span>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Professional Details Card -->
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center ">
-                    <h5 class="mb-0">Professional Details</h5>
-                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#unified-candidate-modal">
-                        <i class="bi bi-pencil"></i> Edit
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Preferred Location</span>
-                                <span class="detail-value">{{ candidate.preferred_location|default:"-" }}</span>
-                            </div>
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Preferred State</span>
-                                <span class="detail-value">{{ candidate.preferred_state|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Highest Qualification</span>
-                                <span class="detail-value">
-                                    {% if candidate.qualification == 'Other' and candidate.other_qualification %}
-                                        {{ candidate.other_qualification }}
-                                    {% else %}
-                                        {{ candidate.qualification|default:"-" }}
-                                    {% endif %}
-                                </span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Diploma</span>
-                                <span class="detail-value">{{ candidate.diploma|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Sector</span>
-                                <span class="detail-value">{{ candidate.sector|default:"-" }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Department</span>
-                                <span class="detail-value">{{ candidate.department|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Experience</span>
-                                <span class="detail-value">
-                                    {{ candidate.experience_year|default:"0" }} years 
-                                    {{ candidate.experience_month|default:"0" }} months
-                                </span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Current Company</span>
-                                <span class="detail-value">{{ candidate.current_company|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Working Status</span>
-                                <span class="detail-value">
-                                    {% if candidate.current_working_status == 'Other' and candidate.other_working_status %}
-                                        {{ candidate.other_working_status }}
-                                    {% else %}
-                                        {{ candidate.current_working_status|default:"-" }}
-                                    {% endif %}
-                                </span>
-                            </div>
                         </div>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Current Salary</span>
-                                <span class="detail-value">{{ candidate.current_salary|default:"-" }}</span>
-                                <span class="detail-value">{{ candidate.current_salary_type|default:"-" }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Expected Salary</span>
-                                <span class="detail-value">{{ candidate.expected_salary|default:"-" }}</span>
-                                <span class="detail-value">{{ candidate.expected_salary_type|default:"-" }}</span>
-                            </div>
-                        </div>
-                    </div>
+                    
+
+                    
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- Calling & Follow-Up Card -->
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center ">
-                    <h5 class="mb-0">Calling & Follow-Up</h5>
-                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#unified-candidate-modal">
-                        <i class="bi bi-pencil"></i> Edit
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Call Connection</span>
-                                <span class="detail-value">
-                                    {% if candidate.call_connection == 'Other' and candidate.other_call_connection %}
-                                        {{ candidate.other_call_connection }}
-                                    {% else %}
-                                        {{ candidate.call_connection|default:"-" }}
-                                    {% endif %}
-                                </span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Calling Remark</span>
-                                <span class="detail-value">{{ candidate.calling_remark|default:"-" }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Lead Status</span>
-                                <span class="detail-value">
-                                    {% if candidate.lead_generate == 'Other' and candidate.other_lead_generate %}
-                                        {{ candidate.other_lead_generate }}
-                                    {% else %}
-                                        {{ candidate.lead_generate|default:"-" }}
-                                    {% endif %}
-                                </span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Interview Status</span>
-                                <span class="detail-value">
-                                    {% if candidate.send_for_interview == 'Other' and candidate.other_interview_status %}
-                                        {{ candidate.other_interview_status }}
-                                    {% else %}
-                                        {{ candidate.send_for_interview|default:"-" }}
-                                    {% endif %}
-                                </span>
-                            </div>
-                        </div>
+<!-- Professional Details Card -->
+<div class="col-lg-6">
+    <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Professional Details</h5>
+            <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#unified-candidate-modal">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Preferred Location</span>
+                        {% if candidate.other_preferred_location %}
+                            <span class="detail-value">{{ candidate.other_preferred_location }}</span>
+                        {% else %}
+                            <span class="detail-value">{{ candidate.preferred_location|default:"-" }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Preferred State</span>
+                        <span class="detail-value">{{ candidate.preferred_state|default:"-" }}</span>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Next Follow-Up</span>
-                                <span class="detail-value">{{ candidate.next_follow_up_date_time|date:"M d, Y"|default:"-" }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Remarks</span>
-                                <span class="detail-value">{{ candidate.remark|default:"-" }}</span>
-                            </div>
-                        </div>
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Highest Qualification</span>
+                        <span class="detail-value">
+                            {% if candidate.qualification == 'Other' and candidate.other_qualification %}
+                                {{ candidate.other_qualification }}
+                            {% else %}
+                                {{ candidate.qualification|default:"-" }}
+                            {% endif %}
+                        </span>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Selection Status Card -->
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center ">
-                    <h5 class="mb-0">Selection Status</h5>
-                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#unified-candidate-modal">
-                        <i class="bi bi-pencil"></i> Edit
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Selection Status</span>
-                                <span class="detail-value">
-                                    {% if candidate.selection_status == 'Other' and candidate.other_selection_status %}
-                                        {{ candidate.other_selection_status }}
-                                    {% else %}
-                                        {{ candidate.selection_status|default:"-" }}
-                                    {% endif %}
-                                </span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Company</span>
-                                <span class="detail-value">{{ candidate.company_name|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Offered Salary</span>
-                                <span class="detail-value">{{ candidate.offered_salary|default:"-" }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Selection Date</span>
-                                <span class="detail-value">{{ candidate.selection_date|date:"M d, Y"|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Joining Date</span>
-                                <span class="detail-value">{{ candidate.candidate_joining_date|date:"M d, Y"|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Commission</span>
-                                <span class="detail-value">{{ candidate.emta_commission|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <span class="d-block detail-label">Payout Date</span>
-                                <span class="detail-value">{{ candidate.payout_date|date:"M d, Y"|default:"-" }}</span>
-                            </div>
-                        </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Diploma</span>
+                        <span class="detail-value">{{ candidate.diploma|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Sector</span>
+                        {% if candidate.other_sector %}
+                            <span class="detail-value">{{ candidate.other_sector }}</span>
+                        {% else %}
+                            <span class="detail-value">{{ candidate.sector|default:"-" }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Department</span>
+                        {% if candidate.other_department %}
+                            <span class="detail-value">{{ candidate.other_department }}</span>
+                        {% else %}
+                            <span class="detail-value">{{ candidate.department|default:"-" }}</span>
+                        {% endif %}
                     </div>
                 </div>
                 
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Experience</span>
+                        <span class="detail-value">
+                            {{ candidate.experience_year|default:"0" }} years 
+                            {{ candidate.experience_month|default:"0" }} months
+                        </span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Current Company</span>
+                        <span class="detail-value">{{ candidate.current_company|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Working Status</span>
+                        <span class="detail-value">
+                            {% if candidate.current_working_status == 'Other' and candidate.other_working_status %}
+                                {{ candidate.other_working_status }}
+                            {% else %}
+                                {{ candidate.current_working_status|default:"-" }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Current Salary</span>
+                        <span class="detail-value">
+                            {{ candidate.current_salary|default:"-" }} 
+                            {{ candidate.current_salary_type|default:"" }}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Expected Salary</span>
+                        <span class="detail-value">
+                            {{ candidate.expected_salary|default:"-" }} 
+                            {{ candidate.expected_salary_type|default:"" }}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Job Title</span>
+                        <span class="detail-value">{{ candidate.job_title|default:"-" }}</span>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Calling & Follow-Up Card -->
+<div class="col-lg-6">
+    <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Calling & Follow-Up</h5>
+            <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#unified-candidate-modal">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Call Connection</span>
+                        <span class="detail-value">
+                            {% if candidate.call_connection == 'Other' and candidate.other_call_connection %}
+                                {{ candidate.other_call_connection }}
+                            {% else %}
+                                {{ candidate.call_connection|default:"-" }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Calling Remark</span>
+                        <span class="detail-value">{{ candidate.calling_remark|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Lead Status</span>
+                        <span class="detail-value">
+                            {% if candidate.lead_generate == 'Other' and candidate.other_lead_generate %}
+                                {{ candidate.other_lead_generate }}
+                            {% else %}
+                                {{ candidate.lead_generate|default:"-" }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Interview Status</span>
+                        <span class="detail-value">
+                            {% if candidate.send_for_interview == 'Other' and candidate.other_interview_status %}
+                                {{ candidate.other_interview_status }}
+                            {% else %}
+                                {{ candidate.send_for_interview|default:"-" }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Next Follow-Up</span>
+                        <span class="detail-value">{{ candidate.next_follow_up_date_time|date:"M d, Y H:i"|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Remarks</span>
+                        <span class="detail-value">{{ candidate.remark|default:"-" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Selection Status Card -->
+<div class="col-lg-6">
+    <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Selection Status</h5>
+            <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#unified-candidate-modal">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Selection Status</span>
+                        <span class="detail-value">
+                            {% if candidate.selection_status == 'Other' and candidate.other_selection_status %}
+                                {{ candidate.other_selection_status }}
+                            {% else %}
+                                {{ candidate.selection_status|default:"Pending" }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Company</span>
+                        <span class="detail-value">{{ candidate.company_name|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Offered Salary</span>
+                        <span class="detail-value">{{ candidate.offered_salary|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Joining Status</span>
+                        <span class="detail-value">{{ candidate.joining_status|default:"-" }}</span>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Selection Date</span>
+                        <span class="detail-value">{{ candidate.selection_date|date:"M d, Y"|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Joining Date</span>
+                        <span class="detail-value">{{ candidate.candidate_joining_date|date:"M d, Y"|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Commission</span>
+                        <span class="detail-value">{{ candidate.emta_commission|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Payout Date</span>
+                        <span class="detail-value">{{ candidate.payout_date|date:"M d, Y"|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Selection Remark</span>
+                        <span class="detail-value">{{ candidate.selection_remark|default:"-" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 

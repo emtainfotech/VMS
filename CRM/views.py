@@ -213,11 +213,11 @@ def crm_dashboard(request):
         employee_performance = sorted(employee_performance_dict.values(), key=lambda x: x['total_candidates'], reverse=True)
 
         # Lead generation for both databases
-        lead_generation_reg = list(current_qs_reg.filter(lead_generate__in=['Yes', 'Converted']).values('employee_name').annotate(
+        lead_generation_reg = list(current_qs_reg.filter(lead_generate__in=['Hot', 'Converted']).values('employee_name').annotate(
             lead_count=Count('id')
         ).order_by('-lead_count'))
         
-        lead_generation_can = list(current_qs_can.filter(lead_generate__in=['Yes', 'Converted']).values('employee_name').annotate(
+        lead_generation_can = list(current_qs_can.filter(lead_generate__in=['Hot', 'Converted']).values('employee_name').annotate(
             lead_count=Count('id')
         ).order_by('-lead_count'))
         
@@ -505,6 +505,10 @@ def admin_candidate_profile(request, id):
                 candidate.other_interview_status = request.POST.get('other_interview_status')
                 candidate.other_selection_status = request.POST.get('other_selection_status')
                 candidate.other_origin_location = request.POST.get('other_origin_location')
+                candidate.other_preferred_location = request.POST.get('other_preferred_location')
+                candidate.other_qualification = request.POST.get('other_qualification')
+                candidate.other_sector = request.POST.get('other_sector')
+                candidate.other_department = request.POST.get('other_department')
 
                 candidate.updated_by = logged_in_employee
                 candidate.save()
@@ -803,7 +807,6 @@ def admin_candidate_registration(request):
             send_for_interview = request.POST.get('send_for_interview')
             next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
             remark = request.POST.get('remark')
-            submit_by = request.POST.get('submit_by')
             preferred_location_str = ', '.join(preferred_location)
             sector_str = ', '.join(sector)
             department_str = ', '.join(department)
@@ -2132,6 +2135,10 @@ def evms_candidate_profile(request,id) :
                 candidate.other_interview_status = request.POST.get('other_interview_status')
                 candidate.other_selection_status = request.POST.get('other_selection_status')
                 candidate.other_origin_location = request.POST.get('other_origin_location')
+                candidate.other_preferred_location = request.POST.get('other_preferred_location')
+                candidate.other_qualification = request.POST.get('other_qualification')
+                candidate.other_sector = request.POST.get('other_sector')
+                candidate.other_department = request.POST.get('other_department')
 
                 
 
@@ -3178,8 +3185,8 @@ def follow_up_candidate(request):
 @login_required
 def generated_leads(request):
     if request.user.is_staff or request.user.is_superuser:
-        candidates_reg = Candidate_registration.objects.filter(lead_generate='Yes').order_by('-id')
-        candidates_can = Candidate.objects.filter(lead_generate='Yes').order_by('-id')
+        candidates_reg = Candidate_registration.objects.filter(lead_generate='Hot').order_by('-id')
+        candidates_can = Candidate.objects.filter(lead_generate='Hot').order_by('-id')
         candidates = list(chain(candidates_reg, candidates_can))
         candidates.sort(key=lambda x: x.register_time, reverse=True)
         context = {

@@ -200,7 +200,8 @@
                   </div>
                 </div>
 
-                <div class="col-md-6 mb-3">
+                
+              <div class="col-md-6 mb-3">
               <label class="form-label">Preferred State</label>
               <div class="dropdown">
                 <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
@@ -243,187 +244,586 @@
                 Please select at least one location
               </div>
             </div>
-                
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Preferred Location</label>
-                  <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                            id="locationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                      {% if candidate.preferred_location %}
-                        {% if candidate.preferred_location|length > 2 %}
-                          {{ candidate.preferred_location|length }} locations selected
-                        {% else %}
-                          {{ candidate.preferred_location|join:", " }}
-                        {% endif %}
-                      {% else %}
-                        Select locations...
-                      {% endif %}
-                    </button>
-                    <ul class="dropdown-menu w-100 p-2" aria-labelledby="locationDropdown">
-                      <li>
-                        <div class="px-2 mb-2">
-                          <input type="text" class="form-control search-input" 
-                                 placeholder="Search locations..." 
-                                 id="locationSearch">
-                        </div>
-                      </li>
-                      <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
-                        {% for district in districts %}
-                        <li class="dropdown-item">
-                          <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="preferred_location" 
-                                   value="{{ district }}" id="loc-{{ forloop.counter }}"
-                                   {% if district in candidate.preferred_location %}checked{% endif %}>
-                            <label class="form-check-label w-100" for="loc-{{ forloop.counter }}">
-                              {{ district }}
-                            </label>
-                          </div>
-                        </li>
-                        {% endfor %}
-                      </div>
-                    </ul>
-                  </div>
-                  <div class="invalid-feedback">
-                    Please select at least one location
-                  </div>
+              
+              <div class="col-md-6 mb-3">
+  <label class="form-label">Preferred Location</label>
+  <div class="dropdown">
+    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+            id="locationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+      {% if candidate.preferred_location %}
+        {% if candidate.preferred_location|length > 2 %}
+          {{ candidate.preferred_location|length }} locations selected
+        {% else %}
+          {{ candidate.preferred_location|join:", " }}
+        {% endif %}
+      {% else %}
+        Select locations...
+      {% endif %}
+    </button>
+    <ul class="dropdown-menu w-100 p-2" aria-labelledby="locationDropdown">
+      <li>
+        <div class="px-2 mb-2">
+          <input type="text" class="form-control search-input" 
+                 placeholder="Search locations..." 
+                 id="locationSearch">
+        </div>
+      </li>
+      <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+        {% for district in districts %}
+        <li class="dropdown-item">
+          <div class="form-check">
+            <input class="form-check-input location-checkbox" type="checkbox" name="preferred_location" 
+                   value="{{ district }}" id="loc-{{ forloop.counter }}"
+                   {% if district in candidate.preferred_location %}checked{% endif %}>
+            <label class="form-check-label w-100" for="loc-{{ forloop.counter }}">
+              {{ district }}
+            </label>
+          </div>
+        </li>
+        {% endfor %}
+        <li class="dropdown-item">
+          <div class="form-check">
+            <input class="form-check-input location-checkbox" type="checkbox" name="preferred_location" 
+                   value="Others" id="loc-others"
+                   {% if "Others" in candidate.preferred_location %}checked{% endif %}>
+            <label class="form-check-label w-100" for="loc-others">
+              Others
+            </label>
+          </div>
+        </li>
+      </div>
+    </ul>
+  </div>
+  <div class="invalid-feedback">
+    Please select at least one location
+  </div>
+</div>
+
+<!-- Hidden 'Other Preferred Location' Field -->
+<div class="col-md-6 mb-3" id="otherPreferredLocationField" style="display: none;">
+  <label class="form-label">Please specify other location(s)</label>
+  <input type="text" class="form-control" name="other_preferred_location" 
+         placeholder="Enter other preferred locations (comma separated)"
+         value="{% if candidate.other_preferred_location %}{{ candidate.other_preferred_location }}{% endif %}">
+</div>
+
+              
+              <div class="col-md-6 mb-3">
+  <label class="form-label">Candidate Origin Location</label>
+  
+  <!-- Custom searchable dropdown container -->
+  <div class="custom-dropdown">
+    <!-- Search input and dropdown toggle -->
+    <div class="dropdown-input-container">
+      <input type="text" class="form-control dropdown-search-input" 
+             placeholder="Search locations..." 
+             id="originLocationSearch"
+             {% if candidate.origin_location %}value="{{ candidate.origin_location }}"{% endif %}>
+      <button class="dropdown-toggle-btn" type="button">
+        <i class="fas fa-chevron-down"></i>
+      </button>
+    </div>
+    
+    <!-- Dropdown options -->
+    <div class="dropdown-options" id="originLocationOptions" style="display: none;">
+      {% for district in districts %}
+      <div class="dropdown-option" data-value="{{ district }}">
+        {{ district }}
+      </div>
+      {% endfor %}
+      <div class="dropdown-option" data-value="Other">
+        Other
+      </div>
+    </div>
+    
+    <!-- Hidden select element for form submission -->
+    <select name="origin_location" id="originLocation" required style="display: none;">
+      {% if candidate.origin_location %}
+        <option value="{{ candidate.origin_location }}" selected>{{ candidate.origin_location }}</option>
+      {% endif %}
+    </select>
+  </div>
+  
+  <!-- Other location field -->
+  <div id="otherOriginLocation" style="display: none;" class="mt-2">
+    <label class="form-label">Specify Other Candidate Origin Location</label>
+    <input type="text" class="form-control" name="other_origin_location" 
+           value="{{ candidate.other_origin_location }}" maxlength="100">
+  </div>
+  <div class="invalid-feedback">
+    Maximum 100 characters allowed
+  </div>
+</div>
+
+<style>
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-input-container {
+  position: relative;
+  display: flex;
+}
+
+.dropdown-search-input {
+  padding-right: 35px;
+}
+
+.dropdown-toggle-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  background: transparent;
+  border: none;
+  padding: 0 10px;
+  color: #6c757d;
+}
+
+.dropdown-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  background: white;
+  z-index: 1000;
+  margin-top: 2px;
+}
+
+.dropdown-option {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.dropdown-option:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-option.active {
+  background-color: #007bff;
+  color: white;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('originLocationSearch');
+  const optionsContainer = document.getElementById('originLocationOptions');
+  const hiddenSelect = document.getElementById('originLocation');
+  const otherLocationField = document.getElementById('otherOriginLocation');
+  
+  // Toggle dropdown visibility
+  searchInput.addEventListener('focus', function() {
+    optionsContainer.style.display = 'block';
+    filterOptions();
+  });
+  
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.custom-dropdown')) {
+      optionsContainer.style.display = 'none';
+    }
+  });
+  
+  // Filter options based on search input
+  searchInput.addEventListener('input', filterOptions);
+  
+  function filterOptions() {
+    const searchValue = searchInput.value.toLowerCase();
+    const options = optionsContainer.querySelectorAll('.dropdown-option');
+    
+    options.forEach(option => {
+      const text = option.textContent.toLowerCase();
+      if (text.includes(searchValue)) {
+        option.style.display = 'block';
+      } else {
+        option.style.display = 'none';
+      }
+    });
+  }
+  
+  // Handle option selection
+  optionsContainer.addEventListener('click', function(e) {
+    const option = e.target.closest('.dropdown-option');
+    if (option) {
+      const value = option.getAttribute('data-value');
+      const text = option.textContent;
+      
+      // Update search input and hidden select
+      searchInput.value = text;
+      hiddenSelect.innerHTML = `<option value="${value}" selected>${text}</option>`;
+      
+      // Toggle other location field
+      if (value === 'Other') {
+        otherLocationField.style.display = 'block';
+      } else {
+        otherLocationField.style.display = 'none';
+      }
+      
+      // Close dropdown
+      optionsContainer.style.display = 'none';
+    }
+  });
+  
+  // Initialize if value exists
+  if (hiddenSelect.value === 'Other') {
+    otherLocationField.style.display = 'block';
+  }
+  
+  // Handle keyboard navigation
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter') {
+      e.preventDefault();
+      const options = Array.from(optionsContainer.querySelectorAll('.dropdown-option:not([style*="display: none"])'));
+      const activeOption = optionsContainer.querySelector('.dropdown-option.active');
+      let currentIndex = activeOption ? options.indexOf(activeOption) : -1;
+      
+      if (e.key === 'ArrowDown') {
+        currentIndex = (currentIndex + 1) % options.length;
+      } else if (e.key === 'ArrowUp') {
+        currentIndex = (currentIndex - 1 + options.length) % options.length;
+      } else if (e.key === 'Enter' && activeOption) {
+        activeOption.click();
+        return;
+      }
+      
+      // Update active option
+      optionsContainer.querySelectorAll('.dropdown-option').forEach(opt => {
+        opt.classList.remove('active');
+      });
+      if (currentIndex >= 0) {
+        options[currentIndex].classList.add('active');
+      }
+    }
+  });
+});
+</script>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Qualification</label>
+                <select class="form-select" name="qualification" id="qualificationSelect">
+                  <option value="">Select Qualification</option>
+                  <option value="High School" {% if candidate.qualification == "High School" %}selected{% endif %}>High School</option>
+                  <option value="Higher Secondary" {% if candidate.qualification == "Higher Secondary" %}selected{% endif %}>Higher Secondary</option>
+                  <option value="Bachelor's Degree" {% if candidate.qualification == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree</option>
+                  <option value="Master's Degree" {% if candidate.qualification == "Master's Degree" %}selected{% endif %}>Master's Degree</option>
+                  <option value="PhD" {% if candidate.qualification == "PhD" %}selected{% endif %}>PhD</option>
+                  <option value="Other" {% if candidate.qualification == "Other" %}selected{% endif %}>Other</option>
+                </select>
+                <div id="otherQualificationContainer" style="display: none;" class="mt-2">
+                  <label class="form-label">Specify Other Qualification</label>
+                  <input type="text" class="form-control" name="other_qualification" 
+                         value="{{ candidate.other_qualification }}" maxlength="100">
                 </div>
-                
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Candidate Origin Location</label>
-                  <select type="text" class="form-select" name="origin_location" id="originLocation" required>
-                      {% for district in districts %}
-                      <option value="{{ district }}" {% if candidate.origin_location == district %}selected{% endif %}>
-                          {{ district }}
-                      </option>
-                      {% endfor %}
-                      <option value="Other" {% if candidate.origin_location == "Other" %}selected{% endif %}>Other</option>
-                  </select>
-                  <div id="otherOriginLocation" style="display: none;" class="mt-2">
-                    <label class="form-label">Specify Other Origin Location</label>
-                    <input type="text" class="form-control" name="other_origin_location" 
-                           value="{{ candidate.other_origin_location }}" maxlength="100">
-                  </div>
-                  <div class="invalid-feedback">
-                    Maximum 100 characters allowed
-                  </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Diploma</label>
+                <input type="text" class="form-control" name="diploma" 
+                       value="{{candidate.diploma}}"
+                       maxlength="100">
+                <div class="invalid-feedback">
+                  Maximum 100 characters allowed
                 </div>
-                
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Qualification</label>
-                  <select class="form-select" name="qualification" id="qualificationSelect">
-                    <option value="">Select Qualification</option>
-                    <option value="High School" {% if candidate.qualification == "High School" %}selected{% endif %}>High School</option>
-                    <option value="Higher Secondary" {% if candidate.qualification == "Higher Secondary" %}selected{% endif %}>Higher Secondary</option>
-                    <option value="Bachelor's Degree" {% if candidate.qualification == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree</option>
-                    <option value="Master's Degree" {% if candidate.qualification == "Master's Degree" %}selected{% endif %}>Master's Degree</option>
-                    <option value="PhD" {% if candidate.qualification == "PhD" %}selected{% endif %}>PhD</option>
-                    <option value="Other" {% if candidate.qualification == "Other" %}selected{% endif %}>Other</option>
-                  </select>
-                  <div id="otherQualificationContainer" style="display: none;" class="mt-2">
-                    <label class="form-label">Specify Other Qualification</label>
-                    <input type="text" class="form-control" name="other_qualification" 
-                           value="{{ candidate.other_qualification }}" maxlength="100">
-                  </div>
-                </div>
-                
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Diploma</label>
-                  <input type="text" class="form-control" name="diploma" 
-                         value="{{candidate.diploma}}" maxlength="100">
-                  <div class="invalid-feedback">
-                    Maximum 100 characters allowed
-                  </div>
-                </div>
-                
-                <!-- Sector -->
-                <div class="col-sm-6 col-md-6">
-                  <div class="mb-3">
-                    <label class="form-label">Sector</label>
-                    <div class="dropdown">
-                      <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                              id="sectorDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        {% if candidate.sector %}
-                          {% if candidate.sector|length > 2 %}
-                            {{ candidate.sector|length }} sectors selected
-                          {% else %}
-                            {{ candidate.sector|join:", " }}
-                          {% endif %}
-                        {% else %}
-                          Select sectors...
-                        {% endif %}
-                      </button>
-                      <ul class="dropdown-menu w-100 p-2" aria-labelledby="sectorDropdown">
-                        <li>
-                          <div class="px-2 mb-2">
-                            <input type="text" class="form-control sector-search-input" 
-                                   placeholder="Search sectors..." 
-                                   id="sectorSearch">
-                          </div>
-                        </li>
-                        <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
-                          {% for job_sector in job_sectors %}
-                          <li class="dropdown-item">
-                            <div class="form-check">
-                              <input class="form-check-input" type="checkbox" name="sector" 
-                                     value="{{ job_sector }}" id="sector-{{ forloop.counter }}"
-                                     {% if job_sector in candidate.sector %}checked{% endif %}>
-                              <label class="form-check-label w-100" for="sector-{{ forloop.counter }}">
-                                {{ job_sector }}
-                              </label>
-                            </div>
-                          </li>
-                          {% endfor %}
-                        </div>
-                      </ul>
-                    </div>
-                    <div class="invalid-feedback">Please select at least one sector.</div>
-                  </div>
-                </div>
-                
-                <!-- Department -->
-                <div class="col-sm-6 col-md-6">
-                  <div class="mb-3">
-                    <label class="form-label">Department</label>
-                    <div class="dropdown">
-                      <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                              id="departmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        {% if candidate.department %}
-                          {% if candidate.department|length > 2 %}
-                            {{ candidate.department|length }} departments selected
-                          {% else %}
-                            {{ candidate.department|join:", " }}
-                          {% endif %}
-                        {% else %}
-                          Select departments...
-                        {% endif %}
-                      </button>
-                      <ul class="dropdown-menu w-100 p-2" aria-labelledby="departmentDropdown">
-                        <li>
-                          <div class="px-2 mb-2">
-                            <input type="text" class="form-control department-search-input" 
-                                   placeholder="Search departments..." 
-                                   id="departmentSearch">
-                          </div>
-                        </li>
-                        <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
-                          {% for department in departments %}
-                          <li class="dropdown-item">
-                            <div class="form-check">
-                              <input class="form-check-input" type="checkbox" name="department" 
-                                     value="{{ department }}" id="dept-{{ forloop.counter }}"
-                                     {% if department in candidate.department %}checked{% endif %}>
-                              <label class="form-check-label w-100" for="dept-{{ forloop.counter }}">
-                                {{ department }}
-                              </label>
-                            </div>
-                          </li>
-                          {% endfor %}
-                        </div>
-                      </ul>
-                    </div>
-                    <div class="invalid-feedback">Please select at least one department.</div>
-                  </div>
-                </div>
+              </div>
+              
+              <!-- Sector -->
+<div class="col-sm-6 col-md-6">
+  <div class="mb-3">
+    <label class="form-label">Sector</label>
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+              id="sectorDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        {% if candidate.sector %}
+          {% if candidate.sector|length > 2 %}
+            {{ candidate.sector|length }} sectors selected
+          {% else %}
+            {{ candidate.sector|join:", " }}
+          {% endif %}
+        {% else %}
+          Select sectors...
+        {% endif %}
+      </button>
+      <ul class="dropdown-menu w-100 p-2" aria-labelledby="sectorDropdown">
+        <li>
+          <div class="px-2 mb-2">
+            <input type="text" class="form-control sector-search-input" 
+                   placeholder="Search sectors..." 
+                   id="sectorSearch">
+          </div>
+        </li>
+        <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+          {% for job_sector in job_sectors %}
+          <li class="dropdown-item">
+            <div class="form-check">
+              <input class="form-check-input sector-checkbox" type="checkbox" name="sector" 
+                     value="{{ job_sector }}" id="sector-{{ forloop.counter }}"
+                     {% if job_sector in candidate.sector %}checked{% endif %}>
+              <label class="form-check-label w-100" for="sector-{{ forloop.counter }}">
+                {{ job_sector }}
+              </label>
+            </div>
+          </li>
+          {% endfor %}
+          <li class="dropdown-item">
+            <div class="form-check">
+              <input class="form-check-input sector-checkbox" type="checkbox" name="sector" 
+                     value="Others" id="sector-others"
+                     {% if "Others" in candidate.sector %}checked{% endif %}>
+              <label class="form-check-label w-100" for="sector-others">
+                Others
+              </label>
+            </div>
+          </li>
+        </div>
+      </ul>
+    </div>
+    <div class="invalid-feedback">Please select at least one sector.</div>
+  </div>
+</div>
+
+<!-- Hidden 'Other Sector' Field -->
+<div class="col-sm-6 col-md-6 mb-3" id="otherSectorField" style="display: none;">
+  <label class="form-label">Please specify other sector(s)</label>
+  <input type="text" class="form-control" name="other_sector" 
+         placeholder="Enter other sectors (comma separated)"
+         value="{% if candidate.other_sector %}{{ candidate.other_sector }}{% endif %}">
+</div>
+
+<script>
+// Search functionality for sectors
+document.getElementById('sectorSearch').addEventListener('input', function() {
+  const searchValue = this.value.toLowerCase();
+  const options = document.querySelectorAll('#sectorDropdown ~ .dropdown-menu .dropdown-options .dropdown-item');
+  
+  options.forEach(option => {
+    const text = option.textContent.toLowerCase();
+    if (text.includes(searchValue)) {
+      option.style.display = 'block';
+    } else {
+      option.style.display = 'none';
+    }
+  });
+});
+
+// Toggle 'Other Sector' field and update button text
+document.addEventListener('DOMContentLoaded', function() {
+  const sectorCheckboxes = document.querySelectorAll('.sector-checkbox');
+  const otherSectorField = document.getElementById('otherSectorField');
+  
+  sectorCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      // Check if "Others" is selected
+      const othersChecked = document.getElementById('sector-others').checked;
+      otherSectorField.style.display = othersChecked ? 'block' : 'none';
+      
+      // Update dropdown button text
+      updateSectorButtonText();
+    });
+  });
+  
+  // Initialize button text
+  updateSectorButtonText();
+  
+  // Check if "Others" was previously selected
+  if (document.getElementById('sector-others').checked) {
+    otherSectorField.style.display = 'block';
+  }
+});
+
+function updateSectorButtonText() {
+  const checkedBoxes = document.querySelectorAll('.sector-checkbox:checked');
+  const button = document.getElementById('sectorDropdown');
+  
+  if (checkedBoxes.length === 0) {
+    button.textContent = 'Select sectors...';
+  } else if (checkedBoxes.length > 2) {
+    button.textContent = checkedBoxes.length + ' sectors selected';
+  } else {
+    const selectedValues = Array.from(checkedBoxes).map(cb => cb.value);
+    button.textContent = selectedValues.join(', ');
+  }
+}
+</script>
+              
+              <!-- Department -->
+<div class="col-sm-6 col-md-6">
+  <div class="mb-3">
+    <label class="form-label">Department</label>
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+              id="departmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        {% if candidate.department %}
+          {% if candidate.department|length > 2 %}
+            {{ candidate.department|length }} departments selected
+          {% else %}
+            {{ candidate.department|join:", " }}
+          {% endif %}
+        {% else %}
+          Select departments...
+        {% endif %}
+      </button>
+      <ul class="dropdown-menu w-100 p-2" aria-labelledby="departmentDropdown">
+        <li>
+          <div class="px-2 mb-2">
+            <input type="text" class="form-control department-search-input" 
+                   placeholder="Search departments..." 
+                   id="departmentSearch">
+          </div>
+        </li>
+        <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+          {% for department in departments %}
+          <li class="dropdown-item">
+            <div class="form-check">
+              <input class="form-check-input department-checkbox" type="checkbox" name="department" 
+                     value="{{ department }}" id="dept-{{ forloop.counter }}"
+                     {% if department in candidate.department %}checked{% endif %}>
+              <label class="form-check-label w-100" for="dept-{{ forloop.counter }}">
+                {{ department }}
+              </label>
+            </div>
+          </li>
+          {% endfor %}
+          <li class="dropdown-item">
+            <div class="form-check">
+              <input class="form-check-input department-checkbox" type="checkbox" name="department" 
+                     value="Others" id="dept-others"
+                     {% if "Others" in candidate.department %}checked{% endif %}>
+              <label class="form-check-label w-100" for="dept-others">
+                Others
+              </label>
+            </div>
+          </li>
+        </div>
+      </ul>
+    </div>
+    <div class="invalid-feedback">Please select at least one department.</div>
+  </div>
+</div>
+
+<!-- Hidden 'Other Department' Field -->
+<div class="col-sm-6 col-md-6 mb-3" id="otherDepartmentField" style="display: none;">
+  <label class="form-label">Please specify other department(s)</label>
+  <input type="text" class="form-control" name="other_department" 
+         placeholder="Enter other departments (comma separated)"
+         value="{% if candidate.other_department %}{{ candidate.other_department }}{% endif %}">
+</div>
+
+<script>
+// Search functionality for departments
+document.getElementById('departmentSearch').addEventListener('input', function() {
+  const searchValue = this.value.toLowerCase();
+  const options = document.querySelectorAll('#departmentDropdown ~ .dropdown-menu .dropdown-options .dropdown-item');
+  
+  options.forEach(option => {
+    const text = option.textContent.toLowerCase();
+    if (text.includes(searchValue)) {
+      option.style.display = 'block';
+    } else {
+      option.style.display = 'none';
+    }
+  });
+});
+
+// Toggle 'Other Department' field and update button text
+document.addEventListener('DOMContentLoaded', function() {
+  const departmentCheckboxes = document.querySelectorAll('.department-checkbox');
+  const otherDepartmentField = document.getElementById('otherDepartmentField');
+  
+  departmentCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      // Check if "Others" is selected
+      const othersChecked = document.getElementById('dept-others').checked;
+      otherDepartmentField.style.display = othersChecked ? 'block' : 'none';
+      
+      // Update dropdown button text
+      updateDepartmentButtonText();
+    });
+  });
+  
+  // Initialize button text
+  updateDepartmentButtonText();
+  
+  // Check if "Others" was previously selected
+  if (document.getElementById('dept-others').checked) {
+    otherDepartmentField.style.display = 'block';
+  }
+});
+
+function updateDepartmentButtonText() {
+  const checkedBoxes = document.querySelectorAll('.department-checkbox:checked');
+  const button = document.getElementById('departmentDropdown');
+  
+  if (checkedBoxes.length === 0) {
+    button.textContent = 'Select departments...';
+  } else if (checkedBoxes.length > 2) {
+    button.textContent = checkedBoxes.length + ' departments selected';
+  } else {
+    const selectedValues = Array.from(checkedBoxes).map(cb => cb.value);
+    button.textContent = selectedValues.join(', ');
+  }
+}
+</script>
+
+
+<script>
+// Search functionality
+document.getElementById('locationSearch').addEventListener('input', function() {
+  const searchValue = this.value.toLowerCase();
+  const options = document.querySelectorAll('.dropdown-options .dropdown-item');
+  
+  options.forEach(option => {
+    const text = option.textContent.toLowerCase();
+    if (text.includes(searchValue)) {
+      option.style.display = 'block';
+    } else {
+      option.style.display = 'none';
+    }
+  });
+});
+
+// Toggle 'Other Preferred Location' field
+document.addEventListener('DOMContentLoaded', function() {
+  const checkboxes = document.querySelectorAll('.location-checkbox');
+  const otherField = document.getElementById('otherPreferredLocationField');
+  
+  checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      // Check if "Others" is selected
+      const othersChecked = document.getElementById('loc-others').checked;
+      otherField.style.display = othersChecked ? 'block' : 'none';
+      
+      // Update dropdown button text
+      updateButtonText();
+    });
+  });
+  
+  // Initialize button text
+  updateButtonText();
+  
+  // Check if "Others" was previously selected
+  if (document.getElementById('loc-others').checked) {
+    otherField.style.display = 'block';
+  }
+});
+
+function updateButtonText() {
+  const checkedBoxes = document.querySelectorAll('.location-checkbox:checked');
+  const button = document.getElementById('locationDropdown');
+  
+  if (checkedBoxes.length === 0) {
+    button.textContent = 'Select locations...';
+  } else if (checkedBoxes.length > 2) {
+    button.textContent = checkedBoxes.length + ' locations selected';
+  } else {
+    const selectedValues = Array.from(checkedBoxes).map(cb => cb.value);
+    button.textContent = selectedValues.join(', ');
+  }
+}
+</script>
                 
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Experience (In Years)</label>
@@ -530,13 +930,30 @@
 
               <div class="row" id="connectedFields" style="display: none;">
                 <div class="col-md-12 mb-3">
-                  <label class="form-label">Lead Generate Status <span class="text-danger">*</span></label>
+                  <label class="form-label">Lead Status <span class="text-danger">*</span></label>
                   <select class="form-select" name="lead_generate" id="leadGenerateSelect" required>
-                    <option value="" disabled selected>Select Status</option>
-                    <option value="Yes" {% if candidate.lead_generate == "Yes" %}selected{% endif %}>Yes</option>
-                    <option value="No" {% if candidate.lead_generate == "No" %}selected{% endif %}>No</option>
-                    <option value="Converted" {% if candidate.lead_generate == "Converted" %}selected{% endif %}>Converted</option>
-                    <option value="Other" {% if candidate.lead_generate == "Other" %}selected{% endif %}>Other</option>
+                   <option value="" disabled selected>Select Status</option>
+    <option value="Hot" {% if candidate.lead_generate == "Hot" %}selected{% endif %}>
+      Hot <span class="text-muted">(Positive prospect but pending for Conversion for Interview scheduling)</span>
+    </option>
+    <option value="Cold" {% if candidate.lead_generate == "Cold" %}selected{% endif %}>
+      Cold <span class="text-muted">(Not so interested)</span>
+    </option>
+    <option value="Converted" {% if candidate.lead_generate == "Converted" %}selected{% endif %}>
+      Converted <span class="text-muted">(for Scheduling Interview)</span>
+    </option>
+    <option value="Not interested" {% if candidate.lead_generate == "Not interested" %}selected{% endif %}>
+      Not interested <span class="text-muted">(Looking for different Jobs/Salary Range - mention in Remarks)</span>
+    </option>
+    <option value="Connect later" {% if candidate.lead_generate == "Connect later" %}selected{% endif %}>
+      Connect later <span class="text-muted">(mention Follow-up date and time)</span>
+    </option>
+    <option value="DND" {% if candidate.lead_generate == "DND" %}selected{% endif %}>
+      DND <span class="text-muted">(Candidate does not want to receive calls/messages)</span>
+    </option>
+    <option value="Other" {% if candidate.lead_generate == "Other" %}selected{% endif %}>
+      Other <span class="text-muted">(mention in remarks)</span>
+    </option>
                   </select>
                   <div id="otherLeadGenerateContainer" style="display: none;" class="mt-2">
                     <label class="form-label">Specify Other Lead Generate Status</label>
@@ -574,7 +991,7 @@
                   <label class="form-label">Next Follow-Up Date <span class="text-danger">*</span></label>
                   <input type="datetime-local" name="next_follow_up_date_time" class="form-control" 
                         value="{{ candidate.next_follow_up_date_time|date:'Y-m-d H:i' }}" 
-                        min="{{ current_date|date:'Y-m-d H:i' }}" required>
+                       >
                   <div class="invalid-feedback">
                     Please select a valid future date
                   </div>

@@ -530,11 +530,30 @@ document.getElementById('candidateResumeInput').addEventListener('change', funct
                                 <!-- Lead Generate -->
                                 <div class="col-md-3">
                                     <div class="mb-3">
-                                        <label class="form-label">Lead Generate</label>
+                                        <label class="form-label">Lead Status</label>
                                         <select class="form-control form-select" name='lead_generate' >
                                             <option value="" disabled selected>Select Status</option>
-                                            <option value="No" {% if Candidate_registration.lead_generate == "No" %}selected{% endif %}>No</option>
-                                            <option value="Yes" {% if Candidate_registration.lead_generate == "Yes" %}selected{% endif %}>Yes</option>
+    <option value="Hot" {% if candidate.lead_generate == "Hot" %}selected{% endif %}>
+      Hot <span class="text-muted">(Positive prospect but pending for Conversion for Interview scheduling)</span>
+    </option>
+    <option value="Cold" {% if candidate.lead_generate == "Cold" %}selected{% endif %}>
+      Cold <span class="text-muted">(Not so interested)</span>
+    </option>
+    <option value="Converted" {% if candidate.lead_generate == "Converted" %}selected{% endif %}>
+      Converted <span class="text-muted">(for Scheduling Interview)</span>
+    </option>
+    <option value="Not interested" {% if candidate.lead_generate == "Not interested" %}selected{% endif %}>
+      Not interested <span class="text-muted">(Looking for different Jobs/Salary Range - mention in Remarks)</span>
+    </option>
+    <option value="Connect later" {% if candidate.lead_generate == "Connect later" %}selected{% endif %}>
+      Connect later <span class="text-muted">(mention Follow-up date and time)</span>
+    </option>
+    <option value="DND" {% if candidate.lead_generate == "DND" %}selected{% endif %}>
+      DND <span class="text-muted">(Candidate does not want to receive calls/messages)</span>
+    </option>
+    <option value="Other" {% if candidate.lead_generate == "Other" %}selected{% endif %}>
+      Other <span class="text-muted">(mention in remarks)</span>
+    </option>
                                         </select>
                                         <div class="invalid-feedback">Please select lead generate status.</div>
                                     </div>

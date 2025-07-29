@@ -1171,6 +1171,10 @@ def employee_candidate_profile(request, id):
             candidate.other_interview_status = request.POST.get('other_interview_status')
             candidate.other_selection_status = request.POST.get('other_selection_status')
             candidate.other_origin_location = request.POST.get('other_origin_location')
+            candidate.other_preferred_location = request.POST.get('other_preferred_location')
+            candidate.other_qualification = request.POST.get('other_qualification')
+            candidate.other_sector = request.POST.get('other_sector')
+            candidate.other_department = request.POST.get('other_department')
 
             # candidate.updated_by = logged_in_employee
             candidate.save()
@@ -2235,6 +2239,19 @@ def employee_evms_candidate_profile(request, id):
                 candidate.candidate_joining_date = request.POST.get('candidate_joining_date') or None
                 candidate.emta_commission = request.POST.get('emta_commission')
                 candidate.payout_date = request.POST.get('payout_date')
+
+                candidate.other_lead_source = request.POST.get('other_lead_source')
+                candidate.other_qualification = request.POST.get('other_qualification')
+                candidate.other_working_status = request.POST.get('other_working_status')
+                candidate.other_call_connection = request.POST.get('other_call_connection')
+                candidate.other_lead_generate = request.POST.get('other_lead_generate')
+                candidate.other_interview_status = request.POST.get('other_interview_status')
+                candidate.other_selection_status = request.POST.get('other_selection_status')
+                candidate.other_origin_location = request.POST.get('other_origin_location')
+                candidate.other_preferred_location = request.POST.get('other_preferred_location')
+                candidate.other_qualification = request.POST.get('other_qualification')
+                candidate.other_sector = request.POST.get('other_sector')
+                candidate.other_department = request.POST.get('other_department')
 
                 candidate.vendor_commission = request.POST.get('vendor_commission')
                 candidate.vendor_payout_date = request.POST.get('vendor_payout_date') or None

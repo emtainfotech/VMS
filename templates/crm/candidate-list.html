@@ -2,452 +2,874 @@
 
 {% block content %}
 <div class="page-wrapper">
-  <!-- Page header -->
-  <div class="page-header d-print-none">
-    <div class="container-xl">
-      <div class="row g-2 align-items-center">
-        <div class="col">
-          <h2 class="page-title">Candidate Management</h2>
-          <div class="text-muted mt-1">
-            <span id="total-candidates">{{ candidates|length }}</span> candidates found
-          </div>
-        </div>
-        <div class="col-auto ms-auto d-print-none">
-          <div class="btn-list">
-            <!-- Add New Candidate -->
-            <a href="{% url 'admin_candidate_registration' %}" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
-                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M12 7v4m0 0v4m0-4h4m-4 0H8" />
-                <path d="M16 21v-2a4 4 0 0 0 -8 0v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              Add New Candidate
-            </a>
-        
-            <!-- Download Candidate Data -->
-            <a href="{% url 'download_candidates' %}" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
-                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
-                <path d="M7 11l5 5l5 -5" />
-                <path d="M12 4v12" />
-              </svg>
-              Download Candidate Data
-            </a>
-          </div>
-        </div>
-        
-        <div class="col-auto ms-auto d-print-none">
-          <div class="btn-list">
-            <!-- Bulk Upload Candidates -->
-            <a href="{% url 'admin_candidate_bulk_upload' %}" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
-                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
-                <path d="M7 11l5 -5l5 5" />
-                <path d="M12 6v12" />
-              </svg>
-              Bulk Upload Candidates
-            </a>
-          </div>
-        </div>
-        
-      </div>
-    </div>
-  </div>
-
-  <!-- Page body -->
-  <div class="page-body">
-    <div class="container-xl">
-      <div class="card">
-        <div class="card-header">
-          <div class="row align-items-center">
-            <div class="col-12 col-md-6 mb-3 mb-md-0">
-              <div class="input-group">
-                <span class="input-group-text">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-                    <path d="M21 21l-6 -6" />
-                  </svg>
-                </span>
-                <input type="text" id="searchInput" class="form-control" placeholder="Search candidates..." aria-label="Search candidates">
-              </div>
-            </div>
-            <div class="col-12 col-md-6 ms-md-auto">
-              <div class="d-flex align-items-center justify-content-end">
-                <div class="me-3 text-nowrap">
-                  <label for="statusFilter" class="form-label">Status:</label>
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">Candidate Management</h2>
+                    <div class="text-muted mt-1">
+                        <span id="total-candidates">{{ candidates|length }}</span> candidates found
+                    </div>
                 </div>
-                <select id="statusFilter" class="form-select">
-                  <option value="">All Statuses</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Selected">Selected</option>
-                  <option value="Rejected">Rejected</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="table-responsive">
-          <table class="table table-vcenter table-hover table-nowrap" id="candidatesTable">
-            <thead>
-              <tr>
-                <th class="w-1">#</th>
-                <th>Connection Status</th>
-                <th>Candidate</th>
-                <th>Contact</th>
-                <th>Selection Status</th>
-                <th>Experience</th>
-                <th>Employee</th>
-                <th>Registered</th>
-                <th class="text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for candidate in candidates %}
-              <tr data-status="{{ candidate.selection_status|lower }}" data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }} {{ candidate.current_working_status|lower }}">
-                <td>{{ forloop.counter }}</td>
-                <td>
-                  {% if candidate.call_connection %}
-                  <span class="badge text-white
-                    {% if candidate.call_connection|lower == 'yes' %}
-                      bg-success
-                    {% elif candidate.call_connection|lower == 'connected' %}
-                      bg-success
-                    {% elif candidate.call_connection|lower == 'no' %}
-                      bg-danger
-                    {% elif candidate.call_connection|lower == 'pending' %}
-                      bg-warning text-dark
-                    {% else %}
-                      bg-secondary
-                    {% endif %}
-                    px-3 py-1 rounded-pill text-capitalize"
-                    title="Call Connection: {{ candidate.call_connection }}">
-                    <i class="fa text-white
-                      {% if candidate.call_connection|lower == 'yes' %}
-                        fa-check-circle
-                      {% elif candidate.call_connection|lower == 'connected' %}
-                        fa-check-circle
-                      {% elif candidate.call_connection|lower == 'no' %}
-                        fa-times-circle
-                      {% elif candidate.call_connection|lower == 'pending' %}
-                        fa-clock
-                      {% else %}
-                        fa-question-circle
-                      {% endif %}
-                      me-1"></i>
-                    {{ candidate.call_connection }}
-                  </span>
-                  {% else %}
-                  <span class="badge bg-secondary px-3 py-1 rounded-pill">New</span>
-                  {% endif %}
-                </td>
-                <td>
-                  <div class="d-flex align-items-center">
-                    <div class="me-3">
-                      {% if candidate.candidate_photo %}
-                      <img src="{{ candidate.candidate_photo.url }}" class="avatar avatar-md rounded-circle" alt="{{ candidate.candidate_name }}">
-                      {% else %}
-                      <div class="avatar avatar-md rounded-circle bg-blue-lt">
-                        {{ candidate.candidate_name|first|upper }}
-                      </div>
-                      {% endif %}
-                    </div>
-                    <div>
-                      <div class="font-weight-medium">
-                        
-                        <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' candidate.id %}{% else %}{% url 'admin_candidate_profile' candidate.id %}{% endif %}" class="text-truncate">
-                          {{ candidate.candidate_name }}
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <a href="{% url 'admin_candidate_registration' %}" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M12 7v4m0 0v4m0-4h4m-4 0H8" />
+                                <path d="M16 21v-2a4 4 0 0 0 -8 0v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            Add New Candidate
                         </a>
-                      </div>
-                      <div class="text-muted small">
-                        {% if candidate.lead_source == 'EVMS' %}
-                        <code>{{ candidate.refer_code }}-{{ candidate.unique_id }}</code> 
-                        {% else %} 
-                        <code>{{ candidate.unique_code }}</code>
-                        {% endif %}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <div class="text-muted">
-                    <a href="tel:{{ candidate.candidate_mobile_number }}" class="text-reset d-block">
-                      {{ candidate.candidate_mobile_number }}
-                    </a>
-                    {% if candidate.candidate_email_address %}
-                    <a href="mailto:{{ candidate.candidate_email_address }}" class="text-reset d-block small text-truncate" style="max-width: 150px;">
-                      {{ candidate.candidate_email_address }}
-                    </a>
-                    {% endif %}
-                  </div>
-                </td>
-                <td>
-                  <span class="status-badge status-{{ candidate.selection_status|lower }}">
-                    {{ candidate.selection_status }}
-                  </span>
-                </td>
-                <td>
-                  <div class="text-muted">
-                    {% if candidate.experience_year or candidate.experience_month %}
-                    {{ candidate.experience_year|default:"0" }}y {{ candidate.experience_month|default:"0" }}m
-                    {% else %}
-                    Fresher
-                    {% endif %}
-                  </div>
-                </td>
-                <td class="text-muted">
-                  {{ candidate.employee_name }}
-                </td>
-                <td class="text-muted" title="{{ candidate.register_time|date:'DATETIME_FORMAT' }}">
-                  {{ candidate.register_time|date:"M d, Y" }}
-                </td>
-                <td class="text-center">
-                  <div class="btn-list justify-content-center">
-                    <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' candidate.id %}{% else %}{% url 'admin_candidate_profile' candidate.id %}{% endif %}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                        <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
-                      </svg>
-                    </a>
-                    {% if candidate.candidate_resume %}
-                    <a href="{{ candidate.candidate_resume.url }}" target="_blank" class="btn btn-sm btn-icon" title="View Resume" data-bs-toggle="tooltip">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
-                        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
-                        <path d="M9 9l1 0"></path>
-                        <path d="M9 13l6 0"></path>
-                        <path d="M9 17l6 0"></path>
-                      </svg>
-                    </a>
-                    <a href="{{ candidate.candidate_resume.url }}" download class="btn btn-sm btn-icon" title="Download Resume" data-bs-toggle="tooltip">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
-                        <path d="M7 11l5 5l5 -5"></path>
-                        <path d="M12 4l0 12"></path>
-                      </svg>
-                    </a>
-                    {% endif %}
-                    <button onclick="confirmDelete({{ candidate.id }}, '{{ candidate.candidate_name }}', '{{ candidate.model_type }}')" class="btn btn-sm btn-icon btn-danger" title="Delete Candidate" data-bs-toggle="tooltip">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M4 7l16 0"></path>
-                        <path d="M10 11l0 6"></path>
-                        <path d="M14 11l0 6"></path>
-                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
-                        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
-                      </svg>
-                    </button>
-                    </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
 
-        <div class="card-footer d-flex align-items-center">
-          <div class="pagination-info">
-            Showing <span id="showingFrom">1</span> to <span id="showingTo">{{ candidates|length }}</span> of <span id="totalCount">{{ candidates|length }}</span> candidates
-          </div>
-          <ul class="pagination m-0 ms-auto">
-            <li class="page-item disabled">
-              <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M15 6l-6 6l6 6" />
-                </svg>
-                prev
-              </a>
-            </li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
-            <li class="page-item">
-              <a class="page-link" href="#">
-                next
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M9 6l6 6l-6 6" />
-                </svg>
-              </a>
-            </li>
-          </ul>
+                        <a href="{% url 'download_candidates' %}" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                                <path d="M7 11l5 5l5 -5" />
+                                <path d="M12 4v12" />
+                            </svg>
+                            Download Candidate Data
+                        </a>
+
+                        <a href="{% url 'admin_candidate_bulk_upload' %}" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                                <path d="M7 11l5 -5l5 5" />
+                                <path d="M12 6v12" />
+                            </svg>
+                            Bulk Upload Candidates
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-12 col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                                        <path d="M21 21l-6 -6" />
+                                    </svg>
+                                </span>
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search candidates..." aria-label="Search candidates">
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-8 d-flex flex-wrap align-items-center justify-content-md-end g-2">
+                            <div class="me-md-2 mb-2 mb-md-0 d-flex flex-grow-1 flex-md-grow-0">
+                                <label for="dateFrom" class="form-label visually-hidden">From Date:</label>
+                                <input type="date" id="dateFrom" class="form-control" title="From Date">
+                            </div>
+                            <div class="me-md-2 mb-2 mb-md-0 d-flex flex-grow-1 flex-md-grow-0">
+                                <label for="dateTo" class="form-label visually-hidden">To Date:</label>
+                                <input type="date" id="dateTo" class="form-control" title="To Date">
+                            </div>
+
+                            <div class="filter-dropdown-container me-md-2 mb-2 mb-md-0 d-flex align-items-center flex-grow-1 flex-md-grow-0">
+                                <label class="form-label mb-0 me-2 text-nowrap">Connection:</label>
+                                <div class="dropdown-toggle-button" id="connectionStatusDropdownToggle" data-target="connectionStatusFilterOptions">
+                                    <span id="connectionStatusSelectedCount">All</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
+                                </div>
+                                <div class="filter-options-pane" id="connectionStatusFilterOptions">
+                                    <label class="form-check cursor-pointer">
+                                        <input class="form-check-input select-all-checkbox" type="checkbox" data-target-filter="connectionStatusCheckboxes">
+                                        <span class="form-check-label font-weight-bold">All</span>
+                                    </label>
+                                    <div id="connectionStatusCheckboxes">
+                                        </div>
+                                </div>
+                            </div>
+
+                            <div class="filter-dropdown-container me-md-2 mb-2 mb-md-0 d-flex align-items-center flex-grow-1 flex-md-grow-0">
+                                <label class="form-label mb-0 me-2 text-nowrap">Lead Source:</label>
+                                <div class="dropdown-toggle-button" id="leadSourceDropdownToggle" data-target="leadSourceFilterOptions">
+                                    <span id="leadSourceSelectedCount">All</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
+                                </div>
+                                <div class="filter-options-pane" id="leadSourceFilterOptions">
+                                    <label class="form-check cursor-pointer">
+                                        <input class="form-check-input select-all-checkbox" type="checkbox" data-target-filter="leadSourceCheckboxes">
+                                        <span class="form-check-label font-weight-bold">All</span>
+                                    </label>
+                                    <div id="leadSourceCheckboxes">
+                                        </div>
+                                </div>
+                            </div>
+
+                            <div class="filter-dropdown-container me-md-2 mb-2 mb-md-0 d-flex align-items-center flex-grow-1 flex-md-grow-0">
+                                <label class="form-label mb-0 me-2 text-nowrap">Employee:</label>
+                                <div class="dropdown-toggle-button" id="employeeDropdownToggle" data-target="employeeFilterOptions">
+                                    <span id="employeeSelectedCount">All Employees</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
+                                </div>
+                                <div class="filter-options-pane" id="employeeFilterOptions">
+                                    <label class="form-check cursor-pointer">
+                                        <input class="form-check-input select-all-checkbox" type="checkbox" data-target-filter="employeeCheckboxes">
+                                        <span class="form-check-label font-weight-bold">Select All</span>
+                                    </label>
+                                    <div id="employeeCheckboxes">
+                                        </div>
+                                </div>
+                            </div>
+
+                            <div class="filter-dropdown-container d-flex align-items-center flex-grow-1 flex-md-grow-0">
+                                <label class="form-label mb-0 me-2 text-nowrap">Lead Status:</label>
+                                <div class="dropdown-toggle-button" id="statusDropdownToggle" data-target="statusFilterOptions">
+                                    <span id="statusSelectedCount">All Statuses</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
+                                </div>
+                                <div class="filter-options-pane" id="statusFilterOptions">
+                                    <label class="form-check cursor-pointer">
+                                        <input class="form-check-input select-all-checkbox" type="checkbox" data-target-filter="statusCheckboxes">
+                                        <span class="form-check-label font-weight-bold">Select All</span>
+                                    </label>
+                                    <div id="statusCheckboxes">
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive table-scrollable-body" style="max-height: 600px; overflow-y: auto;">
+                    <table class="table table-vcenter table-hover table-nowrap" id="candidatesTable">
+                        <thead>
+                            <tr>
+                                <th class="w-1">#</th>
+                                <th>Connection Status</th>
+                                <th>Candidate</th>
+                                <th>Contact</th>
+                                <th>Lead Source</th>
+                                <th>Lead Status</th>
+                                <th>Experience</th>
+                                <th>Employee</th>
+                                <th>Registered</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for candidate in candidates %}
+                            <tr data-status="{{ candidate.lead_generate|lower|slugify }}"
+                                data-connection-status="{{ candidate.call_connection|lower|default:'unknown'|slugify }}"
+                                data-lead-source="{{ candidate.lead_source|lower|default:'unknown'|slugify }}"
+                                data-employee-name="{{ candidate.employee_name|lower|default:'unassigned'|slugify }}"
+                                data-date="{{ candidate.register_time|date:'Y-m-d' }}"
+                                data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }} {{ candidate.current_working_status|lower }} {{ candidate.lead_source|lower }} {% if candidate.other_lead_generate %}{{ candidate.other_lead_generate|lower }}{% endif %} {{ candidate.register_time|date:'M d, Y'|lower }} {{ candidate.employee_name|lower }}">
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    {% if candidate.call_connection %}
+                                    <span class="badge text-white
+                                        {% if candidate.call_connection|lower == 'yes' or candidate.call_connection|lower == 'connected' %}
+                                            bg-success
+                                        {% elif candidate.call_connection|lower == 'no' %}
+                                            bg-danger
+                                        {% elif candidate.call_connection|lower == 'pending' %}
+                                            bg-warning text-dark
+                                        {% else %}
+                                            bg-secondary
+                                        {% endif %}
+                                        px-3 py-1 rounded-pill text-capitalize"
+                                        title="Call Connection: {{ candidate.call_connection }}">
+                                        <i class="fa text-white
+                                            {% if candidate.call_connection|lower == 'yes' or candidate.call_connection|lower == 'connected' %}
+                                                fa-check-circle
+                                            {% elif candidate.call_connection|lower == 'no' %}
+                                                fa-times-circle
+                                            {% elif candidate.call_connection|lower == 'pending' %}
+                                                fa-clock
+                                            {% else %}
+                                                fa-question-circle
+                                            {% endif %}
+                                            me-1"></i>
+                                        {{ candidate.call_connection }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-secondary px-3 py-1 rounded-pill">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            {% if candidate.candidate_photo %}
+                                            <img src="{{ candidate.candidate_photo.url }}"
+                                                class="avatar avatar-md rounded-circle"
+                                                alt="{{ candidate.candidate_name }}">
+                                            {% else %}
+                                            <div class="avatar avatar-md rounded-circle bg-blue-lt">
+                                                {{ candidate.candidate_name|first|upper }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-medium">
+                                                <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' candidate.id %}{% else %}{% url 'admin_candidate_profile' candidate.id %}{% endif %}" class="text-truncate profile-link">
+                                                    {{ candidate.candidate_name }}
+                                                </a>
+                                            </div>
+                                            <div class="text-muted small">
+                                                {% if candidate.lead_source == 'EVMS' %}
+                                                <code>{{ candidate.refer_code }}-{{ candidate.unique_id }}</code>
+                                                {% else %}
+                                                <code>{{ candidate.unique_code }}</code>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-muted">
+                                        <a href="tel:{{ candidate.candidate_mobile_number }}"
+                                            class="text-reset d-block">
+                                            {{ candidate.candidate_mobile_number }}
+                                        </a>
+                                        {% if candidate.candidate_email_address %}
+                                        <a href="mailto:{{ candidate.candidate_email_address }}"
+                                            class="text-reset d-block small text-truncate" style="max-width: 150px;">
+                                            {{ candidate.candidate_email_address }}
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-muted">
+                                        {% if candidate.lead_source == 'Other' and candidate.other_lead_source %}
+                                        {{ candidate.other_lead_source }}
+                                        {% else %}
+                                        {{ candidate.lead_source|default:"-" }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ candidate.lead_generate|lower|slugify }}">
+                                        {% if candidate.lead_generate == 'Other' and candidate.other_lead_generate %}
+                                        {{ candidate.other_lead_generate }}
+                                        {% else %}
+                                        {{ candidate.lead_generate|default:"-" }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="text-muted">
+                                        {% if candidate.experience_year or candidate.experience_month %}
+                                        {{ candidate.experience_year|default:"0" }}y {{ candidate.experience_month|default:"0" }}m
+                                        {% else %}
+                                        Fresher
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-muted">
+                                    {{ candidate.employee_name|default:"Unassigned" }}
+                                </td>
+                                <td class="text-muted" title="{{ candidate.register_time|date:'DATETIME_FORMAT' }}">
+                                    {{ candidate.register_time|date:"M d, Y" }}
+                                </td>
+                                <td class="text-center actions-cell">
+                                    <div class="btn-list d-flex justify-content-center align-items-center flex-nowrap">
+                                        <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' candidate.id %}{% else %}{% url 'admin_candidate_profile' candidate.id %}{% endif %}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                                                <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                                            </svg>
+                                        </a>
+                                        {% if candidate.candidate_resume %}
+                                        <a href="{{ candidate.candidate_resume.url }}" target="_blank" class="btn btn-sm btn-icon" title="View Resume" data-bs-toggle="tooltip">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+                                                <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
+                                                <path d="M9 9l1 0"></path>
+                                                <path d="M9 13l6 0"></path>
+                                                <path d="M9 17l6 0"></path>
+                                            </svg>
+                                        </a>
+                                        <a href="{{ candidate.candidate_resume.url }}" download class="btn btn-sm btn-icon" title="Download Resume" data-bs-toggle="tooltip">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+                                                <path d="M7 11l5 5l5 -5"></path>
+                                                <path d="M12 4l0 12"></path>
+                                            </svg>
+                                        </a>
+                                        {% endif %}
+                                        <button onclick="confirmDelete({{ candidate.id }}, '{{ candidate.candidate_name }}', '{{ candidate.model_type }}')" class="btn btn-sm btn-icon btn-danger" title="Delete Candidate" data-bs-toggle="tooltip">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M4 7l16 0"></path>
+                                                <path d="M10 11l0 6"></path>
+                                                <path d="M14 11l0 6"></path>
+                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
+                                                <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-footer d-flex align-items-center">
+                    <div class="pagination-info">
+                        Showing <span id="showingFrom">1</span> to <span id="showingTo">{{ candidates|length }}</span> of <span id="totalCount">{{ candidates|length }}</span> candidates
+                    </div>
+                    <ul class="pagination m-0 ms-auto">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M15 6l-6 6l6 6" />
+                                </svg>
+                                prev
+                            </a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">
+                                next
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M9 6l6 6l-6 6" />
+                                </svg>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
-  .status-badge {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    border-radius: 50rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    line-height: 1;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: baseline;
-  }
-  
-  .status-pending {
-    background-color: rgba(253, 126, 20, 0.1);
-    color: #fd7e14;
-  }
-  
-  .status-selected {
-    background-color: rgba(32, 201, 151, 0.1);
-    color: #20c997;
-  }
-  
-  .status-rejected {
-    background-color: rgba(250, 82, 82, 0.1);
-    color: #fa5252;
-  }
-  
-  .avatar-container {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f1f5f9;
-  }
-  
-  @media (max-width: 768px) {
-    .card-header .row > div {
-      width: 100%;
+    /* ... (Your existing status-badge, avatar-container, media queries, frozen table head styles remain) ... */
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 50rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
     }
-    
-    .card-header .input-group {
-      margin-bottom: 1rem;
+
+    /* Original statuses */
+    .status-hot { background-color: rgba(253, 126, 20, 0.1); color: #fd7e14; }
+    .status-converted { background-color: rgba(32, 201, 151, 0.1); color: #20c997; }
+    .status-cold { background-color: rgba(250, 82, 82, 0.1); color: #fa5252; }
+
+    /* New statuses based on the provided table data (adjust colors as needed) */
+    .status-pending { background-color: rgba(0, 123, 255, 0.1); color: #007bff; } /* Blue */
+    .status-selected { background-color: rgba(40, 167, 69, 0.1); color: #28a745; } /* Green */
+    .status-rejected { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; } /* Red */
+    .status-not-interested { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; } /* Gray */
+    .status-connect-later { background-color: rgba(23, 162, 184, 0.1); color: #17a2b8; } /* Cyan */
+    .status-dnd { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; } /* Yellow */
+    .status-other { background-color: rgba(102, 16, 242, 0.1); color: #6610f2; } /* Indigo/Purple */
+
+
+    .avatar-container {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* background-color: #f1f5f9; */
     }
-  }
+
+    /* Responsive adjustments for filters */
+    @media (max-width: 767.98px) { /* Adjust breakpoint as needed for Tabler */
+        .card-header .row > .col-12 {
+            margin-bottom: 0.5rem; /* Space between filter rows */
+        }
+        .card-header .col-md-8 > .d-flex {
+            width: 100% !important; /* Ensure filters take full width */
+            margin-right: 0 !important; /* Remove right margin on smaller screens */
+            margin-bottom: 0.5rem !important; /* Add bottom margin for vertical stacking */
+        }
+        .card-header .col-md-8 {
+            padding-top: 1rem; /* Add some space above filters */
+        }
+    }
+
+    /* --- Styles for Frozen Table Head --- */
+    .table-responsive.table-scrollable-body {
+        position: relative; /* Needed for sticky header to work correctly within this container */
+    }
+
+    #candidatesTable thead th {
+        position: sticky;
+        top: 0; /* Stick to the top of its scrolling container */
+        background-color: var(--tblr-card-bg,); /* Match card background or a suitable color */
+        z-index: 10; /* Ensure it stays above scrolling content */
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow for visual separation */
+    }
+
+    /* --- Styles for Custom Checkbox Filters --- */
+    .filter-dropdown-container {
+        position: relative;
+        width: 100%; /* Allows the container to manage its width */
+        flex-grow: 1; /* Allows it to expand within flex layout */
+        flex-basis: auto; /* Allow items to shrink/grow based on content */
+    }
+    @media (min-width: 768px) {
+        .filter-dropdown-container {
+            flex-grow: 0; /* On larger screens, don't grow as much */
+            max-width: 200px; /* Adjust max width for desktop layout */
+        }
+    }
+
+    .dropdown-toggle-button {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 0.75rem; /* Match Bootstrap form-control padding */
+        border: 1px solid var(--tblr-border-color); /* Matches form-control border */
+        border-radius: var(--tblr-border-radius);
+        background-color: var(--tblr-input-bg, );
+        color: var(--tblr-body-color); /* Match text color */
+        cursor: pointer;
+        user-select: none; /* Prevent text selection */
+        line-height: 1.5; /* Match Bootstrap form-control line-height */
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out; /* Match Bootstrap transitions */
+    }
+
+    .dropdown-toggle-button:hover {
+        border-color: var(--tblr-border-color-hover); /* More subtle hover */
+    }
+
+    .dropdown-toggle-button:focus,
+    .dropdown-toggle-button.active {
+        border-color: var(--tblr-primary); /* Focus/active state border */
+        box-shadow: var(--tblr-focus-ring-shadow); /* Tabler focus shadow */
+        outline: 0;
+    }
+
+    .dropdown-icon {
+        margin-left: 0.5rem;
+        transition: transform 0.2s;
+        stroke-width: 2; /* Ensure SVG icon stroke is visible */
+        color: var(--tblr-icon-color); /* Inherit Tabler icon color */
+    }
+
+    .dropdown-toggle-button.active .dropdown-icon {
+        transform: rotate(180deg);
+    }
+
+    .filter-options-pane {
+        position: absolute;
+        top: calc(100% + 5px); /* Position slightly below the button */
+        left: 0;
+        z-index: 1000; /* High z-index to appear above other content */
+        background-color: var(--tblr-card-bg,);
+        border: 1px solid var(--tblr-border-color);
+        border-radius: var(--tblr-border-radius);
+        padding: 0.75rem; /* More padding for better spacing */
+        box-shadow: var(--tblr-box-shadow-lg); /* Larger shadow for popover effect */
+        min-width: 100%; /* Occupy full width of its container */
+        max-height: 250px; /* Max height for scrollable options */
+        overflow-y: auto; /* Enable scrolling for many options */
+        display: none; /* Hidden by default */
+        box-sizing: border-box; /* Include padding/border in width */
+    }
+
+    .filter-options-pane.show {
+        display: block;
+    }
+
+    .filter-options-pane .form-check {
+        margin-bottom: 0.5rem; /* Space between checkboxes */
+        color: var(--tblr-body-color); /* Inherit body text color */
+    }
+
+    .filter-options-pane .form-check:last-child {
+        margin-bottom: 0;
+    }
+
+    .filter-options-pane .form-check-label {
+        margin-left: 0.5rem; /* Space between checkbox and label text */
+    }
+
+    .filter-options-pane .select-all-checkbox + .form-check-label {
+        font-weight: bold; /* Make "Select All" label bold */
+        color: var(--tblr-body-color); /* Ensure bold text also respects theme */
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
 </style>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-  
-    // Search functionality
-    const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
-    const candidatesTable = document.getElementById('candidatesTable');
-    const rows = candidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-    const totalCountEl = document.getElementById('totalCount');
-    const showingFromEl = document.getElementById('showingFrom');
-    const showingToEl = document.getElementById('showingTo');
-    
-    // Function to collect all text content from a row (including hidden/child elements)
-    function getRowTextContent(row) {
-      let textContent = '';
-      const cells = row.getElementsByTagName('td');
-      
-      for (let cell of cells) {
-        // Skip action cells if they have a specific class
-        if (!cell.classList.contains('actions-cell')) {
-          // Get text content, including hidden spans or child elements
-          textContent += ' ' + (cell.textContent || cell.innerText);
-        }
-      }
-      
-      return textContent.toLowerCase().trim();
-    }
-    
-    function filterCandidates() {
-      const searchTerm = searchInput.value.toLowerCase();
-      const statusFilterValue = statusFilter.value.toLowerCase();
-      let visibleCount = 0;
-      
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        const rowText = getRowTextContent(row);
-        const rowStatus = row.getAttribute('data-status') || '';
-        
-        const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
-        const matchesStatus = statusFilterValue === '' || rowStatus.toLowerCase() === statusFilterValue;
-        
-        if (matchesSearch && matchesStatus) {
-          row.style.display = '';
-          visibleCount++;
-        } else {
-          row.style.display = 'none';
-        }
-      }
-      
-      // Update counters
-      showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
-      showingToEl.textContent = visibleCount;
-      if (totalCountEl) {
-        totalCountEl.textContent = rows.length;
-      }
-      if (document.getElementById('total-candidates')) {
-        document.getElementById('total-candidates').textContent = visibleCount;
-      }
-    }
-    
-    // Event listeners
-    searchInput.addEventListener('input', filterCandidates);
-    statusFilter.addEventListener('change', filterCandidates);
-    
-    // Debounce the search input for better performance
-    let searchTimeout;
-    searchInput.addEventListener('input', function() {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(filterCandidates, 300);
-    });
-    
-    // Initial filter
-    filterCandidates();
-    
-    // Make table rows clickable (except when clicking on buttons/links)
-    document.querySelectorAll('#candidatesTable tbody tr').forEach(row => {
-      row.addEventListener('click', (e) => {
-        // Check if the click was on a button, link, or input
-        if (e.target.tagName === 'A' || 
-            e.target.closest('a') || 
-            e.target.tagName === 'BUTTON' || 
-            e.target.closest('button') ||
-            e.target.tagName === 'INPUT' ||
-            e.target.closest('input')) {
-          return;
-        }
-        
-        // Find the profile link in the row and navigate to it
-        const profileLink = row.querySelector('td a.profile-link');
-        if (profileLink) {
-          window.location.href = profileLink.href;
-        }
-      });
-      
-      // Change cursor on hover
-      row.style.cursor = 'pointer';
-    });
-  });
-  
-  // Delete confirmation function
-  function confirmDelete(candidateId, candidateName, modelType) {
-    if (confirm(`Are you sure you want to delete candidate "${candidateName}"? This action cannot be undone.`)) {
-      window.location.href = `/crm/candidate/${candidateId}/${modelType}/delete/`;
-    }
-  }
-</script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
 
+        // Get filter elements
+        const searchInput = document.getElementById('searchInput');
+        const dateFromInput = document.getElementById('dateFrom');
+        const dateToInput = document.getElementById('dateTo');
+
+        // Centralized configuration for checkbox filter UI elements
+        const filterSets = {
+            status: {
+                toggle: document.getElementById('statusDropdownToggle'),
+                optionsPane: document.getElementById('statusFilterOptions'),
+                checkboxContainer: document.getElementById('statusCheckboxes'),
+                selectedCountSpan: document.getElementById('statusSelectedCount'),
+                dataAttribute: 'data-status',
+                allText: 'All'
+            },
+            connectionStatus: {
+                toggle: document.getElementById('connectionStatusDropdownToggle'),
+                optionsPane: document.getElementById('connectionStatusFilterOptions'),
+                checkboxContainer: document.getElementById('connectionStatusCheckboxes'),
+                selectedCountSpan: document.getElementById('connectionStatusSelectedCount'),
+                dataAttribute: 'data-connection-status',
+                allText: 'All'
+            },
+            leadSource: {
+                toggle: document.getElementById('leadSourceDropdownToggle'),
+                optionsPane: document.getElementById('leadSourceFilterOptions'),
+                checkboxContainer: document.getElementById('leadSourceCheckboxes'),
+                selectedCountSpan: document.getElementById('leadSourceSelectedCount'),
+                dataAttribute: 'data-lead-source',
+                allText: 'All'
+            },
+            employee: {
+                toggle: document.getElementById('employeeDropdownToggle'),
+                optionsPane: document.getElementById('employeeFilterOptions'),
+                checkboxContainer: document.getElementById('employeeCheckboxes'),
+                selectedCountSpan: document.getElementById('employeeSelectedCount'),
+                dataAttribute: 'data-employee-name',
+                allText: 'All'
+            }
+        };
+
+        const candidatesTable = document.getElementById('candidatesTable');
+        const rows = candidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        const totalCandidatesEl = document.getElementById('total-candidates');
+        const showingFromEl = document.getElementById('showingFrom');
+        const showingToEl = document.getElementById('showingTo');
+
+        // Helper to format text for display (Title Case)
+        function toTitleCase(str) {
+            if (!str) return '';
+            // Handles "unassigned" to "Unassigned" correctly
+            if (str.toLowerCase() === 'unassigned') return 'Unassigned';
+            return str.toLowerCase().split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
+
+        // Helper to slugify text for data attributes (kebab-case)
+        function slugify(text) {
+            if (!text) return '';
+            // Ensure consistency with how slugify is used in Django templates if needed
+            return text.toString().toLowerCase()
+                .replace(/\s+/g, '-')           // Replace spaces with -
+                .replace(/[^\w-]+/g, '')       // Remove all non-word chars
+                .replace(/--+/g, '-')          // Replace multiple - with single -
+                .replace(/^-+/, '')            // Trim - from start of text
+                .replace(/-+$/, '');           // Trim - from end of text
+        }
+
+        // Renamed from populateDropdowns to reflect checkbox design
+        function populateCheckboxFilters() {
+            const uniqueValues = {
+                status: new Set(),
+                connectionStatus: new Set(),
+                leadSource: new Set(),
+                employee: new Set()
+            };
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                // Get slugified values from data attributes
+                uniqueValues.status.add(row.getAttribute('data-status'));
+                uniqueValues.connectionStatus.add(row.getAttribute('data-connection-status'));
+                uniqueValues.leadSource.add(row.getAttribute('data-lead-source'));
+                uniqueValues.employee.add(row.getAttribute('data-employee-name'));
+            }
+
+            // Function to render checkboxes for a given filter set
+            function renderCheckboxes(filterKey) {
+                const filterSet = filterSets[filterKey];
+                filterSet.checkboxContainer.innerHTML = ''; // Clear existing checkboxes
+
+                const sortedValues = Array.from(uniqueValues[filterKey])
+                                        .filter(Boolean) // Remove null/undefined/empty string
+                                        .sort((a, b) => {
+                                            // Special sorting for 'unassigned' to appear first
+                                            if (a === 'unassigned' && b !== 'unassigned') return -1;
+                                            if (b === 'unassigned' && a !== 'unassigned') return 1;
+                                            return toTitleCase(a).localeCompare(toTitleCase(b));
+                                        });
+
+                sortedValues.forEach(value => {
+                    const label = document.createElement('label');
+                    label.className = 'form-check cursor-pointer';
+
+                    const input = document.createElement('input');
+                    input.className = 'form-check-input filter-checkbox';
+                    input.type = 'checkbox';
+                    input.value = value; // Store slugified value
+                    input.setAttribute('data-filter-key', filterKey); // To identify which filter this checkbox belongs to
+                    input.addEventListener('change', function() {
+                        // If "Select All" is unchecked due to individual selection, uncheck it
+                        const selectAllCheckbox = filterSet.optionsPane.querySelector('.select-all-checkbox');
+                        const allCheckboxes = filterSet.checkboxContainer.querySelectorAll('.filter-checkbox');
+                        const allChecked = Array.from(allCheckboxes).every(cb => cb.checked);
+                        if (!this.checked || !allChecked) { // If current unchecked OR not all are checked
+                            selectAllCheckbox.checked = false;
+                        }
+                        if (allChecked && this.checked) { // If all are now checked AND current one was just checked
+                            selectAllCheckbox.checked = true;
+                        }
+                        filterCandidates();
+                        updateSelectedCount(filterKey);
+                    });
+
+                    const span = document.createElement('span');
+                    span.className = 'form-check-label';
+                    span.textContent = toTitleCase(value); // Display in Title Case
+
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    filterSet.checkboxContainer.appendChild(label);
+                });
+            }
+
+            // Render all checkbox filter groups
+            renderCheckboxes('status');
+            renderCheckboxes('connectionStatus');
+            renderCheckboxes('leadSource');
+            renderCheckboxes('employee');
+
+            // Set up "Select All" checkboxes
+            document.querySelectorAll('.select-all-checkbox').forEach(selectAllCheckbox => {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const targetFilterContainerId = this.getAttribute('data-target-filter');
+                    const checkboxesContainer = document.getElementById(targetFilterContainerId);
+                    const checkboxes = checkboxesContainer.querySelectorAll('.filter-checkbox');
+                    checkboxes.forEach(cb => cb.checked = this.checked);
+                    
+                    const filterKey = checkboxes[0] ? checkboxes[0].getAttribute('data-filter-key') : null;
+                    if (filterKey) {
+                        filterCandidates();
+                        updateSelectedCount(filterKey);
+                    }
+                });
+            });
+
+            // Initial update of selected counts
+            for (const key in filterSets) {
+                updateSelectedCount(key);
+            }
+        }
+
+        // Function to update the count display on the toggle button
+        function updateSelectedCount(filterKey) {
+            const filterSet = filterSets[filterKey];
+            const checkboxes = filterSet.checkboxContainer.querySelectorAll('.filter-checkbox');
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const totalOptions = checkboxes.length;
+
+            if (checkedCount === 0 || checkedCount === totalOptions) {
+                filterSet.selectedCountSpan.textContent = filterSet.allText;
+                if (checkedCount === 0) { // If nothing is selected, uncheck "Select All"
+                    filterSet.optionsPane.querySelector('.select-all-checkbox').checked = false;
+                } else if (checkedCount === totalOptions && totalOptions > 0) { // If all are selected, check "Select All"
+                     filterSet.optionsPane.querySelector('.select-all-checkbox').checked = true;
+                }
+            } else {
+                filterSet.selectedCountSpan.textContent = `${checkedCount} selected`;
+                filterSet.optionsPane.querySelector('.select-all-checkbox').checked = false; // Uncheck "Select All" if partial
+            }
+        }
+
+        // Filter Candidates Function (modified for checkboxes)
+        function filterCandidates() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const dateFromValue = dateFromInput.value;
+            const dateToValue = dateToInput.value;
+
+            // Helper to get selected checkbox values from a specific filter set
+            const getSelectedCheckboxValues = (filterKey) => {
+                const filterSet = filterSets[filterKey];
+                const checkboxes = filterSet.checkboxContainer.querySelectorAll('.filter-checkbox');
+                const checkedValues = Array.from(checkboxes)
+                                        .filter(cb => cb.checked)
+                                        .map(cb => cb.value.toLowerCase());
+                return checkedValues;
+            };
+
+            const selectedStatuses = getSelectedCheckboxValues('status');
+            const selectedConnectionStatuses = getSelectedCheckboxValues('connectionStatus');
+            const selectedLeadSources = getSelectedCheckboxValues('leadSource');
+            const selectedEmployees = getSelectedCheckboxValues('employee');
+
+            let visibleCount = 0;
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const rowStatus = row.getAttribute('data-status');
+                const rowConnectionStatus = row.getAttribute('data-connection-status');
+                const rowLeadSource = row.getAttribute('data-lead-source');
+                const rowEmployeeName = row.getAttribute('data-employee-name');
+                const rowDate = row.getAttribute('data-date');
+                const rowSearchData = row.getAttribute('data-search');
+
+                // Check if row matches lead status filter (if no options selected, it means "All" - matches everything)
+                const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(rowStatus);
+
+                // Check if row matches connection status filter
+                const matchesConnectionStatus = selectedConnectionStatuses.length === 0 || selectedConnectionStatuses.includes(rowConnectionStatus);
+
+                // Check if row matches lead source filter
+                const matchesLeadSource = selectedLeadSources.length === 0 || selectedLeadSources.includes(rowLeadSource);
+
+                // Check if row matches employee filter
+                const matchesEmployee = selectedEmployees.length === 0 || selectedEmployees.includes(rowEmployeeName);
+
+                // Check if row matches date range filter
+                let matchesDate = true;
+                if (dateFromValue && rowDate < dateFromValue) {
+                    matchesDate = false;
+                }
+                if (dateToValue && rowDate > dateToValue) {
+                    matchesDate = false;
+                }
+
+                // Check if row matches search term
+                let matchesSearch = true;
+                if (searchTerm) {
+                    matchesSearch = rowSearchData.includes(searchTerm);
+                }
+
+                // Only show row if all filters match
+                if (matchesSearch && matchesStatus && matchesDate && matchesConnectionStatus && matchesLeadSource && matchesEmployee) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+
+            // Update counters
+            showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
+            showingToEl.textContent = visibleCount;
+            totalCandidatesEl.textContent = visibleCount;
+        }
+
+        // --- Event Listeners and Initial Calls ---
+
+        // Populate checkbox filters once the DOM is loaded
+        populateCheckboxFilters();
+
+        // Event listeners for filter toggles (buttons)
+        for (const key in filterSets) {
+            const filterSet = filterSets[key];
+            filterSet.toggle.addEventListener('click', function(event) {
+                event.stopPropagation(); // Prevent document click from immediately closing it
+                // Close all other open panes
+                for (const otherKey in filterSets) {
+                    if (otherKey !== key) {
+                        filterSets[otherKey].optionsPane.classList.remove('show');
+                        filterSets[otherKey].toggle.classList.remove('active');
+                    }
+                }
+                // Toggle current pane
+                filterSet.optionsPane.classList.toggle('show');
+                filterSet.toggle.classList.toggle('active');
+            });
+        }
+
+        // Close filter panes when clicking outside
+        document.addEventListener('click', function(event) {
+            let clickedInsideFilterControl = false;
+            for (const key in filterSets) {
+                const filterSet = filterSets[key];
+                // Check if the click was within the toggle button or the options pane
+                if (filterSet.optionsPane.contains(event.target) || filterSet.toggle.contains(event.target)) {
+                    clickedInsideFilterControl = true;
+                    break;
+                }
+            }
+            // If the click was not inside any filter control, close all open panes
+            if (!clickedInsideFilterControl) {
+                for (const key in filterSets) {
+                    filterSets[key].optionsPane.classList.remove('show');
+                    filterSets[key].toggle.classList.remove('active');
+                }
+            }
+        });
+
+
+        // Event listeners for date inputs
+        dateFromInput.addEventListener('change', filterCandidates);
+        dateToInput.addEventListener('change', filterCandidates);
+
+        // Debounce the search input for better performance
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(filterCandidates, 300);
+        });
+
+        // Initial filter call after filters are populated
+        filterCandidates();
+
+        // Make table rows clickable (except when clicking on buttons/links)
+        document.querySelectorAll('#candidatesTable tbody tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                // Check if the click was on a button or link or input/select or within an actions cell
+                if (e.target.tagName === 'A' || e.target.closest('a') ||
+                    e.target.tagName === 'BUTTON' || e.target.closest('button') ||
+                    e.target.tagName === 'INPUT' || e.target.closest('input') ||
+                    e.target.tagName === 'SELECT' || e.target.closest('select') ||
+                    e.target.closest('.actions-cell')) {
+                    return;
+                }
+
+                // Find the profile link in the row and navigate to it
+                const profileLink = row.querySelector('.profile-link');
+                if (profileLink) {
+                    window.location.href = profileLink.href;
+                }
+            });
+
+            // Change cursor on hover
+            row.style.cursor = 'pointer';
+        });
+    });
+
+    // Delete confirmation function (outside DOMContentLoaded as it's a global function)
+    function confirmDelete(candidateId, candidateName, modelType) {
+        if (confirm(`Are you sure you want to delete candidate "${candidateName}"? This action cannot be undone.`)) {
+            window.location.href = `/crm/candidate/${candidateId}/${modelType}/delete/`;
+        }
+    }
+</script>
 {% endblock %}
