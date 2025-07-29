@@ -559,18 +559,6 @@ document.getElementById('candidateResumeInput').addEventListener('change', funct
                                     </div>
                                 </div>
                                 
-                                {% comment %} <!-- Send For Interview -->
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Send For Interview</label>
-                                        <select class="form-control form-select" name='send_for_interview' >
-                                            <option value="" disabled selected>Select Status</option>
-                                            <option value="No" {% if Candidate_registration.send_for_interview == "No" %}selected{% endif %}>No</option>
-                                            <option value="Yes" {% if Candidate_registration.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
-                                        </select>
-                                        <div class="invalid-feedback">Please select interview status.</div>
-                                    </div>
-                                </div> {% endcomment %}
                                 
                                 <!-- Next Follow-Up Date -->
                                 <div class="col-md-3">
