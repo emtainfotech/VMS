@@ -924,7 +924,7 @@ function updateDepartmentButtonText() {
               <!-- Lead Generate Status -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Lead Status <span class="text-danger">*</span></label>
-                <select class="form-select" name="lead_generate" id="leadGenerateSelect" required disabled>
+                <select class="form-select" name="lead_generate" id="leadGenerateSelect" >
                   <option value="" disabled selected>Select Status</option>
     <option value="Hot" {% if candidate.lead_generate == "Hot" %}selected{% endif %}>
       Hot <span class="text-muted">(Positive prospect but pending for Conversion for Interview scheduling)</span>
@@ -959,7 +959,7 @@ function updateDepartmentButtonText() {
               <!-- Interview Status -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Interview Status <span class="text-danger">*</span></label>
-                <select class="form-select" name="send_for_interview" id="interviewStatusSelect" required disabled>
+                <select class="form-select" name="send_for_interview" id="interviewStatusSelect">
                   <option value="" disabled selected>Select Status</option>
                   <option value="Yes" {% if candidate.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
                   <option value="No" {% if candidate.send_for_interview == "No" %}selected{% endif %}>No</option>
@@ -987,7 +987,7 @@ function updateDepartmentButtonText() {
               <!-- Calling Remark -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Calling Remark <span class="text-danger">*</span></label>
-                <textarea class="form-control" name="calling_remark" maxlength="500" required disabled>{{ candidate.calling_remark }}</textarea>
+                <textarea class="form-control" name="calling_remark" maxlength="500">{{ candidate.calling_remark }}</textarea>
                 <div class="invalid-feedback">Please enter a remark (max 500 characters)</div>
               </div>
             </div>

@@ -931,7 +931,7 @@ function updateButtonText() {
               <div class="row" id="connectedFields" style="display: none;">
                 <div class="col-md-12 mb-3">
                   <label class="form-label">Lead Status <span class="text-danger">*</span></label>
-                  <select class="form-select" name="lead_generate" id="leadGenerateSelect" required>
+                  <select class="form-select" name="lead_generate" id="leadGenerateSelect" >
                    <option value="" disabled selected>Select Status</option>
     <option value="Hot" {% if candidate.lead_generate == "Hot" %}selected{% endif %}>
       Hot <span class="text-muted">(Positive prospect but pending for Conversion for Interview scheduling)</span>
