@@ -711,17 +711,43 @@ class Task(models.Model):
     def __str__(self):
         return self.title
 
+from django.db import models, transaction, IntegrityError
+from django.db.models import IntegerField, Max
+from django.db.models.functions import Substr, Cast
+from django.utils.timezone import now
+
+# If these are in another module, import them accordingly
+# from .models import Employee, CandidateActivity
+
+def get_next_unique_code():
+    """
+    Returns the next code in the EC000001 pattern by taking the max numeric part
+    of existing codes and incrementing it.
+    """
+    last_number = (
+        Candidate_registration.objects
+        .filter(unique_code__regex=r'^EC\d{6}$')
+        .annotate(num_part=Cast(Substr('unique_code', 3, 6), IntegerField()))
+        .aggregate(max_num=Max('num_part'))['max_num'] or 0
+    )
+    return f"EC{last_number + 1:06d}"
+
+
 class Candidate_registration(models.Model):
     employee_name = models.CharField(max_length=50)
     employee_assigned = models.CharField(max_length=50)
     register_time = models.DateTimeField(default=now)
+
     candidate_name = models.CharField(max_length=255)
-    unique_code = models.CharField(max_length=255)
+    # Keep your original length to avoid broad migrations; add uniqueness + not editable.
+    unique_code = models.CharField(max_length=255, unique=True, db_index=True, editable=False)
+
     candidate_mobile_number = models.CharField(max_length=15)
     candidate_alternate_mobile_number = models.CharField(max_length=15, blank=True, null=True)
     candidate_email_address = models.EmailField(blank=True, null=True)
     gender = models.CharField(max_length=10, blank=True, null=True)
     lead_source = models.CharField(max_length=255)
+
     preferred_state = models.CharField(max_length=255, blank=True, null=True)
     preferred_location = models.CharField(max_length=255, blank=True, null=True)
     origin_location = models.CharField(max_length=255, blank=True, null=True)
@@ -742,9 +768,11 @@ class Candidate_registration(models.Model):
     lead_generate = models.CharField(max_length=255, blank=True, null=True)
     send_for_interview = models.CharField(max_length=255, blank=True, null=True)
     next_follow_up_date_time = models.DateTimeField(blank=True, null=True)
-    candidate_photo = models.FileField(upload_to='candidate-photo/') 
+
+    candidate_photo = models.FileField(upload_to='candidate-photo/')
     candidate_resume = models.FileField(upload_to='candidate-resume/')
-    remark = models.CharField(max_length=255,blank=True, null=True)
+    remark = models.CharField(max_length=255, blank=True, null=True)
+
     submit_by = models.CharField(max_length=100, blank=True, null=True)
     selection_status = models.CharField(max_length=10, default='Pending')
     company_name = models.CharField(max_length=10, blank=True, null=True)
@@ -756,6 +784,7 @@ class Candidate_registration(models.Model):
     emta_commission = models.CharField(max_length=255, blank=True, null=True)
     payout_date = models.DateField(blank=True, null=True)
     selection_remark = models.CharField(max_length=255, blank=True, null=True)
+
     other_lead_source = models.CharField(max_length=255, blank=True, null=True)
     other_qualification = models.CharField(max_length=255, blank=True, null=True)
     other_working_status = models.CharField(max_length=255, blank=True, null=True)
@@ -767,6 +796,7 @@ class Candidate_registration(models.Model):
     other_preferred_location = models.CharField(max_length=255, blank=True, null=True)
     other_sector = models.CharField(max_length=255, blank=True, null=True)
     other_department = models.CharField(max_length=255, blank=True, null=True)
+
     invoice_status = models.CharField(max_length=255, blank=True, null=True)
     invoice_paid_status = models.CharField(max_length=255, blank=True, null=True)
     invoice_number = models.CharField(max_length=255, blank=True, null=True)
@@ -774,56 +804,96 @@ class Candidate_registration(models.Model):
     invoice_amount = models.CharField(max_length=255, blank=True, null=True)
     invoice_remark = models.CharField(max_length=255, blank=True, null=True)
     invoice_attachment = models.FileField(upload_to='invoice_attachments/', null=True, blank=True)
-    created_by = models.ForeignKey(Employee, related_name='candidate_registration_created', on_delete=models.SET_NULL, null=True, blank=True)
-    updated_by = models.ForeignKey(Employee, related_name='candidate_registration_updated', on_delete=models.SET_NULL, null=True, blank=True)
+
+    created_by = models.ForeignKey('Employee', related_name='candidate_registration_created',
+                                   on_delete=models.SET_NULL, null=True, blank=True)
+    updated_by = models.ForeignKey('Employee', related_name='candidate_registration_updated',
+                                   on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = "Candidate Registration"
+        verbose_name_plural = "Candidate Registrations"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.candidate_name} ({self.unique_code})"
+
     def save(self, *args, **kwargs):
+        """
+        - Auto-assigns unique_code on first save using EC###### format.
+        - Logs creation/updates to CandidateActivity.
+        - Retries on IntegrityError to avoid duplicate codes under concurrency.
+        """
         user = kwargs.pop('user', None)
-        
-        if not self.pk:  # New record being created
-            if user:
-                self.created_by = user
-            super().save(*args, **kwargs)
-            # Create activity log for creation
-            CandidateActivity.objects.create(
-                candidate=self,
-                employee=user,
-                action='created',
-                changes={'initial': 'Record created'}
-            )
-        else:
-            # Existing record being updated
-            old_record = Candidate_registration.objects.get(pk=self.pk)
-            changes = {}
-            
-            # Compare each field to find changes
-            for field in self._meta.fields:
-                field_name = field.name
-                old_value = getattr(old_record, field_name)
-                new_value = getattr(self, field_name)
-                
-                if old_value != new_value and field_name not in ['updated_at', 'created_at']:
-                    changes[field_name] = {
-                        'old': str(old_value),
-                        'new': str(new_value)
-                    }
-            
-            if user:
-                self.updated_by = user
-            
-            super().save(*args, **kwargs)
-            
-            # Only create activity log if there were changes
-            if changes:
+        is_new = self._state.adding
+
+        # NEW RECORD
+        if is_new:
+            # If code not provided, try to generate + save atomically with retries.
+            if not self.unique_code:
+                attempts = 3
+                for attempt in range(attempts):
+                    try:
+                        with transaction.atomic():
+                            self.unique_code = get_next_unique_code()
+                            if user:
+                                self.created_by = user
+                            super().save(*args, **kwargs)
+                        break  # saved successfully
+                    except IntegrityError:
+                        # Code collision (very rare); try again with a fresh code.
+                        if attempt == attempts - 1:
+                            raise
+                        self.unique_code = None
+                # Activity log after successful save
                 CandidateActivity.objects.create(
                     candidate=self,
                     employee=user,
-                    action='updated',
-                    changes=changes
+                    action='created',
+                    changes={'initial': 'Record created'}
                 )
-            
+                return
+            else:
+                # unique_code already set by caller
+                if user:
+                    self.created_by = user
+                super().save(*args, **kwargs)
+                CandidateActivity.objects.create(
+                    candidate=self,
+                    employee=user,
+                    action='created',
+                    changes={'initial': 'Record created'}
+                )
+                return
+
+        # EXISTING RECORD (update path)
+        old_record = Candidate_registration.objects.get(pk=self.pk)
+        changes = {}
+
+        for field in self._meta.fields:
+            field_name = field.name
+            if field_name in ['updated_at', 'created_at']:
+                continue
+            old_value = getattr(old_record, field_name)
+            new_value = getattr(self, field_name)
+            if old_value != new_value:
+                changes[field_name] = {'old': str(old_value), 'new': str(new_value)}
+
+        if user:
+            self.updated_by = user
+
+        super().save(*args, **kwargs)
+
+        if changes:
+            CandidateActivity.objects.create(
+                candidate=self,
+                employee=user,
+                action='updated',
+                changes=changes
+            )
+        
 class CandidateActivity(models.Model):
     ACTION_CHOICES = [
         ('created', 'Created'),

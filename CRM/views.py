@@ -779,7 +779,7 @@ def admin_candidate_registration(request):
         logged_in_employee = Employee.objects.get(user=request.user)
         if request.method == 'POST':
             candidate_name = request.POST.get('candidate_name')
-            unique_code = request.POST.get('unique_code')
+            # unique_code = request.POST.get('unique_code')
             candidate_mobile_number = request.POST.get('candidate_mobile_number')
             candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
             candidate_email_address = request.POST.get('candidate_email_address')
@@ -837,7 +837,7 @@ def admin_candidate_registration(request):
             Candidate_registration.objects.create(
                 employee_name=logged_in_employee,
                 candidate_name=candidate_name,
-                unique_code=unique_code,
+                # unique_code=unique_code,
                 candidate_mobile_number=candidate_mobile_number,
                 candidate_alternate_mobile_number=candidate_alternate_mobile_number,
                 candidate_email_address=candidate_email_address,
@@ -873,7 +873,7 @@ def admin_candidate_registration(request):
             
             return JsonResponse({'status': 'success', 'redirect_url': reverse('admin_candidate_list')})
         
-        suggested_unique_code = admin_get_next_unique_code(request)
+        # suggested_unique_code = admin_get_next_unique_code(request)
 
         districts = [
             "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
@@ -1033,7 +1033,7 @@ def admin_candidate_registration(request):
 
 
         context = {
-            'suggested_unique_code':suggested_unique_code,
+            # 'suggested_unique_code':suggested_unique_code,
             'districts' : districts,
             'job_sectors' : job_sectors,
             'departments' : departments
@@ -1043,15 +1043,15 @@ def admin_candidate_registration(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
     
-def admin_get_next_unique_code():
-    candidate = Candidate_registration.objects.filter(unique_code__regex=r'^EC\d{6}$').values_list('unique_code', flat=True)
-    numbers = [int(re.search(r'\d{6}', code).group()) for code in candidate if re.search(r'\d{6}', code)]
+# def admin_get_next_unique_code():
+#     candidate = Candidate_registration.objects.filter(unique_code__regex=r'^EC\d{6}$').values_list('unique_code', flat=True)
+#     numbers = [int(re.search(r'\d{6}', code).group()) for code in candidate if re.search(r'\d{6}', code)]
 
-    if numbers:
-        next_number = max(numbers) + 1  
-    else:
-        next_number = 1 
-    return f"EC{next_number:06d}"
+#     if numbers:
+#         next_number = max(numbers) + 1  
+#     else:
+#         next_number = 1 
+#     return f"EC{next_number:06d}"
 
 
 @login_required
@@ -1164,7 +1164,7 @@ def admin_candidate_bulk_upload(request):
                         candidate = Candidate_registration(
                             employee_name=row.get('employee_name', ''),
                             candidate_name=row['candidate_name'].strip(),
-                            unique_code=row.get('unique_code', admin_get_next_unique_code(request)),
+                            # unique_code=row.get('unique_code', admin_get_next_unique_code(request)),
                             candidate_mobile_number=mobile_number,
                             candidate_alternate_mobile_number=str(row.get('candidate_alternate_mobile_number', '')).strip(),
                             candidate_email_address=str(row.get('candidate_email_address', '')).strip(),

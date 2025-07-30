@@ -824,7 +824,7 @@ def employee_candidate_registration(request) :
         logged_in_employee = Employee.objects.get(user=request.user)
         if request.method == 'POST':
             candidate_name = request.POST.get('candidate_name')
-            unique_code = request.POST.get('unique_code')
+            # unique_code = request.POST.get('unique_code')
             candidate_mobile_number = request.POST.get('candidate_mobile_number')
             candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
             candidate_email_address = request.POST.get('candidate_email_address')
@@ -866,7 +866,7 @@ def employee_candidate_registration(request) :
             Candidate_registration.objects.create(
                 employee_name=logged_in_employee,
                 candidate_name=candidate_name,
-                unique_code=unique_code,
+                # unique_code=unique_code,
                 candidate_mobile_number=candidate_mobile_number,
                 candidate_alternate_mobile_number=candidate_alternate_mobile_number,
                 candidate_email_address=candidate_email_address,
@@ -903,7 +903,7 @@ def employee_candidate_registration(request) :
         
             return redirect('employee_candidate_list')
         
-        suggested_unique_code = get_next_unique_code()
+        # suggested_unique_code = get_next_unique_code()
 
         state = [
         "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", 
@@ -1020,7 +1020,7 @@ def employee_candidate_registration(request) :
 
 
         context = {
-            'suggested_unique_code':suggested_unique_code,
+            # 'suggested_unique_code':suggested_unique_code,
             'districts' : districts,
             'job_sectors' : job_sectors,
             'departments' : departments,
@@ -1032,15 +1032,15 @@ def employee_candidate_registration(request) :
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)    
 
-def get_next_unique_code():
-    candidate = Candidate_registration.objects.filter(unique_code__regex=r'^EC\d{6}$').values_list('unique_code', flat=True)
-    numbers = [int(re.search(r'\d{6}', unique_code).group()) for unique_code in candidate]
+# def get_next_unique_code():
+#     candidate = Candidate_registration.objects.filter(unique_code__regex=r'^EC\d{6}$').values_list('unique_code', flat=True)
+#     numbers = [int(re.search(r'\d{6}', unique_code).group()) for unique_code in candidate]
 
-    if numbers:
-        next_number = max(numbers) + 1  
-    else:
-        next_number = 1 
-    return f"EC{next_number:06d}"
+#     if numbers:
+#         next_number = max(numbers) + 1  
+#     else:
+#         next_number = 1 
+#     return f"EC{next_number:06d}"
 
 @login_required
 def employee_candidate_profile(request, id):
