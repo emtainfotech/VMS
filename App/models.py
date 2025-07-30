@@ -711,18 +711,18 @@ class Task(models.Model):
     def __str__(self):
         return self.title
 
+import re
 from django.db import models, transaction, IntegrityError
 from django.db.models import IntegerField, Max
 from django.db.models.functions import Substr, Cast
 from django.utils.timezone import now
 
-# If these are in another module, import them accordingly
+# Adjust these imports to your project structure
 # from .models import Employee, CandidateActivity
 
 def get_next_unique_code():
     """
-    Returns the next code in the EC000001 pattern by taking the max numeric part
-    of existing codes and incrementing it.
+    Returns the next available EC###### code by incrementing the numeric part of existing codes.
     """
     last_number = (
         Candidate_registration.objects
@@ -739,8 +739,7 @@ class Candidate_registration(models.Model):
     register_time = models.DateTimeField(default=now)
 
     candidate_name = models.CharField(max_length=255)
-    # Keep your original length to avoid broad migrations; add uniqueness + not editable.
-    unique_code = models.CharField(max_length=255, unique=True, db_index=True, editable=False)
+    unique_code = models.CharField(max_length=255, unique=True, editable=False, db_index=True)
 
     candidate_mobile_number = models.CharField(max_length=15)
     candidate_alternate_mobile_number = models.CharField(max_length=15, blank=True, null=True)
@@ -821,79 +820,56 @@ class Candidate_registration(models.Model):
         return f"{self.candidate_name} ({self.unique_code})"
 
     def save(self, *args, **kwargs):
-        """
-        - Auto-assigns unique_code on first save using EC###### format.
-        - Logs creation/updates to CandidateActivity.
-        - Retries on IntegrityError to avoid duplicate codes under concurrency.
-        """
         user = kwargs.pop('user', None)
         is_new = self._state.adding
 
-        # NEW RECORD
-        if is_new:
-            # If code not provided, try to generate + save atomically with retries.
-            if not self.unique_code:
-                attempts = 3
-                for attempt in range(attempts):
-                    try:
-                        with transaction.atomic():
-                            self.unique_code = get_next_unique_code()
-                            if user:
-                                self.created_by = user
-                            super().save(*args, **kwargs)
-                        break  # saved successfully
-                    except IntegrityError:
-                        # Code collision (very rare); try again with a fresh code.
-                        if attempt == attempts - 1:
-                            raise
-                        self.unique_code = None
-                # Activity log after successful save
+        # If new and unique_code not set, try safe auto-generation
+        if is_new and not self.unique_code:
+            for _ in range(5):  # Retry up to 5 times
+                try:
+                    with transaction.atomic():
+                        self.unique_code = get_next_unique_code()
+                        if user:
+                            self.created_by = user
+                        super().save(*args, **kwargs)
+                        CandidateActivity.objects.create(
+                            candidate=self,
+                            employee=user,
+                            action='created',
+                            changes={'initial': 'Record created'}
+                        )
+                        return
+                except IntegrityError:
+                    self.unique_code = None
+            raise IntegrityError("Failed to generate a unique code after multiple attempts.")
+
+        # If updating an existing record
+        if not is_new:
+            old_record = Candidate_registration.objects.get(pk=self.pk)
+            changes = {}
+
+            for field in self._meta.fields:
+                field_name = field.name
+                if field_name in ['updated_at', 'created_at']:
+                    continue
+                old_value = getattr(old_record, field_name)
+                new_value = getattr(self, field_name)
+                if old_value != new_value:
+                    changes[field_name] = {'old': str(old_value), 'new': str(new_value)}
+
+            if user:
+                self.updated_by = user
+
+            super().save(*args, **kwargs)
+
+            if changes:
                 CandidateActivity.objects.create(
                     candidate=self,
                     employee=user,
-                    action='created',
-                    changes={'initial': 'Record created'}
+                    action='updated',
+                    changes=changes
                 )
-                return
-            else:
-                # unique_code already set by caller
-                if user:
-                    self.created_by = user
-                super().save(*args, **kwargs)
-                CandidateActivity.objects.create(
-                    candidate=self,
-                    employee=user,
-                    action='created',
-                    changes={'initial': 'Record created'}
-                )
-                return
-
-        # EXISTING RECORD (update path)
-        old_record = Candidate_registration.objects.get(pk=self.pk)
-        changes = {}
-
-        for field in self._meta.fields:
-            field_name = field.name
-            if field_name in ['updated_at', 'created_at']:
-                continue
-            old_value = getattr(old_record, field_name)
-            new_value = getattr(self, field_name)
-            if old_value != new_value:
-                changes[field_name] = {'old': str(old_value), 'new': str(new_value)}
-
-        if user:
-            self.updated_by = user
-
-        super().save(*args, **kwargs)
-
-        if changes:
-            CandidateActivity.objects.create(
-                candidate=self,
-                employee=user,
-                action='updated',
-                changes=changes
-            )
-        
+     
 class CandidateActivity(models.Model):
     ACTION_CHOICES = [
         ('created', 'Created'),
