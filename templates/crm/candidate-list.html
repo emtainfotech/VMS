@@ -192,7 +192,7 @@
                                 data-lead-source="{{ candidate.lead_source|lower|default:'unknown'|slugify }}"
                                 data-employee-name="{{ candidate.employee_name|lower|default:'unassigned'|slugify }}"
                                 data-date="{{ candidate.register_time|date:'Y-m-d' }}"
-                                data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }} {{ candidate.current_working_status|lower }} {{ candidate.lead_source|lower }} {% if candidate.other_lead_generate %}{{ candidate.other_lead_generate|lower }}{% endif %} {{ candidate.register_time|date:'M d, Y'|lower }} {{ candidate.employee_name|lower }}">
+                                data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }} {{ candidate.current_working_status|lower }} ">
                                 <td>{{ forloop.counter }}</td>
                                 <td>
                                     {% if candidate.call_connection %}
