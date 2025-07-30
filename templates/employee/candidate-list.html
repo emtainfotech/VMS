@@ -66,12 +66,18 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
                                 </div>
                                 <div class="filter-options-pane" id="connectionStatusFilterOptions">
+                                    <div class="input-icon mb-2">
+                                        <input type="text" class="form-control dropdown-search-input" placeholder="Search connection..." data-filter-target="connectionStatusCheckboxes">
+                                        <span class="input-icon-addon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
+                                        </span>
+                                    </div>
                                     <label class="form-check cursor-pointer">
                                         <input class="form-check-input select-all-checkbox" type="checkbox" data-target-filter="connectionStatusCheckboxes">
                                         <span class="form-check-label font-weight-bold">Select All</span>
                                     </label>
                                     <div id="connectionStatusCheckboxes">
-                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -82,12 +88,18 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
                                 </div>
                                 <div class="filter-options-pane" id="leadSourceFilterOptions">
+                                    <div class="input-icon mb-2">
+                                        <input type="text" class="form-control dropdown-search-input" placeholder="Search source..." data-filter-target="leadSourceCheckboxes">
+                                        <span class="input-icon-addon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
+                                        </span>
+                                    </div>
                                     <label class="form-check cursor-pointer">
                                         <input class="form-check-input select-all-checkbox" type="checkbox" data-target-filter="leadSourceCheckboxes">
                                         <span class="form-check-label font-weight-bold">Select All</span>
                                     </label>
                                     <div id="leadSourceCheckboxes">
-                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -98,12 +110,18 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
                                 </div>
                                 <div class="filter-options-pane" id="statusFilterOptions">
+                                    <div class="input-icon mb-2">
+                                        <input type="text" class="form-control dropdown-search-input" placeholder="Search status..." data-filter-target="statusCheckboxes">
+                                        <span class="input-icon-addon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
+                                        </span>
+                                    </div>
                                     <label class="form-check cursor-pointer">
                                         <input class="form-check-input select-all-checkbox" type="checkbox" data-target-filter="statusCheckboxes">
                                         <span class="form-check-label font-weight-bold">Select All</span>
                                     </label>
                                     <div id="statusCheckboxes">
-                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -572,11 +590,11 @@
         function slugify(text) {
             if (!text) return '';
             return text.toString().toLowerCase()
-                .replace(/\s+/g, '-')           // Replace spaces with -
-                .replace(/[^\w-]+/g, '')       // Remove all non-word chars
-                .replace(/--+/g, '-')          // Replace multiple - with single -
-                .replace(/^-+/, '')            // Trim - from start of text
-                .replace(/-+$/, '');           // Trim - from end of text
+                .replace(/\s+/g, '-')       // Replace spaces with -
+                .replace(/[^\w-]+/g, '')     // Remove all non-word chars
+                .replace(/--+/g, '-')        // Replace multiple - with single -
+                .replace(/^-+/, '')          // Trim - from start of text
+                .replace(/-+$/, '');         // Trim - from end of text
         }
 
         // Renamed from populateDropdowns to reflect checkbox design
@@ -601,8 +619,8 @@
                 filterSet.checkboxContainer.innerHTML = ''; // Clear existing checkboxes
 
                 const sortedValues = Array.from(uniqueValues[filterKey])
-                                        .filter(Boolean) // Remove null/undefined/empty string
-                                        .sort((a, b) => toTitleCase(a).localeCompare(toTitleCase(b)));
+                                            .filter(Boolean) // Remove null/undefined/empty string
+                                            .sort((a, b) => toTitleCase(a).localeCompare(toTitleCase(b)));
 
                 sortedValues.forEach(value => {
                     const label = document.createElement('label');
@@ -677,7 +695,7 @@
                 if (checkedCount === 0) { // If nothing is selected, uncheck "Select All"
                     filterSet.optionsPane.querySelector('.select-all-checkbox').checked = false;
                 } else if (checkedCount === totalOptions && totalOptions > 0) { // If all are selected, check "Select All"
-                     filterSet.optionsPane.querySelector('.select-all-checkbox').checked = true;
+                    filterSet.optionsPane.querySelector('.select-all-checkbox').checked = true;
                 }
             } else {
                 filterSet.selectedCountSpan.textContent = `${checkedCount} selected`;
@@ -696,8 +714,8 @@
                 const filterSet = filterSets[filterKey];
                 const checkboxes = filterSet.checkboxContainer.querySelectorAll('.filter-checkbox');
                 const checkedValues = Array.from(checkboxes)
-                                        .filter(cb => cb.checked)
-                                        .map(cb => cb.value.toLowerCase());
+                                            .filter(cb => cb.checked)
+                                            .map(cb => cb.value.toLowerCase());
                 return checkedValues;
             };
 
@@ -802,11 +820,35 @@
         dateFromInput.addEventListener('change', filterCandidates);
         dateToInput.addEventListener('change', filterCandidates);
 
-        // Debounce the search input for better performance
+        // Debounce the main search input for better performance
         let searchTimeout;
         searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(filterCandidates, 300);
+        });
+
+        // Add event listeners for the new dropdown search inputs
+        document.querySelectorAll('.dropdown-search-input').forEach(searchDropdownInput => {
+            searchDropdownInput.addEventListener('input', function() {
+                const filterTargetId = this.getAttribute('data-filter-target');
+                const checkboxesContainer = document.getElementById(filterTargetId);
+                const checkboxes = checkboxesContainer.querySelectorAll('.form-check'); // Get the whole label element
+                const searchTerm = this.value.toLowerCase().trim();
+
+                checkboxes.forEach(checkboxLabel => {
+                    const checkbox = checkboxLabel.querySelector('.form-check-input');
+                    const labelText = checkboxLabel.querySelector('.form-check-label').textContent.toLowerCase();
+                    
+                    // Show/hide based on search term, but always show "Select All"
+                    if (checkbox.classList.contains('select-all-checkbox')) {
+                        checkboxLabel.style.display = ''; 
+                    } else if (labelText.includes(searchTerm)) {
+                        checkboxLabel.style.display = '';
+                    } else {
+                        checkboxLabel.style.display = 'none';
+                    }
+                });
+            });
         });
 
         // Initial filter call after filters are populated

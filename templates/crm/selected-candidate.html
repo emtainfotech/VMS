@@ -2,7 +2,6 @@
 
 {% block content %}
 <div class="page-wrapper">
-  <!-- Page header -->
   <div class="page-header d-print-none">
     <div class="container-xl">
       <div class="row g-2 align-items-center">
@@ -28,13 +27,13 @@
     </div>
   </div>
 
-  <!-- Page body -->
   <div class="page-body">
     <div class="container-xl">
       <div class="card">
         <div class="card-header">
-          <div class="row align-items-center">
-            <div class="col-12 col-md-6 mb-3 mb-md-0">
+          <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-3">
+              <label for="searchInput" class="form-label">Search Candidate:</label>
               <div class="input-group">
                 <span class="input-group-text">
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -43,21 +42,30 @@
                     <path d="M21 21l-6 -6" />
                   </svg>
                 </span>
-                <input type="text" id="searchInput" class="form-control" placeholder="Search candidates..." aria-label="Search candidates">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search by name, contact, code..." aria-label="Search candidates">
               </div>
             </div>
-            <div class="col-12 col-md-6 ms-md-auto">
-              <div class="d-flex align-items-center justify-content-end">
-                <div class="me-3 text-nowrap">
-                  <label for="companyFilter" class="form-label">Company:</label>
-                </div>
-                <select id="companyFilter" class="form-select">
-                  <option value="">All Companies</option>
-                  {% for company in companies|dictsort:"company_name" %}
-                    <option value="{{ company.company_name }}">{{ company.company_name }}</option>
-                  {% endfor %}
+
+            <div class="col-12 col-md-3">
+              <label for="companyFilter" class="form-label">Company:</label>
+              <select id="companyFilter" class="form-select" multiple>
                 </select>
-              </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+              <label for="employeeFilter" class="form-label">Employee:</label>
+              <select id="employeeFilter" class="form-select" multiple>
+                </select>
+            </div>
+            
+            <div class="col-12 col-md-3">
+              <label for="selectionDateRangeFilter" class="form-label">Selection Date Range:</label>
+              <input type="text" id="selectionDateRangeFilter" class="form-control" placeholder="Select date range">
+            </div>
+
+            <div class="col-12 col-md-3 mt-3 mt-md-0">
+              <label for="joiningDateRangeFilter" class="form-label">Joining Date Range:</label>
+              <input type="text" id="joiningDateRangeFilter" class="form-control" placeholder="Select date range">
             </div>
           </div>
         </div>
@@ -80,7 +88,10 @@
             <tbody>
               {% for candidate in candidates %}
               <tr data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }} {{ candidate.company_name|lower }}"
-                  data-company="{{ candidate.company_name }}">
+                  data-company="{{ candidate.company_name|lower }}"
+                  data-employee="{{ candidate.employee_name|lower }}"
+                  data-selection-date="{{ candidate.selection_date|date:'Y-m-d' }}"
+                  data-joining-date="{{ candidate.candidate_joining_date|date:'Y-m-d' }}">
                 <td>{{ forloop.counter }}</td>
                 <td>
                   <div class="d-flex align-items-center">
@@ -238,6 +249,46 @@
     padding: 0.25rem 0.5rem;
   }
   
+  /* Sticky Table Header */
+  .table-responsive {
+    overflow-y: auto; /* Enable vertical scrolling */
+    max-height: calc(100vh - 350px); /* Adjust based on your layout */
+  }
+
+  .table th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa; /* Or your table header background color */
+    z-index: 10; /* Ensure header stays on top of content */
+  }
+
+  /* Adjust Tom-select styling for better integration if needed */
+  .ts-control {
+    border-color: var(--tblr-border-color, #dee2e6) !important; /* Bootstrap border color */
+  }
+  .ts-control.focus {
+    box-shadow: 0 0 0 0.25rem rgba(41, 128, 185, 0.25) !important; /* Bootstrap focus shadow */
+  }
+  .ts-wrapper.multi .ts-control > div {
+    background-color: var(--tblr-blue-lt) !important; /* Example badge color */
+    color: var(--tblr-blue) !important;
+  }
+  /* Flatpickr input styling to match Bootstrap forms */
+  .flatpickr-input {
+    min-height: calc(1.5em + 0.75rem + 2px); /* Matches Bootstrap form-control height */
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--tblr-body-color, #212529);
+    background-color: var(--tblr-body-bg, #fff);
+    background-clip: padding-box;
+    border: 1px solid var(--tblr-border-color, #dee2e6);
+    appearance: none;
+    border-radius: var(--tblr-border-radius, 0.25rem);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+
   @media (max-width: 768px) {
     .card-header .row > div {
       width: 100%;
@@ -248,6 +299,11 @@
     }
   }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
@@ -256,46 +312,157 @@
     tooltipTriggerList.map(function (tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-  
-    // Search and filter functionality
-    const searchInput = document.getElementById('searchInput');
-    const companyFilter = document.getElementById('companyFilter');
+
+    // Get table and rows
     const selectedCandidatesTable = document.getElementById('selectedCandidatesTable');
-    const rows = selectedCandidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    const rows = Array.from(selectedCandidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr'));
+
+    // Dynamically get unique companies and employees from table data
+    const uniqueCompanies = new Set();
+    const uniqueEmployees = new Set();
+    rows.forEach(row => {
+      const company = row.getAttribute('data-company');
+      const employee = row.getAttribute('data-employee');
+      if (company && company !== 'null' && company !== '-') {
+        uniqueCompanies.add(company);
+      }
+      if (employee && employee !== 'null' && employee !== '-') {
+        uniqueEmployees.add(employee);
+      }
+    });
+
+    // Populate and initialize Tom-select for Company filter
+    const companyFilterSelectElement = document.getElementById('companyFilter');
+    Array.from(uniqueCompanies).sort().forEach(company => {
+      const option = document.createElement('option');
+      option.value = company;
+      option.textContent = company.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); // Capitalize first letter of each word
+      companyFilterSelectElement.appendChild(option);
+    });
+    const companySelect = new TomSelect('#companyFilter', {
+      plugins: ['remove_button'],
+      create: false,
+      sortField: { field: "text", direction: "asc" }
+    });
+
+    // Populate and initialize Tom-select for Employee filter
+    const employeeFilterSelectElement = document.getElementById('employeeFilter');
+    Array.from(uniqueEmployees).sort().forEach(employee => {
+      const option = document.createElement('option');
+      option.value = employee;
+      option.textContent = employee.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); // Capitalize first letter of each word
+      employeeFilterSelectElement.appendChild(option);
+    });
+    const employeeSelect = new TomSelect('#employeeFilter', {
+      plugins: ['remove_button'],
+      create: false,
+      sortField: { field: "text", direction: "asc" }
+    });
+
+    // Initialize Flatpickr for date range filters
+    const selectionDateRangePicker = flatpickr("#selectionDateRangeFilter", {
+      mode: "range",
+      dateFormat: "Y-m-d",
+      onChange: function(selectedDates, dateStr, instance) {
+        filterCandidates();
+      }
+    });
+
+    const joiningDateRangePicker = flatpickr("#joiningDateRangeFilter", {
+      mode: "range",
+      dateFormat: "Y-m-d",
+      onChange: function(selectedDates, dateStr, instance) {
+        filterCandidates();
+      }
+    });
+
+    // Get other filter elements
+    const searchInput = document.getElementById('searchInput');
     const totalCountEl = document.getElementById('totalCount');
     const showingFromEl = document.getElementById('showingFrom');
     const showingToEl = document.getElementById('showingTo');
     
     function filterCandidates() {
       const searchTerm = searchInput.value.toLowerCase();
-      const companyFilterValue = companyFilter.value.toLowerCase();
+      const selectedCompanies = companySelect.getValue();
+      const selectedEmployees = employeeSelect.getValue();
+
+      // Get selected date ranges (Flatpickr returns an array of Date objects)
+      const selectionDates = selectionDateRangePicker.selectedDates;
+      const joiningDates = joiningDateRangePicker.selectedDates;
+
+      // Helper function to format a Date object to YYYY-MM-DD
+      const formatDate = (date) => date ? date.toISOString().split('T')[0] : null;
+
       let visibleCount = 0;
       
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
+      rows.forEach(row => {
         let rowTextContent = '';
-        
-        // Get text content from all cells except actions column
         const cells = row.getElementsByTagName('td');
-        for (let j = 0; j < cells.length - 1; j++) { // Skip last column (actions)
+        for (let j = 0; j < cells.length - 1; j++) {
           rowTextContent += ' ' + cells[j].textContent.toLowerCase();
         }
         
-        // Also include data attributes if they exist
         const searchContent = row.getAttribute('data-search') || '';
-        const rowCompany = row.getAttribute('data-company') || '';
+        const rowCompany = (row.getAttribute('data-company') || '').toLowerCase();
+        const rowEmployee = (row.getAttribute('data-employee') || '').toLowerCase();
+        const rowSelectionDateStr = row.getAttribute('data-selection-date') || ''; // String YYYY-MM-DD
+        const rowJoiningDateStr = row.getAttribute('data-joining-date') || '';     // String YYYY-MM-DD
         
         const matchesSearch = rowTextContent.includes(searchTerm) || searchContent.includes(searchTerm);
-        const matchesCompany = companyFilterValue === '' || 
-                            rowCompany.toLowerCase().includes(companyFilterValue);
         
-        if (matchesSearch && matchesCompany) {
+        const matchesCompany = selectedCompanies.length === 0 || selectedCompanies.includes(rowCompany);
+        const matchesEmployee = selectedEmployees.length === 0 || selectedEmployees.includes(rowEmployee);
+
+        // Date range matching logic for Selection Date
+        let matchesSelectionDate = true;
+        if (selectionDates.length > 0) { // If any date(s) are selected in the picker
+          if (rowSelectionDateStr === "") { // If candidate has no selection date, it won't match any filter
+            matchesSelectionDate = false;
+          } else {
+            const dateToCheck = new Date(rowSelectionDateStr); // Convert candidate's date string to Date object
+
+            if (selectionDates.length === 1) { // Single date selected in the picker
+              const selectedDate = selectionDates[0];
+              // Check if the candidate's date is on the exact selected date
+              matchesSelectionDate = dateToCheck.toDateString() === selectedDate.toDateString();
+            } else if (selectionDates.length === 2) { // Date range selected in the picker
+              const startDate = selectionDates[0];
+              const endDate = selectionDates[1];
+              // Check if the candidate's date falls within the range (inclusive)
+              matchesSelectionDate = dateToCheck >= startDate && dateToCheck <= endDate;
+            }
+          }
+        }
+
+        // Date range matching logic for Joining Date
+        let matchesJoiningDate = true;
+        if (joiningDates.length > 0) { // If any date(s) are selected in the picker
+          if (rowJoiningDateStr === "") { // If candidate has no joining date, it won't match any filter
+            matchesJoiningDate = false;
+          } else {
+            const dateToCheck = new Date(rowJoiningDateStr); // Convert candidate's date string to Date object
+
+            if (joiningDates.length === 1) { // Single date selected in the picker
+              const selectedDate = joiningDates[0];
+              // Check if the candidate's date is on the exact selected date
+              matchesJoiningDate = dateToCheck.toDateString() === selectedDate.toDateString();
+            } else if (joiningDates.length === 2) { // Date range selected in the picker
+              const startDate = joiningDates[0];
+              const endDate = joiningDates[1];
+              // Check if the candidate's date falls within the range (inclusive)
+              matchesJoiningDate = dateToCheck >= startDate && dateToCheck <= endDate;
+            }
+          }
+        }
+        
+        if (matchesSearch && matchesCompany && matchesEmployee && matchesSelectionDate && matchesJoiningDate) {
           row.style.display = '';
           visibleCount++;
         } else {
           row.style.display = 'none';
         }
-      }
+      });
       
       // Update counters
       showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
@@ -317,34 +484,31 @@
     
     // Event listeners
     searchInput.addEventListener('input', filterCandidates);
-    companyFilter.addEventListener('change', filterCandidates);
-    
-    
-    
-    // Initial filter
+    companySelect.on('change', filterCandidates);
+    employeeSelect.on('change', filterCandidates);
+    // Flatpickr handles its own change event, triggering filterCandidates
+
+    // Initial filter on page load
     filterCandidates();
     
     // Make table rows clickable (except when clicking on buttons)
     document.querySelectorAll('#selectedCandidatesTable tbody tr').forEach(row => {
       row.addEventListener('click', (e) => {
-        // Check if the click was on a button, link, or input
         if (e.target.tagName === 'A' || e.target.closest('a') || 
             e.target.tagName === 'BUTTON' || e.target.closest('button') ||
-            e.target.tagName === 'INPUT' || e.target.closest('input')) {
+            e.target.tagName === 'INPUT' || e.target.closest('input') ||
+            e.target.closest('.ts-wrapper') || e.target.closest('.flatpickr-calendar')) {
           return;
         }
         
-        // Find the profile link in the row and navigate to it
         const profileLink = row.querySelector('td:nth-child(2) a');
         if (profileLink) {
           window.location.href = profileLink.href;
         }
       });
       
-      // Change cursor on hover
       row.style.cursor = 'pointer';
     });
   });
-  </script>
-
+</script>
 {% endblock %}

@@ -2,7 +2,6 @@
 
 {% block content %}
 <div class="page-wrapper">
-  <!-- Page header -->
   <div class="page-header d-print-none">
     <div class="container-xl">
       <div class="row g-2 align-items-center">
@@ -28,13 +27,12 @@
     </div>
   </div>
 
-  <!-- Page body -->
   <div class="page-body">
     <div class="container-xl">
       <div class="card">
         <div class="card-header">
           <div class="row align-items-center">
-            <div class="col-12 col-md-6 mb-3 mb-md-0">
+            <div class="col-12 col-md-4 mb-3 mb-md-0">
               <div class="input-group">
                 <span class="input-group-text">
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -46,8 +44,8 @@
                 <input type="text" id="searchInput" class="form-control" placeholder="Search candidates..." aria-label="Search candidates">
               </div>
             </div>
-            <div class="col-12 col-md-6 ms-md-auto">
-              <div class="d-flex align-items-center justify-content-end">
+            <div class="col-12 col-md-4 mb-3 mb-md-0">
+              <div class="d-flex align-items-center justify-content-md-center">
                 <div class="me-3 text-nowrap">
                   <label for="statusFilter" class="form-label">Follow Up Status:</label>
                 </div>
@@ -57,6 +55,19 @@
                   <option value="overdue">Overdue</option>
                   <option value="upcoming">Upcoming</option>
                 </select>
+              </div>
+            </div>
+            <div class="col-12 col-md-4">
+              <div class="d-flex align-items-center justify-content-md-end">
+                <div class="me-3 text-nowrap">
+                  <label for="leadStatusFilter" class="form-label">Lead Status:</label>
+                </div>
+                <select id="leadStatusFilter" class="form-select">
+                  <option value="">All</option>
+                  <option value="hot">Hot</option>
+                  <option value="converted">Converted</option>
+                  <option value="rejected">Rejected</option>
+                  </select>
               </div>
             </div>
           </div>
@@ -71,13 +82,14 @@
                 <th>Contact</th>
                 <th>Registered</th>
                 <th>Follow Up Date</th>
-                <th>Status</th>
+                <th>Lead Status</th>
                 <th class="text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for candidate in candidates %}
               <tr data-status="{% if candidate.next_follow_up_date == today %}today{% elif candidate.next_follow_up_date < today %}overdue{% else %}upcoming{% endif %}"
+                  data-lead-status="{{ candidate.lead_generate|lower }}" {# Added data-lead-status attribute #}
                   data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }}">
                 <td>{{ forloop.counter }}</td>
                 <td>
@@ -93,7 +105,7 @@
                     </div>
                     <div>
                       <div class="font-weight-medium">
-                        {% if candidate.lead_source == 'EVMS' %}  
+                        {% if candidate.lead_source == 'EVMS' %} 
                         <a href="{% url 'employee_evms_candidate_profile' candidate.id %}" class="text-reset">
                           {{ candidate.candidate_name }}
                         </a>
@@ -147,8 +159,8 @@
                   </div>
                 </td>
                 <td>
-                  <span class="status-badge status-{{ candidate.selection_status|lower }}">
-                    {{ candidate.selection_status }}
+                  <span class="status-badge status-{{ candidate.lead_generate|lower }}">
+                    {{ candidate.lead_generate }}
                   </span>
                 </td>
                 <td class="text-center">
@@ -236,12 +248,12 @@
     vertical-align: baseline;
   }
   
-  .status-pending {
+  .status-hot {
     background-color: rgba(253, 126, 20, 0.1);
     color: #fd7e14;
   }
   
-  .status-selected {
+  .status-converted {
     background-color: rgba(32, 201, 151, 0.1);
     color: #20c997;
   }
@@ -264,6 +276,19 @@
   .badge.bg-green-lt {
     background-color: rgba(32, 201, 151, 0.1);
     color: #20c997;
+  }
+
+  /* Sticky Table Header */
+  .table-responsive {
+    overflow-y: auto; /* Enable vertical scrolling */
+    max-height: calc(100vh - 350px); /* Adjust based on your layout, ensuring content fits */
+  }
+
+  .table th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa; /* Or your table header background color */
+    z-index: 10; /* Ensure header stays on top of content */
   }
   
   @media (max-width: 768px) {
@@ -288,6 +313,7 @@
     // Search and filter functionality
     const searchInput = document.getElementById('searchInput');
     const statusFilter = document.getElementById('statusFilter');
+    const leadStatusFilter = document.getElementById('leadStatusFilter'); // New filter
     const followUpTable = document.getElementById('followUpTable');
     const rows = followUpTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
     const totalCountEl = document.getElementById('totalCount');
@@ -296,7 +322,8 @@
   
     function filterCandidates() {
       const searchTerm = searchInput.value.toLowerCase();
-      const statusFilterValue = statusFilter.value.toLowerCase();
+      const followUpStatusFilterValue = statusFilter.value.toLowerCase();
+      const leadStatusFilterValue = leadStatusFilter.value.toLowerCase(); // Get lead status filter value
       let visibleCount = 0;
   
       for (let i = 0; i < rows.length; i++) {
@@ -309,12 +336,14 @@
           rowText += cells[j].textContent.toLowerCase() + ' ';
         }
   
-        const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
+        const rowFollowUpStatus = (row.getAttribute('data-status') || '').toLowerCase();
+        const rowLeadStatus = (row.getAttribute('data-lead-status') || '').toLowerCase(); // Get lead status from data attribute
   
         const matchesSearch = rowText.includes(searchTerm);
-        const matchesStatus = statusFilterValue === '' || rowStatus === statusFilterValue;
+        const matchesFollowUpStatus = followUpStatusFilterValue === '' || rowFollowUpStatus === followUpStatusFilterValue;
+        const matchesLeadStatus = leadStatusFilterValue === '' || rowLeadStatus === leadStatusFilterValue; // Check lead status
   
-        if (matchesSearch && matchesStatus) {
+        if (matchesSearch && matchesFollowUpStatus && matchesLeadStatus) { // Combine all filters
           row.style.display = '';
           visibleCount++;
         } else {
@@ -331,6 +360,7 @@
     // Event listeners
     searchInput.addEventListener('input', filterCandidates);
     statusFilter.addEventListener('change', filterCandidates);
+    leadStatusFilter.addEventListener('change', filterCandidates); // New event listener for lead status
   
     // Initial filter
     filterCandidates();
@@ -353,7 +383,5 @@
       row.style.cursor = 'pointer';
     });
   });
-  </script>
-  
-
+</script>
 {% endblock %}
