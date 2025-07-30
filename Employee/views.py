@@ -2808,16 +2808,14 @@ def employee_performance_dashboard(request):
         employee_name=logged_in_employee,
         next_follow_up_date_time__isnull=False,
         next_follow_up_date_time__gte=date_range_start,
-        next_follow_up_date_time__lte=date_range_end,
-        lead_generate='No'
+        next_follow_up_date_time__lte=date_range_end
     ).order_by('next_follow_up_date_time')
     
     follow_up_candidates_can = Candidate.objects.filter(
         employee_name=logged_in_employee,
         next_follow_up_date_time__isnull=False,
         next_follow_up_date_time__gte=date_range_start,
-        next_follow_up_date_time__lte=date_range_end,
-        lead_generate='No'
+        next_follow_up_date_time__lte=date_range_end
     ).order_by('next_follow_up_date_time')
     
     # Combine both querysets
