@@ -795,6 +795,7 @@ class Candidate_registration(models.Model):
     other_preferred_location = models.CharField(max_length=255, blank=True, null=True)
     other_sector = models.CharField(max_length=255, blank=True, null=True)
     other_department = models.CharField(max_length=255, blank=True, null=True)
+    hello_world = models.CharField(max_length=255, blank=True, null=True)
 
     invoice_status = models.CharField(max_length=255, blank=True, null=True)
     invoice_paid_status = models.CharField(max_length=255, blank=True, null=True)
