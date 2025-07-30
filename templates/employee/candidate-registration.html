@@ -488,8 +488,8 @@ document.getElementById('candidateResumeInput').addEventListener('change', funct
                                         <label class="form-label">Call Connection</label>
                                         <select class="form-control form-select" name='call_connection' required>
                                             <option value="" disabled selected>Select Status</option>
-                                            <option value="Yes" {% if Candidate_registration.call_connection == "Yes" %}selected{% endif %}>Yes</option>
-                                            <option value="No" {% if Candidate_registration.call_connection == "No" %}selected{% endif %}>No</option>
+                                            <option value="Connected" {% if Candidate_registration.call_connection == "Connected" %}selected{% endif %}>Connected</option>
+                                            <option value="Not Connected" {% if Candidate_registration.call_connection == "Not Connected" %}selected{% endif %}>Not Connected</option>
                                         </select>
                                         <div class="invalid-feedback">Please select call connection status.</div>
                                     </div>

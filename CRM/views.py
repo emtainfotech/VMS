@@ -3185,8 +3185,8 @@ def follow_up_candidate(request):
 @login_required
 def generated_leads(request):
     if request.user.is_staff or request.user.is_superuser:
-        candidates_reg = Candidate_registration.objects.filter(lead_generate='Hot').order_by('-id')
-        candidates_can = Candidate.objects.filter(lead_generate='Hot').order_by('-id')
+        candidates_reg = Candidate_registration.objects.filter(lead_generate__in=['Hot', 'Converted']).order_by('-id')
+        candidates_can = Candidate.objects.filter(lead_generate__in=['Hot', 'Converted']).order_by('-id')
         candidates = list(chain(candidates_reg, candidates_can))
         candidates.sort(key=lambda x: x.register_time, reverse=True)
         context = {

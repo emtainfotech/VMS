@@ -53,15 +53,63 @@
                 </div>
                 <select id="statusFilter" class="form-select">
                   <option value="">All Statuses</option>
-                  <option value="new">New</option>
-                  <option value="contacted">Contacted</option>
-                  <option value="qualified">Qualified</option>
+                  <option value="Converted">Converted</option>
+                  <option value="Hot">Hot</option>
                 </select>
               </div>
             </div>
           </div>
         </div>
 
+<style>
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 50rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+    }
+
+    .status-hot {
+        background-color: rgba(253, 126, 20, 0.1);
+        color: #fd7e14;
+    }
+
+    .status-converted {
+        background-color: rgba(32, 201, 151, 0.1);
+        color: #20c997;
+    }
+
+    .status-cold {
+        background-color: rgba(250, 82, 82, 0.1);
+        color: #fa5252;
+    }
+
+    /* Added for other statuses based on lead_generate values */
+    .status-not-interested {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+    }
+
+    .status-connect-later {
+        background-color: rgba(0, 123, 255, 0.1);
+        color: #007bff;
+    }
+
+    .status-dnd {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .status-other {
+        background-color: rgba(102, 16, 242, 0.1);
+        color: #6610f2;
+    }
+    </style>
         <div class="table-responsive">
           <table class="table table-vcenter table-hover table-nowrap" id="leadsTable">
             <thead>
@@ -69,6 +117,8 @@
                 <th class="w-1">#</th>
                 <th>Candidate</th>
                 <th>Contact</th>
+                <th>Lead Status</th>
+                <th>Employee</th>
                 <th>Registration</th>
                 <th>Resume</th>
                 <th class="text-center">Actions</th>
@@ -77,7 +127,7 @@
             <tbody>
               {% for candidate in candidates %}
               <tr data-search="{{ candidate.candidate_name|lower }} {{ candidate.unique_code|lower }} {{ candidate.candidate_mobile_number }}"
-                  data-status="new">
+                  data-status="{{candidate.lead_generate|lower}}">
                 <td>{{ forloop.counter }}</td>
                 <td>
                   <div class="d-flex align-items-center">
@@ -116,6 +166,16 @@
                       {{ candidate.candidate_email_address }}
                     </a>
                     {% endif %}
+                  </div>
+                </td>
+                <td>
+                  <div class=" status-badge status-{{ candidate.lead_generate|lower|slugify }}">
+                    {{ candidate.lead_generate }}
+                  </div>
+                </td>
+                <td>
+                  <div class="text-muted small">
+                    {{ candidate.employee_name }}
                   </div>
                 </td>
                 <td>

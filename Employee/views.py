@@ -120,7 +120,7 @@ def employee_dashboard(request):
             call_connection='Yes', register_time__date=today1, employee_name=logged_in_employee
         ).count()
         total_lead_generate = Candidate_registration.objects.filter(
-            lead_generate='Yes', register_time__date=today1, employee_name=logged_in_employee
+            lead_generate='Hot', register_time__date=today1, employee_name=logged_in_employee
         ).count()
         total_placement = Candidate_registration.objects.filter(
             selection_status='Selected', register_time__date=today1, employee_name=logged_in_employee
@@ -2755,7 +2755,7 @@ def calculate_percentage(part, total):
     return round((part / total) * 100, 2) if total > 0 else 0
 
 def get_call_breakdown(current_qs, previous_qs):
-    statuses = ['Yes', 'No', 'Busy', 'Not Reachable', 'Wrong Number']
+    statuses = ['Yes', 'No', 'Connected' 'Busy', 'Not Reachable', 'Wrong Number']
     breakdown = []
 
     for status in statuses:
@@ -2923,8 +2923,8 @@ def employee_performance_dashboard(request):
     interview_current = sum(1 for c in current_qs if getattr(c, 'send_for_interview', '') == 'Yes')
     interview_previous = sum(1 for c in previous_qs if getattr(c, 'send_for_interview', '') == 'Yes')
 
-    lead_current = sum(1 for c in current_qs if getattr(c, 'lead_generate', '') == 'Yes')
-    lead_previous = sum(1 for c in previous_qs if getattr(c, 'lead_generate', '') == 'Yes')
+    lead_current = sum(1 for c in current_qs if getattr(c, 'lead_generate', '') == 'Hot')
+    lead_previous = sum(1 for c in previous_qs if getattr(c, 'lead_generate', '') == 'Hot')
 
     today_candidates = list(chain(
         Candidate_registration.objects.filter(employee_name=logged_in_employee, register_time__date=today),
@@ -3040,7 +3040,7 @@ def employee_chart_data(request):
         ).count()
         
         total_lead_generate = Candidate_registration.objects.filter(
-            lead_generate='Yes', register_time__date=today1, employee_name=logged_in_employee
+            lead_generate='Hot', register_time__date=today1, employee_name=logged_in_employee
         ).count()
         
         total_placement = Candidate_registration.objects.filter(
@@ -3091,7 +3091,7 @@ def overall_employee_chart_data(request):
         ).count()
 
         total_lead_generate = Candidate_registration.objects.filter(
-            lead_generate='Yes', register_time__date__gte=start_date, register_time__date__lte=today, employee_name=logged_in_employee
+            lead_generate='Hot', register_time__date__gte=start_date, register_time__date__lte=today, employee_name=logged_in_employee
         ).count()
 
         total_placement = Candidate_registration.objects.filter(
@@ -3140,7 +3140,7 @@ def each_employee_chart_data(request):
             .annotate(
                 total_calls=Count("id"),
                 connected_calls=Count("id", filter=models.Q(call_connection="Yes")),
-                leads_generated=Count("id", filter=models.Q(lead_generate="Yes"))
+                leads_generated=Count("id", filter=models.Q(lead_generate="Hot"))
             )
             .order_by("period")
         )
@@ -3501,12 +3501,12 @@ def employee_generated_leads(request):
         # Get candidates from both databases
         candidates_reg = Candidate_registration.objects.filter(
             employee_name=logged_in_employee,
-            lead_generate__in=['Yes', 'Converted']
+            lead_generate__in=['Hot', 'Converted']
         ).order_by('-id')
         
         candidates_can = Candidate.objects.filter(
             employee_name=logged_in_employee,
-            lead_generate__in=['Yes', 'Converted']
+            lead_generate__in=['Hot', 'Converted']
         ).order_by('-id')
         
         # Combine both querysets
