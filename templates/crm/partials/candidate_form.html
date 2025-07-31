@@ -161,7 +161,7 @@
 
             <div class="col-md-6 mb-3">
               <label class="form-label">Assign To</label>
-              <select class="form-select" name="employee_assigned" required>
+              <select class="form-select" name="employee_assigned">
                 <option value="" disabled>Select Employee</option>
                {% for employee in employees %}
                         <option value="{{ employee.first_name }} {{ employee.last_name }} ({{ employee.employee_id }})" 
@@ -372,7 +372,7 @@
     </div>
     
     <!-- Hidden select element for form submission -->
-    <select name="origin_location" id="originLocation" required style="display: none;">
+    <select name="origin_location" id="originLocation"  style="display: none;">
       {% if candidate.origin_location %}
         <option value="{{ candidate.origin_location }}" selected>{{ candidate.origin_location }}</option>
       {% endif %}

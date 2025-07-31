@@ -105,7 +105,7 @@
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Candidate Email Address <span class="text-danger">*</span></label>
                   <input type="email" class="form-control" name="candidate_email_address" id="candidateEmail"
-                         value="{{ candidate.candidate_email_address }}" required />
+                         value="{{ candidate.candidate_email_address }}"  />
                   <div class="invalid-feedback">
                     Please enter a valid email address
                   </div>
@@ -337,7 +337,7 @@
     </div>
     
     <!-- Hidden select element for form submission -->
-    <select name="origin_location" id="originLocation" required style="display: none;">
+    <select name="origin_location" id="originLocation"  style="display: none;">
       {% if candidate.origin_location %}
         <option value="{{ candidate.origin_location }}" selected>{{ candidate.origin_location }}</option>
       {% endif %}
@@ -967,7 +967,7 @@ function updateButtonText() {
                 
                 <div class="col-md-12 mb-3">
                   <label class="form-label">Send for Interview Status <span class="text-danger">*</span></label>
-                  <select class="form-select" name="send_for_interview" id="interviewStatusSelect" required>
+                  <select class="form-select" name="send_for_interview" id="interviewStatusSelect" >
                     <option value="" disabled selected>Select Status</option>
                     <option value="Yes" {% if candidate.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
                     <option value="No" {% if candidate.send_for_interview == "No" %}selected{% endif %}>No</option>
@@ -1217,7 +1217,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (selectElement.value === 'Other') {
       container.style.display = 'block';
       const input = container.querySelector('input');
-      if (input) input.required = true;
+      if (input) input.required = false;
     } else {
       container.style.display = 'none';
       const input = container.querySelector('input');
@@ -1256,7 +1256,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (callConnection && callConnection.value === 'Connected') {
       connectedFields.style.display = 'block';
       connectedFields.querySelectorAll('[required]').forEach(el => {
-        el.required = true;
+        el.required = false;
       });
     } else {
       connectedFields.style.display = 'none';
@@ -1287,7 +1287,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isSelected && joiningStatus && joiningStatus.value === 'Joined') {
       joinedFields.style.display = 'block';
       joinedFields.querySelectorAll('[required]').forEach(el => {
-        el.required = true;
+        el.required = false;
       });
     } else {
       joinedFields.style.display = 'none';
@@ -1457,7 +1457,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <!-- admin status -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Admin Status <span class="text-danger">*</span></label>
-              <select class="form-select" name="admin_status" required>
+              <select class="form-select" name="admin_status" >
                 <option value="" disabled selected>Select Admin Status</option>
                 <option value="Pending" {% if candidate.admin_status == "Pending" %}selected{% endif %}>Pending</option>
                 <option value="Complete" {% if candidate.admin_status == "Complete" %}selected{% endif %}>Complete</option>
@@ -1556,7 +1556,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <!-- Vendor Remark for Payment -->
             <div class="col-md-12 mb-3">
               <label class="form-label">Vendor Remark for Payment <span class="text-danger">*</span></label>
-              <textarea class="form-control" name="vendor_payment_remark" rows="3" required maxlength="500">{{ candidate.vendor_payment_remark }}</textarea>
+              <textarea class="form-control" name="vendor_payment_remark" rows="3"  maxlength="500">{{ candidate.vendor_payment_remark }}</textarea>
               <div class="invalid-feedback">
                 Please enter Vendor Remark for Payments (max 500 characters)
               </div>
