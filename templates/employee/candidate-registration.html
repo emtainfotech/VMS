@@ -17,6 +17,8 @@
                     <form method="POST" enctype="multipart/form-data" class="card" id="candidateForm" novalidate>
                         {% csrf_token %}
                         <div class="card-body">
+                            <!-- Add this error display div near the top of your form -->
+    <div id="formErrors" class="alert alert-danger d-none"></div>
                             <div class="row row-cards">
                                 <!-- Candidate Name -->
                                 <div class="col-md-5">
@@ -82,7 +84,7 @@
                                 <div class="col-sm-6 col-md-2">
                                     <div class="mb-3">
                                         <div class="form-label">Gender</div>
-                                        <select name="gender" class="form-select" >
+                                        <select name="gender" class="form-select" required>
                                             <option value="" disabled selected>Select Gender</option>
                                             <option value="Male" {% if Candidate_registration.gender == "Male" %}selected{% endif %}>Male</option>
                                             <option value="Female" {% if Candidate_registration.gender == "Female" %}selected{% endif %}>Female</option>
@@ -167,14 +169,15 @@
 <div class="col-sm-6 col-md-3">
   <div class="mb-3">
     <label class="form-label">Origin Location</label>
-    <input list="originLocationOptions" class="form-control" name="origin_location" id="originLocationSelect" 
-           placeholder="Type or select origin location" value="{% if Candidate_registration.origin_location %}{{ Candidate_registration.origin_location }}{% endif %}">
-    <datalist id="originLocationOptions">
+    <select type="text" class="form-select" name="origin_location" id="originLocationSelect" >
+      <option value="" disabled selected>Select Origin location</option>
       {% for district in districts %}
-      <option value="{{ district }}">
+      <option value="{{ district }}" {% if Candidate_registration.origin_location == district %}selected{% endif %}>
+        {{ district }}
+      </option>
       {% endfor %}
-      <option value="Others">
-    </datalist>
+      <option value="Others" {% if Candidate_registration.origin_location == "Others" %}selected{% endif %}>Others</option>
+    </select>
     <div class="invalid-feedback">Please select an origin location.</div>
   </div>
 </div>
@@ -367,20 +370,32 @@ document.getElementById('select-department').addEventListener('change', function
                                 
                                 <!-- Current Salary -->
                                 <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Current Salary</label>
+                                  <label class="form-label">Current Salary</label>
+                                    <div class="mb-3 input-group">
                                         <input type="number" class="form-control" name="current_salary" 
                                                placeholder="Current Salary" min="0" step="1">
+                                               <select class="form-select" name="current_salary_type">
+                      <option value="(CTC)" {% if candidate.current_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
+                      <option value="(Per Month)" {% if candidate.current_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
+                      <option value="(In Hand)" {% if candidate.current_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
+                      <option value="(Per Annum)" {% if candidate.current_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
+                    </select>
                                         <div class="invalid-feedback">Please enter a valid salary.</div>
                                     </div>
                                 </div>
                                 
                                 <!-- Expected Salary -->
                                 <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Expected Salary</label>
+                                  <label class="form-label">Expected Salary</label>
+                                    <div class="mb-3 input-group">
                                         <input type="number" name='expected_salary' class="form-control" 
                                                placeholder="Expected Salary" min="0" step="1">
+                                               <select class="form-select" name="expected_salary_type">
+                      <option value="(CTC)" {% if candidate.expected_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
+                      <option value="(Per Month)" {% if candidate.expected_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
+                      <option value="(In Hand)" {% if candidate.expected_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
+                      <option value="(Per Annum)" {% if candidate.expected_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
+                    </select>
                                         <div class="invalid-feedback">Please enter a valid expected salary.</div>
                                     </div>
                                 </div>
@@ -480,6 +495,7 @@ document.getElementById('candidateResumeInput').addEventListener('change', funct
 });
 </script>
 
+                                
                                 <hr>
                                 
                                 <!-- Call Connection -->
@@ -500,7 +516,7 @@ document.getElementById('candidateResumeInput').addEventListener('change', funct
                                     <div class="mb-3">
                                         <label class="form-label">Calling Remark</label>
                                         <select class="form-control form-select" name='calling_remark'>
-                                            <option value="None" {% if Candidate_registration.calling_remark == "None" %}selected{% endif %}>None</option>
+                                            <!-- <option value="None" {% if Candidate_registration.calling_remark == "None" %}selected{% endif %}>None</option> -->
                                             <option value="Lead Generate" {% if Candidate_registration.calling_remark == "Lead Generate" %}selected{% endif %}>Lead Generate</option>
                                             <option value="Follow-Up" {% if Candidate_registration.calling_remark == "Follow-Up" %}selected{% endif %}>Follow-Up</option>
                                             <option value="Shortlisted for Banking Counselling" {% if Candidate_registration.calling_remark == "Shortlisted for Banking Counselling" %}selected{% endif %}>Shortlisted for Banking Counselling</option>
@@ -567,7 +583,7 @@ document.getElementById('candidateResumeInput').addEventListener('change', funct
                                 </div>
                                 
                                 <!-- Remark -->
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <div class="mb-3">
                                         <label class="form-label">Remark</label>
                                         <textarea name='remark' class="form-control" placeholder="Remark" maxlength="500"></textarea>
@@ -583,94 +599,156 @@ document.getElementById('candidateResumeInput').addEventListener('change', funct
                     
                     <script>
                     document.addEventListener("DOMContentLoaded", function() {
-                        const form = document.getElementById("candidateForm");
-                        
-                        // Form validation
-                        form.addEventListener("submit", function(event) {
-                            if (!form.checkValidity()) {
-                                event.preventDefault();
-                                event.stopPropagation();
-                            }
-                            
-                            // Custom validation for multi-select fields
-                            const multiSelectFields = ['preferred_location', 'sector', 'department'];
-                            let isValid = true;
-                            
-                            multiSelectFields.forEach(fieldName => {
-                                const field = document.querySelector(`[name="${fieldName}"]`);
-                                if (field && field.required && field.selectedOptions.length === 0) {
-                                    field.classList.add('is-invalid');
-                                    isValid = false;
-                                }
-                            });
-                            
-                            // Validate experience months if years are provided
-                            const expYears = document.querySelector('[name="experience_year"]');
-                            const expMonths = document.querySelector('[name="experience_month"]');
-                            
-                            if (expYears.value && !expMonths.value) {
-                                expMonths.setCustomValidity("Please specify months if years are provided");
-                                expMonths.classList.add('is-invalid');
-                                isValid = false;
-                            } else {
-                                expMonths.setCustomValidity("");
-                            }
-                            
-                            // Validate expected salary is >= current salary if both provided
-                            const currentSalary = document.querySelector('[name="current_salary"]');
-                            const expectedSalary = document.querySelector('[name="expected_salary"]');
-                            
-                            if (currentSalary.value && expectedSalary.value && 
-                                parseInt(expectedSalary.value) < parseInt(currentSalary.value)) {
-                                expectedSalary.setCustomValidity("Expected salary should be greater than or equal to current salary");
-                                expectedSalary.classList.add('is-invalid');
-                                isValid = false;
-                            } else {
-                                expectedSalary.setCustomValidity("");
-                            }
-                            
-                            // Validate file sizes and types
-                            const photo = document.querySelector('[name="candidate_photo"]');
-                            if (photo.files.length > 0) {
-                                const file = photo.files[0];
-                                const validTypes = ['image/jpeg', 'image/png'];
-                                if (!validTypes.includes(file.type)) {
-                                    photo.setCustomValidity("Please upload an image in JPG or PNG format");
-                                    photo.classList.add('is-invalid');
-                                    isValid = false;
-                                } else if (file.size > 2 * 1024 * 1024) { // 2MB
-                                    photo.setCustomValidity("Photo size should be less than 2MB");
-                                    photo.classList.add('is-invalid');
-                                    isValid = false;
-                                } else {
-                                    photo.setCustomValidity("");
-                                }
-                            }
-                            
-                            const resume = document.querySelector('[name="candidate_resume"]');
-                            if (resume.files.length > 0) {
-                                const file = resume.files[0];
-                                const validTypes = ['application/pdf', 'application/msword', 
-                                                   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-                                if (!validTypes.includes(file.type)) {
-                                    resume.setCustomValidity("Please upload a resume in PDF, DOC or DOCX format");
-                                    resume.classList.add('is-invalid');
-                                    isValid = false;
-                                } else if (file.size > 5 * 1024 * 1024) { // 5MB
-                                    resume.setCustomValidity("Resume size should be less than 5MB");
-                                    resume.classList.add('is-invalid');
-                                    isValid = false;
-                                } else {
-                                    resume.setCustomValidity("");
-                                }
-                            }
-                            
-                            if (!isValid) {
-                                event.preventDefault();
-                            }
-                            
-                            form.classList.add('was-validated');
-                        });
+    const form = document.getElementById("candidateForm");
+    const errorDiv = document.getElementById("formErrors");
+    
+    // Form validation
+    form.addEventListener("submit", function(event) {
+        event.preventDefault();
+        
+        // Reset error display
+        errorDiv.classList.add('d-none');
+        errorDiv.innerHTML = '';
+        
+        if (!form.checkValidity()) {
+            event.stopPropagation();
+            form.classList.add('was-validated');
+            return;
+        }
+        
+        // Custom validation for multi-select fields
+        const multiSelectFields = ['preferred_location', 'sector', 'department'];
+        let isValid = true;
+        
+        multiSelectFields.forEach(fieldName => {
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            if (field && field.required && field.selectedOptions.length === 0) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            }
+        });
+        
+        // Validate experience months if years are provided
+        const expYears = document.querySelector('[name="experience_year"]');
+        const expMonths = document.querySelector('[name="experience_month"]');
+        
+        if (expYears.value && !expMonths.value) {
+            expMonths.setCustomValidity("Please specify months if years are provided");
+            expMonths.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            expMonths.setCustomValidity("");
+        }
+        
+        // Validate expected salary is >= current salary if both provided
+        const currentSalary = document.querySelector('[name="current_salary"]');
+        const expectedSalary = document.querySelector('[name="expected_salary"]');
+        
+        if (currentSalary.value && expectedSalary.value && 
+            parseInt(expectedSalary.value) < parseInt(currentSalary.value)) {
+            expectedSalary.setCustomValidity("Expected salary should be greater than or equal to current salary");
+            expectedSalary.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            expectedSalary.setCustomValidity("");
+        }
+        
+        // Validate file sizes and types
+        const photo = document.querySelector('[name="candidate_photo"]');
+        if (photo.files.length > 0) {
+            const file = photo.files[0];
+            const validTypes = ['image/jpeg', 'image/png'];
+            if (!validTypes.includes(file.type)) {
+                photo.setCustomValidity("Please upload an image in JPG or PNG format");
+                photo.classList.add('is-invalid');
+                isValid = false;
+            } else if (file.size > 2 * 1024 * 1024) { // 2MB
+                photo.setCustomValidity("Photo size should be less than 2MB");
+                photo.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                photo.setCustomValidity("");
+            }
+        }
+        
+        const resume = document.querySelector('[name="candidate_resume"]');
+        if (resume.files.length > 0) {
+            const file = resume.files[0];
+            const validTypes = ['application/pdf', 'application/msword', 
+                               'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            if (!validTypes.includes(file.type)) {
+                resume.setCustomValidity("Please upload a resume in PDF, DOC or DOCX format");
+                resume.classList.add('is-invalid');
+                isValid = false;
+            } else if (file.size > 5 * 1024 * 1024) { // 5MB
+                resume.setCustomValidity("Resume size should be less than 5MB");
+                resume.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                resume.setCustomValidity("");
+            }
+        }
+        
+        if (!isValid) {
+            form.classList.add('was-validated');
+            return;
+        }
+        
+        // Submit form via AJAX
+        const formData = new FormData(form);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.href = data.redirect_url;
+            } else {
+                // Shouldn't happen if server returns proper response
+                console.error('Unexpected response:', data);
+            }
+        })
+        .catch(error => {
+            if (error.errors) {
+                // Display duplicate errors
+                errorDiv.innerHTML = error.errors.map(err => `<div>${err}</div>`).join('');
+                errorDiv.classList.remove('d-none');
+                
+                // Scroll to errors
+                errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Highlight problematic fields
+                if (error.errors.some(err => err.includes('Mobile number'))) {
+                    const mobileField = document.querySelector('[name="candidate_mobile_number"]');
+                    mobileField.classList.add('is-invalid');
+                    mobileField.focus();
+                }
+                if (error.errors.some(err => err.includes('Email address'))) {
+                    const emailField = document.querySelector('[name="candidate_email_address"]');
+                    emailField.classList.add('is-invalid');
+                    if (!document.activeElement.matches('[name="candidate_mobile_number"]')) {
+                        emailField.focus();
+                    }
+                }
+            } else {
+                // Generic error handling
+                errorDiv.innerHTML = '<div>An error occurred. Please try again.</div>';
+                errorDiv.classList.remove('d-none');
+                console.error('Error:', error);
+            }
+        });
+    });
                         
                         // Real-time validation for fields
                         const fieldsToValidate = [
@@ -776,6 +854,7 @@ document.getElementById('candidateResumeInput').addEventListener('change', funct
       
     </div>
   </div>
+
   <!-- Libs JS -->
   <script src="/static/dist/libs/nouislider/dist/nouislider.min.js?1692870487" defer></script>
   <script src="/static/dist/libs/litepicker/dist/litepicker.js?1692870487" defer></script>
@@ -784,6 +863,20 @@ document.getElementById('candidateResumeInput').addEventListener('change', funct
   <script src="/static/dist/js/tabler.min.js?1692870487" defer></script>
   <script src="/static/dist/js/demo.min.js?1692870487" defer></script>
   
+  <style>
+    #formErrors {
+    margin: 1rem;
+    padding: 1rem;
+}
+
+#formErrors div {
+    margin-bottom: 0.5rem;
+}
+
+#formErrors div:last-child {
+    margin-bottom: 0;
+}
+  </style>
 </body>
 </html>
 

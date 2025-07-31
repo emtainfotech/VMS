@@ -861,6 +861,20 @@ def employee_candidate_registration(request) :
             other_qualification = request.POST.get('other_qualification')
             other_sector = request.POST.get('other_sector')
             other_department = request.POST.get('other_department')
+            current_salary_type = request.POST.get('current_salary_type')
+            expected_salary_type = request.POST.get('expected_salary_type')
+
+            # Check for duplicates
+            duplicate_mobile = Candidate_registration.objects.filter(
+                candidate_mobile_number=candidate_mobile_number
+            ).exists()
+            
+            if duplicate_mobile:
+                errors = []
+                if duplicate_mobile:
+                    errors.append("Mobile number already registered")
+               
+                return JsonResponse({'status': 'error', 'errors': errors}, status=400)
            
             # Save to database
             Candidate_registration.objects.create(
@@ -898,10 +912,12 @@ def employee_candidate_registration(request) :
                 other_origin_location = other_origin_location,
                 other_preferred_location = other_preferred_location,
                 other_sector = other_sector,
-                other_department = other_department
+                other_department = other_department,
+                current_salary_type = current_salary_type,
+                expected_salary_type = expected_salary_type
             )
         
-            return redirect('employee_candidate_list')
+            return JsonResponse({'status': 'success', 'redirect_url': reverse('employee_candidate_list')})
         
         # suggested_unique_code = get_next_unique_code()
 

@@ -856,6 +856,8 @@ def admin_candidate_registration(request):
             other_qualification = request.POST.get('other_qualification')
             other_sector = request.POST.get('other_sector')
             other_department = request.POST.get('other_department')
+            current_salary_type = request.POST.get('current_salary_type')
+            expected_salary_type = request.POST.get('expected_salary_type')
             
             # Check for duplicates
             duplicate_mobile = Candidate_registration.objects.filter(
@@ -909,7 +911,9 @@ def admin_candidate_registration(request):
                 other_origin_location=other_origin_location,
                 other_preferred_location=other_preferred_location,
                 other_sector=other_sector,
-                other_department=other_department   
+                other_department=other_department,
+                current_salary_type=current_salary_type,
+                expected_salary_type=expected_salary_type
             )
             
             return JsonResponse({'status': 'success', 'redirect_url': reverse('admin_candidate_list')})

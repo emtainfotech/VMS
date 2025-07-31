@@ -370,20 +370,32 @@ document.getElementById('select-department').addEventListener('change', function
                                 
                                 <!-- Current Salary -->
                                 <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Current Salary</label>
+                                  <label class="form-label">Current Salary</label>
+                                    <div class="mb-3 input-group">
                                         <input type="number" class="form-control" name="current_salary" 
                                                placeholder="Current Salary" min="0" step="1">
+                                               <select class="form-select" name="current_salary_type">
+                      <option value="(CTC)" {% if candidate.current_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
+                      <option value="(Per Month)" {% if candidate.current_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
+                      <option value="(In Hand)" {% if candidate.current_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
+                      <option value="(Per Annum)" {% if candidate.current_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
+                    </select>
                                         <div class="invalid-feedback">Please enter a valid salary.</div>
                                     </div>
                                 </div>
                                 
                                 <!-- Expected Salary -->
                                 <div class="col-sm-6 col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Expected Salary</label>
+                                  <label class="form-label">Expected Salary</label>
+                                    <div class="mb-3 input-group">
                                         <input type="number" name='expected_salary' class="form-control" 
                                                placeholder="Expected Salary" min="0" step="1">
+                                               <select class="form-select" name="expected_salary_type">
+                      <option value="(CTC)" {% if candidate.expected_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
+                      <option value="(Per Month)" {% if candidate.expected_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
+                      <option value="(In Hand)" {% if candidate.expected_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
+                      <option value="(Per Annum)" {% if candidate.expected_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
+                    </select>
                                         <div class="invalid-feedback">Please enter a valid expected salary.</div>
                                     </div>
                                 </div>
