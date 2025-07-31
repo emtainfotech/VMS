@@ -458,6 +458,475 @@
             </div>
         </div>
 
+        <div class="container-fluid">
+    <h2 class="mt-4">Candidate Profile: {{ candidate.candidate_name }}</h2>
+    <hr>
+
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+
+    {# ... Your existing HTML for candidate details forms ... #}
+
+    <div class="card my-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3>Interview Records</h3>
+            <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addInterviewModal">
+                Add New Interview
+            </button>
+        </div>
+        <div class="card-body">
+            
+
+            {% if interviews %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Company</th>
+                                <th>Job Position</th>
+                                <th>Date & Time</th>
+                                <th>Mode</th>
+                                <th>Status</th>
+                                <th>Interviewer</th>
+                                <th>Feedback</th>
+                                <th>Rating</th>
+                                <th>Attachment</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for interview in interviews %}
+                                <tr>
+                                    <td>{{ interview.company_name }}</td>
+                                    <td>{{ interview.job_position }}</td>
+                                    <td>{{ interview.interview_date_time|date:"Y-m-d H:i" }}</td>
+                                    <td>{{ interview.get_interview_mode_display }}</td>
+                                    <td>{{ interview.get_status_display }}</td>
+                                    <td>{{ interview.interviewer_name }}</td>
+                                    <td>{{ interview.feedback|truncatechars:50 }}</td>
+                                    <td>{% if interview.rating %}{{ interview.rating }}/10{% else %}N/A{% endif %}</td>
+                                    <td>
+                                        {% if interview.attachment %}
+                                            <a href="{{ interview.attachment.url }}" target="_blank">View</a>
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-info edit-interview-btn"
+                                                data-bs-toggle="modal" data-bs-target="#editInterviewModal"
+                                                data-id="{{ interview.id }}"
+                                                data-company-name="{{ interview.company_name }}"
+                                                data-job-position="{{ interview.job_position }}"
+                                                data-date-time="{{ interview.interview_date_time|date:'Y-m-d\TH:i' }}"
+                                                data-interviewer-name="{{ interview.interviewer_name }}"
+                                                data-interviewer-email="{{ interview.interviewer_email }}"
+                                                data-interviewer-phone="{{ interview.interviewer_phone }}"
+                                                data-status="{{ interview.status }}"
+                                                data-interview-mode="{{ interview.interview_mode }}"
+                                                data-location="{{ interview.location }}"
+                                                data-meeting-link="{{ interview.meeting_link }}"
+                                                data-notes="{{ interview.notes }}"
+                                                data-feedback="{{ interview.feedback }}"
+                                                data-rating="{{ interview.rating }}"
+                                                data-is-technical="{% if interview.is_technical %}true{% else %}false{% endif %}"
+                                                data-duration="{{ interview.duration }}"
+                                                data-requirements="{{ interview.requirements }}"
+                                                data-attachment-url="{% if interview.attachment %}{{ interview.attachment.url }}{% else %}#{% endif %}"
+                                                data-attachment-name="{% if interview.attachment %}{{ interview.attachment.name}}{% else %}None{% endif %}"
+                                                >
+                                            Edit
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger delete-interview-btn"
+                                                data-bs-toggle="modal" data-bs-target="#deleteInterviewModal"
+                                                data-id="{{ interview.id }}"
+                                                data-company-name="{{ interview.company_name }}"
+                                                data-job-position="{{ interview.job_position }}"
+                                                >
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No interview records found for this candidate.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="addInterviewModal" tabindex="-1" aria-labelledby="addInterviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addInterviewModalLabel">Add New Interview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{% url 'admin_candidate_profile' id=candidate.id %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="add_interview_submit" value="true">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="interview_company_name" class="form-label">Company Name</label>
+                            <input type="text" class="form-control" id="interview_company_name" name="interview_company_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="job_position" class="form-label">Job Position</label>
+                            <input type="text" class="form-control" id="job_position" name="job_position" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="interview_date_time" class="form-label">Interview Date & Time</label>
+                            <input type="datetime-local" class="form-control" id="interview_date_time" name="interview_date_time">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="interviewer_name" class="form-label">Interviewer Name</label>
+                            <input type="text" class="form-control" id="interviewer_name" name="interviewer_name">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="interviewer_email" class="form-label">Interviewer Email</label>
+                            <input type="email" class="form-control" id="interviewer_email" name="interviewer_email">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="interviewer_phone" class="form-label">Interviewer Phone</label>
+                            <input type="text" class="form-control" id="interviewer_phone" name="interviewer_phone">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                {% for key, value in interview_statuses %}
+                                    <option value="{{ key }}">{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="interview_mode" class="form-label">Interview Mode</label>
+                            <select class="form-select" id="interview_mode" name="interview_mode" required>
+                                {% for key, value in interview_modes %}
+                                    <option value="{{ key }}">{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="meeting_link" class="form-label">Meeting Link</label>
+                            <input type="url" class="form-control" id="meeting_link" name="meeting_link">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="feedback" class="form-label">Feedback</label>
+                        <textarea class="form-control" id="feedback" name="feedback" rows="3"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="rating" class="form-label">Rating (out of 10)</label>
+                            <input type="number" class="form-control" id="rating" name="rating" min="0" max="10">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_technical" name="is_technical">
+                                <label class="form-check-label" for="is_technical">
+                                    Technical Interview
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="duration" class="form-label">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="duration" name="duration" min="1">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="interview_attachment" class="form-label">Attachment</label>
+                            <input type="file" class="form-control" id="interview_attachment" name="interview_attachment">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="requirements" class="form-label">Special Requirements</label>
+                        <textarea class="form-control" id="requirements" name="requirements" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add Interview</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editInterviewModal" tabindex="-1" aria-labelledby="editInterviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editInterviewModalLabel">Edit Interview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{% url 'admin_candidate_profile' id=candidate.id %}" method="POST" enctype="multipart/form-data" id="editInterviewForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="edit_interview_submit" value="true">
+                    <input type="hidden" name="interview_id" id="edit_interview_id">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_interview_company_name" class="form-label">Company Name</label>
+                            <input type="text" class="form-control" id="edit_interview_company_name" name="interview_company_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_job_position" class="form-label">Job Position</label>
+                            <input type="text" class="form-control" id="edit_job_position" name="job_position" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_interview_date_time" class="form-label">Interview Date & Time</label>
+                            <input type="datetime-local" class="form-control" id="edit_interview_date_time" name="interview_date_time">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_interviewer_name" class="form-label">Interviewer Name</label>
+                            <input type="text" class="form-control" id="edit_interviewer_name" name="interviewer_name">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_interviewer_email" class="form-label">Interviewer Email</label>
+                            <input type="email" class="form-control" id="edit_interviewer_email" name="interviewer_email">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_interviewer_phone" class="form-label">Interviewer Phone</label>
+                            <input type="text" class="form-control" id="edit_interviewer_phone" name="interviewer_phone">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_status" class="form-label">Status</label>
+                            <select class="form-select" id="edit_status" name="status" required>
+                                {% for key, value in interview_statuses %}
+                                    <option value="{{ key }}">{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_interview_mode" class="form-label">Interview Mode</label>
+                            <select class="form-select" id="edit_interview_mode" name="interview_mode" required>
+                                {% for key, value in interview_modes %}
+                                    <option value="{{ key }}">{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="edit_location" name="location">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_meeting_link" class="form-label">Meeting Link</label>
+                            <input type="url" class="form-control" id="edit_meeting_link" name="meeting_link">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="edit_notes" name="notes" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_feedback" class="form-label">Feedback</label>
+                        <textarea class="form-control" id="edit_feedback" name="feedback" rows="3"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_rating" class="form-label">Rating (out of 10)</label>
+                            <input type="number" class="form-control" id="edit_rating" name="rating" min="0" max="10">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_is_technical" name="is_technical">
+                                <label class="form-check-label" for="edit_is_technical">
+                                    Technical Interview
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_duration" class="form-label">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="edit_duration" name="duration" min="1">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_interview_attachment" class="form-label">Attachment</label>
+                            <input type="file" class="form-control" id="edit_interview_attachment" name="interview_attachment">
+                            <small id="currentAttachment" class="form-text text-muted">Current: <a id="edit_current_attachment_link" href="#" target="_blank"></a></small>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="clear_interview_attachment" name="clear_interview_attachment">
+                                <label class="form-check-label" for="clear_interview_attachment">Clear current attachment</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_requirements" class="form-label">Special Requirements</label>
+                        <textarea class="form-control" id="edit_requirements" name="requirements" rows="2"></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteInterviewModal" tabindex="-1" aria-labelledby="deleteInterviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteInterviewModalLabel">Delete Interview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the interview for <strong id="delete_interview_company_name"></strong> - <strong id="delete_job_position"></strong>?</p>
+                <form action="{% url 'admin_candidate_profile' id=candidate.id %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="delete_interview_submit" value="true">
+                    <input type="hidden" name="interview_id" id="delete_interview_id">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle Edit Interview Modal Populating Data
+        var editInterviewModal = document.getElementById('editInterviewModal');
+        editInterviewModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget; // Button that triggered the modal
+            
+            var interviewId = button.getAttribute('data-id');
+            var companyName = button.getAttribute('data-company-name');
+            var jobPosition = button.getAttribute('data-job-position');
+            var dateTime = button.getAttribute('data-date-time'); // Format YYYY-MM-DDTHH:MM
+            var interviewerName = button.getAttribute('data-interviewer-name');
+            var interviewerEmail = button.getAttribute('data-interviewer-email');
+            var interviewerPhone = button.getAttribute('data-interviewer-phone');
+            var status = button.getAttribute('data-status');
+            var interviewMode = button.getAttribute('data-interview-mode');
+            var location = button.getAttribute('data-location');
+            var meetingLink = button.getAttribute('data-meeting-link');
+            var notes = button.getAttribute('data-notes');
+            var feedback = button.getAttribute('data-feedback');
+            var rating = button.getAttribute('data-rating');
+            var isTechnical = button.getAttribute('data-is-technical') === 'true';
+            var duration = button.getAttribute('data-duration');
+            var requirements = button.getAttribute('data-requirements');
+            var attachmentUrl = button.getAttribute('data-attachment-url');
+            var attachmentName = button.getAttribute('data-attachment-name');
+
+            var modalForm = editInterviewModal.querySelector('#editInterviewForm');
+            modalForm.querySelector('#edit_interview_id').value = interviewId;
+            modalForm.querySelector('#edit_interview_company_name').value = companyName;
+            modalForm.querySelector('#edit_job_position').value = jobPosition;
+            modalForm.querySelector('#edit_interview_date_time').value = dateTime; // Set directly
+            modalForm.querySelector('#edit_interviewer_name').value = interviewerName;
+            modalForm.querySelector('#edit_interviewer_email').value = interviewerEmail;
+            modalForm.querySelector('#edit_interviewer_phone').value = interviewerPhone;
+            modalForm.querySelector('#edit_status').value = status;
+            modalForm.querySelector('#edit_interview_mode').value = interviewMode;
+            modalForm.querySelector('#edit_location').value = location;
+            modalForm.querySelector('#edit_meeting_link').value = meetingLink;
+            modalForm.querySelector('#edit_notes').value = notes;
+            modalForm.querySelector('#edit_feedback').value = feedback;
+            modalForm.querySelector('#edit_rating').value = rating;
+            modalForm.querySelector('#edit_is_technical').checked = isTechnical;
+            modalForm.querySelector('#edit_duration').value = duration;
+            modalForm.querySelector('#edit_requirements').value = requirements;
+            
+            var currentAttachmentLink = modalForm.querySelector('#edit_current_attachment_link');
+            if (attachmentUrl && attachmentUrl !== '#') {
+                currentAttachmentLink.href = attachmentUrl;
+                currentAttachmentLink.textContent = attachmentName;
+                currentAttachmentLink.style.display = 'inline'; // Show the link
+            } else {
+                currentAttachmentLink.textContent = 'None';
+                currentAttachmentLink.href = '#';
+                currentAttachmentLink.style.display = 'none'; // Hide the link if no attachment
+            }
+            modalForm.querySelector('#clear_interview_attachment').checked = false; // Uncheck by default
+        });
+
+        // Handle Delete Interview Modal Populating Data
+        var deleteInterviewModal = document.getElementById('deleteInterviewModal');
+        deleteInterviewModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget; // Button that triggered the modal
+            var interviewId = button.getAttribute('data-id');
+            var companyName = button.getAttribute('data-company-name');
+            var jobPosition = button.getAttribute('data-job-position');
+
+            var modalBody = deleteInterviewModal.querySelector('.modal-body');
+            modalBody.querySelector('#delete_interview_id').value = interviewId;
+            modalBody.querySelector('#delete_interview_company_name').textContent = companyName;
+            modalBody.querySelector('#delete_job_position').textContent = jobPosition;
+        });
+
+        // Initialize multi-select dropdowns (if you are using a library like Select2)
+        // If you are using a library like Select2 for `preferred_location`, `sector`, `department`,
+        // ensure you initialize them here. Example:
+        // $('.select2').select2(); // Assuming your select elements have class 'select2'
+    });
+</script>
+
         <!-- Invoice Details Card -->
         <div class="col-lg-6">
             <div class="card h-100">

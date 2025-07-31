@@ -380,7 +380,7 @@
     </div>
     
     <!-- Hidden select element for form submission -->
-    <select name="origin_location" id="originLocation" required style="display: none;">
+    <select name="origin_location" id="originLocation" style="display: none;">
       {% if candidate.origin_location %}
         <option value="{{ candidate.origin_location }}" selected>{{ candidate.origin_location }}</option>
       {% endif %}

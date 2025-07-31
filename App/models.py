@@ -976,7 +976,7 @@ class Candidate_Interview(models.Model):
     feedback = models.TextField(blank=True, null=True)
     rating = models.PositiveIntegerField(blank=True, null=True, help_text="Rating out of 10")
     is_technical = models.BooleanField(default=False)
-    duration = models.PositiveIntegerField(help_text="Duration in minutes", default=60)
+    duration = models.PositiveIntegerField(help_text="Duration in minutes", default=60, blank=True, null=True)
     requirements = models.TextField(blank=True, null=True, help_text="Any special requirements")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

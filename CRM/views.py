@@ -66,7 +66,7 @@ def crm_admin_logout(request):
 def crm_dashboard(request):
     if request.user.is_staff or request.user.is_superuser:
         # Time period filter
-        period = request.GET.get('period', 'month')
+        period = request.GET.get('period', 'day')
         custom_start = request.GET.get('start_date')
         custom_end = request.GET.get('end_date')
         
@@ -107,12 +107,12 @@ def crm_dashboard(request):
         # Get candidates from both databases
         interview_detail_reg = Candidate_Interview.objects.filter(
             interview_date_time__date=today,
-            status__in=['Scheduled', 'Rescheduled']
+            status__in=['scheduled', 'rescheduled']
         ).order_by('interview_date_time')
         
         interview_detail_can = EVMS_Candidate_Interview.objects.filter(
             interview_date_time__date=today,
-            status__in=['Scheduled', 'Rescheduled']
+            status__in=['scheduled', 'rescheduled']
         ).order_by('interview_date_time')
         
         # Combine both querysets
@@ -256,8 +256,8 @@ def crm_dashboard(request):
         call_connection = sorted(call_connection_dict.values(), key=lambda x: (x['employee_name'], -x['count']))
 
         # Interview status for both databases
-        interview_candidates = current_qs_reg.filter(send_for_interview='Yes').count() + current_qs_can.filter(send_for_interview='Yes').count()
-        
+        interview_candidates = current_qs_reg.filter(send_for_interview__in=['Scheduled', 'Rescheduled']).count() + current_qs_can.filter(send_for_interview__in=['Scheduled', 'Rescheduled']).count()
+
         # Status counts with comparison percentages
         def get_status_comparison(current_reg, current_can, previous_reg, previous_can):
             current_total = current_reg + current_can
@@ -360,10 +360,20 @@ def crm_dashboard(request):
         return render(request, 'crm/404.html', status=404)
 
 import datetime as dt
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils import timezone
+from django.db.models import Q # Import Q for complex lookups
+
+# Assuming these are your models
+# from .models import Candidate_registration, Employee, VacancyDetails, Company_registration, CandidateActivity, Candidate_Interview, User 
+
+
 @login_required
 def admin_candidate_profile(request, id):
     if request.user.is_staff or request.user.is_superuser:
-        candidate = get_object_or_404(Candidate_registration.objects.prefetch_related('activities__employee'), id=id)
+        candidate = get_object_or_404(Candidate_registration.objects.prefetch_related('activities__employee', 'interviews'), id=id)
         logged_in_employee = Employee.objects.get(user=request.user)
         employees = Employee.objects.all().order_by('-id')
         vacancies = VacancyDetails.objects.filter(
@@ -376,73 +386,68 @@ def admin_candidate_profile(request, id):
         companies = Company_registration.objects.all().order_by('-id')
 
         if request.method == 'POST':
-            # Store the original candidate data before any updates
-            original_candidate = Candidate_registration.objects.get(id=id)
-            changes = {}
-
-            # Track changes for all fields at once
-            fields_to_track = [
-                # Personal Information
-                'candidate_name', 'candidate_mobile_number', 'candidate_email_address',
-                'gender', 'lead_source',
-                # Candidate Details
-                'candidate_alternate_mobile_number', 'preferred_location', 'origin_location',
-                'qualification', 'diploma', 'sector', 'department', 'experience_year',
-                'experience_month', 'current_company', 'current_working_status',
-                'current_salary', 'expected_salary', 'submit_by', 'employee_assigned',
-                # Calling Remark
-                'call_connection', 'calling_remark', 'lead_generate',
-                'send_for_interview', 'next_follow_up_date_time',
-                # Selection Record
-                'selection_status', 'company_name', 'offered_salary',
-                'selection_date', 'candidate_joining_date', 'emta_commission',
-                'payout_date', 'selection_remark',
-                'other_lead_source', 'other_qualification', 'other_working_status',
-                'other_call_connection', 'other_lead_generate',
-                'other_interview_status', 'other_selection_status',
-                'other_origin_location'
-            ]
-            
-            # Check for changes in all fields
-            for field in fields_to_track:
-                new_value = request.POST.get(field)
-                old_value = getattr(original_candidate, field)
-                
-                # Convert date objects to string for JSON serialization
-                if isinstance(old_value, (dt.date, dt.datetime)):
-                    old_value = str(old_value)
-                if new_value and field in ['selection_date', 'candidate_joining_date', 'payout_date']:
-                    new_value = str(new_value) if new_value else None
-                
-                if str(old_value) != str(new_value):
-                    changes[field] = {
-                        'old': old_value,
-                        'new': new_value
-                    }
-
-            # Handle file uploads
-            if 'candidate_photo' in request.FILES:
-                changes['candidate_photo'] = {
-                    'old': original_candidate.candidate_photo.name if original_candidate.candidate_photo else None,
-                    'new': request.FILES['candidate_photo'].name
-                }
-            if 'candidate_resume' in request.FILES:
-                changes['candidate_resume'] = {
-                    'old': original_candidate.candidate_resume.name if original_candidate.candidate_resume else None,
-                    'new': request.FILES['candidate_resume'].name
-                }
-
+            # Handle general candidate profile updates
             if 'submit_all' in request.POST:
-                # Get list inputs and convert to string
+                original_candidate = Candidate_registration.objects.get(id=id)
+                changes = {}
+
+                fields_to_track = [
+                    'candidate_name', 'candidate_mobile_number', 'candidate_email_address',
+                    'gender', 'lead_source',
+                    'candidate_alternate_mobile_number', 'preferred_location', 'origin_location',
+                    'qualification', 'diploma', 'sector', 'department', 'experience_year',
+                    'experience_month', 'current_company', 'current_working_status',
+                    'current_salary', 'expected_salary', 'submit_by', 'employee_assigned',
+                    'call_connection', 'calling_remark', 'lead_generate',
+                    'send_for_interview', 'next_follow_up_date_time',
+                    'selection_status', 'company_name', 'offered_salary',
+                    'selection_date', 'candidate_joining_date', 'emta_commission',
+                    'payout_date', 'selection_remark',
+                    'other_lead_source', 'other_qualification', 'other_working_status',
+                    'other_call_connection', 'other_lead_generate',
+                    'other_interview_status', 'other_selection_status',
+                    'other_origin_location', 'other_preferred_location',
+                    'other_qualification', 'other_sector', 'other_department'
+                ]
+                
+                # Check for changes in all fields
+                for field in fields_to_track:
+                    new_value = request.POST.get(field)
+                    old_value = getattr(original_candidate, field)
+                    
+                    # Convert date objects to string for JSON serialization
+                    if isinstance(old_value, (dt.date, dt.datetime)):
+                        old_value = str(old_value)
+                    if new_value and field in ['selection_date', 'candidate_joining_date', 'payout_date', 'next_follow_up_date_time']:
+                        new_value = str(new_value) if new_value else None
+                    
+                    if str(old_value) != str(new_value):
+                        changes[field] = {
+                            'old': old_value,
+                            'new': new_value
+                        }
+
+                # Handle file uploads
+                if 'candidate_photo' in request.FILES:
+                    current_photo_name = original_candidate.candidate_photo.name if original_candidate.candidate_photo else None
+                    if current_photo_name != request.FILES['candidate_photo'].name:
+                        changes['candidate_photo'] = {
+                            'old': current_photo_name,
+                            'new': request.FILES['candidate_photo'].name
+                        }
+                if 'candidate_resume' in request.FILES:
+                    current_resume_name = original_candidate.candidate_resume.name if original_candidate.candidate_resume else None
+                    if current_resume_name != request.FILES['candidate_resume'].name:
+                        changes['candidate_resume'] = {
+                            'old': current_resume_name,
+                            'new': request.FILES['candidate_resume'].name
+                        }
+
                 preferred_location = request.POST.getlist('preferred_location')
                 sector = request.POST.getlist('sector')
                 department = request.POST.getlist('department')
+                preferred_state = request.POST.getlist('preferred_state')
 
-                preferred_location_str = ', '.join(preferred_location)
-                sector_str = ', '.join(sector)
-                department_str = ', '.join(department)
-
-                # Update all fields at once
                 candidate.candidate_name = request.POST.get('candidate_name')
                 candidate.candidate_mobile_number = request.POST.get('candidate_mobile_number')
                 candidate.candidate_email_address = request.POST.get('candidate_email_address')
@@ -455,17 +460,14 @@ def admin_candidate_profile(request, id):
                 if 'candidate_resume' in request.FILES:
                     candidate.candidate_resume = request.FILES['candidate_resume']
 
-                # Candidate Details
                 candidate.candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
-                candidate.preferred_location = preferred_location_str
-                preferred_state = request.POST.getlist('preferred_state')
-                preferred_state_str = ', '.join(preferred_state)
-                candidate.preferred_state = preferred_state_str
+                candidate.preferred_location = ', '.join(preferred_location)
+                candidate.preferred_state = ', '.join(preferred_state)
                 candidate.origin_location = request.POST.get('origin_location')
                 candidate.qualification = request.POST.get('qualification')
                 candidate.diploma = request.POST.get('diploma')
-                candidate.sector = sector_str
-                candidate.department = department_str
+                candidate.sector = ', '.join(sector)
+                candidate.department = ', '.join(department)
                 candidate.experience_year = request.POST.get('experience_year')
                 candidate.experience_month = request.POST.get('experience_month')
                 candidate.current_company = request.POST.get('current_company')
@@ -476,14 +478,12 @@ def admin_candidate_profile(request, id):
                 candidate.expected_salary_type = request.POST.get('expected_salary_type')
                 candidate.submit_by = request.POST.get('submit_by')
 
-                # Calling Remark
                 candidate.call_connection = request.POST.get('call_connection')
                 candidate.calling_remark = request.POST.get('calling_remark')
                 candidate.lead_generate = request.POST.get('lead_generate')
                 candidate.send_for_interview = request.POST.get('send_for_interview')
                 candidate.next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
 
-                # Selection Record
                 candidate.selection_status = request.POST.get('selection_status')
                 candidate.company_name = request.POST.get('company_name')
                 candidate.job_title = request.POST.get('job_title')
@@ -511,54 +511,182 @@ def admin_candidate_profile(request, id):
                 candidate.updated_by = logged_in_employee
                 candidate.save()
 
-                messages.success(request, 'Candidate related details updated successfully!')
+                if changes:
+                    for field, change in changes.items():
+                        if isinstance(change['old'], (dt.date, dt.datetime)):
+                            change['old'] = str(change['old'])
+                        if isinstance(change['new'], (dt.date, dt.datetime)):
+                            change['new'] = str(change['new'])
+                    
+                    CandidateActivity.objects.create(
+                        candidate=candidate,
+                        employee=logged_in_employee,
+                        action='updated',
+                        changes=changes,
+                        remark="Updated via unified form"
+                    )
+                messages.success(request, 'Candidate details updated successfully!')
 
+            # Handle invoice related data
             elif 'invoice_releted_data' in request.POST:
-                # Handle form submission for invoice details
                 candidate.invoice_status = request.POST.get('invoice_status')
                 candidate.invoice_date = request.POST.get('invoice_date') or None
                 candidate.invoice_amount = request.POST.get('invoice_amount')
                 candidate.invoice_remark = request.POST.get('invoice_remark')
                 candidate.invoice_paid_status = request.POST.get('invoice_paid_status')
                 candidate.invoice_number = request.POST.get('invoice_number')
-                # candidate.invoice_attachment = request.FILES.get('invoice_attachment', '')
-                candidate.invoice_attachment = request.FILES['invoice_attachment'].name if 'invoice_attachment' in request.FILES else None
+                
+                if 'invoice_attachment' in request.FILES:
+                    candidate.invoice_attachment = request.FILES['invoice_attachment']
+                elif request.POST.get('clear_invoice_attachment'): # Add a hidden input to clear the file
+                    candidate.invoice_attachment = None
 
                 candidate.save()
-                messages.success(request, 'Invoice related details updated successfully!')
+                messages.success(request, 'Invoice details updated successfully!')
 
-            # Create activity log if there were changes
-            if changes:
-                # Convert any remaining date objects to strings
-                for field, change in changes.items():
-                    if isinstance(change['old'], (dt.date, dt.datetime)):
-                        change['old'] = str(change['old'])
-                    if isinstance(change['new'], (dt.date, dt.datetime)):
-                        change['new'] = str(change['new'])
+            # Handle adding a new interview
+            elif 'add_interview_submit' in request.POST:
+                try:
+                    interview_date_time_str = request.POST.get('interview_date_time')
+                    if interview_date_time_str:
+                        interview_date_time = dt.datetime.strptime(interview_date_time_str, '%Y-%m-%dT%H:%M')
+                    else:
+                        interview_date_time = None
+
+                    interview = Candidate_Interview.objects.create(
+                        candidate=candidate,
+                        interview_date_time=interview_date_time,
+                        company_name=request.POST.get('interview_company_name'),
+                        job_position=request.POST.get('job_position'),
+                        interviewer_name=request.POST.get('interviewer_name'),
+                        interviewer_email=request.POST.get('interviewer_email'),
+                        interviewer_phone=request.POST.get('interviewer_phone'),
+                        status=request.POST.get('status'),
+                        interview_mode=request.POST.get('interview_mode'),
+                        location=request.POST.get('location'),
+                        meeting_link=request.POST.get('meeting_link'),
+                        notes=request.POST.get('notes'),
+                        feedback=request.POST.get('feedback'),
+                        rating=request.POST.get('rating') or None,
+                        is_technical=request.POST.get('is_technical') == 'on',
+                        duration=request.POST.get('duration') or None,
+                        requirements=request.POST.get('requirements'),
+                        created_by=request.user, # Assign the creating user
+                        updated_by=request.user, # Assign the updating user
+                    )
+                    if 'interview_attachment' in request.FILES:
+                        interview.attachment = request.FILES['interview_attachment']
+                        interview.save(user=request.user) # Pass user to save method
+
+                    messages.success(request, 'Interview added successfully!')
+                except Exception as e:
+                    messages.error(request, f'Error adding interview: {e}')
+                return redirect('admin_candidate_profile', id=id)
+
+            # Handle editing an existing interview
+            elif 'edit_interview_submit' in request.POST:
+                interview_id = request.POST.get('interview_id')
+                interview = get_object_or_404(Candidate_Interview, id=interview_id, candidate=candidate)
+
+                original_interview_data = {field.name: getattr(interview, field.name) for field in interview._meta.fields}
+                interview_changes = {}
+
+                # Update fields
+                interview_date_time_str = request.POST.get('interview_date_time')
+                if interview_date_time_str:
+                    interview.interview_date_time = dt.datetime.strptime(interview_date_time_str, '%Y-%m-%dT%H:%M')
+                else:
+                    interview.interview_date_time = None
                 
+                interview.company_name = request.POST.get('interview_company_name')
+                interview.job_position = request.POST.get('job_position')
+                interview.interviewer_name = request.POST.get('interviewer_name')
+                interview.interviewer_email = request.POST.get('interviewer_email')
+                interview.interviewer_phone = request.POST.get('interviewer_phone')
+                interview.status = request.POST.get('status')
+                interview.interview_mode = request.POST.get('interview_mode')
+                interview.location = request.POST.get('location')
+                interview.meeting_link = request.POST.get('meeting_link')
+                interview.notes = request.POST.get('notes')
+                interview.feedback = request.POST.get('feedback')
+                interview.rating = request.POST.get('rating') or None
+                interview.is_technical = request.POST.get('is_technical') == 'on'
+                interview.duration = request.POST.get('duration') or None
+                interview.requirements = request.POST.get('requirements')
+
+                if 'interview_attachment' in request.FILES:
+                    interview.attachment = request.FILES['interview_attachment']
+                elif request.POST.get('clear_interview_attachment'): # Allows clearing the file
+                    interview.attachment = None
+
+                # Track changes for activity log
+                for field in interview._meta.fields:
+                    new_value = getattr(interview, field.name)
+                    old_value = original_interview_data[field.name]
+
+                    # Special handling for datetime fields to compare strings
+                    if isinstance(old_value, (dt.date, dt.datetime)):
+                        old_value = str(old_value)
+                    if isinstance(new_value, (dt.date, dt.datetime)):
+                        new_value = str(new_value)
+
+                    if str(old_value) != str(new_value):
+                        interview_changes[field.name] = {
+                            'old': old_value,
+                            'new': new_value
+                        }
+                
+                interview.save(user=request.user) # Pass the logged-in user to the save method
+
+                if interview_changes:
+                    # Log the interview changes in CandidateActivity
+                    CandidateActivity.objects.create(
+                        candidate=candidate,
+                        employee=logged_in_employee,
+                        action=f'Interview updated (ID: {interview.id})',
+                        changes=interview_changes,
+                        remark=f"Interview details updated by {logged_in_employee.user.username}"
+                    )
+                messages.success(request, 'Interview updated successfully!')
+                return redirect('admin_candidate_profile', id=id)
+
+            # Handle deleting an interview
+            elif 'delete_interview_submit' in request.POST:
+                interview_id = request.POST.get('interview_id')
+                interview = get_object_or_404(Candidate_Interview, id=interview_id, candidate=candidate)
+                interview_details = {
+                    'company_name': interview.company_name,
+                    'job_position': interview.job_position,
+                    'interview_date_time': str(interview.interview_date_time) if interview.interview_date_time else None
+                }
+                interview.delete()
+                
+                # Log the deletion
                 CandidateActivity.objects.create(
                     candidate=candidate,
                     employee=logged_in_employee,
-                    action='updated',
-                    changes=changes,
-                    remark="Updated via unified form"
+                    action=f'Interview deleted',
+                    changes={'deleted_interview': interview_details},
+                    remark=f"Interview deleted by {logged_in_employee.user.username}"
                 )
+                messages.success(request, 'Interview deleted successfully!')
+                return redirect('admin_candidate_profile', id=id)
 
+            # Redirect after any POST request that doesn't fall into the above
             return redirect('admin_candidate_profile', id=id)
-        
-        
+
+        # GET request context
         state = [
-        "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", 
-        "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", 
-        "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
-        "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
-        # Union Territories
-        "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", 
-        "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+            "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana",
+            "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+            "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
+            "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+            "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
+            "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
         ]
 
         state_district = {
-            "Andhra Pradesh": ["Anantapur", "Chittoor", "East Godavari", "Guntur", "Krishna", "Kurnool", "Nellore", "Prakasam", "Srikakulam", "Visakhapatnam", "Vizianagaram", "West Godavari"],  
+            "Andhra Pradesh": ["Anantapur", "Chittoor", "East Godavari", "Guntur", "Krishna", "Kurnool", "Nellore", "Prakasam", "Srikakulam", "Visakhapatnam", "Vizianagaram", "West Godavari"], 
             "Arunachal Pradesh": ["Anjaw", "Changlang", "Dibang Valley", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang"],
             "Assam": ["Barpeta", "Bongaigaon", "Cachar", "Charaideo", "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao", "Goalpara", "Golaghat", "Hailakandi", "Hazaribag", "Jorhat", "Kamrup Metropolitan", "Kamrup", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Moranha", "Nagaon", "Nalbari", "North Cachar Hills", "Sivasagar", "Sonitpur", "South Cachar Hills", "Tinsukia", "Udalguri", "West Karbi Anglong"],
             "Bihar": ["Araria", "Aurangabad", "Bhojpur", "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran"],
@@ -586,7 +714,6 @@ def admin_candidate_profile(request, id):
             "Uttar Pradesh": ["Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur", "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor", "Budaun", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah", "Etawah", "Ayodhya", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat", "Kanpur Nagar", "Kasganj", "Kaushambi", "Kushinagar", "Lakhimpur Kheri", "Lalitpur", "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau", "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh", "Prayagraj", "Rae Bareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar", "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra", "Sultanpur", "Unnao", "Varanasi"],
             "Uttarakhand": ["Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", "Uttarkashi"],
             "West Bengal": ["Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong", "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur", "Purulia", "South 24 Parganas", "Uttar Dinajpur"],
-            # Union Territories
             "Andaman and Nicobar Islands": ["Nicobar", "North and Middle Andaman", "South Andaman"],
             "Chandigarh": ["Chandigarh"],
             "Dadra and Nagar Haveli and Daman and Diu": ["Dadra and Nagar Haveli", "Daman", "Diu"],
@@ -597,167 +724,78 @@ def admin_candidate_profile(request, id):
             "Puducherry": ["Karaikal", "Mahe", "Puducherry", "Yanam"]
         }
 
-        
-        districts = [
-            "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
-            "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
-            "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni",
-            "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch",
-            "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni",
-            "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
-            "Ujjain", "Umaria", "Vidisha","Anantapur", "Chittoor", "East Godavari", "Guntur", "Krishna", "Kurnool", "Nellore", "Prakasam", "Srikakulam", "Visakhapatnam", "Vizianagaram", "West Godavari",
-            "Anjaw", "Changlang", "Dibang Valley", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang",
-            "Barpeta", "Bongaigaon", "Cachar", "Charaideo", "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao", "Goalpara", "Golaghat", "Hailakandi", "Hazaribag", "Jorhat", "Kamrup Metropolitan", "Kamrup", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Moranha", "Nagaon", "Nalbari", "North Cachar Hills", "Sivasagar", "Sonitpur", "South Cachar Hills", "Tinsukia", "Udalguri", "West Karbi Anglong",
-            "Araria", "Aurangabad", "Bhojpur", "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran",
-            "Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur", "Bilaspur", "Dakshin Bastar Dantewada", "Dhamtari", "Durg", "Gariyaband", "Gaurela Pendra Marwahi", "Janjgir-Champa", "Jashpur", "Kabirdham", "Kanker", "Kondagaon", "Korba", "Koriya", "Mahasamund", "Mungeli", "Narayanpur",
-            "North Goa", "South Goa","Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch", "Bhavnagar", "Botad", "Chhota Udaipur", "Dahod", "Dang", "Devbhoomi Dwarka", "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch", "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal", "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar", "Tapi", "Vadodara", "Valsad",
-            "Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram", "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh", "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa", "Sonipat", "Yamunanagar",
-            "Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu", "Lahaul and Spiti", "Mandi", "Shimla", "Sirmaur", "Solan", "Una",
-            "Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum", "Garhwa", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamtara", "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu", "Ramgarh", "Ranchi", "Sahebganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum",
-            "Bagalkot", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar", "Chamarajanagar", "Chikballapur", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi", "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi", "Uttara Kannada", "Vijayapura", "Yadgir",
-            "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam", "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad",
-            "Ahmednagar", "Akola", "Amravati", "Aurangabad", "Beed", "Bhandara", "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli", "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban", "Nagpur", "Nanded", "Nandurbar", "Nashik", "Osmanabad", "Palghar", "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara", "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal",
-            "Bishnupur", "Chandel", "Churachandpur", "Imphal East", "Imphal West", "Jiribam", "Kakching", "Kamjong", "Kangpokpi", "Noney", "Pherzawl", "Senapati", "Tamenglong", "Tengnoupal", "Thoubal", "Ukhrul",
-            "East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "North Garo Hills", "Ri Bhoi", "South Garo Hills", "South West Garo Hills", "South West Khasi Hills", "West Garo Hills", "West Jaintia Hills", "West Khasi Hills",
-            "Aizawl", "Champhai", "Hnahthial", "Khawzawl", "Kolasib", "Lawngtlai", "Lunglei", "Mamit", "Saiha", "Saitual", "Serchhip",
-            "Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung", "Mon", "Peren", "Phek", "Tuensang", "Wokha", "Zunheboto",
-            "Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Bhubaneswar", "Boudh", "Cuttack", "Deogarh", "Dhenkanal", "Gajapati", "Ganjam", "Jagatsinghpur", "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar", "Khordha", "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", "Puri", "Rayagada", "Sambalpur", "Subarnapur", "Sundargarh",
-            "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka", "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana", "Mansa", "Moga", "Muktsar", "Nawanshahr", "Pathankot", "Patiala", "Rupnagar", "Sangrur", "SAS Nagar", "Tarn Taran",
-            "Ajmer", "Alwar", "Banswara", "Baran", "Barmer", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh", "Churu", "Dausa", "Dholpur", "Dungarpur", "Hanumangarh", "Jaipur", "Jaisalmer", "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Karauli", "Kota", "Nagaur", "Pali", "Pratapgarh", "Rajsamand", "Sawai Madhopur", "Sikar", "Sirohi", "Sri Ganganagar", "Tonk", "Udaipur",
-            "East Sikkim", "North Sikkim", "South Sikkim", "West Sikkim",
-            "Ariyalur", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kanchipuram", "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Salem", "Sivaganga", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar",
-            "Adilabad", "Bhadradri Kothagudem", "Hyderabad", "Jagtial", "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar", "Khammam", "Komaram Bheem Asifabad", "Mahabubabad", "Mahabubnagar", "Mancherial", "Medak", "Medchal-Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda", "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli", "Rajanna Sircilla", "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad", "Wanaparthy", "Warangal Rural", "Warangal Urban", "Yadadri Bhuvanagiri",
-            "Dhalai", "Gomati", "Khowai", "North Tripura", "Sepahijala", "South Tripura", "Unakoti", "West Tripura",
-            "Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur", "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor", "Budaun", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah", "Etawah", "Ayodhya", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat", "Kanpur Nagar", "Kasganj", "Kaushambi", "Kushinagar", "Lakhimpur Kheri", "Lalitpur", "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau", "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh", "Prayagraj", "Rae Bareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar", "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra", "Sultanpur", "Unnao", "Varanasi",
-            "Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", "Uttarkashi",
-            "Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong", "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur", "Purulia", "South 24 Parganas", "Uttar Dinajpur",
-            "Nicobar", "North and Middle Andaman", "South Andaman", "Chandigarh", "Dadra and Nagar Haveli", "Daman", "Diu", "Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi", "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi",
-            "Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur",
-            "Kargil", "Leh", "Lakshadweep", "Karaikal", "Mahe", "Puducherry", "Yanam"
+        districts = sorted(list(set(d for sublist in state_district.values() for d in sublist)))
 
-        ]
-        
-        
-        
         job_sectors = [
-        "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
-        "Healthcare and Pharmaceuticals","Education and Training",
-        "Retail and E-commerce", "Manufacturing and Production","Real Estate and Construction", "Hospitality and Tourism",
-        "Media and Entertainment", "Telecommunications","Logistics and Supply Chain","Marketing and Advertising","Human Resources",
-        "Legal and Compliance","Engineering and Infrastructure","Automobile Industry",
-        "Fashion and Textile", "FMCG (Fast Moving Consumer Goods)",
-        "Agriculture and Farming", "Insurance","Government Sector","NGO and Social Services",
-        "Energy and Power","Aviation and Aerospace"
+            "IT (Information Technology)", "BPO (Business Process Outsourcing)", "Banking and Finance",
+            "Healthcare and Pharmaceuticals", "Education and Training",
+            "Retail and E-commerce", "Manufacturing and Production", "Real Estate and Construction", "Hospitality and Tourism",
+            "Media and Entertainment", "Telecommunications", "Logistics and Supply Chain", "Marketing and Advertising", "Human Resources",
+            "Legal and Compliance", "Engineering and Infrastructure", "Automobile Industry",
+            "Fashion and Textile", "FMCG (Fast Moving Consumer Goods)",
+            "Agriculture and Farming", "Insurance", "Government Sector", "NGO and Social Services",
+            "Energy and Power", "Aviation and Aerospace"
         ]
         departments = [
-        # IT (Information Technology)
-        "Software Development", "IT Support", "Web Development", 
-        "Network Administration", "Cybersecurity", 
-        "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)",
-
-        # BPO (Business Process Outsourcing)
-        "Customer Support", "Technical Support", "Voice Process", 
-        "Non-Voice Process", "Back Office Operations",
-
-        # Banking and Finance
-        "Investment Banking", "Retail Banking", "Loan Processing", 
-        "Risk Management", "Accounting and Auditing", 
-        "Financial Analysis", "Wealth Management",
-
-        # Healthcare and Pharmaceuticals
-        "Medical Representatives", "Clinical Research", "Nursing", 
-        "Medical Technicians", "Pharmacy Operations", 
-        "Healthcare Administration",
-
-        # Education and Training
-        "Teaching", "Curriculum Development", "Academic Counseling", 
-        "E-Learning Development", "Education Administration",
-
-        # Retail and E-commerce
-        "Store Operations", "Supply Chain Management", 
-        "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
-
-        # Manufacturing and Production
-        "Production Planning", "Quality Control", "Maintenance and Repair", 
-        "Operations Management", "Inventory Management",
-
-        # Real Estate and Construction
-        "Sales and Marketing", "Civil Engineering", "Project Management", 
-        "Interior Designing", "Surveying and Valuation",
-
-        # Hospitality and Tourism
-        "Hotel Management", "Travel Coordination", "Event Planning", 
-        "Food and Beverage Services", "Guest Relations",
-
-        # Media and Entertainment
-        "Content Writing", "Video Editing", "Graphic Designing", 
-        "Social Media Management", "Event Production",
-
-        # Telecommunications
-        "Network Installation", "Customer Support", "Telecom Engineering", 
-        "Technical Operations", "Business Development",
-
-        # Logistics and Supply Chain
-        "Logistics Coordination", "Warehouse Management", "Procurement", 
-        "Transportation Management", "Inventory Control",
-
-        # Marketing and Advertising
-        "Market Research", "Brand Management", "Advertising Sales", 
-        "Public Relations", "Digital Marketing",
-
-        # Human Resources
-        "Recruitment", "Employee Relations", "Payroll and Benefits", 
-        "Training and Development", "HR Analytics",
-
-        # Legal and Compliance
-        "Corporate Law", "Compliance Auditing", "Contract Management", 
-        "Intellectual Property Rights", "Legal Advisory",
-
-        # Engineering and Infrastructure
-        "Civil Engineering", "Mechanical Engineering", 
-        "Electrical Engineering", "Project Planning", "Structural Design",
-
-        # Automobile Industry
-        "Automotive Design", "Production and Assembly", "Sales and Service", 
-        "Supply Chain Management", "Quality Assurance",
-
-        # Fashion and Textile
-        "Fashion Design", "Merchandising", "Production Management", 
-        "Quality Control", "Retail Sales",
-
-        # FMCG (Fast Moving Consumer Goods)
-        "Sales and Marketing", "Supply Chain Operations", 
-        "Production Management", "Quality Control", "Brand Management",
-
-        # Agriculture and Farming
-        "Agribusiness Management", "Farm Operations", "Food Processing", 
-        "Agricultural Sales", "Quality Assurance",
-
-        # Insurance
-        "Sales and Business Development", "Underwriting", 
-        "Claims Management", "Actuarial Services", "Policy Administration",
-
-        # Government Sector
-        "Administrative Services", "Public Relations", 
-        "Policy Analysis", "Clerical Positions", "Field Operations",
-
-        # NGO and Social Services
-        "Community Development", "Fundraising", "Program Management", 
-        "Volunteer Coordination", "Policy Advocacy",
-
-        # Energy and Power
-        "Renewable Energy Operations", "Power Plant Engineering", 
-        "Energy Efficiency Management", "Electrical Design", "Maintenance",
-
-        # Aviation and Aerospace
-        "Flight Operations", "Ground Staff", "Aircraft Maintenance", 
-        "Cabin Crew", "Research and Development"
+            "Software Development", "IT Support", "Web Development",
+            "Network Administration", "Cybersecurity",
+            "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)",
+            "Customer Support", "Technical Support", "Voice Process",
+            "Non-Voice Process", "Back Office Operations",
+            "Investment Banking", "Retail Banking", "Loan Processing",
+            "Risk Management", "Accounting and Auditing",
+            "Financial Analysis", "Wealth Management",
+            "Medical Representatives", "Clinical Research", "Nursing",
+            "Medical Technicians", "Pharmacy Operations",
+            "Healthcare Administration",
+            "Teaching", "Curriculum Development", "Academic Counseling",
+            "E-Learning Development", "Education Administration",
+            "Store Operations", "Supply Chain Management",
+            "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
+            "Production Planning", "Quality Control", "Maintenance and Repair",
+            "Operations Management", "Inventory Management",
+            "Sales and Marketing", "Civil Engineering", "Project Management",
+            "Interior Designing", "Surveying and Valuation",
+            "Hotel Management", "Travel Coordination", "Event Planning",
+            "Food and Beverage Services", "Guest Relations",
+            "Content Writing", "Video Editing", "Graphic Designing",
+            "Social Media Management", "Event Production",
+            "Network Installation", "Customer Support", "Telecom Engineering",
+            "Technical Operations", "Business Development",
+            "Logistics Coordination", "Warehouse Management", "Procurement",
+            "Transportation Management", "Inventory Control",
+            "Market Research", "Brand Management", "Advertising Sales",
+            "Public Relations", "Digital Marketing",
+            "Recruitment", "Employee Relations", "Payroll and Benefits",
+            "Training and Development", "HR Analytics",
+            "Corporate Law", "Compliance Auditing", "Contract Management",
+            "Intellectual Property Rights", "Legal Advisory",
+            "Civil Engineering", "Mechanical Engineering",
+            "Electrical Engineering", "Project Planning", "Structural Design",
+            "Automotive Design", "Production and Assembly", "Sales and Service",
+            "Supply Chain Management", "Quality Assurance",
+            "Fashion Design", "Merchandising", "Production Management",
+            "Quality Control", "Retail Sales",
+            "Sales and Marketing", "Supply Chain Operations",
+            "Production Management", "Quality Control", "Brand Management",
+            "Agribusiness Management", "Farm Operations", "Food Processing",
+            "Agricultural Sales", "Quality Assurance",
+            "Sales and Business Development", "Underwriting",
+            "Claims Management", "Actuarial Services", "Policy Administration",
+            "Administrative Services", "Public Relations",
+            "Policy Analysis", "Clerical Positions", "Field Operations",
+            "Community Development", "Fundraising", "Program Management",
+            "Volunteer Coordination", "Policy Advocacy",
+            "Renewable Energy Operations", "Power Plant Engineering",
+            "Energy Efficiency Management", "Electrical Design", "Maintenance",
+            "Flight Operations", "Ground Staff", "Aircraft Maintenance",
+            "Cabin Crew", "Research and Development"
         ]
 
-        
         context = {
             'candidate': candidate,
             'activities': candidate.activities.all().order_by('-timestamp'),
+            'interviews': candidate.interviews.all().order_by('-interview_date_time'), # Pass interviews to template
             'today': timezone.now().date(),
             'districts': districts,
             'job_sectors': job_sectors,
@@ -767,11 +805,14 @@ def admin_candidate_profile(request, id):
             'state': state,
             'state_district': state_district,
             'employees': employees,
+            'interview_statuses': Candidate_Interview.INTERVIEW_STATUS, # Pass interview choices
+            'interview_modes': Candidate_Interview.INTERVIEW_MODE, # Pass interview choices
         }
-            
         return render(request, 'crm/candidate-profile.html', context)
     else:
-        return render(request, 'crm/404.html', status=404)  
+        messages.error(request, "You are not authorized to view this page.")
+        return render(request, 'crm/404.html', status=404)
+    
 
 @login_required    
 def admin_candidate_registration(request):

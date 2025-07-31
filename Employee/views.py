@@ -2775,7 +2775,7 @@ def employee_performance_dashboard(request):
     if not request.user.is_authenticated:
         return redirect('login')
 
-    period = request.GET.get('period', 'week')
+    period = request.GET.get('period', 'today')
     logged_in_employee = Employee.objects.get(user=request.user)
     today = datetime.now().date()
 
@@ -2787,13 +2787,13 @@ def employee_performance_dashboard(request):
     interview_detail_reg = Candidate_Interview.objects.filter(
         candidate__employee_name=logged_in_employee,
         interview_date_time__date=today,
-        status__in=['Scheduled', 'Rescheduled']
+        status__in=['scheduled', 'rescheduled']
     ).order_by('interview_date_time')
     
     interview_detail_can = EVMS_Candidate_Interview.objects.filter(
         candidate__employee_name=logged_in_employee,
         interview_date_time__date=today,
-        status__in=['Scheduled', 'Rescheduled']
+        status__in=['scheduled', 'rescheduled']
     ).order_by('interview_date_time')
     
     # Combine both querysets
@@ -2930,8 +2930,8 @@ def employee_performance_dashboard(request):
     ))
 
     # Call stats
-    total_connected = sum(1 for c in current_qs if getattr(c, 'call_connection', '') == 'Yes')
-    total_failed = sum(1 for c in current_qs if getattr(c, 'call_connection', '') not in ('Yes', None, ''))
+    total_connected = sum(1 for c in current_qs if getattr(c, 'call_connection', '') == 'Connected')
+    total_failed = sum(1 for c in current_qs if getattr(c, 'call_connection', '') not in ('Connected', None, ''))
     total_calls = sum(1 for c in current_qs if getattr(c, 'call_connection', '') != '')
 
     call_stats = {
