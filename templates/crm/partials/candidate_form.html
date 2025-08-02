@@ -1055,6 +1055,7 @@ function updateButtonText() {
                 <option value="" disabled selected>Select Status</option>
                 <option value="Selected" {% if candidate.selection_status == "Selected" %}selected{% endif %}>Selected</option>
                 <option value="Rejected" {% if candidate.selection_status == "Rejected" %}selected{% endif %}>Rejected</option>
+                <option value="On Hold" {% if candidate.selection_status == "On Hold" %}selected{% endif %}>On Hold</option>
                 <option value="Pending" {% if candidate.selection_status == "Pending" %}selected{% endif %}>Pending</option>
                 <option value="Not Join" {% if candidate.selection_status == "Not Join" %}selected{% endif %}>Not Join</option>
                 <option value="Other" {% if candidate.selection_status == "Other" %}selected{% endif %}>Other</option>
