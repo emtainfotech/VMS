@@ -360,14 +360,7 @@ def crm_dashboard(request):
         return render(request, 'crm/404.html', status=404)
 
 import datetime as dt
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.utils import timezone
-from django.db.models import Q # Import Q for complex lookups
-
-# Assuming these are your models
-# from .models import Candidate_registration, Employee, VacancyDetails, Company_registration, CandidateActivity, Candidate_Interview, User 
+from django.db.models.fields.files import FieldFile # Make sure this is imported!
 
 
 @login_required
@@ -410,64 +403,79 @@ def admin_candidate_profile(request, id):
                     'other_qualification', 'other_sector', 'other_department'
                 ]
                 
-                # Check for changes in all fields
-                for field in fields_to_track:
-                    new_value = request.POST.get(field)
-                    old_value = getattr(original_candidate, field)
+                # --- FIX START ---
+                # Capture original values for fields_to_track, converting non-serializable types
+                original_candidate_serializable_data = {}
+                for field_name_to_track in fields_to_track:
+                    value = getattr(original_candidate, field_name_to_track)
+                    if isinstance(value, (dt.date, dt.datetime)):
+                        original_candidate_serializable_data[field_name_to_track] = str(value)
+                    else:
+                        original_candidate_serializable_data[field_name_to_track] = value
+
+                # Handle file fields separately to ensure their names are stored, not FieldFile objects
+                file_fields_to_track = ['candidate_photo', 'candidate_resume']
+                for file_field_name in file_fields_to_track:
+                    file_object = getattr(original_candidate, file_field_name)
+                    original_candidate_serializable_data[file_field_name] = file_object.name if file_object else None
+
+                # Now, re-populate `changes` dictionary
+                for field_name in fields_to_track:
+                    new_value_from_post = request.POST.get(field_name)
                     
-                    # Convert date objects to string for JSON serialization
-                    if isinstance(old_value, (dt.date, dt.datetime)):
-                        old_value = str(old_value)
-                    if new_value and field in ['selection_date', 'candidate_joining_date', 'payout_date', 'next_follow_up_date_time']:
-                        new_value = str(new_value) if new_value else None
+                    # Special handling for multi-select fields (which come as lists from POST)
+                    if field_name in ['preferred_location', 'sector', 'department', 'preferred_state']:
+                        new_value_from_post = ', '.join(request.POST.getlist(field_name))
+
+                    old_value_serializable = original_candidate_serializable_data.get(field_name) # Use the pre-converted value
                     
-                    if str(old_value) != str(new_value):
-                        changes[field] = {
-                            'old': old_value,
-                            'new': new_value
+                    # Convert incoming POST date/datetime values to string for comparison
+                    if new_value_from_post and field_name in ['selection_date', 'candidate_joining_date', 'payout_date', 'next_follow_up_date_time']:
+                        new_value_from_post = str(new_value_from_post) if new_value_from_post else None
+
+                    # Compare serializable values
+                    if str(old_value_serializable) != str(new_value_from_post):
+                        changes[field_name] = {
+                            'old': old_value_serializable,
+                            'new': new_value_from_post
                         }
 
-                # Handle file uploads
+                # Handle file uploads and their logging for `changes`
+                # Important: Update the candidate object with new files/clears FIRST
+                # Then, retrieve the *new* state of the file fields for logging.
+                
+                # Capture old file names before potentially changing candidate object
+                old_candidate_photo_name = original_candidate.candidate_photo.name if original_candidate.candidate_photo else None
+                old_candidate_resume_name = original_candidate.candidate_resume.name if original_candidate.candidate_resume else None
+
                 if 'candidate_photo' in request.FILES:
-                    current_photo_name = original_candidate.candidate_photo.name if original_candidate.candidate_photo else None
-                    if current_photo_name != request.FILES['candidate_photo'].name:
-                        changes['candidate_photo'] = {
-                            'old': current_photo_name,
-                            'new': request.FILES['candidate_photo'].name
-                        }
+                    candidate.candidate_photo = request.FILES['candidate_photo']
+                elif request.POST.get('candidate_photo-clear'): # Assumes a hidden input for clearing
+                    candidate.candidate_photo = None
+
                 if 'candidate_resume' in request.FILES:
-                    current_resume_name = original_candidate.candidate_resume.name if original_candidate.candidate_resume else None
-                    if current_resume_name != request.FILES['candidate_resume'].name:
-                        changes['candidate_resume'] = {
-                            'old': current_resume_name,
-                            'new': request.FILES['candidate_resume'].name
-                        }
+                    candidate.candidate_resume = request.FILES['candidate_resume']
+                elif request.POST.get('candidate_resume-clear'): # Assumes a hidden input for clearing
+                    candidate.candidate_resume = None
+                # --- FIX END ---
 
-                preferred_location = request.POST.getlist('preferred_location')
-                sector = request.POST.getlist('sector')
-                department = request.POST.getlist('department')
-                preferred_state = request.POST.getlist('preferred_state')
-
+                # Update other fields from POST (rest of your original assignments)
                 candidate.candidate_name = request.POST.get('candidate_name')
                 candidate.candidate_mobile_number = request.POST.get('candidate_mobile_number')
                 candidate.candidate_email_address = request.POST.get('candidate_email_address')
                 candidate.gender = request.POST.get('gender')
                 candidate.lead_source = request.POST.get('lead_source')
-                candidate.employee_assigned = request.POST.get('employee_assigned')
+                candidate.employee_assigned = request.POST.get('employee_assigned') # This field is unique to admin view
 
-                if 'candidate_photo' in request.FILES:
-                    candidate.candidate_photo = request.FILES['candidate_photo']
-                if 'candidate_resume' in request.FILES:
-                    candidate.candidate_resume = request.FILES['candidate_resume']
-
-                candidate.candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
-                candidate.preferred_location = ', '.join(preferred_location)
-                candidate.preferred_state = ', '.join(preferred_state)
+                # Multi-selects are already handled above by joining getlist
+                candidate.preferred_location = ', '.join(request.POST.getlist('preferred_location'))
+                candidate.preferred_state = ', '.join(request.POST.getlist('preferred_state'))
                 candidate.origin_location = request.POST.get('origin_location')
                 candidate.qualification = request.POST.get('qualification')
                 candidate.diploma = request.POST.get('diploma')
-                candidate.sector = ', '.join(sector)
-                candidate.department = ', '.join(department)
+                candidate.sector = ', '.join(request.POST.getlist('sector'))
+                candidate.department = ', '.join(request.POST.getlist('department'))
+
                 candidate.experience_year = request.POST.get('experience_year')
                 candidate.experience_month = request.POST.get('experience_month')
                 candidate.current_company = request.POST.get('current_company')
@@ -509,15 +517,23 @@ def admin_candidate_profile(request, id):
                 candidate.other_department = request.POST.get('other_department')
 
                 candidate.updated_by = logged_in_employee
-                candidate.save()
+                candidate.save() # Save the candidate after all updates, including files
+
+                # Now, after saving, re-check the file fields for changes
+                # This ensures you're logging the state *after* the save operation
+                if old_candidate_photo_name != (candidate.candidate_photo.name if candidate.candidate_photo else None):
+                    changes['candidate_photo'] = {
+                        'old': old_candidate_photo_name,
+                        'new': candidate.candidate_photo.name if candidate.candidate_photo else None
+                    }
+                if old_candidate_resume_name != (candidate.candidate_resume.name if candidate.candidate_resume else None):
+                    changes['candidate_resume'] = {
+                        'old': old_candidate_resume_name,
+                        'new': candidate.candidate_resume.name if candidate.candidate_resume else None
+                    }
 
                 if changes:
-                    for field, change in changes.items():
-                        if isinstance(change['old'], (dt.date, dt.datetime)):
-                            change['old'] = str(change['old'])
-                        if isinstance(change['new'], (dt.date, dt.datetime)):
-                            change['new'] = str(change['new'])
-                    
+                    # The `changes` dictionary now only contains JSON-serializable types
                     CandidateActivity.objects.create(
                         candidate=candidate,
                         employee=logged_in_employee,
@@ -527,7 +543,7 @@ def admin_candidate_profile(request, id):
                     )
                 messages.success(request, 'Candidate details updated successfully!')
 
-            # Handle invoice related data
+            # Handle invoice related data (no changes needed here as it likely doesn't involve FieldFile in `changes`)
             elif 'invoice_releted_data' in request.POST:
                 candidate.invoice_status = request.POST.get('invoice_status')
                 candidate.invoice_date = request.POST.get('invoice_date') or None
@@ -536,12 +552,37 @@ def admin_candidate_profile(request, id):
                 candidate.invoice_paid_status = request.POST.get('invoice_paid_status')
                 candidate.invoice_number = request.POST.get('invoice_number')
                 
+                # Store invoice attachment name for logging
+                old_invoice_attachment_name = candidate.invoice_attachment.name if candidate.invoice_attachment else None
+
                 if 'invoice_attachment' in request.FILES:
                     candidate.invoice_attachment = request.FILES['invoice_attachment']
-                elif request.POST.get('clear_invoice_attachment'): # Add a hidden input to clear the file
+                elif request.POST.get('clear_invoice_attachment'): 
                     candidate.invoice_attachment = None
 
-                candidate.save()
+                candidate.save() # Save the candidate object first
+
+                # Log changes to invoice attachment after save
+                invoice_changes = {}
+                if old_invoice_attachment_name != (candidate.invoice_attachment.name if candidate.invoice_attachment else None):
+                    invoice_changes['invoice_attachment'] = {
+                        'old': old_invoice_attachment_name,
+                        'new': candidate.invoice_attachment.name if candidate.invoice_attachment else None
+                    }
+                # If you have other invoice fields to track in activity, add them here
+                # For example:
+                # if str(original_candidate.invoice_status) != str(candidate.invoice_status):
+                #     invoice_changes['invoice_status'] = {'old': original_candidate.invoice_status, 'new': candidate.invoice_status}
+                
+                if invoice_changes:
+                    CandidateActivity.objects.create(
+                        candidate=candidate,
+                        employee=logged_in_employee,
+                        action='invoice_updated',
+                        changes=invoice_changes,
+                        remark="Invoice details updated"
+                    )
+
                 messages.success(request, 'Invoice details updated successfully!')
 
             # Handle adding a new interview
@@ -571,12 +612,12 @@ def admin_candidate_profile(request, id):
                         is_technical=request.POST.get('is_technical') == 'on',
                         duration=request.POST.get('duration') or None,
                         requirements=request.POST.get('requirements'),
-                        created_by=request.user, # Assign the creating user
-                        updated_by=request.user, # Assign the updating user
+                        created_by=request.user, 
+                        updated_by=request.user, 
                     )
                     if 'interview_attachment' in request.FILES:
                         interview.attachment = request.FILES['interview_attachment']
-                        interview.save(user=request.user) # Pass user to save method
+                        interview.save() # Save again to process the file upload
 
                     messages.success(request, 'Interview added successfully!')
                 except Exception as e:
@@ -588,10 +629,20 @@ def admin_candidate_profile(request, id):
                 interview_id = request.POST.get('interview_id')
                 interview = get_object_or_404(Candidate_Interview, id=interview_id, candidate=candidate)
 
-                original_interview_data = {field.name: getattr(interview, field.name) for field in interview._meta.fields}
+                # Store original data for change tracking, handle FieldFile specifically
+                original_interview_data = {}
+                for field in interview._meta.fields:
+                    value = getattr(interview, field.name)
+                    if isinstance(value, FieldFile):
+                        original_interview_data[field.name] = value.name if value else None # Store file name/path
+                    elif isinstance(value, (dt.date, dt.datetime)):
+                        original_interview_data[field.name] = str(value)
+                    else:
+                        original_interview_data[field.name] = value
+
                 interview_changes = {}
 
-                # Update fields
+                # Update fields with new values from POST
                 interview_date_time_str = request.POST.get('interview_date_time')
                 if interview_date_time_str:
                     interview.interview_date_time = dt.datetime.strptime(interview_date_time_str, '%Y-%m-%dT%H:%M')
@@ -614,32 +665,42 @@ def admin_candidate_profile(request, id):
                 interview.duration = request.POST.get('duration') or None
                 interview.requirements = request.POST.get('requirements')
 
+                # Handle attachment file upload or clear checkbox
                 if 'interview_attachment' in request.FILES:
                     interview.attachment = request.FILES['interview_attachment']
-                elif request.POST.get('clear_interview_attachment'): # Allows clearing the file
+                elif request.POST.get('clear_interview_attachment') == 'on': # Explicitly check for 'on'
                     interview.attachment = None
+                # If no new file is uploaded and clear is not checked, the existing file remains.
 
-                # Track changes for activity log
-                for field in interview._meta.fields:
-                    new_value = getattr(interview, field.name)
-                    old_value = original_interview_data[field.name]
+                interview.updated_by = request.user
+                interview.save() # Save the object first to ensure file changes are processed
 
-                    # Special handling for datetime fields to compare strings
-                    if isinstance(old_value, (dt.date, dt.datetime)):
-                        old_value = str(old_value)
-                    if isinstance(new_value, (dt.date, dt.datetime)):
-                        new_value = str(new_value)
+                # After saving, get the updated values from the database (including file names/paths)
+                # This ensures we get the FieldFile object's correct `name` attribute after saving any file changes.
+                updated_interview = Candidate_Interview.objects.get(id=interview_id)
+                
+                # Now, build the changes dictionary comparing original serializable values
+                # with the newly updated serializable values from the database.
+                for field_name in original_interview_data.keys():
+                    old_value = original_interview_data[field_name]
+                    new_value_current_object = getattr(updated_interview, field_name) # Get from the freshly fetched object
 
-                    if str(old_value) != str(new_value):
-                        interview_changes[field.name] = {
+                    new_value_for_log = None
+                    if isinstance(new_value_current_object, FieldFile):
+                        new_value_for_log = new_value_current_object.name if new_value_current_object else None
+                    elif isinstance(new_value_current_object, (dt.date, dt.datetime)):
+                        new_value_for_log = str(new_value_current_object)
+                    else:
+                        new_value_for_log = new_value_current_object
+
+                    # Compare the serializable representations
+                    if old_value != new_value_for_log:
+                        interview_changes[field_name] = {
                             'old': old_value,
-                            'new': new_value
+                            'new': new_value_for_log
                         }
                 
-                interview.save(user=request.user) # Pass the logged-in user to the save method
-
                 if interview_changes:
-                    # Log the interview changes in CandidateActivity
                     CandidateActivity.objects.create(
                         candidate=candidate,
                         employee=logged_in_employee,
@@ -654,19 +715,23 @@ def admin_candidate_profile(request, id):
             elif 'delete_interview_submit' in request.POST:
                 interview_id = request.POST.get('interview_id')
                 interview = get_object_or_404(Candidate_Interview, id=interview_id, candidate=candidate)
-                interview_details = {
+                
+                # Capture details for logging before deletion
+                interview_details_for_log = {
                     'company_name': interview.company_name,
                     'job_position': interview.job_position,
-                    'interview_date_time': str(interview.interview_date_time) if interview.interview_date_time else None
+                    'interview_date_time': str(interview.interview_date_time) if interview.interview_date_time else None,
+                    'attachment_name': interview.attachment.name if interview.attachment else None # Log the attachment name
                 }
-                interview.delete()
+                
+                interview.delete() # Perform the deletion
                 
                 # Log the deletion
                 CandidateActivity.objects.create(
                     candidate=candidate,
                     employee=logged_in_employee,
                     action=f'Interview deleted',
-                    changes={'deleted_interview': interview_details},
+                    changes={'deleted_interview': interview_details_for_log}, # Use the serializable dict
                     remark=f"Interview deleted by {logged_in_employee.user.username}"
                 )
                 messages.success(request, 'Interview deleted successfully!')
@@ -788,6 +853,7 @@ def admin_candidate_profile(request, id):
             "Volunteer Coordination", "Policy Advocacy",
             "Renewable Energy Operations", "Power Plant Engineering",
             "Energy Efficiency Management", "Electrical Design", "Maintenance",
+            "Aviation and Aerospace",
             "Flight Operations", "Ground Staff", "Aircraft Maintenance",
             "Cabin Crew", "Research and Development"
         ]
@@ -2029,10 +2095,26 @@ def admin_vendor_candidate_list(request, id):
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils import timezone
+import datetime as dt # Import datetime for date/time handling
+from django.db.models.fields.files import FieldFile # Import FieldFile
+
+
 @login_required
-def evms_candidate_profile(request,id) :
+def evms_candidate_profile(request, id):
     if request.user.is_staff or request.user.is_superuser:
         candidate = get_object_or_404(Candidate, id=id)
+        
+        # Ensure logged_in_employee is retrieved for activity logging
+        try:
+            logged_in_employee = Employee.objects.get(user=request.user)
+        except Employee.DoesNotExist:
+            messages.error(request, "Employee profile not found for the logged-in user.")
+            return render(request, 'crm/404.html', status=404)
+
         employees = Employee.objects.all()
         companies = Company_registration.objects.all()
         vacancies = VacancyDetails.objects.filter(
@@ -2042,87 +2124,64 @@ def evms_candidate_profile(request,id) :
             'job_profile',
             'company__company_name'
         )
-        if request.method == 'POST':
-            # Store the original candidate data before any updates
-            original_candidate = Candidate.objects.get(id=id)
-            changes = {}
 
-            # Track changes for all fields at once
-            fields_to_track = [
-                # Personal Information
-                'candidate_name', 'candidate_mobile_number', 'candidate_email_address',
-                'gender', 'lead_source',
-                # Candidate Details
-                'candidate_alternate_mobile_number', 'preferred_location', 'origin_location',
-                'qualification', 'diploma', 'sector', 'department', 'experience_year',
-                'experience_month', 'current_company', 'current_working_status',
-                'current_salary', 'expected_salary', 'submit_by', 'employee_assigned',
-                # Calling Remark
-                'call_connection', 'calling_remark', 'lead_generate',
-                'send_for_interview', 'next_follow_up_date_time',
-                # Selection Record
-                'selection_status', 'company_name', 'offered_salary',
-                'selection_date', 'candidate_joining_date', 'emta_commission',
-                'payout_date', 'selection_remark',
-                'other_lead_source', 'other_qualification', 'other_working_status',
-                'other_call_connection', 'other_lead_generate',
-                'other_interview_status', 'other_selection_status',
-                'other_origin_location'
-            ]
-            
-            # Check for changes in all fields
-            for field in fields_to_track:
-                new_value = request.POST.get(field)
-                old_value = getattr(original_candidate, field)
-                if str(old_value) != str(new_value):
-                    changes[field] = {'old': old_value, 'new': new_value}
-
-            # Handle file uploads
-            if 'candidate_photo' in request.FILES:
-                changes['candidate_photo'] = {
-                    'old': original_candidate.candidate_photo.name if original_candidate.candidate_photo else None,
-                    'new': request.FILES['candidate_photo'].name
-                }
-            if 'candidate_resume' in request.FILES:
-                changes['candidate_resume'] = {
-                    'old': original_candidate.candidate_resume.name if original_candidate.candidate_resume else None,
-                    'new': request.FILES['candidate_resume'].name
-                }
         if request.method == 'POST':
+            # Handle general candidate profile updates
             if 'submit_all' in request.POST:
-                # Get list inputs and convert to string
-                preferred_location = request.POST.getlist('preferred_location')
-                sector = request.POST.getlist('sector')
-                department = request.POST.getlist('department')
+                original_candidate = Candidate.objects.get(id=id) # Re-fetch to get original state for comparison
+                changes = {}
 
-                preferred_location_str = ', '.join(preferred_location)
-                sector_str = ', '.join(sector)
-                department_str = ', '.join(department)
+                fields_to_track = [
+                    'candidate_name', 'candidate_mobile_number', 'candidate_email_address',
+                    'gender', 'lead_source',
+                    'candidate_alternate_mobile_number', 'preferred_location', 'origin_location',
+                    'qualification', 'diploma', 'sector', 'department', 'experience_year',
+                    'experience_month', 'current_company', 'current_working_status',
+                    'current_salary', 'expected_salary', 'submit_by', 'employee_assigned',
+                    'call_connection', 'calling_remark', 'lead_generate',
+                    'send_for_interview', 'next_follow_up_date_time',
+                    'selection_status', 'company_name', 'offered_salary',
+                    'selection_date', 'candidate_joining_date', 'emta_commission',
+                    'payout_date', 'selection_remark',
+                    'other_lead_source', 'other_qualification', 'other_working_status',
+                    'other_call_connection', 'other_lead_generate',
+                    'other_interview_status', 'other_selection_status',
+                    'other_origin_location', 'other_preferred_location',
+                    'other_qualification', 'other_sector', 'other_department'
+                ]
+                
+                # Capture original values for fields_to_track, converting non-serializable types
+                original_candidate_serializable_data = {}
+                for field_name_to_track in fields_to_track:
+                    value = getattr(original_candidate, field_name_to_track)
+                    if isinstance(value, (dt.date, dt.datetime)):
+                        original_candidate_serializable_data[field_name_to_track] = str(value)
+                    else:
+                        original_candidate_serializable_data[field_name_to_track] = value
 
-                # Handle Employee fields
+                # Handle file fields separately to ensure their names are stored, not FieldFile objects
+                file_fields_to_track = ['candidate_photo', 'candidate_resume']
+                for file_field_name in file_fields_to_track:
+                    file_object = getattr(original_candidate, file_field_name)
+                    original_candidate_serializable_data[file_field_name] = file_object.name if file_object else None
+
+                # Apply updates from POST data to the candidate object
                 candidate.candidate_name = request.POST.get('candidate_name')
-                candidate.employee_name = request.POST.get('employee_name')
-                candidate.employee_assigned = request.POST.get('employee_assigned')
                 candidate.candidate_mobile_number = request.POST.get('candidate_mobile_number')
                 candidate.candidate_email_address = request.POST.get('candidate_email_address')
                 candidate.gender = request.POST.get('gender')
                 candidate.lead_source = request.POST.get('lead_source')
-                if 'candidate_photo' in request.FILES:
-                    candidate.candidate_photo = request.FILES['candidate_photo']
-                if 'candidate_resume' in request.FILES:
-                    candidate.candidate_resume = request.FILES['candidate_resume']
-                
-                # Handle Emergency Contact fields
-                candidate.candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
-                candidate.preferred_location = preferred_location_str
-                preferred_state = request.POST.getlist('preferred_state')
-                preferred_state_str = ', '.join(preferred_state)
-                candidate.preferred_state = preferred_state_str
+                candidate.employee_assigned = request.POST.get('employee_assigned') # This field is unique to admin view
+
+                # Multi-selects
+                candidate.preferred_location = ', '.join(request.POST.getlist('preferred_location'))
+                candidate.preferred_state = ', '.join(request.POST.getlist('preferred_state'))
                 candidate.origin_location = request.POST.get('origin_location')
                 candidate.qualification = request.POST.get('qualification')
                 candidate.diploma = request.POST.get('diploma')
-                candidate.sector = sector_str
-                candidate.department = department_str
+                candidate.sector = ', '.join(request.POST.getlist('sector'))
+                candidate.department = ', '.join(request.POST.getlist('department'))
+
                 candidate.experience_year = request.POST.get('experience_year')
                 candidate.experience_month = request.POST.get('experience_month')
                 candidate.current_company = request.POST.get('current_company')
@@ -2131,15 +2190,14 @@ def evms_candidate_profile(request,id) :
                 candidate.current_salary_type = request.POST.get('current_salary_type')
                 candidate.expected_salary = request.POST.get('expected_salary')
                 candidate.expected_salary_type = request.POST.get('expected_salary_type')
+                candidate.submit_by = request.POST.get('submit_by')
 
-                # Handle Social Media details form submission
                 candidate.call_connection = request.POST.get('call_connection')
                 candidate.calling_remark = request.POST.get('calling_remark')
                 candidate.lead_generate = request.POST.get('lead_generate')
                 candidate.send_for_interview = request.POST.get('send_for_interview')
                 candidate.next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
-                
-                # Handle form submission for bank details
+
                 candidate.selection_status = request.POST.get('selection_status')
                 candidate.company_name = request.POST.get('company_name')
                 candidate.job_title = request.POST.get('job_title')
@@ -2149,26 +2207,7 @@ def evms_candidate_profile(request,id) :
                 candidate.emta_commission = request.POST.get('emta_commission')
                 candidate.payout_date = request.POST.get('payout_date') or None
                 candidate.joining_status = request.POST.get('joining_status')
-                
-                # Handle form submission for bank details
-                
-                candidate.vendor_commission = request.POST.get('vendor_commission')
-                candidate.vendor_payout_date = request.POST.get('vendor_payout_date') or None
-                candidate.commission_generation_date = request.POST.get('commission_generation_date') or None
-                candidate.vendor_commission_status = request.POST.get('vendor_commission_status')
-                candidate.vendor_payment_remark = request.POST.get('vendor_payment_remark')
-                candidate.payment_done_by = request.POST.get('payment_done_by')
-                candidate.payment_done_by_date = request.POST.get('payment_done_by_date') or None
-                if 'submit_recipt' in request.FILES:
-                    candidate.submit_recipt = request.FILES['submit_recipt']
-
-                # Handle form submission for invoice details
-                candidate.invoice_status = request.POST.get('invoice_status')
-                candidate.invoice_date = request.POST.get('invoice_date') or None
-                candidate.invoice_amount = request.POST.get('invoice_amount')
-                candidate.invoice_remark = request.POST.get('invoice_remark')
-                if 'invoice_attachment' in request.FILES:
-                    candidate.invoice_attachment = request.FILES['invoice_attachment']
+                candidate.selection_remark = request.POST.get('selection_remark')
 
                 candidate.other_lead_source = request.POST.get('other_lead_source')
                 candidate.other_qualification = request.POST.get('other_qualification')
@@ -2183,14 +2222,78 @@ def evms_candidate_profile(request,id) :
                 candidate.other_sector = request.POST.get('other_sector')
                 candidate.other_department = request.POST.get('other_department')
 
-                
+                # Handle file uploads and clearing
+                if 'candidate_photo' in request.FILES:
+                    candidate.candidate_photo = request.FILES['candidate_photo']
+                elif request.POST.get('candidate_photo-clear') == 'on':
+                    candidate.candidate_photo = None
 
-                candidate.save()
+                if 'candidate_resume' in request.FILES:
+                    candidate.candidate_resume = request.FILES['candidate_resume']
+                elif request.POST.get('candidate_resume-clear') == 'on':
+                    candidate.candidate_resume = None
 
+                candidate.updated_by = logged_in_employee # Assuming you have an 'updated_by' field in Candidate model
+                candidate.save() # Save the candidate after all updates
+
+                # Now, after saving, re-check the file fields for changes
+                for field_name in fields_to_track:
+                    new_value_current_object = getattr(candidate, field_name) # Get from the updated object
+                    new_value_for_log = None
+                    if isinstance(new_value_current_object, (dt.date, dt.datetime)):
+                        new_value_for_log = str(new_value_current_object)
+                    else:
+                        new_value_for_log = new_value_current_object
+
+                    old_value_serializable = original_candidate_serializable_data.get(field_name)
+                    
+                    if str(old_value_serializable) != str(new_value_for_log):
+                        changes[field_name] = {
+                            'old': old_value_serializable,
+                            'new': new_value_for_log
+                        }
+
+                # Handle file changes for logging (after save, use the updated candidate object)
+                if original_candidate_serializable_data.get('candidate_photo') != (candidate.candidate_photo.name if candidate.candidate_photo else None):
+                    changes['candidate_photo'] = {
+                        'old': original_candidate_serializable_data.get('candidate_photo'),
+                        'new': candidate.candidate_photo.name if candidate.candidate_photo else None
+                    }
+                if original_candidate_serializable_data.get('candidate_resume') != (candidate.candidate_resume.name if candidate.candidate_resume else None):
+                    changes['candidate_resume'] = {
+                        'old': original_candidate_serializable_data.get('candidate_resume'),
+                        'new': candidate.candidate_resume.name if candidate.candidate_resume else None
+                    }
+
+                if changes:
+                    EVMS_CandidateActivity.objects.create(
+                        candidate=candidate,
+                        employee=logged_in_employee,
+                        action='updated',
+                        changes=changes,
+                        remark="Updated via unified form"
+                    )
                 messages.success(request, 'Candidate details updated successfully!')
 
             elif 'submit_vendor_related_data' in request.POST:
-                # Handle form submission for bank details
+                # Store original data for change tracking
+                original_candidate = Candidate.objects.get(id=id)
+                changes = {}
+                fields_to_track = [
+                    'admin_status', 'vendor_commission', 'vendor_payout_date', 
+                    'commission_generation_date', 'vendor_commission_status', 
+                    'vendor_payment_remark', 'payment_done_by', 'payment_done_by_date'
+                ]
+
+                # Capture original values
+                original_vendor_data = {}
+                for field_name in fields_to_track:
+                    value = getattr(original_candidate, field_name)
+                    original_vendor_data[field_name] = str(value) if isinstance(value, (dt.date, dt.datetime)) else value
+                
+                old_submit_recipt_name = original_candidate.submit_recipt.name if original_candidate.submit_recipt else None
+
+                # Update candidate object
                 candidate.admin_status = request.POST.get('admin_status')
                 candidate.vendor_commission = request.POST.get('vendor_commission')
                 candidate.vendor_payout_date = request.POST.get('vendor_payout_date') or None
@@ -2199,29 +2302,238 @@ def evms_candidate_profile(request,id) :
                 candidate.vendor_payment_remark = request.POST.get('vendor_payment_remark')
                 candidate.payment_done_by = request.POST.get('payment_done_by')
                 candidate.payment_done_by_date = request.POST.get('payment_done_by_date') or None
-                # submit_recipt = request.FILES.get('submit_recipt')
+                
                 if 'submit_recipt' in request.FILES:
                     candidate.submit_recipt = request.FILES['submit_recipt']
+                elif request.POST.get('submit_recipt-clear') == 'on':
+                    candidate.submit_recipt = None
 
+                candidate.updated_by = logged_in_employee
                 candidate.save()
 
+                # Track changes after saving
+                for field_name in fields_to_track:
+                    new_value = getattr(candidate, field_name)
+                    new_value_for_log = str(new_value) if isinstance(new_value, (dt.date, dt.datetime)) else new_value
+                    if str(original_vendor_data.get(field_name)) != str(new_value_for_log):
+                        changes[field_name] = {'old': original_vendor_data.get(field_name), 'new': new_value_for_log}
+                
+                if old_submit_recipt_name != (candidate.submit_recipt.name if candidate.submit_recipt else None):
+                    changes['submit_recipt'] = {
+                        'old': old_submit_recipt_name,
+                        'new': candidate.submit_recipt.name if candidate.submit_recipt else None
+                    }
+
+                if changes:
+                    EVMS_CandidateActivity.objects.create(
+                        candidate=candidate,
+                        employee=logged_in_employee,
+                        action='vendor_details_updated',
+                        changes=changes,
+                        remark="Vendor related details updated"
+                    )
                 messages.success(request, 'Vendor related details updated successfully!')
 
-            elif 'invoice_releted_data' in request.POST :
-                # Handle form submission for invoice details
+            elif 'invoice_releted_data' in request.POST:
+                # Store original data for change tracking
+                original_candidate = Candidate.objects.get(id=id)
+                changes = {}
+                fields_to_track = [
+                    'invoice_status', 'invoice_date', 'invoice_amount', 
+                    'invoice_remark', 'invoice_paid_status', 'invoice_number'
+                ]
+
+                # Capture original values
+                original_invoice_data = {}
+                for field_name in fields_to_track:
+                    value = getattr(original_candidate, field_name)
+                    original_invoice_data[field_name] = str(value) if isinstance(value, (dt.date, dt.datetime)) else value
+                
+                old_invoice_attachment_name = original_candidate.invoice_attachment.name if original_candidate.invoice_attachment else None
+
+                # Update candidate object
                 candidate.invoice_status = request.POST.get('invoice_status')
                 candidate.invoice_date = request.POST.get('invoice_date') or None
                 candidate.invoice_amount = request.POST.get('invoice_amount')
                 candidate.invoice_remark = request.POST.get('invoice_remark')
                 candidate.invoice_paid_status = request.POST.get('invoice_paid_status')
                 candidate.invoice_number = request.POST.get('invoice_number')
+                
                 if 'invoice_attachment' in request.FILES:
                     candidate.invoice_attachment = request.FILES['invoice_attachment']
+                elif request.POST.get('clear_invoice_attachment') == 'on':
+                    candidate.invoice_attachment = None
+
+                candidate.updated_by = logged_in_employee
                 candidate.save()
-                messages.success(request, 'Invoice related details updated successfully!')
+
+                # Track changes after saving
+                for field_name in fields_to_track:
+                    new_value = getattr(candidate, field_name)
+                    new_value_for_log = str(new_value) if isinstance(new_value, (dt.date, dt.datetime)) else new_value
+                    if str(original_invoice_data.get(field_name)) != str(new_value_for_log):
+                        changes[field_name] = {'old': original_invoice_data.get(field_name), 'new': new_value_for_log}
                 
+                if old_invoice_attachment_name != (candidate.invoice_attachment.name if candidate.invoice_attachment else None):
+                    changes['invoice_attachment'] = {
+                        'old': old_invoice_attachment_name,
+                        'new': candidate.invoice_attachment.name if candidate.invoice_attachment else None
+                    }
+
+                if changes:
+                    CandidateActivity.objects.create(
+                        candidate=candidate,
+                        employee=logged_in_employee,
+                        action='invoice_updated',
+                        changes=changes,
+                        remark="Invoice details updated"
+                    )
+                messages.success(request, 'Invoice related details updated successfully!')
+
+            elif 'add_interview_submit' in request.POST:
+                try:
+                    interview_date_time_str = request.POST.get('interview_date_time')
+                    if interview_date_time_str:
+                        interview_date_time = dt.datetime.strptime(interview_date_time_str, '%Y-%m-%dT%H:%M')
+                    else:
+                        interview_date_time = None
+
+                    interview = EVMS_Candidate_Interview.objects.create(
+                        candidate=candidate,
+                        interview_date_time=interview_date_time,
+                        company_name=request.POST.get('interview_company_name'),
+                        job_position=request.POST.get('job_position'),
+                        interviewer_name=request.POST.get('interviewer_name'),
+                        interviewer_email=request.POST.get('interviewer_email'),
+                        interviewer_phone=request.POST.get('interviewer_phone'),
+                        status=request.POST.get('status'),
+                        interview_mode=request.POST.get('interview_mode'),
+                        location=request.POST.get('location'),
+                        meeting_link=request.POST.get('meeting_link'),
+                        notes=request.POST.get('notes'),
+                        feedback=request.POST.get('feedback'),
+                        rating=request.POST.get('rating') or None,
+                        is_technical=request.POST.get('is_technical') == 'on',
+                        duration=request.POST.get('duration') or None,
+                        requirements=request.POST.get('requirements'),
+                        created_by=request.user, 
+                        updated_by=request.user, 
+                    )
+                    if 'interview_attachment' in request.FILES:
+                        interview.attachment = request.FILES['interview_attachment']
+                        interview.save()
+                    EVMS_CandidateActivity.objects.create(
+                        candidate=candidate,
+                        employee=logged_in_employee,
+                        action=f'New interview added (ID: {interview.id})',
+                        changes={
+                            'interview_date_time': str(interview.interview_date_time),
+                            'company_name': interview.company_name,
+                            'job_position': interview.job_position,
+                            'status': interview.status,
+                            'interview_mode': interview.interview_mode,
+                            'attachment': interview.attachment.name if interview.attachment else None
+                        },
+                        remark=f"New interview added by {logged_in_employee.user.username}"
+                    )
+                    messages.success(request, 'Interview added successfully!')
+                except Exception as e:
+                    messages.error(request, f'Error adding interview: {e}')
+                return redirect('evms_candidate_profile', id=id)
+
+            elif 'edit_interview_submit' in request.POST:
+                interview_id = request.POST.get('interview_id')
+                # This line is where the ValueError occurred. It is now corrected.
+                interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id, candidate=candidate)
+                original_interview_data = {}
+                for field in interview._meta.fields:
+                    value = getattr(interview, field.name)
+                    if isinstance(value, FieldFile):
+                        original_interview_data[field.name] = value.name if value else None
+                    elif isinstance(value, (dt.date, dt.datetime)):
+                        original_interview_data[field.name] = str(value)
+                    else:
+                        original_interview_data[field.name] = value
+                interview_changes = {}
+
+                interview_date_time_str = request.POST.get('interview_date_time')
+                if interview_date_time_str:
+                    interview.interview_date_time = dt.datetime.strptime(interview_date_time_str, '%Y-%m-%dT%H:%M')
+                else:
+                    interview.interview_date_time = None
+                
+                interview.company_name = request.POST.get('interview_company_name')
+                interview.job_position = request.POST.get('job_position')
+                interview.interviewer_name = request.POST.get('interviewer_name')
+                interview.interviewer_email = request.POST.get('interviewer_email')
+                interview.interviewer_phone = request.POST.get('interviewer_phone')
+                interview.status = request.POST.get('status')
+                interview.interview_mode = request.POST.get('interview_mode')
+                interview.location = request.POST.get('location')
+                interview.meeting_link = request.POST.get('meeting_link')
+                interview.notes = request.POST.get('notes')
+                interview.feedback = request.POST.get('feedback')
+                interview.rating = request.POST.get('rating') or None
+                interview.is_technical = request.POST.get('is_technical') == 'on'
+                interview.duration = request.POST.get('duration') or None
+                interview.requirements = request.POST.get('requirements')
+                if 'interview_attachment' in request.FILES:
+                    interview.attachment = request.FILES['interview_attachment']
+                elif request.POST.get('clear_interview_attachment') == 'on': 
+                    interview.attachment = None
+                
+                interview.updated_by = request.user
+                interview.save()
+                updated_interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id, candidate=candidate)
+                
+                for field_name in original_interview_data.keys():
+                    old_value = original_interview_data[field_name]
+                    new_value_current_object = getattr(updated_interview, field_name)
+                    new_value_for_log = None
+                    if isinstance(new_value_current_object, FieldFile):
+                        new_value_for_log = new_value_current_object.name if new_value_current_object else None
+                    elif isinstance(new_value_current_object, (dt.date, dt.datetime)):
+                        new_value_for_log = str(new_value_current_object)
+                    else:
+                        new_value_for_log = new_value_current_object
+                    if old_value != new_value_for_log:
+                        interview_changes[field_name] = {'old': old_value, 'new': new_value_for_log}
+                
+                if interview_changes:
+                    EVMS_CandidateActivity.objects.create(
+                        candidate=candidate,
+                        employee=logged_in_employee,
+                        action=f'Interview updated (ID: {interview.id})',
+                        changes=interview_changes,
+                        remark=f"Interview details updated by {logged_in_employee.user.username}"
+                    )
+                messages.success(request, 'Interview updated successfully!')
+                return redirect('evms_candidate_profile', id=id)
+
+            elif 'delete_interview_submit' in request.POST:
+                interview_id = request.POST.get('interview_id')
+                # This line is where the ValueError occurred. It is now corrected.
+                interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id, candidate=candidate)
+                interview_details_for_log = {
+                    'company_name': interview.company_name,
+                    'job_position': interview.job_position,
+                    'interview_date_time': str(interview.interview_date_time) if interview.interview_date_time else None,
+                    'attachment_name': interview.attachment.name if interview.attachment else None
+                }
+                interview.delete()
+                EVMS_CandidateActivity.objects.create(
+                    candidate=candidate,
+                    employee=logged_in_employee,
+                    action=f'Interview deleted',
+                    changes={'deleted_interview': interview_details_for_log},
+                    remark=f"Interview deleted by {logged_in_employee.user.username}"
+                )
+                messages.success(request, 'Interview deleted successfully!')
+                return redirect('evms_candidate_profile', id=id)
+            
             return redirect('evms_candidate_profile', id=id)
-        
+
+        # GET request context
         districts = [
             "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
             "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
@@ -2258,26 +2570,23 @@ def evms_candidate_profile(request,id) :
             "Nicobar", "North and Middle Andaman", "South Andaman", "Chandigarh", "Dadra and Nagar Haveli", "Daman", "Diu", "Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi", "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi",
             "Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur",
             "Kargil", "Leh", "Lakshadweep", "Karaikal", "Mahe", "Puducherry", "Yanam"
-
         ]
-        
 
         state = [
-        "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", 
-        "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", 
-        "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
-        "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
-        # Union Territories
-        "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", 
-        "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+            "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", 
+            "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", 
+            "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
+            "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+            "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", 
+            "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
         ]
 
         state_district = {
-            "Andhra Pradesh": ["Anantapur", "Chittoor", "East Godavari", "Guntur", "Krishna", "Kurnool", "Nellore", "Prakasam", "Srikakulam", "Visakhapatnam", "Vizianagaram", "West Godavari"],  
+            "Andhra Pradesh": ["Anantapur", "Chittoor", "East Godavari", "Guntur", "Krishna", "Kurnool", "Nellore", "Prakasam", "Srikakulam", "Visakhapatnam", "Vizianagaram", "West Godavari"], 
             "Arunachal Pradesh": ["Anjaw", "Changlang", "Dibang Valley", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang"],
             "Assam": ["Barpeta", "Bongaigaon", "Cachar", "Charaideo", "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao", "Goalpara", "Golaghat", "Hailakandi", "Hazaribag", "Jorhat", "Kamrup Metropolitan", "Kamrup", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Moranha", "Nagaon", "Nalbari", "North Cachar Hills", "Sivasagar", "Sonitpur", "South Cachar Hills", "Tinsukia", "Udalguri", "West Karbi Anglong"],
             "Bihar": ["Araria", "Aurangabad", "Bhojpur", "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran"],
-            "Chhattisgarh": ["Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur", "Bilaspur", "Dakshin Bastar Dantewada", "Dhamtari", "Durg", "Gariyaband", "Gaurela Pendra Marwahi", "Janjgir-Champa", "Jashpur", "Kabirdham", "Kanker", "Kondagaon", "Korba", "Koriya", "Mahasamund", "Mungeli", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur"],
+            "Chhattisgarh": ["Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur", "Bilaspur", "Dakshin Bastar Dantewada", "Dhamtari", "Durg", "Gariyaband", "Gaurela Pendra Marwahi", "Janjgir-Champa", "Jashpur", "Kabirdham", "Kanker", "Kondagaon", "Korba", "Koriya", "Mahasamund", "Mungeli", "Narayanpur"],
             "Goa": ["North Goa", "South Goa"],
             "Gujarat": ["Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch", "Bhavnagar", "Botad", "Chhota Udaipur", "Dahod", "Dang", "Devbhoomi Dwarka", "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch", "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal", "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar", "Tapi", "Vadodara", "Valsad"],
             "Haryana": ["Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram", "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh", "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa", "Sonipat", "Yamunanagar"],
@@ -2301,7 +2610,6 @@ def evms_candidate_profile(request,id) :
             "Uttar Pradesh": ["Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur", "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor", "Budaun", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah", "Etawah", "Ayodhya", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat", "Kanpur Nagar", "Kasganj", "Kaushambi", "Kushinagar", "Lakhimpur Kheri", "Lalitpur", "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau", "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh", "Prayagraj", "Rae Bareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar", "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra", "Sultanpur", "Unnao", "Varanasi"],
             "Uttarakhand": ["Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", "Uttarkashi"],
             "West Bengal": ["Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong", "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur", "Purulia", "South 24 Parganas", "Uttar Dinajpur"],
-            # Union Territories
             "Andaman and Nicobar Islands": ["Nicobar", "North and Middle Andaman", "South Andaman"],
             "Chandigarh": ["Chandigarh"],
             "Dadra and Nagar Haveli and Daman and Diu": ["Dadra and Nagar Haveli", "Daman", "Diu"],
@@ -2312,141 +2620,94 @@ def evms_candidate_profile(request,id) :
             "Puducherry": ["Karaikal", "Mahe", "Puducherry", "Yanam"]
         }
 
-        
         job_sectors = [
-        "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
-        "Healthcare and Pharmaceuticals","Education and Training",
-        "Retail and E-commerce", "Manufacturing and Production","Real Estate and Construction", "Hospitality and Tourism",
-        "Media and Entertainment", "Telecommunications","Logistics and Supply Chain","Marketing and Advertising","Human Resources",
-        "Legal and Compliance","Engineering and Infrastructure","Automobile Industry",
-        "Fashion and Textile", "FMCG (Fast Moving Consumer Goods)",
-        "Agriculture and Farming", "Insurance","Government Sector","NGO and Social Services",
-        "Energy and Power","Aviation and Aerospace"
+            "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
+            "Healthcare and Pharmaceuticals","Education and Training",
+            "Retail and E-commerce", "Manufacturing and Production","Real Estate and Construction", "Hospitality and Tourism",
+            "Media and Entertainment", "Telecommunications","Logistics and Supply Chain","Marketing and Advertising","Human Resources",
+            "Legal and Compliance","Engineering and Infrastructure","Automobile Industry",
+            "Fashion and Textile", "FMCG (Fast Moving Consumer Goods)",
+            "Agriculture and Farming", "Insurance","Government Sector","NGO and Social Services",
+            "Energy and Power","Aviation and Aerospace"
         ]
         
         departments = [
-        # IT (Information Technology)
-        "Software Development", "IT Support", "Web Development", 
-        "Network Administration", "Cybersecurity", 
-        "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)",
-
-        # BPO (Business Process Outsourcing)
-        "Customer Support", "Technical Support", "Voice Process", 
-        "Non-Voice Process", "Back Office Operations",
-
-        # Banking and Finance
-        "Investment Banking", "Retail Banking", "Loan Processing", 
-        "Risk Management", "Accounting and Auditing", 
-        "Financial Analysis", "Wealth Management",
-
-        # Healthcare and Pharmaceuticals
-        "Medical Representatives", "Clinical Research", "Nursing", 
-        "Medical Technicians", "Pharmacy Operations", 
-        "Healthcare Administration",
-
-        # Education and Training
-        "Teaching", "Curriculum Development", "Academic Counseling", 
-        "E-Learning Development", "Education Administration",
-
-        # Retail and E-commerce
-        "Store Operations", "Supply Chain Management", 
-        "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
-
-        # Manufacturing and Production
-        "Production Planning", "Quality Control", "Maintenance and Repair", 
-        "Operations Management", "Inventory Management",
-
-        # Real Estate and Construction
-        "Sales and Marketing", "Civil Engineering", "Project Management", 
-        "Interior Designing", "Surveying and Valuation",
-
-        # Hospitality and Tourism
-        "Hotel Management", "Travel Coordination", "Event Planning", 
-        "Food and Beverage Services", "Guest Relations",
-
-        # Media and Entertainment
-        "Content Writing", "Video Editing", "Graphic Designing", 
-        "Social Media Management", "Event Production",
-
-        # Telecommunications
-        "Network Installation", "Customer Support", "Telecom Engineering", 
-        "Technical Operations", "Business Development",
-
-        # Logistics and Supply Chain
-        "Logistics Coordination", "Warehouse Management", "Procurement", 
-        "Transportation Management", "Inventory Control",
-
-        # Marketing and Advertising
-        "Market Research", "Brand Management", "Advertising Sales", 
-        "Public Relations", "Digital Marketing",
-
-        # Human Resources
-        "Recruitment", "Employee Relations", "Payroll and Benefits", 
-        "Training and Development", "HR Analytics",
-
-        # Legal and Compliance
-        "Corporate Law", "Compliance Auditing", "Contract Management", 
-        "Intellectual Property Rights", "Legal Advisory",
-
-        # Engineering and Infrastructure
-        "Civil Engineering", "Mechanical Engineering", 
-        "Electrical Engineering", "Project Planning", "Structural Design",
-
-        # Automobile Industry
-        "Automotive Design", "Production and Assembly", "Sales and Service", 
-        "Supply Chain Management", "Quality Assurance",
-
-        # Fashion and Textile
-        "Fashion Design", "Merchandising", "Production Management", 
-        "Quality Control", "Retail Sales",
-
-        # FMCG (Fast Moving Consumer Goods)
-        "Sales and Marketing", "Supply Chain Operations", 
-        "Production Management", "Quality Control", "Brand Management",
-
-        # Agriculture and Farming
-        "Agribusiness Management", "Farm Operations", "Food Processing", 
-        "Agricultural Sales", "Quality Assurance",
-
-        # Insurance
-        "Sales and Business Development", "Underwriting", 
-        "Claims Management", "Actuarial Services", "Policy Administration",
-
-        # Government Sector
-        "Administrative Services", "Public Relations", 
-        "Policy Analysis", "Clerical Positions", "Field Operations",
-
-        # NGO and Social Services
-        "Community Development", "Fundraising", "Program Management", 
-        "Volunteer Coordination", "Policy Advocacy",
-
-        # Energy and Power
-        "Renewable Energy Operations", "Power Plant Engineering", 
-        "Energy Efficiency Management", "Electrical Design", "Maintenance",
-
-        # Aviation and Aerospace
-        "Flight Operations", "Ground Staff", "Aircraft Maintenance", 
-        "Cabin Crew", "Research and Development"
+            "Software Development", "IT Support", "Web Development", 
+            "Network Administration", "Cybersecurity", 
+            "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)",
+            "Customer Support", "Technical Support", "Voice Process", 
+            "Non-Voice Process", "Back Office Operations",
+            "Investment Banking", "Retail Banking", "Loan Processing", 
+            "Risk Management", "Accounting and Auditing", 
+            "Financial Analysis", "Wealth Management",
+            "Medical Representatives", "Clinical Research", "Nursing", 
+            "Medical Technicians", "Pharmacy Operations", 
+            "Healthcare Administration",
+            "Teaching", "Curriculum Development", "Academic Counseling", 
+            "E-Learning Development", "Education Administration",
+            "Store Operations", "Supply Chain Management", 
+            "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
+            "Production Planning", "Quality Control", "Maintenance and Repair", 
+            "Operations Management", "Inventory Management",
+            "Sales and Marketing", "Civil Engineering", "Project Management", 
+            "Interior Designing", "Surveying and Valuation",
+            "Hotel Management", "Travel Coordination", "Event Planning", 
+            "Food and Beverage Services", "Guest Relations",
+            "Content Writing", "Video Editing", "Graphic Designing", 
+            "Social Media Management", "Event Production",
+            "Network Installation", "Customer Support", "Telecom Engineering", 
+            "Technical Operations", "Business Development",
+            "Logistics Coordination", "Warehouse Management", "Procurement", 
+            "Transportation Management", "Inventory Control",
+            "Market Research", "Brand Management", "Advertising Sales", 
+            "Public Relations", "Digital Marketing",
+            "Recruitment", "Employee Relations", "Payroll and Benefits", 
+            "Training and Development", "HR Analytics",
+            "Corporate Law", "Compliance Auditing", "Contract Management", 
+            "Intellectual Property Rights", "Legal Advisory",
+            "Civil Engineering", "Mechanical Engineering", 
+            "Electrical Engineering", "Project Planning", "Structural Design",
+            "Automotive Design", "Production and Assembly", "Sales and Service", 
+            "Supply Chain Management", "Quality Assurance",
+            "Fashion Design", "Merchandising", "Production Management", 
+            "Quality Control", "Retail Sales",
+            "Sales and Marketing", "Supply Chain Operations", 
+            "Production Management", "Quality Control", "Brand Management",
+            "Agribusiness Management", "Farm Operations", "Food Processing", 
+            "Agricultural Sales", "Quality Assurance",
+            "Sales and Business Development", "Underwriting", 
+            "Claims Management", "Actuarial Services", "Policy Administration",
+            "Administrative Services", "Public Relations", 
+            "Policy Analysis", "Clerical Positions", "Field Operations",
+            "Community Development", "Fundraising", "Program Management", 
+            "Volunteer Coordination", "Policy Advocacy",
+            "Renewable Energy Operations", "Power Plant Engineering", 
+            "Energy Efficiency Management", "Electrical Design", "Maintenance",
+            "Aviation and Aerospace",
+            "Flight Operations", "Ground Staff", "Aircraft Maintenance", 
+            "Cabin Crew", "Research and Development"
         ]
-
 
         context = {
             'candidate': candidate,
-            'employees' : employees,
+            'employees': employees,
             'districts': districts,
             'job_sectors': job_sectors,
             'departments': departments,
             'vacancies': vacancies,
             'activities': candidate.activities.all().order_by('-timestamp'),
+            'interviews': candidate.interviews.all().order_by('-interview_date_time'), # Pass interviews to template
+            'today': timezone.now().date(),
             'companies': companies,
             'state': state,
             'state_district': state_district,
+            'interview_statuses': EVMS_Candidate_Interview.INTERVIEW_STATUS, # Assuming you have this tuple defined in EVMS_Candidate_Interview model
+            'interview_modes': EVMS_Candidate_Interview.INTERVIEW_MODE,     # Assuming you have this tuple defined in EVMS_Candidate_Interview model
         }
-        return render(request,'crm/evms-candidate-profile.html',context)
+        return render(request, 'crm/evms-candidate-profile.html', context)
     else:
-        # If the user is not an admin, show a 404 page
+        messages.error(request, "You are not authorized to view this page.")
         return render(request, 'crm/404.html', status=404)
-
 @login_required
 def evms_vendor_candidate_profile(request,id) :
     if request.user.is_staff or request.user.is_superuser:

@@ -1,4 +1,5 @@
 <style>
+  /* Sticky Header for Modal Sections */
   .sticky-section-header {
     position: sticky;
     top: -25px; /* Adjust based on your header height */
@@ -11,9 +12,10 @@
     border-bottom: 1px solid #eee;
     margin-top: 0;
     margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
 
+  /* Modal Specific Styles */
   .modal-content {
     border-radius: 0.5rem;
   }
@@ -36,60 +38,95 @@
   .dropdown-menu {
     z-index: 1060;
   }
-</style>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const modalBody = document.querySelector('.modal-body');
-    const modalHeader = document.querySelector('.modal-header');
-    const sections = document.querySelectorAll('.modal-body h5.text-secondary');
-    
-    // Create the sticky header element
-    const stickyHeader = document.createElement('h5');
-    stickyHeader.className = 'sticky-section-header text-secondary';
-    stickyHeader.style.display = 'none';
-    modalHeader.after(stickyHeader);
-    
-    // Add intersection observer to track which section is visible
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            // Find the currently visible section
-            const visibleSection = Array.from(sections).find(section => {
-              const rect = section.getBoundingClientRect();
-              return rect.top >= 0 && rect.top <= window.innerHeight;
-            });
-            
-            if (visibleSection) {
-              stickyHeader.textContent = visibleSection.textContent;
-              stickyHeader.style.display = 'block';
-            } else {
-              stickyHeader.style.display = 'none';
-            }
-          }
-        });
-      }, 
-      {
-        root: modalBody,
-        threshold: 0.1,
-        rootMargin: '-60px 0px -90% 0px' // Adjust based on your needs
-      }
-    );
-    
-    // Observe each section
-    sections.forEach(section => {
-      observer.observe(section);
-    });
-    
-    // Also observe the form's top to hide the sticky header when at the very top
-    const firstElement = document.querySelector('#candidateForm > *:first-child');
-    if (firstElement) {
-      observer.observe(firstElement);
-    }
-  });
-  </script>
 
-<!-- Single Modal Form -->
+  /* Custom Searchable Dropdown for Origin Location */
+  .custom-dropdown {
+    position: relative;
+    width: 100%;
+  }
+
+  .dropdown-input-container {
+    position: relative;
+    display: flex;
+  }
+
+  .dropdown-search-input {
+    padding-right: 35px;
+  }
+
+  .dropdown-toggle-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    background: transparent;
+    border: none;
+    padding: 0 10px;
+    color: #6c757d;
+  }
+
+  .dropdown-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    background: white;
+    z-index: 1000;
+    margin-top: 2px;
+  }
+
+  .dropdown-option {
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+
+  .dropdown-option:hover {
+    background-color: #f8f9fa;
+  }
+
+  .dropdown-option.active {
+    background-color: #007bff;
+    color: white;
+  }
+
+  /* Multi-select Dropdown Specific Styles (for Preferred Location, Sector, Department) */
+  .dropdown-item {
+    padding: 0.25rem 1rem;
+    cursor: pointer;
+  }
+  .dropdown-item:hover {
+    /* Consider if you want this border for checkboxes, it might look odd. Removed for now. */
+    /* border: 1px solid #007bff; */
+  }
+  .search-input {
+    border-radius: 0.25rem;
+  }
+  /* .dropdown-options is already defined above for searchable dropdown, no need to redefine */
+  /* Scrollbar styling */
+  .dropdown-options::-webkit-scrollbar {
+    width: 8px;
+  }
+  .dropdown-options::-webkit-scrollbar-track {
+    border-radius: 4px;
+    border: 1px solid #007bff;
+  }
+  .dropdown-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+  .dropdown-options::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  .form-check-label {
+    cursor: pointer;
+    width: 100%;
+  }
+</style>
+
 <div class="modal modal-blur fade" id="unified-candidate-modal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content d-flex flex-column" style="height: 90vh;">
@@ -100,77 +137,41 @@
       <div class="modal-body flex-grow-1" style="overflow-y: auto;">
         <form method="POST" enctype="multipart/form-data" id="unifiedCandidateForm" novalidate>
           {% csrf_token %}
-          <input type="hidden" name="submit_by" value="{{user.username}}"/>
-          
+          <input type="hidden" name="submit_by" value="{{user.username}}" />
+
           <div class="tab-content" id="formTabContent">
-            <!-- Personal Information Section -->
             <h5 class="text-secondary mb-4 sticky-section-header">Personal Information</h5>
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label class="form-label">Candidate Name <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="candidate_name" id="candidateName"
-                       value="{{ candidate.candidate_name }}" 
-                       required minlength="2" maxlength="100"
-                       pattern="^[a-zA-Z\s]*$" 
-                       onchange="confirmFieldChange('name', this.value)" />
+                  value="{{ candidate.candidate_name }}" required minlength="2" maxlength="100"
+                  pattern="^[a-zA-Z\s]*$" onchange="confirmFieldChange('name', this.value)" />
                 <div class="invalid-feedback">
                   Please enter a valid name (2-100 characters, letters only)
                 </div>
               </div>
-              
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
                 <input type="tel" class="form-control" name="candidate_mobile_number" id="candidateMobile"
-                       value="{{ candidate.candidate_mobile_number }}" 
-                       required pattern="[0-9]{10}" 
-                       maxlength="10"
-                       onchange="confirmFieldChange('mobile', this.value)" />
+                  value="{{ candidate.candidate_mobile_number }}" required pattern="[0-9]{10}"
+                  maxlength="10" onchange="confirmFieldChange('mobile', this.value)" />
                 <div class="invalid-feedback">
                   Please enter a valid 10-digit mobile number
                 </div>
               </div>
-              
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Email Address</label>
                 <input type="email" class="form-control" name="candidate_email_address" id="candidateEmail"
-                       value="{{ candidate.candidate_email_address }}" 
-                       maxlength="100" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
-                       onchange="confirmFieldChange('email', this.value)" />
+                  value="{{ candidate.candidate_email_address }}" maxlength="100" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
+                  onchange="confirmFieldChange('email', this.value)" />
                 <div class="invalid-feedback">
                   Please enter a valid email address
                 </div>
               </div>
 
-              <script>
-              document.addEventListener('DOMContentLoaded', function() {
-                  // Store original values
-                  window.originalValues = {
-                      name: document.getElementById('candidateName').value,
-                      mobile: document.getElementById('candidateMobile').value,
-                      email: document.getElementById('candidateEmail').value
-                  };
-              });
-
-              function confirmFieldChange(field, newValue) {
-                  const originalValue = window.originalValues[field];
-                  if (newValue !== originalValue) {
-                      const fieldNames = {
-                          name: 'Name',
-                          mobile: 'Mobile Number',
-                          email: 'Email Address'
-                      };
-                      
-                      const message = `You are about to change the candidate's ${fieldNames[field]} from "${originalValue}" to "${newValue}".\n\nAre you sure you want to proceed?`;
-                      
-                      if (!confirm(message)) {
-                          // Reset to original value if user cancels
-                          const element = document.getElementById(`candidate${field.charAt(0).toUpperCase() + field.slice(1)}`);
-                          element.value = originalValue;
-                      }
-                  }
-              }
-              </script>
-              
               <div class="col-md-6 mb-3">
                 <label class="form-label">Gender <span class="text-danger">*</span></label>
                 <select class="form-select" name="gender" required>
@@ -183,368 +184,207 @@
                   Please select gender
                 </div>
               </div>
-              
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Profile Photo</label>
-                <input type="file" class="form-control" name="candidate_photo" 
-                       accept="image/*" />
+                <input type="file" class="form-control" name="candidate_photo" accept="image/*" />
                 <div class="invalid-feedback">
                   Please upload a valid image (JPEG, PNG, JPG)
                 </div>
                 <small class="text-muted">Max size: 10MB</small>
               </div>
-              
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Resume <span class="text-danger">*</span></label>
-                <input type="file" class="form-control" name="candidate_resume" 
-                       accept=".pdf,.doc,.docx" />
+                <input type="file" class="form-control" name="candidate_resume" accept=".pdf,.doc,.docx" />
                 <div class="invalid-feedback">
                   Please upload a valid resume (PDF, DOC, DOCX)
                 </div>
                 <small class="text-muted">Max size: 10MB (PDF, DOC, DOCX)</small>
               </div>
-              
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Lead Source</label>
-                <select name="lead_source" class="form-select" required id="leadSourceSelect">
-                    <option value="" disabled selected>Select Lead Source</option>
-                    <option value="EVMS" {% if candidate.lead_source == "EVMS" %}selected{% endif %}>EVMS</option>
-                    <option value="Walk-In" {% if candidate.lead_source == "Walk-In" %}selected{% endif %}>Walk-In</option>
-                    <option value="Job Hai" {% if candidate.lead_source == "Job Hai" %}selected{% endif %}>Job Hai</option>
-                    <option value="Naukari" {% if candidate.lead_source == "Naukari" %}selected{% endif %}>Naukari</option>
-                    <option value="Apna" {% if candidate.lead_source == "Apna" %}selected{% endif %}>Apna</option>
-                    <option value="Expertia" {% if candidate.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
-                    <option value="Instagram" {% if candidate.lead_source == "Instagram" %}selected{% endif %}>Instagram</option>
-                    <option value="Website" {% if candidate.lead_source == "Website" %}selected{% endif %}>Website</option>
-                    <option value="Indeed" {% if candidate.lead_source == "Indeed" %}selected{% endif %}>Indeed</option>
-                    <option value="Facebook" {% if candidate.lead_source == "Facebook" %}selected{% endif %}>Facebook</option>
-                    <option value="Linkedin" {% if candidate.lead_source == "Linkedin" %}selected{% endif %}>Linkedin</option>
-                    <option value="Personal Refference" {% if candidate.lead_source == "Personal Refference" %}selected{% endif %}>Personal Refference</option>
-                    <option value="Other" {% if candidate.lead_source == "Other" %}selected{% endif %}>Other</option>
+                <select name="lead_source" class="form-select"  id="leadSourceSelect" required>
+                  <option value="" disabled selected>Select Lead Source</option>
+                  <option value="EVMS" {% if candidate.lead_source == "EVMS" %}selected{% endif %}>EVMS</option>
+                  <option value="Walk-In" {% if candidate.lead_source == "Walk-In" %}selected{% endif %}>Walk-In</option>
+                  <option value="Job Hai" {% if candidate.lead_source == "Job Hai" %}selected{% endif %}>Job Hai</option>
+                  <option value="Naukari" {% if candidate.lead_source == "Naukari" %}selected{% endif %}>Naukari</option>
+                  <option value="Apna" {% if candidate.lead_source == "Apna" %}selected{% endif %}>Apna</option>
+                  <option value="Expertia" {% if candidate.lead_source == "Expertia" %}selected{% endif %}>Expertia</option>
+                  <option value="Instagram" {% if candidate.lead_source == "Instagram" %}selected{% endif %}>Instagram</option>
+                  <option value="Website" {% if candidate.lead_source == "Website" %}selected{% endif %}>Website</option>
+                  <option value="Indeed" {% if candidate.lead_source == "Indeed" %}selected{% endif %}>Indeed</option>
+                  <option value="Facebook" {% if candidate.lead_source == "Facebook" %}selected{% endif %}>Facebook</option>
+                  <option value="Linkedin" {% if candidate.lead_source == "Linkedin" %}selected{% endif %}>Linkedin</option>
+                  <option value="Personal Refference" {% if candidate.lead_source == "Personal Refference" %}selected{% endif %}>Personal Refference</option>
+                  <option value="Other" {% if candidate.lead_source == "Other" %}selected{% endif %}>Other</option>
                 </select>
                 <div id="otherLeadSourceContainer" style="display: none;" class="mt-2">
                   <label class="form-label">Specify Other Lead Source</label>
-                  <input type="text" class="form-control" name="other_lead_source" 
-                         value="{{ candidate.other_lead_source }}" maxlength="100">
+                  <input type="text" class="form-control" name="other_lead_source"
+                    value="{{ candidate.other_lead_source }}" maxlength="100">
                 </div>
               </div>
             </div>
-            
-            <!-- Candidate Details Section -->
+
             <hr class="my-4">
             <h5 class="text-secondary mb-4 sticky-section-header">Candidate Information</h5>
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label class="form-label">Alternate Mobile Number</label>
-                <input type="tel" class="form-control" name="candidate_alternate_mobile_number" 
-                       value="{{candidate.candidate_alternate_mobile_number}}"
-                       pattern="[0-9]{10}" maxlength="10">
+                <input type="tel" class="form-control" name="candidate_alternate_mobile_number"
+                  value="{{candidate.candidate_alternate_mobile_number}}" pattern="[0-9]{10}" maxlength="10">
                 <div class="invalid-feedback">
                   Please enter a valid 10-digit mobile number
                 </div>
               </div>
 
               <div class="col-md-6 mb-3">
-              <label class="form-label">Preferred State</label>
-              <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                        id="stateDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                  {% if candidate.state %}
-                    {% if candidate.state|length > 2 %}
-                      {{ candidate.state|length }} states selected
+                <label class="form-label">Preferred State</label>
+                <div class="dropdown">
+                  <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button"
+                    id="stateDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if candidate.preferred_state %}
+                      {% if candidate.preferred_state|length > 2 %}
+                        {{ candidate.preferred_state|length }} states selected
+                      {% else %}
+                        {{ candidate.preferred_state }}
+                      {% endif %}
                     {% else %}
-                      {{ candidate.state|join:", " }}
+                      Select states...
                     {% endif %}
-                  {% else %}
-                    Select states...
-                  {% endif %}
-                </button>
-                <ul class="dropdown-menu w-100 p-2" aria-labelledby="stateDropdown">
-                  <li>
-                    <div class="px-2 mb-2">
-                      <input type="text" class="form-control search-input" 
-                             placeholder="Search states..." 
-                             id="stateSearch">
-                    </div>
-                  </li>
-                  <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
-                    {% for S in state %}
-                    <li class="dropdown-item">
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="preferred_state" 
-                               value="{{ S }}" id="loc-{{ forloop.counter }}"
-                               {% if S in candidate.preferred_state %}checked{% endif %}>
-                        <label class="form-check-label w-100" for="loc-{{ forloop.counter }}">
-                          {{ S }}
-                        </label>
+                  </button>
+                  <ul class="dropdown-menu w-100 p-2" aria-labelledby="stateDropdown">
+                    <li>
+                      <div class="px-2 mb-2">
+                        <input type="text" class="form-control search-input"
+                          placeholder="Search states..." id="stateSearch">
                       </div>
                     </li>
-                    {% endfor %}
+                    <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+                      {% for S in state %}
+                      <li class="dropdown-item text-black">
+                        <div class="form-check">
+                          <input class="form-check-input state-checkbox" type="checkbox" name="preferred_state"
+                            value="{{ S }}" id="state-loc-{{ forloop.counter }}"
+                            {% if S in candidate.preferred_state %}checked{% endif %}>
+                          <label class="form-check-label w-100" for="state-loc-{{ forloop.counter }}">
+                            {{ S }}
+                          </label>
+                        </div>
+                      </li>
+                      {% endfor %}
+                    </div>
+                  </ul>
+                </div>
+                <div class="invalid-feedback">
+                  Please select at least one state
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Preferred Location</label>
+                <div class="dropdown">
+                  <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button"
+                    id="locationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if candidate.preferred_location %}
+                      {% if candidate.preferred_location|length > 2 %}
+                        {{ candidate.preferred_location|length }} locations selected
+                      {% else %}
+                        {{ candidate.preferred_location }}
+                      {% endif %}
+                    {% else %}
+                      Select locations...
+                    {% endif %}
+                  </button>
+                  <ul class="dropdown-menu w-100 p-2" aria-labelledby="locationDropdown">
+                    <li>
+                      <div class="px-2 mb-2">
+                        <input type="text" class="form-control search-input"
+                          placeholder="Search locations..." id="locationSearch">
+                      </div>
+                    </li>
+                    <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+                      {% for district in districts %}
+                      <li class="dropdown-item text-black">
+                        <div class="form-check">
+                          <input class="form-check-input location-checkbox" type="checkbox" name="preferred_location"
+                            value="{{ district }}" id="loc-{{ forloop.counter }}"
+                            {% if district in candidate.preferred_location %}checked{% endif %}>
+                          <label class="form-check-label w-100" for="loc-{{ forloop.counter }}">
+                            {{ district }}
+                          </label>
+                        </div>
+                      </li>
+                      {% endfor %}
+                      <li class="dropdown-item text-black">
+                        <div class="form-check">
+                          <input class="form-check-input location-checkbox" type="checkbox" name="preferred_location"
+                            value="Other" id="loc-others"
+                            {% if "Other" in candidate.preferred_location %}checked{% endif %}>
+                          <label class="form-check-label w-100" for="loc-others">
+                            Other
+                          </label>
+                        </div>
+                      </li>
+                    </div>
+                  </ul>
+                </div>
+                <div class="invalid-feedback">
+                  Please select at least one location
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3" id="otherPreferredLocationField" style="display: none;">
+                <label class="form-label">Please specify other location(s)</label>
+                <input type="text" class="form-control" name="other_preferred_location"
+                  placeholder="Enter other preferred locations (comma separated)"
+                  value="{% if candidate.other_preferred_location %}{{ candidate.other_preferred_location }}{% endif %}">
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Candidate Origin Location</label>
+
+                <div class="custom-dropdown">
+                  <div class="dropdown-input-container">
+                    <input type="text" class="form-control dropdown-search-input"
+                      placeholder="Search locations..." id="originLocationSearch"
+                      value="{% if candidate.origin_location %}{{ candidate.origin_location }}{% endif %}">
+                    <button class="dropdown-toggle-btn" type="button">
+                      <i class="fas fa-chevron-down"></i>
+                    </button>
                   </div>
-                </ul>
+
+                  <div class="dropdown-options" id="originLocationOptions" style="display: none;">
+                    {% for district in districts %}
+                    <div class="dropdown-option text-black" data-value="{{ district }}">
+                      {{ district }}
+                    </div>
+                    {% endfor %}
+                    <div class="dropdown-option text-black" data-value="Other">
+                      Other
+                    </div>
+                  </div>
+
+                  <select name="origin_location" id="originLocation" style="display: none;">
+                    {% if candidate.origin_location %}
+                    <option value="{{ candidate.origin_location }}" selected>{{ candidate.origin_location }}</option>
+                    {% endif %}
+                  </select>
+                </div>
+
+                <div id="otherOriginLocationContainer" style="display: none;" class="mt-2">
+                  <label class="form-label">Specify Other Candidate Origin Location</label>
+                  <input type="text" class="form-control" name="other_origin_location"
+                    value="{{ candidate.other_origin_location }}" maxlength="100">
+                </div>
+                <div class="invalid-feedback">
+                  Maximum 100 characters allowed
+                </div>
               </div>
-              <div class="invalid-feedback">
-                Please select at least one location
-              </div>
-            </div>
-              
-              <div class="col-md-6 mb-3">
-  <label class="form-label">Preferred Location</label>
-  <div class="dropdown">
-    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-            id="locationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-      {% if candidate.preferred_location %}
-        {% if candidate.preferred_location|length > 2 %}
-          {{ candidate.preferred_location|length }} locations selected
-        {% else %}
-          {{ candidate.preferred_location|join:", " }}
-        {% endif %}
-      {% else %}
-        Select locations...
-      {% endif %}
-    </button>
-    <ul class="dropdown-menu w-100 p-2" aria-labelledby="locationDropdown">
-      <li>
-        <div class="px-2 mb-2">
-          <input type="text" class="form-control search-input" 
-                 placeholder="Search locations..." 
-                 id="locationSearch">
-        </div>
-      </li>
-      <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
-        {% for district in districts %}
-        <li class="dropdown-item">
-          <div class="form-check">
-            <input class="form-check-input location-checkbox" type="checkbox" name="preferred_location" 
-                   value="{{ district }}" id="loc-{{ forloop.counter }}"
-                   {% if district in candidate.preferred_location %}checked{% endif %}>
-            <label class="form-check-label w-100" for="loc-{{ forloop.counter }}">
-              {{ district }}
-            </label>
-          </div>
-        </li>
-        {% endfor %}
-        <li class="dropdown-item">
-          <div class="form-check">
-            <input class="form-check-input location-checkbox" type="checkbox" name="preferred_location" 
-                   value="Others" id="loc-others"
-                   {% if "Others" in candidate.preferred_location %}checked{% endif %}>
-            <label class="form-check-label w-100" for="loc-others">
-              Others
-            </label>
-          </div>
-        </li>
-      </div>
-    </ul>
-  </div>
-  <div class="invalid-feedback">
-    Please select at least one location
-  </div>
-</div>
 
-<!-- Hidden 'Other Preferred Location' Field -->
-<div class="col-md-6 mb-3" id="otherPreferredLocationField" style="display: none;">
-  <label class="form-label">Please specify other location(s)</label>
-  <input type="text" class="form-control" name="other_preferred_location" 
-         placeholder="Enter other preferred locations (comma separated)"
-         value="{% if candidate.other_preferred_location %}{{ candidate.other_preferred_location }}{% endif %}">
-</div>
-
-              
-              <div class="col-md-6 mb-3">
-  <label class="form-label">Candidate Origin Location</label>
-  
-  <!-- Custom searchable dropdown container -->
-  <div class="custom-dropdown">
-    <!-- Search input and dropdown toggle -->
-    <div class="dropdown-input-container">
-      <input type="text" class="form-control dropdown-search-input" 
-             placeholder="Search locations..." 
-             id="originLocationSearch"
-             {% if candidate.origin_location %}value="{{ candidate.origin_location }}"{% endif %}>
-      <button class="dropdown-toggle-btn" type="button">
-        <i class="fas fa-chevron-down"></i>
-      </button>
-    </div>
-    
-    <!-- Dropdown options -->
-    <div class="dropdown-options" id="originLocationOptions" style="display: none;">
-      {% for district in districts %}
-      <div class="dropdown-option" data-value="{{ district }}">
-        {{ district }}
-      </div>
-      {% endfor %}
-      <div class="dropdown-option" data-value="Other">
-        Other
-      </div>
-    </div>
-    
-    <!-- Hidden select element for form submission -->
-    <select name="origin_location" id="originLocation" style="display: none;">
-      {% if candidate.origin_location %}
-        <option value="{{ candidate.origin_location }}" selected>{{ candidate.origin_location }}</option>
-      {% endif %}
-    </select>
-  </div>
-  
-  <!-- Other location field -->
-  <div id="otherOriginLocation" style="display: none;" class="mt-2">
-    <label class="form-label">Specify Other Candidate Origin Location</label>
-    <input type="text" class="form-control" name="other_origin_location" 
-           value="{{ candidate.other_origin_location }}" maxlength="100">
-  </div>
-  <div class="invalid-feedback">
-    Maximum 100 characters allowed
-  </div>
-</div>
-
-<style>
-.custom-dropdown {
-  position: relative;
-  width: 100%;
-}
-
-.dropdown-input-container {
-  position: relative;
-  display: flex;
-}
-
-.dropdown-search-input {
-  padding-right: 35px;
-}
-
-.dropdown-toggle-btn {
-  position: absolute;
-  right: 0;
-  top: 0;
-  height: 100%;
-  background: transparent;
-  border: none;
-  padding: 0 10px;
-  color: #6c757d;
-}
-
-.dropdown-options {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  max-height: 250px;
-  overflow-y: auto;
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
-  background: white;
-  z-index: 1000;
-  margin-top: 2px;
-}
-
-.dropdown-option {
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
-.dropdown-option:hover {
-  background-color: #f8f9fa;
-}
-
-.dropdown-option.active {
-  background-color: #007bff;
-  color: white;
-}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const searchInput = document.getElementById('originLocationSearch');
-  const optionsContainer = document.getElementById('originLocationOptions');
-  const hiddenSelect = document.getElementById('originLocation');
-  const otherLocationField = document.getElementById('otherOriginLocation');
-  
-  // Toggle dropdown visibility
-  searchInput.addEventListener('focus', function() {
-    optionsContainer.style.display = 'block';
-    filterOptions();
-  });
-  
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('.custom-dropdown')) {
-      optionsContainer.style.display = 'none';
-    }
-  });
-  
-  // Filter options based on search input
-  searchInput.addEventListener('input', filterOptions);
-  
-  function filterOptions() {
-    const searchValue = searchInput.value.toLowerCase();
-    const options = optionsContainer.querySelectorAll('.dropdown-option');
-    
-    options.forEach(option => {
-      const text = option.textContent.toLowerCase();
-      if (text.includes(searchValue)) {
-        option.style.display = 'block';
-      } else {
-        option.style.display = 'none';
-      }
-    });
-  }
-  
-  // Handle option selection
-  optionsContainer.addEventListener('click', function(e) {
-    const option = e.target.closest('.dropdown-option');
-    if (option) {
-      const value = option.getAttribute('data-value');
-      const text = option.textContent;
-      
-      // Update search input and hidden select
-      searchInput.value = text;
-      hiddenSelect.innerHTML = `<option value="${value}" selected>${text}</option>`;
-      
-      // Toggle other location field
-      if (value === 'Other') {
-        otherLocationField.style.display = 'block';
-      } else {
-        otherLocationField.style.display = 'none';
-      }
-      
-      // Close dropdown
-      optionsContainer.style.display = 'none';
-    }
-  });
-  
-  // Initialize if value exists
-  if (hiddenSelect.value === 'Other') {
-    otherLocationField.style.display = 'block';
-  }
-  
-  // Handle keyboard navigation
-  searchInput.addEventListener('keydown', function(e) {
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter') {
-      e.preventDefault();
-      const options = Array.from(optionsContainer.querySelectorAll('.dropdown-option:not([style*="display: none"])'));
-      const activeOption = optionsContainer.querySelector('.dropdown-option.active');
-      let currentIndex = activeOption ? options.indexOf(activeOption) : -1;
-      
-      if (e.key === 'ArrowDown') {
-        currentIndex = (currentIndex + 1) % options.length;
-      } else if (e.key === 'ArrowUp') {
-        currentIndex = (currentIndex - 1 + options.length) % options.length;
-      } else if (e.key === 'Enter' && activeOption) {
-        activeOption.click();
-        return;
-      }
-      
-      // Update active option
-      optionsContainer.querySelectorAll('.dropdown-option').forEach(opt => {
-        opt.classList.remove('active');
-      });
-      if (currentIndex >= 0) {
-        options[currentIndex].classList.add('active');
-      }
-    }
-  });
-});
-</script>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Qualification</label>
                 <select class="form-select" name="qualification" id="qualificationSelect">
@@ -558,289 +398,167 @@ document.addEventListener('DOMContentLoaded', function() {
                 </select>
                 <div id="otherQualificationContainer" style="display: none;" class="mt-2">
                   <label class="form-label">Specify Other Qualification</label>
-                  <input type="text" class="form-control" name="other_qualification" 
-                         value="{{ candidate.other_qualification }}" maxlength="100">
+                  <input type="text" class="form-control" name="other_qualification"
+                    value="{{ candidate.other_qualification }}" maxlength="100">
                 </div>
               </div>
-              
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Diploma</label>
-                <input type="text" class="form-control" name="diploma" 
-                       value="{{candidate.diploma}}"
-                       maxlength="100">
+                <input type="text" class="form-control" name="diploma" value="{{candidate.diploma}}"
+                  maxlength="100">
                 <div class="invalid-feedback">
                   Maximum 100 characters allowed
                 </div>
               </div>
-              
-              <!-- Sector -->
-<div class="col-sm-6 col-md-6">
-  <div class="mb-3">
-    <label class="form-label">Sector</label>
-    <div class="dropdown">
-      <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-              id="sectorDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-        {% if candidate.sector %}
-          {% if candidate.sector|length > 2 %}
-            {{ candidate.sector|length }} sectors selected
-          {% else %}
-            {{ candidate.sector|join:", " }}
-          {% endif %}
-        {% else %}
-          Select sectors...
-        {% endif %}
-      </button>
-      <ul class="dropdown-menu w-100 p-2" aria-labelledby="sectorDropdown">
-        <li>
-          <div class="px-2 mb-2">
-            <input type="text" class="form-control sector-search-input" 
-                   placeholder="Search sectors..." 
-                   id="sectorSearch">
-          </div>
-        </li>
-        <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
-          {% for job_sector in job_sectors %}
-          <li class="dropdown-item">
-            <div class="form-check">
-              <input class="form-check-input sector-checkbox" type="checkbox" name="sector" 
-                     value="{{ job_sector }}" id="sector-{{ forloop.counter }}"
-                     {% if job_sector in candidate.sector %}checked{% endif %}>
-              <label class="form-check-label w-100" for="sector-{{ forloop.counter }}">
-                {{ job_sector }}
-              </label>
-            </div>
-          </li>
-          {% endfor %}
-          <li class="dropdown-item">
-            <div class="form-check">
-              <input class="form-check-input sector-checkbox" type="checkbox" name="sector" 
-                     value="Others" id="sector-others"
-                     {% if "Others" in candidate.sector %}checked{% endif %}>
-              <label class="form-check-label w-100" for="sector-others">
-                Others
-              </label>
-            </div>
-          </li>
-        </div>
-      </ul>
-    </div>
-    <div class="invalid-feedback">Please select at least one sector.</div>
-  </div>
-</div>
 
-<!-- Hidden 'Other Sector' Field -->
-<div class="col-sm-6 col-md-6 mb-3" id="otherSectorField" style="display: none;">
-  <label class="form-label">Please specify other sector(s)</label>
-  <input type="text" class="form-control" name="other_sector" 
-         placeholder="Enter other sectors (comma separated)"
-         value="{% if candidate.other_sector %}{{ candidate.other_sector }}{% endif %}">
-</div>
+              <div class="col-sm-6 col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Sector</label>
+                  <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button"
+                      id="sectorDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                      {% if candidate.sector %}
+                        {% if candidate.sector|length > 2 %}
+                          {{ candidate.sector|length }} sectors selected
+                        {% else %}
+                          {{ candidate.sector }}
+                        {% endif %}
+                      {% else %}
+                        Select sectors...
+                      {% endif %}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-2" aria-labelledby="sectorDropdown">
+                      <li>
+                        <div class="px-2 mb-2">
+                          <input type="text" class="form-control search-input"
+                            placeholder="Search sectors..." id="sectorSearch">
+                        </div>
+                      </li>
+                      <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+                        {% for job_sector in job_sectors %}
+                        <li class="dropdown-item text-black">
+                          <div class="form-check">
+                            <input class="form-check-input sector-checkbox text-black" type="checkbox" name="sector"
+                              value="{{ job_sector }}" id="sector-{{ forloop.counter }}"
+                              {% if job_sector in candidate.sector %}checked{% endif %}>
+                            <label class="form-check-label w-100" for="sector-{{ forloop.counter }}">
+                              {{ job_sector }}
+                            </label>
+                          </div>
+                        </li>
+                        {% endfor %}
+                        <li class="dropdown-item text-black">
+                          <div class="form-check">
+                            <input class="form-check-input sector-checkbox" type="checkbox" name="sector"
+                              value="Other" id="sector-others"
+                              {% if "Other" in candidate.sector %}checked{% endif %}>
+                            <label class="form-check-label w-100 " for="sector-others">
+                              Other
+                            </label>
+                          </div>
+                        </li>
+                      </div>
+                    </ul>
+                  </div>
+                  <div class="invalid-feedback">Please select at least one sector.</div>
+                </div>
+              </div>
 
-<script>
-// Search functionality for sectors
-document.getElementById('sectorSearch').addEventListener('input', function() {
-  const searchValue = this.value.toLowerCase();
-  const options = document.querySelectorAll('#sectorDropdown ~ .dropdown-menu .dropdown-options .dropdown-item');
-  
-  options.forEach(option => {
-    const text = option.textContent.toLowerCase();
-    if (text.includes(searchValue)) {
-      option.style.display = 'block';
-    } else {
-      option.style.display = 'none';
-    }
-  });
-});
+              <div class="col-sm-6 col-md-6 mb-3" id="otherSectorField" style="display: none;">
+                <label class="form-label">Please specify other sector(s)</label>
+                <input type="text" class="form-control" name="other_sector"
+                  placeholder="Enter other sectors (comma separated)"
+                  value="{% if candidate.other_sector %}{{ candidate.other_sector }}{% endif %}">
+              </div>
 
-// Toggle 'Other Sector' field and update button text
-document.addEventListener('DOMContentLoaded', function() {
-  const sectorCheckboxes = document.querySelectorAll('.sector-checkbox');
-  const otherSectorField = document.getElementById('otherSectorField');
-  
-  sectorCheckboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-      // Check if "Others" is selected
-      const othersChecked = document.getElementById('sector-others').checked;
-      otherSectorField.style.display = othersChecked ? 'block' : 'none';
-      
-      // Update dropdown button text
-      updateSectorButtonText();
-    });
-  });
-  
-  // Initialize button text
-  updateSectorButtonText();
-  
-  // Check if "Others" was previously selected
-  if (document.getElementById('sector-others').checked) {
-    otherSectorField.style.display = 'block';
-  }
-});
+              <div class="col-sm-6 col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Department</label>
+                  <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button"
+                      id="departmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                      {% if candidate.department %}
+                        {% if candidate.department|length > 2 %}
+                          {{ candidate.department|length }} departments selected
+                        {% else %}
+                          {{ candidate.department }}
+                        {% endif %}
+                      {% else %}
+                        Select departments...
+                      {% endif %}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-2" aria-labelledby="departmentDropdown">
+                      <li>
+                        <div class="px-2 mb-2">
+                          <input type="text" class="form-control search-input"
+                            placeholder="Search departments..." id="departmentSearch">
+                        </div>
+                      </li>
+                      <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
+                        {% for department in departments %}
+                        <li class="dropdown-item text-black">
+                          <div class="form-check">
+                            <input class="form-check-input department-checkbox text-black" type="checkbox" name="department"
+                              value="{{ department }}" id="dept-{{ forloop.counter }}"
+                              {% if department in candidate.department %}checked{% endif %}>
+                            <label class="form-check-label w-100" for="dept-{{ forloop.counter }}">
+                              {{ department }}
+                            </label>
+                          </div>
+                        </li>
+                        {% endfor %}
+                        <li class="dropdown-item text-black">
+                          <div class="form-check">
+                            <input class="form-check-input department-checkbox" type="checkbox" name="department"
+                              value="Other" id="dept-others"
+                              {% if "Other" in candidate.department %}checked{% endif %}>
+                            <label class="form-check-label w-100" for="dept-others">
+                              Other
+                            </label>
+                          </div>
+                        </li>
+                      </div>
+                    </ul>
+                  </div>
+                  <div class="invalid-feedback">Please select at least one department.</div>
+                </div>
+              </div>
 
-function updateSectorButtonText() {
-  const checkedBoxes = document.querySelectorAll('.sector-checkbox:checked');
-  const button = document.getElementById('sectorDropdown');
-  
-  if (checkedBoxes.length === 0) {
-    button.textContent = 'Select sectors...';
-  } else if (checkedBoxes.length > 2) {
-    button.textContent = checkedBoxes.length + ' sectors selected';
-  } else {
-    const selectedValues = Array.from(checkedBoxes).map(cb => cb.value);
-    button.textContent = selectedValues.join(', ');
-  }
-}
-</script>
-              
-              <!-- Department -->
-<div class="col-sm-6 col-md-6">
-  <div class="mb-3">
-    <label class="form-label">Department</label>
-    <div class="dropdown">
-      <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-              id="departmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-        {% if candidate.department %}
-          {% if candidate.department|length > 2 %}
-            {{ candidate.department|length }} departments selected
-          {% else %}
-            {{ candidate.department|join:", " }}
-          {% endif %}
-        {% else %}
-          Select departments...
-        {% endif %}
-      </button>
-      <ul class="dropdown-menu w-100 p-2" aria-labelledby="departmentDropdown">
-        <li>
-          <div class="px-2 mb-2">
-            <input type="text" class="form-control department-search-input" 
-                   placeholder="Search departments..." 
-                   id="departmentSearch">
-          </div>
-        </li>
-        <div class="dropdown-options" style="max-height: 250px; overflow-y: auto;">
-          {% for department in departments %}
-          <li class="dropdown-item">
-            <div class="form-check">
-              <input class="form-check-input department-checkbox" type="checkbox" name="department" 
-                     value="{{ department }}" id="dept-{{ forloop.counter }}"
-                     {% if department in candidate.department %}checked{% endif %}>
-              <label class="form-check-label w-100" for="dept-{{ forloop.counter }}">
-                {{ department }}
-              </label>
-            </div>
-          </li>
-          {% endfor %}
-          <li class="dropdown-item">
-            <div class="form-check">
-              <input class="form-check-input department-checkbox" type="checkbox" name="department" 
-                     value="Others" id="dept-others"
-                     {% if "Others" in candidate.department %}checked{% endif %}>
-              <label class="form-check-label w-100" for="dept-others">
-                Others
-              </label>
-            </div>
-          </li>
-        </div>
-      </ul>
-    </div>
-    <div class="invalid-feedback">Please select at least one department.</div>
-  </div>
-</div>
+              <div class="col-sm-6 col-md-6 mb-3" id="otherDepartmentField" style="display: none;">
+                <label class="form-label">Please specify other department(s)</label>
+                <input type="text" class="form-control" name="other_department"
+                  placeholder="Enter other departments (comma separated)"
+                  value="{% if candidate.other_department %}{{ candidate.other_department }}{% endif %}">
+              </div>
 
-<!-- Hidden 'Other Department' Field -->
-<div class="col-sm-6 col-md-6 mb-3" id="otherDepartmentField" style="display: none;">
-  <label class="form-label">Please specify other department(s)</label>
-  <input type="text" class="form-control" name="other_department" 
-         placeholder="Enter other departments (comma separated)"
-         value="{% if candidate.other_department %}{{ candidate.other_department }}{% endif %}">
-</div>
-
-<script>
-// Search functionality for departments
-document.getElementById('departmentSearch').addEventListener('input', function() {
-  const searchValue = this.value.toLowerCase();
-  const options = document.querySelectorAll('#departmentDropdown ~ .dropdown-menu .dropdown-options .dropdown-item');
-  
-  options.forEach(option => {
-    const text = option.textContent.toLowerCase();
-    if (text.includes(searchValue)) {
-      option.style.display = 'block';
-    } else {
-      option.style.display = 'none';
-    }
-  });
-});
-
-// Toggle 'Other Department' field and update button text
-document.addEventListener('DOMContentLoaded', function() {
-  const departmentCheckboxes = document.querySelectorAll('.department-checkbox');
-  const otherDepartmentField = document.getElementById('otherDepartmentField');
-  
-  departmentCheckboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-      // Check if "Others" is selected
-      const othersChecked = document.getElementById('dept-others').checked;
-      otherDepartmentField.style.display = othersChecked ? 'block' : 'none';
-      
-      // Update dropdown button text
-      updateDepartmentButtonText();
-    });
-  });
-  
-  // Initialize button text
-  updateDepartmentButtonText();
-  
-  // Check if "Others" was previously selected
-  if (document.getElementById('dept-others').checked) {
-    otherDepartmentField.style.display = 'block';
-  }
-});
-
-function updateDepartmentButtonText() {
-  const checkedBoxes = document.querySelectorAll('.department-checkbox:checked');
-  const button = document.getElementById('departmentDropdown');
-  
-  if (checkedBoxes.length === 0) {
-    button.textContent = 'Select departments...';
-  } else if (checkedBoxes.length > 2) {
-    button.textContent = checkedBoxes.length + ' departments selected';
-  } else {
-    const selectedValues = Array.from(checkedBoxes).map(cb => cb.value);
-    button.textContent = selectedValues.join(', ');
-  }
-}
-</script>
-              
               <div class="col-md-6 mb-3">
                 <label class="form-label">Experience (Years)</label>
-                <input type="number" class="form-control" name="experience_year" 
-                       value="{{candidate.experience_year}}"
-                       min="0" max="50">
+                <input type="number" class="form-control" name="experience_year"
+                  value="{{candidate.experience_year}}" min="0" max="50">
                 <div class="invalid-feedback">
                   Please enter valid years (0-50)
                 </div>
               </div>
-              
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Experience (Months)</label>
-                <input type="number" class="form-control" name="experience_month" 
-                       value="{{candidate.experience_month}}"
-                       min="0" max="11">
+                <input type="number" class="form-control" name="experience_month"
+                  value="{{candidate.experience_month}}" min="0" max="11">
                 <div class="invalid-feedback">
                   Please enter valid months (0-11)
                 </div>
               </div>
-              
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Current Company</label>
-                <input type="text" class="form-control" name="current_company" 
-                       value="{{candidate.current_company}}"
-                       maxlength="100">
+                <input type="text" class="form-control" name="current_company"
+                  value="{{candidate.current_company}}" maxlength="100">
                 <div class="invalid-feedback">
                   Maximum 100 characters allowed
                 </div>
               </div>
-              
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Working Status</label>
                 <select class="form-select" name="current_working_status" id="workingStatusSelect">
@@ -853,16 +571,16 @@ function updateDepartmentButtonText() {
                 </select>
                 <div id="otherWorkingStatusContainer" style="display: none;" class="mt-2">
                   <label class="form-label">Specify Other Working Status</label>
-                  <input type="text" class="form-control" name="other_working_status" 
-                         value="{{ candidate.other_working_status }}" maxlength="100">
+                  <input type="text" class="form-control" name="other_working_status"
+                    value="{{ candidate.other_working_status }}" maxlength="100">
                 </div>
               </div>
-              
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Current Salary (₹)</label>
                 <div class="input-group">
                   <input type="number" class="form-control" name="current_salary"
-                         value="{{ candidate.current_salary }}" min="0" step="1">
+                    value="{{ candidate.current_salary }}" min="0" step="0.01">
                   <select class="form-select" name="current_salary_type">
                     <option value="(CTC)" {% if candidate.current_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
                     <option value="(Per Month)" {% if candidate.current_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
@@ -874,12 +592,12 @@ function updateDepartmentButtonText() {
                   Please enter a valid salary
                 </div>
               </div>
-              
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Expected Salary (₹)</label>
                 <div class="input-group">
                   <input type="number" class="form-control" name="expected_salary"
-                         value="{{ candidate.expected_salary }}" min="0" step="1">
+                    value="{{ candidate.expected_salary }}" min="0" step="0.01">
                   <select class="form-select" name="expected_salary_type">
                     <option value="(CTC)" {% if candidate.expected_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
                     <option value="(Per Month)" {% if candidate.expected_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
@@ -892,13 +610,11 @@ function updateDepartmentButtonText() {
                 </div>
               </div>
             </div>
-            
-            <!-- Calling Remark Section -->
+
             <hr class="my-4">
             <h5 class="text-secondary mb-4 sticky-section-header">Calling Remark</h5>
-            
+
             <div class="row">
-              <!-- Call Connection Status -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Call Connection Status <span class="text-danger">*</span></label>
                 <select class="form-select" name="call_connection" id="callConnection" required>
@@ -912,90 +628,67 @@ function updateDepartmentButtonText() {
                 </select>
                 <div id="otherCallConnectionContainer" style="display: none;" class="mt-2">
                   <label class="form-label">Specify Other Call Connection Status</label>
-                  <input type="text" class="form-control" name="other_call_connection" 
-                         value="{{ candidate.other_call_connection }}" maxlength="100">
+                  <input type="text" class="form-control" name="other_call_connection"
+                    value="{{ candidate.other_call_connection }}" maxlength="100">
                 </div>
                 <div class="invalid-feedback">Please select call connection status</div>
               </div>
             </div>
 
-            <!-- Other fields (hidden initially) -->
             <div class="row" id="otherFields" style="display: none;">
-              <!-- Lead Generate Status -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Lead Status <span class="text-danger">*</span></label>
-                <select class="form-select" name="lead_generate" id="leadGenerateSelect" >
+                <select class="form-select" name="lead_generate" id="leadGenerateSelect">
                   <option value="" disabled selected>Select Status</option>
-    <option value="Hot" {% if candidate.lead_generate == "Hot" %}selected{% endif %}>
-      Hot <span class="text-muted">(Positive prospect but pending for Conversion for Interview scheduling)</span>
-    </option>
-    <option value="Cold" {% if candidate.lead_generate == "Cold" %}selected{% endif %}>
-      Cold <span class="text-muted">(Not so interested)</span>
-    </option>
-    <option value="Converted" {% if candidate.lead_generate == "Converted" %}selected{% endif %}>
-      Converted <span class="text-muted">(for Scheduling Interview)</span>
-    </option>
-    <option value="Not interested" {% if candidate.lead_generate == "Not interested" %}selected{% endif %}>
-      Not interested <span class="text-muted">(Looking for different Jobs/Salary Range - mention in Remarks)</span>
-    </option>
-    <option value="Connect later" {% if candidate.lead_generate == "Connect later" %}selected{% endif %}>
-      Connect later <span class="text-muted">(mention Follow-up date and time)</span>
-    </option>
-    <option value="DND" {% if candidate.lead_generate == "DND" %}selected{% endif %}>
-      DND <span class="text-muted">(Candidate does not want to receive calls/messages)</span>
-    </option>
-    <option value="Other" {% if candidate.lead_generate == "Other" %}selected{% endif %}>
-      Other <span class="text-muted">(mention in remarks)</span>
-    </option>
+                  <option value="Hot" {% if candidate.lead_generate == "Hot" %}selected{% endif %}>
+                    Hot <span class="text-muted">(Positive prospect but pending for Conversion for Interview scheduling)</span>
+                  </option>
+                  <option value="Cold" {% if candidate.lead_generate == "Cold" %}selected{% endif %}>
+                    Cold <span class="text-muted">(Not so interested)</span>
+                  </option>
+                  <option value="Converted" {% if candidate.lead_generate == "Converted" %}selected{% endif %}>
+                    Converted <span class="text-muted">(for Scheduling Interview)</span>
+                  </option>
+                  <option value="Not interested" {% if candidate.lead_generate == "Not interested" %}selected{% endif %}>
+                    Not interested <span class="text-muted">(Looking for different Jobs/Salary Range - mention in Remarks)</span>
+                  </option>
+                  <option value="Connect later" {% if candidate.lead_generate == "Connect later" %}selected{% endif %}>
+                    Connect later <span class="text-muted">(mention Follow-up date and time)</span>
+                  </option>
+                  <option value="DND" {% if candidate.lead_generate == "DND" %}selected{% endif %}>
+                    DND <span class="text-muted">(Candidate does not want to receive calls/messages)</span>
+                  </option>
+                  <option value="Other" {% if candidate.lead_generate == "Other" %}selected{% endif %}>
+                    Other <span class="text-muted">(mention in remarks)</span>
+                  </option>
                 </select>
                 <div id="otherLeadGenerateContainer" style="display: none;" class="mt-2">
                   <label class="form-label">Specify Other Lead Generate Status</label>
-                  <input type="text" class="form-control" name="other_lead_generate" 
-                         value="{{ candidate.other_lead_generate }}" maxlength="100">
+                  <input type="text" class="form-control" name="other_lead_generate"
+                    value="{{ candidate.other_lead_generate }}" maxlength="100">
                 </div>
                 <div class="invalid-feedback">Please select lead status</div>
               </div>
 
-              <!-- Interview Status -->
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Interview Status <span class="text-danger">*</span></label>
-                <select class="form-select" name="send_for_interview" id="interviewStatusSelect">
-                  <option value="" disabled selected>Select Status</option>
-                  <option value="Yes" {% if candidate.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
-                  <option value="No" {% if candidate.send_for_interview == "No" %}selected{% endif %}>No</option>
-                  <option value="Scheduled" {% if candidate.send_for_interview == "Scheduled" %}selected{% endif %}>Scheduled</option>
-                  <option value="Not Interested" {% if candidate.send_for_interview == "Not Interested" %}selected{% endif %}>Not Interested</option>
-                  <option value="Rescheduled" {% if candidate.send_for_interview == "Rescheduled" %}selected{% endif %}>Rescheduled</option>
-                  <option value="Completed" {% if candidate.send_for_interview == "Completed" %}selected{% endif %}>Completed</option>
-                  <option value="Other" {% if candidate.send_for_interview == "Other" %}selected{% endif %}>Other</option>
-                </select>
-                <div id="otherInterviewStatusContainer" style="display: none;" class="mt-2">
-                  <label class="form-label">Specify Other Interview Status</label>
-                  <input type="text" class="form-control" name="other_interview_status" 
-                         value="{{ candidate.other_interview_status }}" maxlength="100">
-                </div>
-                <div class="invalid-feedback">Please select interview status</div>
-              </div>
+             
 
-              <!-- Next Follow-Up Date -->
               <div class="col-md-6 mb-3">
                 <label class="form-label">Next Follow-Up Date </label>
-                <input type="datetime-local" class="form-control" name="next_follow_up_date_time" value="{{ candidate.next_follow_up_date_time|date:'Y-m-d H:i' }}" >
+                <input type="datetime-local" class="form-control" name="next_follow_up_date_time"
+                  value="{{ candidate.next_follow_up_date_time|date:'Y-m-d H:i' }}">
                 <div class="invalid-feedback">Please select a valid future date</div>
               </div>
-              
-              <!-- Calling Remark -->
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Calling Remark <span class="text-danger">*</span></label>
-                <textarea class="form-control" name="calling_remark" maxlength="500">{{ candidate.calling_remark }}</textarea>
+                <textarea class="form-control" name="remark" maxlength="500">{{ candidate.remark }}</textarea>
                 <div class="invalid-feedback">Please enter a remark (max 500 characters)</div>
               </div>
             </div>
-            
-            <!-- Selection Record Section -->
+
             <hr class="my-4">
             <h5 class="text-secondary mb-4 sticky-section-header">Selection Record</h5>
-            
+
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label class="form-label">Selection Status</label>
@@ -1010,42 +703,57 @@ function updateDepartmentButtonText() {
 
                 <div id="otherSelectionStatusContainer" class="mt-2" style="display: none;">
                   <label class="form-label">Specify Other Selection Status</label>
-                  <input type="text" class="form-control" name="other_selection_status" value="{{ candidate.other_selection_status }}" maxlength="100">
+                  <input type="text" class="form-control" name="other_selection_status"
+                    value="{{ candidate.other_selection_status }}" maxlength="100">
                 </div>
               </div>
             </div>
 
-            <!-- Fields shown when Selection = Selected -->
             <div class="row" id="selectionFields" style="display: none;">
-                <div class="col-md-6 mb-3">
-              <label class="form-label">Company Name</label>
-              <select class="form-select" name="company_name">
-                {% for c in companies %}
-                  <option value="{{ c.company_name }}"
-                    {% if candidate.company_name == c.company_name %}selected{% endif %}>
-                    {{ c.company_name }}
-                  </option>
-                {% endfor %}
-                <option value="Other" {% if candidate.company_name == "Other" %}selected{% endif %}>Other</option>
-              </select>
-            </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Company Name</label>
+                <select class="form-select" name="company_name">
+                  {% comment %}
+                  The `companies` context is not available in employee_candidate_profile.
+                  You might need to adjust your view or data fetching if you want to populate this dynamically.
+                  For now, leaving it as a simple text input or adding a default 'Other' option is safer.
+                  If you intend to fetch it, uncomment and ensure `companies` is passed from the view.
+                  {% endcomment %}
+                  {% if candidate.company_name %}
+                    <option value="{{ candidate.company_name }}" selected>{{ candidate.company_name }}</option>
+                  {% else %}
+                    <option value="">Select Company</option>
+                  {% endif %}
+                  {% comment %} {% for c in companies %}
+                    <option value="{{ c.company_name }}"
+                      {% if candidate.company_name == c.company_name %}selected{% endif %}>
+                      {{ c.company_name }}
+                    </option>
+                  {% endfor %} {% endcomment %}
+                  <option value="Other" {% if candidate.company_name == "Other" %}selected{% endif %}>Other</option>
+                </select>
+              </div>
 
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Job Profile</label>
-              <select class="form-select" name="job_title">
-                {% for v in vacancies %}
-                  <option value="{{ v.job_profile }}"
-                    {% if candidate.job_title == v.job_profile %}selected{% endif %}>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Job Profile</label>
+                <select class="form-select" name="job_title">
+                  {% if candidate.job_title %}
+                    <option value="{{ candidate.job_title }}" selected>{{ candidate.job_title }}</option>
+                  {% else %}
+                    <option value="">Select Job Profile</option>
+                  {% endif %}
+                  {% for v in vacancies %}
+                  <option value="{{ v.job_profile }}" {% if candidate.job_title == v.job_profile %}selected{% endif %}>
                     {{ v.job_profile }} - {{ v.company__company_name }}
                   </option>
-                {% endfor %}
-                <option value="Other" {% if candidate.job_title == "Other" %}selected{% endif %}>Other</option>
-              </select>
-            </div>
+                  {% endfor %}
+                  <option value="Other" {% if candidate.job_title == "Other" %}selected{% endif %}>Other</option>
+                </select>
+              </div>
 
               <div class="col-md-6 mb-3">
                 <label class="form-label">Offered Salary (₹)</label>
-                <input type="number" name="offered_salary" class="form-control" value="{{ candidate.offered_salary }}" min="0" step="1">
+                <input type="number" name="offered_salary" class="form-control" value="{{ candidate.offered_salary }}" min="0">
               </div>
 
               <div class="col-md-6 mb-3">
@@ -1063,7 +771,6 @@ function updateDepartmentButtonText() {
               </div>
             </div>
 
-            <!-- Fields shown when Joining Status = Joined -->
             <div class="row" id="joinedFields" style="display: none;">
               <div class="col-md-6 mb-3">
                 <label class="form-label">Joining Date</label>
@@ -1072,7 +779,7 @@ function updateDepartmentButtonText() {
 
               <div class="col-md-6 mb-3">
                 <label class="form-label">Our Commission (₹)</label>
-                <input type="number" name="emta_commission" class="form-control" value="{{ candidate.emta_commission }}" min="0" step="1">
+                <input type="number" name="emta_commission" class="form-control" value="{{ candidate.emta_commission }}" min="0">
               </div>
 
               <div class="col-md-6 mb-3">
@@ -1085,450 +792,1181 @@ function updateDepartmentButtonText() {
                 <input type="text" name="selection_remark" class="form-control" value="{{ candidate.selection_remark }}">
               </div>
             </div>
+
+            <hr class="my-4">
+            <h5 class="text-secondary mb-4 sticky-section-header">Interview Records</h5>
+            <div class="table-responsive">
+              <table class="table table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th>Date & Time</th>
+                    <th>Company</th>
+                    <th>Job Position</th>
+                    <th>Status</th>
+                    <th>Mode</th>
+                    <th>Feedback</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for interview in interviews %}
+                  <tr>
+                    <td>{{ interview.interview_date_time|date:"d M Y H:i" }}</td>
+                    <td>{{ interview.company_name }}</td>
+                    <td>{{ interview.job_position }}</td>
+                    <td>{{ interview.get_status_display }}</td>
+                    <td>{{ interview.get_interview_mode_display }}</td>
+                    <td>{{ interview.feedback|default:"N/A" }}</td>
+                    <td>
+                      <button type="button" class="btn btn-sm btn-info edit-interview-btn"
+                        data-bs-toggle="modal" data-bs-target="#editInterviewModal"
+                        data-interview-id="{{ interview.id }}"
+                        data-interview-date-time="{{ interview.interview_date_time|date:'Y-m-d\TH:i' }}"
+                        data-company-name="{{ interview.company_name }}"
+                        data-job-position="{{ interview.job_position }}"
+                        data-interviewer-name="{{ interview.interviewer_name }}"
+                        data-interviewer-email="{{ interview.interviewer_email }}"
+                        data-interviewer-phone="{{ interview.interviewer_phone }}"
+                        data-status="{{ interview.status }}"
+                        data-interview-mode="{{ interview.interview_mode }}"
+                        data-location="{{ interview.location }}"
+                        data-meeting-link="{{ interview.meeting_link }}"
+                        data-notes="{{ interview.notes }}"
+                        data-feedback="{{ interview.feedback }}"
+                        data-rating="{{ interview.rating }}"
+                        data-is-technical="{{ interview.is_technical }}"
+                        data-duration="{{ interview.duration }}"
+                        data-requirements="{{ interview.requirements }}"
+                        data-attachment="{% if interview.attachment %}{{ interview.attachment.url }}{% else %}{% endif %}">
+                        Edit
+                      </button>
+                      <button type="button" class="btn btn-sm btn-danger delete-interview-btn"
+                        data-bs-toggle="modal" data-bs-target="#deleteInterviewConfirmModal"
+                        data-interview-id="{{ interview.id }}">
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="7" class="text-center">No interviews recorded.</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal"
+              data-bs-target="#addInterviewModal">Add New Interview</button>
+
           </div>
         </form>
       </div>
       <div class="modal-footer sticky-bottom bg-white" style="z-index: 1050;">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="submit" name="submit_all" class="btn btn-primary">Save All Changes</button>
+        <button type="submit" name="submit_all" form="unifiedCandidateForm" class="btn btn-primary">Save All Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="addInterviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Interview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" name="add_interview_submit" value="true">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Interview Date & Time</label>
+              <input type="datetime-local" class="form-control" name="interview_date_time" >
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Company Name</label>
+              <input type="text" class="form-control" name="interview_company_name" >
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Job Position</label>
+              <input type="text" class="form-control" name="job_position" >
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Interviewer Name</label>
+              <input type="text" class="form-control" name="interviewer_name">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Interviewer Email</label>
+              <input type="email" class="form-control" name="interviewer_email">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Interviewer Phone</label>
+              <input type="tel" class="form-control" name="interviewer_phone" pattern="[0-9]{10}">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Status</label>
+              <select class="form-select" name="status" >
+                <option value="" disabled selected>Select Status</option>
+                {% for value, label in interview_statuses %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Interview Mode</label>
+              <select class="form-select" name="interview_mode" >
+                <option value="" disabled selected>Select Mode</option>
+                {% for value, label in interview_modes %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Location (if in-person)</label>
+              <input type="text" class="form-control" name="location">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Meeting Link (if virtual)</label>
+              <input type="url" class="form-control" name="meeting_link">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control" name="notes" rows="3"></textarea>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Feedback</label>
+              <textarea class="form-control" name="feedback" rows="3"></textarea>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Rating (1-5)</label>
+              <input type="number" class="form-control" name="rating" min="1" max="5">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Is Technical Interview?</label>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" name="is_technical">
+                <label class="form-check-label">Yes</label>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Duration (minutes)</label>
+              <input type="number" class="form-control" name="duration" min="1">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Requirements</label>
+              <textarea class="form-control" name="requirements" rows="3"></textarea>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Attachment</label>
+              <input type="file" class="form-control" name="interview_attachment" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Interview</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="editInterviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Interview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="edit_interview_submit" value="true">
+        <input type="hidden" name="interview_id" id="edit-interview-id">
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Interview Date & Time</label>
+              <input type="datetime-local" class="form-control" name="interview_date_time" id="edit-interview-date-time" >
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Company Name</label>
+              <input type="text" class="form-control" name="interview_company_name" id="edit-interview-company-name" >
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Job Position</label>
+              <input type="text" class="form-control" name="job_position" id="edit-job-position" >
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Interviewer Name</label>
+              <input type="text" class="form-control" name="interviewer_name" id="edit-interviewer-name">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Interviewer Email</label>
+              <input type="email" class="form-control" name="interviewer_email" id="edit-interviewer-email">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Interviewer Phone</label>
+              <input type="tel" class="form-control" name="interviewer_phone" id="edit-interviewer-phone" pattern="[0-9]{10}">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Status</label>
+              <select class="form-select" name="status" id="edit-interview-status" >
+                <option value="" disabled>Select Status</option>
+                {% for value, label in interview_statuses %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Interview Mode</label>
+              <select class="form-select" name="interview_mode" id="edit-interview-mode" >
+                <option value="" disabled>Select Mode</option>
+                {% for value, label in interview_modes %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Location (if in-person)</label>
+              <input type="text" class="form-control" name="location" id="edit-location">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Meeting Link (if virtual)</label>
+              <input type="url" class="form-control" name="meeting_link" id="edit-meeting-link">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control" name="notes" id="edit-notes" rows="3"></textarea>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Feedback</label>
+              <textarea class="form-control" name="feedback" id="edit-feedback" rows="3"></textarea>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Rating (1-5)</label>
+              <input type="number" class="form-control" name="rating" id="edit-rating" min="1" max="5">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Is Technical Interview?</label>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" name="is_technical" id="edit-is-technical">
+                <label class="form-check-label" for="edit-is-technical">Yes</label>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Duration (minutes)</label>
+              <input type="number" class="form-control" name="duration" id="edit-duration" min="1">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Requirements</label>
+              <textarea class="form-control" name="requirements" id="edit-requirements" rows="3"></textarea>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Attachment</label>
+              <input type="file" class="form-control" name="interview_attachment" id="edit-interview-attachment" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+              <div id="current-interview-attachment" class="mt-1"></div>
+              <div class="form-check mt-1" id="clear-interview-attachment-container" style="display:none;">
+                <input class="form-check-input" type="checkbox" name="clear_interview_attachment" id="clear-interview-attachment-checkbox">
+                <label class="form-check-label" for="clear-interview-attachment-checkbox">Clear current attachment</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="deleteInterviewConfirmModal" tabindex="-1" aria-labelledby="deleteInterviewConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteInterviewConfirmModalLabel">Confirm Deletion</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this interview record? This action cannot be undone.
+      </div>
+      <div class="modal-footer">
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="delete_interview_submit" value="true">
+          <input type="hidden" name="interview_id" id="delete-interview-id">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Form elements
+ document.addEventListener('DOMContentLoaded', function() {
+  // --- Sticky Section Header Logic ---
+  const modalBody = document.querySelector('.modal-body');
+  const modalHeaderElement = document.querySelector('.modal-header'); // Renamed to avoid conflict
+  const sections = document.querySelectorAll('.modal-body h5.text-secondary');
+
+  const stickyHeader = document.createElement('h5');
+  stickyHeader.className = 'sticky-section-header text-secondary';
+  stickyHeader.style.display = 'none';
+  // Ensure modalHeaderElement exists before attempting to insert after it
+  if (modalHeaderElement) {
+    modalHeaderElement.after(stickyHeader);
+  }
+
+
+  // The IntersectionObserver needs a root element to observe from.
+  // If modalBody can be null (e.g., if the modal isn't present on page load),
+  // then the observer shouldn't be created.
+  if (modalBody) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const visibleSection = Array.from(sections).find(section => {
+              const rect = section.getBoundingClientRect();
+              // Check if section is mostly visible within the modal body
+              return rect.top >= modalBody.getBoundingClientRect().top && rect.top <= (modalBody.getBoundingClientRect().bottom - rect.height);
+            });
+
+            if (visibleSection) {
+              stickyHeader.textContent = visibleSection.textContent;
+              stickyHeader.style.display = 'block';
+            } else {
+              stickyHeader.style.display = 'none';
+            }
+          }
+        });
+      }, {
+        root: modalBody,
+        threshold: 0.1, // Trigger when 10% of the section is visible
+        rootMargin: '-50px 0px -50% 0px' // Adjust to control sticky behavior
+      }
+    );
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+  }
+
+
+  // --- Candidate Profile Field Change Confirmation ---
+  // Store original values on modal load (or document load if modal is always present)
+  window.originalValues = {
+    name: document.getElementById('candidateName')?.value || '',
+    mobile: document.getElementById('candidateMobile')?.value || '',
+    email: document.getElementById('candidateEmail')?.value || ''
+  };
+
+  function confirmFieldChange(field, newValue) {
+    const originalValue = window.originalValues[field];
+    if (newValue !== originalValue) {
+      const fieldNames = {
+        name: 'Name',
+        mobile: 'Mobile Number',
+        email: 'Email Address'
+      };
+
+      const message = `You are about to change the candidate's ${fieldNames[field]} from "${originalValue}" to "${newValue}".\n\nAre you sure you want to proceed?`;
+
+      if (!confirm(message)) {
+        // Reset to original value if user cancels
+        const element = document.getElementById(`candidate${field.charAt(0).toUpperCase() + field.slice(1)}`);
+        if (element) { // Ensure element exists before setting value
+          element.value = originalValue;
+        }
+      }
+    }
+  }
+  window.confirmFieldChange = confirmFieldChange; // Make it globally accessible
+
+  // --- Form Elements and Conditional Display Logic ---
   const form = document.getElementById('unifiedCandidateForm');
-  const submitBtn = document.querySelector('button[type="submit"]');
-  
-  // Conditional fields
+  // Check if the form exists before proceeding with form-related logic
+  if (!form) {
+    console.warn("unifiedCandidateForm not found. Skipping form-related JS initialization.");
+    return; // Exit if the main form isn't present
+  }
+
+  const submitBtn = form.querySelector('button[name="submit_all"]'); // Target by name now
   const callConnection = document.getElementById('callConnection');
   const otherFieldsWrapper = document.getElementById('otherFields');
   const selectionStatus = document.getElementById('selectionStatus');
   const joiningStatus = document.getElementById('joiningStatus');
-  
-  // Other input containers
+
   const otherInputContainers = [
-    { select: 'leadSourceSelect', container: 'otherLeadSourceContainer' },
-    { select: 'qualificationSelect', container: 'otherQualificationContainer' },
-    { select: 'workingStatusSelect', container: 'otherWorkingStatusContainer' },
-    { select: 'callConnection', container: 'otherCallConnectionContainer' },
-    { select: 'originLocation', container: 'otherOriginLocation' },
-    { select: 'leadGenerateSelect', container: 'otherLeadGenerateContainer' },
-    { select: 'interviewStatusSelect', container: 'otherInterviewStatusContainer' },
-    { select: 'selectionStatus', container: 'otherSelectionStatusContainer' }
+    { selectId: 'leadSourceSelect', containerId: 'otherLeadSourceContainer' },
+    { selectId: 'qualificationSelect', containerId: 'otherQualificationContainer' },
+    { selectId: 'workingStatusSelect', containerId: 'otherWorkingStatusContainer' },
+    { selectId: 'callConnection', containerId: 'otherCallConnectionContainer' },
+    // { selectId: 'originLocation', containerId: 'otherOriginLocationContainer' }, // Handled by custom dropdown JS
+    { selectId: 'leadGenerateSelect', containerId: 'otherLeadGenerateContainer' },
+    { selectId: 'interviewStatusSelect', containerId: 'otherInterviewStatusContainer' },
+    { selectId: 'selectionStatus', containerId: 'otherSelectionStatusContainer' }
   ];
 
-  // Initialize dropdowns
-  initializeDropdowns(['sector', 'department', 'location']);
+  // Initialize all dropdowns (preferred state, preferred location, sector, department)
+  initializeMultiSelectDropdown('state');
+  initializeMultiSelectDropdown('location');
+  initializeMultiSelectDropdown('sector');
+  initializeMultiSelectDropdown('department');
 
-  // Initialize form state based on preselected values
+  // Initialize other input fields based on current selected values
+  otherInputContainers.forEach(item => {
+    const select = document.getElementById(item.selectId);
+    if (select) {
+      select.addEventListener('change', () => toggleOtherInput(select, item.containerId));
+      toggleOtherInput(select, item.containerId); // Initial state
+    }
+  });
+
+  // Initialize visibility of conditional sections
   if (callConnection) {
-    toggleOtherFields();
-    toggleOtherInput(callConnection, 'otherCallConnectionContainer');
+    callConnection.addEventListener('change', toggleOtherFields);
+    toggleOtherFields(); // Initial state for calling remark fields
   }
 
   if (selectionStatus) {
-    toggleSelectionFields();
-    toggleOtherInput(selectionStatus, 'otherSelectionStatusContainer');
+    selectionStatus.addEventListener('change', toggleSelectionFields);
+    toggleSelectionFields(); // Initial state for selection fields
   }
 
-  // Initialize other input fields
-  otherInputContainers.forEach(item => {
-    const select = document.getElementById(item.select);
-    if (select) {
-      select.addEventListener('change', function() {
-        toggleOtherInput(this, item.container);
-      });
-      // Initialize on load
-      toggleOtherInput(select, item.container);
-    }
-  });
-
-  // Toggle fields based on call connection status
-  callConnection.addEventListener('change', function() {
-    toggleOtherFields();
-    toggleOtherInput(this, 'otherCallConnectionContainer');
-  });
-
-  // Toggle selection fields
-  selectionStatus.addEventListener('change', function() {
-    toggleSelectionFields();
-    toggleOtherInput(this, 'otherSelectionStatusContainer');
-  });
-
-  // Toggle joined fields
   if (joiningStatus) {
     joiningStatus.addEventListener('change', toggleSelectionFields);
+    toggleSelectionFields(); // Initial state for joined fields
   }
 
-  // Form submission
-  submitBtn.addEventListener('click', function(event) {
-    event.preventDefault();
-    
-    if (!validateForm()) {
-      event.stopPropagation();
-      return;
-    }
-    
-    submitForm();
-  });
+
+  // --- Form Submission and Validation ---
+  if (submitBtn) { // Ensure submit button exists
+    submitBtn.addEventListener('click', function(event) {
+      event.preventDefault();
+      if (validateForm()) {
+        submitForm();
+      } else {
+        // Force showing validation messages if validation fails
+        form.classList.add('was-validated');
+        // Scroll to the first invalid field
+        const firstInvalid = form.querySelector('.is-invalid');
+        if (firstInvalid && modalBody) {
+          // Adjust scroll behavior to scroll the modal body itself
+          // Find the closest scrollable parent or directly scroll modalBody
+          const targetOffset = firstInvalid.getBoundingClientRect().top - modalBody.getBoundingClientRect().top;
+          modalBody.scrollTop += targetOffset - 50; // Adjust 50px for padding/header
+        }
+      }
+    });
+  }
 
   // Real-time validation
   form.querySelectorAll('input, select, textarea').forEach(input => {
+    // Store original required state for later use in toggleOtherFields
+    if (input.required) {
+      input.dataset.originalRequired = 'true';
+    } else {
+      input.dataset.originalRequired = 'false';
+    }
+
     input.addEventListener('input', validateInput);
     input.addEventListener('blur', validateInput);
   });
 
-  // Helper functions
-  function initializeDropdowns(types) {
-    types.forEach(type => {
-      const dropdown = document.getElementById(`${type}Dropdown`);
-      const checkboxes = document.querySelectorAll(`input[name="${type}"]`);
-      const searchInput = document.getElementById(`${type}Search`);
-      
-      if (checkboxes) {
-        checkboxes.forEach(checkbox => {
-          checkbox.addEventListener('change', () => updateDropdownButtonText(type));
-        });
+
+  function initializeMultiSelectDropdown(type) {
+    const dropdownButton = document.getElementById(`${type}Dropdown`);
+    // Ensure the checkboxes query is correct
+    const checkboxes = document.querySelectorAll(`input[name="${type}"]:not(#stateSearch):not(#locationSearch):not(#sectorSearch):not(#departmentSearch)`);
+    const searchInput = document.getElementById(`${type}Search`);
+
+    if (!dropdownButton || checkboxes.length === 0) return; // Exit if no elements found
+
+    // Update button text on load and whenever a checkbox changes
+    const updateButtonText = () => {
+      const checkedBoxes = document.querySelectorAll(`input[name="${type}"]:checked`);
+      const selectedItems = Array.from(checkedBoxes).map(cb => {
+        // Find the label associated with the checkbox
+        const label = cb.closest('.form-check')?.querySelector('.form-check-label');
+        return label ? label.textContent.trim() : cb.value; // Fallback to value if label not found
+      });
+
+      if (selectedItems.length === 0) {
+        dropdownButton.textContent = `Select ${type}s...`;
+      } else if (selectedItems.length > 2) {
+        dropdownButton.textContent = `${selectedItems.length} ${type}s selected`;
+      } else {
+        dropdownButton.textContent = selectedItems.join(', ');
       }
-      
-      if (searchInput) {
-        searchInput.addEventListener('input', function() {
-          const searchTerm = this.value.toLowerCase();
-          const options = document.querySelectorAll(`#${type}Dropdown + .dropdown-menu .dropdown-item`);
-          
-          options.forEach(option => {
-            const text = option.textContent.toLowerCase();
-            option.style.display = text.includes(searchTerm) ? 'block' : 'none';
-          });
-        });
+
+      // Specific logic for "Other" visibility in location, sector, department
+      if (type === 'location') {
+        const otherLocationCheckbox = document.getElementById('loc-others');
+        const otherLocationField = document.getElementById('otherPreferredLocationField');
+        if (otherLocationCheckbox && otherLocationField) {
+          otherLocationField.style.display = otherLocationCheckbox.checked ? 'block' : 'none';
+          otherLocationField.querySelector('input').required = otherLocationCheckbox.checked;
+          if (!otherLocationCheckbox.checked) {
+            otherLocationField.querySelector('input').value = '';
+            otherLocationField.querySelector('input').classList.remove('is-invalid');
+          }
+        }
+      } else if (type === 'sector') {
+        const otherSectorCheckbox = document.getElementById('sector-others');
+        const otherSectorField = document.getElementById('otherSectorField');
+        if (otherSectorCheckbox && otherSectorField) {
+          otherSectorField.style.display = otherSectorCheckbox.checked ? 'block' : 'none';
+          otherSectorField.querySelector('input').required = otherSectorCheckbox.checked;
+          if (!otherSectorCheckbox.checked) {
+            otherSectorField.querySelector('input').value = '';
+            otherSectorField.querySelector('input').classList.remove('is-invalid');
+          }
+        }
+      } else if (type === 'department') {
+        const otherDepartmentCheckbox = document.getElementById('dept-others');
+        const otherDepartmentField = document.getElementById('otherDepartmentField');
+        if (otherDepartmentCheckbox && otherDepartmentField) {
+          otherDepartmentField.style.display = otherDepartmentCheckbox.checked ? 'block' : 'none';
+          otherDepartmentField.querySelector('input').required = otherDepartmentCheckbox.checked;
+          if (!otherDepartmentCheckbox.checked) {
+            otherDepartmentField.querySelector('input').value = '';
+            otherDepartmentField.querySelector('input').classList.remove('is-invalid');
+          }
+        }
       }
-      
-      updateDropdownButtonText(type);
+    };
+
+    checkboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', updateButtonText);
     });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        // Adjust the selector to target the actual list items within the current dropdown
+        const options = this.closest('.dropdown-menu').querySelectorAll('.dropdown-options .dropdown-item');
+
+        options.forEach(option => {
+          const text = option.textContent.toLowerCase();
+          option.style.display = text.includes(searchTerm) ? 'block' : 'none';
+        });
+      });
+    }
+    updateButtonText(); // Initial call
   }
 
-  function updateDropdownButtonText(type) {
-    const button = document.getElementById(`${type}Dropdown`);
-    const checkboxes = document.querySelectorAll(`input[name="${type}"]:checked`);
-    const selectedItems = Array.from(checkboxes).map(cb => cb.nextElementSibling.textContent);
-    
-    if (selectedItems.length === 0) {
-      button.textContent = `Select ${type}s...`;
-    } else if (selectedItems.length > 2) {
-      button.textContent = `${selectedItems.length} ${type}s selected`;
-    } else {
-      button.textContent = selectedItems.join(', ');
-    }
-  }
 
   function toggleOtherFields() {
     const isConnected = callConnection.value === 'Connected';
-    otherFieldsWrapper.style.display = isConnected ? 'flex' : 'none';
-    otherFieldsWrapper.querySelectorAll('select, textarea, input').forEach(el => {
-      el.disabled = !isConnected;
-      if (!isConnected) {
-        el.required = false;
-      } else {
-        if (el.name === 'calling_remark' || el.name === 'lead_generate' || 
-            el.name === 'send_for_interview' || el.name === 'next_follow_up_date_time') {
+    if (otherFieldsWrapper) {
+      otherFieldsWrapper.style.display = isConnected ? 'flex' : 'none';
+      otherFieldsWrapper.querySelectorAll('select, textarea, input').forEach(el => {
+        el.disabled = !isConnected;
+        // Adjust required status based on visibility and original required state
+        if (isConnected) {
+          if (el.dataset.originalRequired === 'true') {
+            el.required = true;
+          }
+        } else {
           el.required = false;
+          el.value = ''; // Clear value when hidden
+          el.classList.remove('is-invalid'); // Clear validation on hidden fields
+          el.setCustomValidity(''); // Clear custom validity
         }
-      }
-    });
+      });
+      // Specifically handle validation state for the whole form when connection status changes
+      form.classList.remove('was-validated');
+    }
   }
 
   function toggleSelectionFields() {
     const isSelected = selectionStatus.value === 'Selected';
-    document.getElementById('selectionFields').style.display = isSelected ? 'flex' : 'none';
-    
-    if (isSelected && joiningStatus && joiningStatus.value === 'Joined') {
-      document.getElementById('joinedFields').style.display = 'flex';
-    } else {
-      document.getElementById('joinedFields').style.display = 'none';
+    const selectionFieldsDiv = document.getElementById('selectionFields');
+    const joinedFieldsDiv = document.getElementById('joinedFields');
+
+    if (selectionFieldsDiv) {
+      selectionFieldsDiv.style.display = isSelected ? 'flex' : 'none';
+
+      // Reset validation for selection fields if they become hidden
+      if (!isSelected) {
+        selectionFieldsDiv.querySelectorAll('input, select').forEach(el => {
+          el.required = false;
+          el.value = '';
+          el.classList.remove('is-invalid');
+          el.setCustomValidity('');
+        });
+      } else {
+        // Set required for certain selection fields if selected (based on your HTML structure)
+        const companyNameSelect = selectionFieldsDiv.querySelector('select[name="company_name"]');
+        const jobTitleSelect = selectionFieldsDiv.querySelector('select[name="job_title"]');
+        const offeredSalaryInput = selectionFieldsDiv.querySelector('input[name="offered_salary"]');
+        const selectionDateInput = selectionFieldsDiv.querySelector('input[name="selection_date"]');
+        const joiningStatusSelect = selectionFieldsDiv.querySelector('select[name="joining_status"]');
+
+        if (companyNameSelect) companyNameSelect.required = true;
+        if (jobTitleSelect) jobTitleSelect.required = true;
+        if (offeredSalaryInput) offeredSalaryInput.required = true;
+        if (selectionDateInput) selectionDateInput.required = true;
+        if (joiningStatusSelect) joiningStatusSelect.required = true;
+      }
     }
+
+
+    // Joined fields are dependent on both selection status AND joining status
+    if (joinedFieldsDiv) {
+      const isJoined = (joiningStatus && joiningStatus.value === 'Joined');
+      joinedFieldsDiv.style.display = (isSelected && isJoined) ? 'flex' : 'none';
+
+      // Reset validation for joined fields if they become hidden
+      if (!(isSelected && isJoined)) {
+        joinedFieldsDiv.querySelectorAll('input, select').forEach(el => {
+          el.required = false;
+          el.value = '';
+          el.classList.remove('is-invalid');
+          el.setCustomValidity('');
+        });
+      } else {
+        // Set required for joined fields if visible
+        const candidateJoiningDateInput = joinedFieldsDiv.querySelector('input[name="candidate_joining_date"]');
+        const emtaCommissionInput = joinedFieldsDiv.querySelector('input[name="emta_commission"]');
+        const payoutDateInput = joinedFieldsDiv.querySelector('input[name="payout_date"]');
+        const selectionRemarkInput = joinedFieldsDiv.querySelector('input[name="selection_remark"]');
+
+        if (candidateJoiningDateInput) candidateJoiningDateInput.required = true;
+        if (emtaCommissionInput) emtaCommissionInput.required = true;
+        if (payoutDateInput) payoutDateInput.required = true;
+        if (selectionRemarkInput) selectionRemarkInput.required = true;
+      }
+    }
+    form.classList.remove('was-validated'); // Clear validation state when sections change
   }
 
   function toggleOtherInput(selectElement, containerId) {
     const container = document.getElementById(containerId);
+    if (!container) return; // Ensure container exists
+
+    const otherInput = container.querySelector('input');
+    if (!otherInput) return; // Ensure input exists
+
     if (selectElement.value === 'Other') {
       container.style.display = 'block';
-      container.querySelector('input').required = true;
+      otherInput.required = true;
     } else {
       container.style.display = 'none';
-      container.querySelector('input').required = false;
+      otherInput.required = false;
+      otherInput.value = ''; // Clear value when hidden
+      otherInput.classList.remove('is-invalid'); // Clear validation
+      otherInput.setCustomValidity(''); // Clear custom validity
     }
   }
 
+
   function validateForm() {
     let isValid = true;
-    
-    // Reset custom validity
+
+    // Reset custom validity and invalid class for all inputs
     form.querySelectorAll('input, select, textarea').forEach(input => {
       input.setCustomValidity('');
       input.classList.remove('is-invalid');
     });
-    
-    // Basic validation
+
+    // HTML5 built-in validation (applies to visible, non-disabled, required fields)
+    // This will handle the basic required fields and pattern checks
     if (!form.checkValidity()) {
       isValid = false;
     }
-    
-    // Validate conditional fields
-    if (callConnection.value === 'Connected') {
-      otherFieldsWrapper.querySelectorAll('[required]').forEach(el => {
-        if (!el.value) {
-          el.classList.add('is-invalid');
-          isValid = false;
-        }
-      });
-    }
-    
-    if (selectionStatus.value === 'Selected') {
-      document.querySelectorAll('#selectionFields [required]').forEach(el => {
-        if (!el.value) {
-          el.classList.add('is-invalid');
-          isValid = false;
-        }
-      });
-    }
-    
-    // Validate "Other" fields
-    document.querySelectorAll('[id$="Container"]').forEach(container => {
-      if (container.style.display !== 'none' && !container.querySelector('input').value) {
-        container.querySelector('input').classList.add('is-invalid');
+
+    // Manual validation for conditional required fields based on their visibility
+    // Calling Remark section fields (only if callConnection is 'Connected')
+    if (callConnection && callConnection.value === 'Connected') {
+      const leadGenerateSelect = document.getElementById('leadGenerateSelect');
+      const interviewStatusSelect = document.getElementById('interviewStatusSelect');
+      const callingRemark = document.getElementById('calling_remark');
+
+      if (leadGenerateSelect && !leadGenerateSelect.value) {
+        leadGenerateSelect.classList.add('is-invalid');
+        leadGenerateSelect.setCustomValidity('Please select lead status');
         isValid = false;
       }
+      if (interviewStatusSelect && !interviewStatusSelect.value) {
+        interviewStatusSelect.classList.add('is-invalid');
+        interviewStatusSelect.setCustomValidity('Please select interview status');
+        isValid = false;
+      }
+      if (callingRemark && !callingRemark.value.trim()) {
+        callingRemark.classList.add('is-invalid');
+        callingRemark.setCustomValidity('Please enter a remark (max 500 characters)');
+        isValid = false;
+      }
+    }
+
+    // Selection Record section fields (only if selectionStatus is 'Selected')
+    if (selectionStatus && selectionStatus.value === 'Selected') {
+      const companyNameSelect = form.querySelector('select[name="company_name"]');
+      const jobTitleSelect = form.querySelector('select[name="job_title"]');
+      const offeredSalaryInput = form.querySelector('input[name="offered_salary"]');
+      const selectionDateInput = form.querySelector('input[name="selection_date"]');
+      const joiningStatusSelect = form.querySelector('select[name="joining_status"]');
+
+      if (companyNameSelect && !companyNameSelect.value) {
+        companyNameSelect.classList.add('is-invalid');
+        companyNameSelect.setCustomValidity('Please select a company name');
+        isValid = false;
+      }
+      if (jobTitleSelect && !jobTitleSelect.value) {
+        jobTitleSelect.classList.add('is-invalid');
+        jobTitleSelect.setCustomValidity('Please select a job profile');
+        isValid = false;
+      }
+      if (offeredSalaryInput && (!offeredSalaryInput.value || parseFloat(offeredSalaryInput.value) < 0)) {
+        offeredSalaryInput.classList.add('is-invalid');
+        offeredSalaryInput.setCustomValidity('Please enter a valid offered salary');
+        isValid = false;
+      }
+      if (selectionDateInput && !selectionDateInput.value) {
+        selectionDateInput.classList.add('is-invalid');
+        selectionDateInput.setCustomValidity('Please select a selection date');
+        isValid = false;
+      }
+      if (joiningStatusSelect && !joiningStatusSelect.value) {
+        joiningStatusSelect.classList.add('is-invalid');
+        joiningStatusSelect.setCustomValidity('Please select a joining status');
+        isValid = false;
+      }
+
+      // Fields for 'Joined' status
+      if (joiningStatusSelect && joiningStatusSelect.value === 'Joined') {
+        const candidateJoiningDateInput = form.querySelector('input[name="candidate_joining_date"]');
+        const emtaCommissionInput = form.querySelector('input[name="emta_commission"]');
+        const payoutDateInput = form.querySelector('input[name="payout_date"]');
+        const selectionRemarkInput = form.querySelector('input[name="selection_remark"]');
+
+
+        if (candidateJoiningDateInput && !candidateJoiningDateInput.value) {
+          candidateJoiningDateInput.classList.add('is-invalid');
+          candidateJoiningDateInput.setCustomValidity('Please select a joining date');
+          isValid = false;
+        }
+        if (emtaCommissionInput && (!emtaCommissionInput.value || parseFloat(emtaCommissionInput.value) < 0)) {
+          emtaCommissionInput.classList.add('is-invalid');
+          emtaCommissionInput.setCustomValidity('Please enter a valid commission');
+          isValid = false;
+        }
+        if (payoutDateInput && !payoutDateInput.value) {
+          payoutDateInput.classList.add('is-invalid');
+          payoutDateInput.setCustomValidity('Please select a payout date');
+          isValid = false;
+        }
+         if (selectionRemarkInput && !selectionRemarkInput.value.trim()) {
+            selectionRemarkInput.classList.add('is-invalid');
+            selectionRemarkInput.setCustomValidity('Please enter a selection remark');
+            isValid = false;
+        }
+      }
+    }
+
+    // Validate "Other" fields if visible and required
+    otherInputContainers.forEach(item => {
+      const selectElement = document.getElementById(item.selectId);
+      const container = document.getElementById(item.containerId);
+      if (selectElement && container && container.style.display !== 'none') {
+        const otherInput = container.querySelector('input');
+        if (otherInput && otherInput.required && !otherInput.value.trim()) {
+          otherInput.classList.add('is-invalid');
+          otherInput.setCustomValidity(`Please specify other ${selectElement.name.replace('_', ' ')}`);
+          isValid = false;
+        }
+      }
     });
-    
+
+    // Specific validation for origin location "Other"
+    const originLocationSelect = document.getElementById('originLocation');
+    const otherOriginLocationContainer = document.getElementById('otherOriginLocationContainer');
+    if (originLocationSelect && otherOriginLocationContainer && originLocationSelect.value === 'Other' && otherOriginLocationContainer.style.display !== 'none') {
+      const otherOriginInput = otherOriginLocationContainer.querySelector('input[name="other_origin_location"]');
+      if (otherOriginInput && !otherOriginInput.value.trim()) {
+        otherOriginInput.classList.add('is-invalid');
+        otherOriginInput.setCustomValidity('Please specify other origin location');
+        isValid = false;
+      }
+    }
+
     // Validate file sizes
     if (!validateFileSize('candidate_photo', 10) || !validateFileSize('candidate_resume', 10)) {
       isValid = false;
     }
-    
-    // Validate salary
-    const currentSalary = parseFloat(form.querySelector('input[name="current_salary"]').value) || 0;
-    const expectedSalary = parseFloat(form.querySelector('input[name="expected_salary"]').value) || 0;
-    
-    if (expectedSalary > 0 && expectedSalary < currentSalary) {
-      const expectedSalaryInput = form.querySelector('input[name="expected_salary"]');
-      expectedSalaryInput.setCustomValidity('Expected salary should be ≥ current salary');
-      expectedSalaryInput.classList.add('is-invalid');
-      isValid = false;
+
+    // Validate salary comparison
+    const currentSalaryInput = form.querySelector('input[name="current_salary"]');
+    const expectedSalaryInput = form.querySelector('input[name="expected_salary"]');
+
+    const currentSalary = parseFloat(currentSalaryInput ? currentSalaryInput.value : 0) || 0;
+    const expectedSalary = parseFloat(expectedSalaryInput ? expectedSalaryInput.value : 0) || 0;
+
+    if (expectedSalaryInput) {
+      if (expectedSalary > 0 && expectedSalary < currentSalary) {
+        expectedSalaryInput.setCustomValidity('Expected salary should be ≥ current salary');
+        expectedSalaryInput.classList.add('is-invalid');
+        isValid = false;
+      } else {
+        expectedSalaryInput.setCustomValidity(''); // Clear if valid
+      }
     }
-    
+
+
+    // Add was-validated class to show browser's validation messages
     form.classList.add('was-validated');
+
     return isValid;
   }
 
   function validateFileSize(fieldName, maxSizeMB) {
     const fileInput = form.querySelector(`input[name="${fieldName}"]`);
-    if (fileInput.files.length > 0) {
+    if (fileInput && fileInput.files.length > 0) {
       const fileSize = fileInput.files[0].size / 1024 / 1024; // in MB
       if (fileSize > maxSizeMB) {
         fileInput.setCustomValidity(`File size should not exceed ${maxSizeMB}MB`);
         fileInput.classList.add('is-invalid');
         return false;
+      } else {
+        fileInput.setCustomValidity(''); // Clear if valid
+        fileInput.classList.remove('is-invalid');
       }
     }
     return true;
   }
 
   function validateInput() {
+    // Clear previous custom validity first
+    this.setCustomValidity('');
+
     if (this.checkValidity()) {
       this.classList.remove('is-invalid');
     } else {
       this.classList.add('is-invalid');
     }
-    
+
     // Special handling for expected salary
     if (this.name === 'expected_salary') {
-      const currentSalary = parseFloat(form.querySelector('input[name="current_salary"]').value) || 0;
+      const currentSalaryInput = form.querySelector('input[name="current_salary"]');
+      const currentSalary = parseFloat(currentSalaryInput ? currentSalaryInput.value : 0) || 0;
       const expectedSalary = parseFloat(this.value) || 0;
-      
+
       if (expectedSalary > 0 && expectedSalary < currentSalary) {
         this.setCustomValidity('Expected salary should be ≥ current salary');
         this.classList.add('is-invalid');
       } else {
         this.setCustomValidity('');
+        // If it was invalid, remove the class now that it's valid
+        if (this.classList.contains('is-invalid')) {
+          this.classList.remove('is-invalid');
+        }
       }
     }
+    // Also re-validate the form on input change to ensure cross-field dependencies are checked
+    // However, calling validateForm() on every input can be heavy.
+    // A better approach might be to only call validateForm() on submit, or specific checks on blur.
+    // For now, we'll stick to individual input validation and full form validation on submit.
   }
+
 
   function submitForm() {
     const formData = new FormData(form);
     const originalBtnText = submitBtn.innerHTML;
-    
-    // Show loading state
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
-    
+
+    if (submitBtn) { // Ensure submitBtn exists before manipulating
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+    }
+
+
     fetch(form.action, {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        showAlert('success', data.message);
-        
-        // Redirect or close modal after delay
-        setTimeout(() => {
-          if (window.location.pathname.includes('add')) {
-            window.location.href = data.redirect_url || window.location.href;
-          } else {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('unified-candidate-modal'));
-            if (modal) modal.hide();
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest', // Important for Django to recognize AJAX
+          'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          // If response is not OK (e.g., 400, 500), try to parse JSON for errors
+          return response.json().then(err => Promise.reject(err));
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          showAlert('success', data.message);
+          // Reload the page to reflect changes, including interview table updates
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
+        } else {
+          showAlert('danger', data.message || 'Error saving data');
+          if (data.errors) {
+            Object.entries(data.errors).forEach(([field, errorMessages]) => {
+              const input = form.querySelector(`[name="${field}"]`);
+              if (input) {
+                // Assuming errorMessages is an array of strings
+                input.setCustomValidity(errorMessages.join(' '));
+                input.classList.add('is-invalid');
+              }
+            });
+            form.classList.add('was-validated');
           }
-        }, 1500);
-      } else {
-        showAlert('danger', data.message || 'Error saving data');
-        
-        // Show field errors if any
-        if (data.errors) {
-          Object.entries(data.errors).forEach(([field, error]) => {
+        }
+      })
+      .catch(error => {
+        console.error('Fetch error:', error);
+        showAlert('danger', error.message || 'Network error or server issue. Please try again.');
+        if (error.errors) { // Handle errors from server if they exist
+          Object.entries(error.errors).forEach(([field, messages]) => {
             const input = form.querySelector(`[name="${field}"]`);
             if (input) {
-              input.setCustomValidity(error);
+              input.setCustomValidity(messages.join(' ')); // Join multiple error messages
               input.classList.add('is-invalid');
             }
           });
           form.classList.add('was-validated');
         }
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      showAlert('danger', 'Error saving data. Please try again.');
-    })
-    .finally(() => {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalBtnText;
-    });
+      })
+      .finally(() => {
+        if (submitBtn) { // Ensure submitBtn exists
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
+        }
+      });
   }
-  
+
   function showAlert(type, message) {
-    // Remove any existing alerts
     const existingAlert = form.querySelector('.alert');
     if (existingAlert) {
       existingAlert.remove();
     }
-    
+
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`; // Added mt-3 for spacing
+    alertDiv.setAttribute('role', 'alert');
     alertDiv.innerHTML = `
       ${message}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
     form.prepend(alertDiv);
-    
-    // Auto-dismiss after 5 seconds
+
     setTimeout(() => {
-      alertDiv.classList.remove('show');
-      setTimeout(() => alertDiv.remove(), 150);
+      // Check if bootstrap is available before trying to use its Alert class
+      if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+        const bsAlert = bootstrap.Alert.getInstance(alertDiv);
+        if (bsAlert) { // Ensure an instance exists
+          bsAlert.close();
+        } else { // Fallback if no instance, just remove the element
+            alertDiv.remove();
+        }
+      } else {
+        alertDiv.remove(); // Direct removal if Bootstrap JS is not loaded
+      }
     }, 5000);
   }
-});
-</script>
 
-<style>
-.dropdown-item {
-  padding: 0.25rem 1rem;
-  cursor: pointer;
-}
-.dropdown-item:hover {
-  border: 1px solid #007bff;
-}
-.search-input {
-  border-radius: 0.25rem;
-}
-.dropdown-options {
-  max-height: 250px;
-  overflow-y: auto;
-}
-/* Scrollbar styling */
-.dropdown-options::-webkit-scrollbar {
-  width: 8px;
-}
-.dropdown-options::-webkit-scrollbar-track {
-  border-radius: 4px;
-  border: 1px solid #007bff;
-}
-.dropdown-options::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-.dropdown-options::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-.form-check-label {
-  cursor: pointer;
-  width: 100%;
-}
-</style>
+  // --- Custom Searchable Dropdown for Origin Location ---
+  const originLocationSearchInput = document.getElementById('originLocationSearch');
+  const originLocationOptionsContainer = document.getElementById('originLocationOptions');
+  const originLocationHiddenSelect = document.getElementById('originLocation');
+  const otherOriginLocationContainer = document.getElementById('otherOriginLocationContainer');
 
+  // Check if the custom dropdown elements exist before attaching listeners
+  if (originLocationSearchInput && originLocationOptionsContainer && originLocationHiddenSelect && otherOriginLocationContainer) {
+    const dropdownToggleButton = originLocationSearchInput.nextElementSibling; // The chevron icon button
 
-<script>
-// Search functionality
-document.getElementById('locationSearch').addEventListener('input', function() {
-  const searchValue = this.value.toLowerCase();
-  const options = document.querySelectorAll('.dropdown-options .dropdown-item');
-  
-  options.forEach(option => {
-    const text = option.textContent.toLowerCase();
-    if (text.includes(searchValue)) {
-      option.style.display = 'block';
-    } else {
-      option.style.display = 'none';
-    }
-  });
-});
-
-// Toggle 'Other Preferred Location' field
-document.addEventListener('DOMContentLoaded', function() {
-  const checkboxes = document.querySelectorAll('.location-checkbox');
-  const otherField = document.getElementById('otherPreferredLocationField');
-  
-  checkboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-      // Check if "Others" is selected
-      const othersChecked = document.getElementById('loc-others').checked;
-      otherField.style.display = othersChecked ? 'block' : 'none';
-      
-      // Update dropdown button text
-      updateButtonText();
+    // Toggle dropdown visibility
+    originLocationSearchInput.addEventListener('focus', function() {
+      originLocationOptionsContainer.style.display = 'block';
+      filterOriginLocationOptions();
     });
-  });
-  
-  // Initialize button text
-  updateButtonText();
-  
-  // Check if "Others" was previously selected
-  if (document.getElementById('loc-others').checked) {
-    otherField.style.display = 'block';
+
+    // Toggle on button click
+    dropdownToggleButton.addEventListener('click', function() {
+      if (originLocationOptionsContainer.style.display === 'block') {
+        originLocationOptionsContainer.style.display = 'none';
+      } else {
+        originLocationOptionsContainer.style.display = 'block';
+        filterOriginLocationOptions();
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      // Close if click outside the custom dropdown
+      if (!e.target.closest('.custom-dropdown')) {
+        originLocationOptionsContainer.style.display = 'none';
+      }
+    });
+
+    // Filter options based on search input
+    originLocationSearchInput.addEventListener('input', filterOriginLocationOptions);
+
+    function filterOriginLocationOptions() {
+      const searchValue = originLocationSearchInput.value.toLowerCase();
+      const options = originLocationOptionsContainer.querySelectorAll('.dropdown-option');
+
+      options.forEach(option => {
+        const text = option.textContent.toLowerCase();
+        if (text.includes(searchValue)) {
+          option.style.display = 'block';
+        } else {
+          option.style.display = 'none';
+        }
+      });
+    }
+
+    // Handle option selection for origin location
+    originLocationOptionsContainer.addEventListener('click', function(e) {
+      const option = e.target.closest('.dropdown-option');
+      if (option) {
+        const value = option.getAttribute('data-value');
+        const text = option.textContent.trim();
+
+        originLocationSearchInput.value = text;
+        // Update the hidden select element's value
+        // Remove existing options first to ensure only the selected one is present
+        originLocationHiddenSelect.innerHTML = '';
+        const newOption = document.createElement('option');
+        newOption.value = value;
+        newOption.textContent = text;
+        newOption.selected = true;
+        originLocationHiddenSelect.appendChild(newOption);
+
+
+        toggleOtherInput(originLocationHiddenSelect, 'otherOriginLocationContainer'); // Use the generic toggleOtherInput
+
+        originLocationOptionsContainer.style.display = 'none';
+      }
+    });
+
+    // Initialize "Other" origin location field on load
+    if (originLocationHiddenSelect.value === 'Other') {
+      otherOriginLocationContainer.style.display = 'block';
+      const otherOriginInput = otherOriginLocationContainer.querySelector('input[name="other_origin_location"]');
+      if (otherOriginInput) {
+        otherOriginInput.required = true;
+      }
+    } else {
+      otherOriginLocationContainer.style.display = 'none';
+      const otherOriginInput = otherOriginLocationContainer.querySelector('input[name="other_origin_location"]');
+      if (otherOriginInput) {
+        otherOriginInput.required = false;
+        otherOriginInput.value = ''; // Clear value if not 'Other'
+      }
+    }
+
+
+    // Handle keyboard navigation for origin location dropdown
+    originLocationSearchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter') {
+        e.preventDefault();
+        const options = Array.from(originLocationOptionsContainer.querySelectorAll('.dropdown-option:not([style*="display: none"])'));
+        const activeOption = originLocationOptionsContainer.querySelector('.dropdown-option.active');
+        let currentIndex = activeOption ? options.indexOf(activeOption) : -1;
+
+        // Remove active class from all
+        options.forEach(opt => opt.classList.remove('active'));
+
+        if (e.key === 'ArrowDown') {
+          currentIndex = (currentIndex + 1) % options.length;
+        } else if (e.key === 'ArrowUp') {
+          currentIndex = (currentIndex - 1 + options.length) % options.length;
+        } else if (e.key === 'Enter' && activeOption) {
+          activeOption.click();
+          originLocationSearchInput.blur(); // Remove focus after selection
+          return;
+        }
+
+        // Add active class to new current option
+        if (options[currentIndex]) {
+          options[currentIndex].classList.add('active');
+          // Scroll into view
+          options[currentIndex].scrollIntoView({
+            block: 'nearest',
+            inline: 'nearest'
+          });
+        }
+      }
+    });
+  } // End of custom dropdown elements check
+
+  // --- Interview Modals (Add, Edit, Delete) ---
+  // Populate Edit Interview Modal
+  const editInterviewModal = document.getElementById('editInterviewModal');
+  if (editInterviewModal) {
+    editInterviewModal.addEventListener('show.bs.modal', function(event) {
+      const button = event.relatedTarget; // Button that triggered the modal
+      const interviewId = button.getAttribute('data-interview-id');
+
+      // Get elements of the edit form
+      const form = editInterviewModal.querySelector('form');
+      // Set form action if needed, though often it's the same URL
+      // form.action = `your-interview-edit-url/${interviewId}/`; // Example if you have a specific URL
+
+      document.getElementById('edit-interview-id').value = interviewId;
+      document.getElementById('edit-interview-date-time').value = button.getAttribute('data-interview-date-time');
+      document.getElementById('edit-interview-company-name').value = button.getAttribute('data-company-name');
+      document.getElementById('edit-job-position').value = button.getAttribute('data-job-position');
+      document.getElementById('edit-interviewer-name').value = button.getAttribute('data-interviewer-name');
+      document.getElementById('edit-interviewer-email').value = button.getAttribute('data-interviewer-email');
+      document.getElementById('edit-interviewer-phone').value = button.getAttribute('data-interviewer-phone');
+      document.getElementById('edit-interview-status').value = button.getAttribute('data-status');
+      document.getElementById('edit-interview-mode').value = button.getAttribute('data-interview-mode');
+      document.getElementById('edit-location').value = button.getAttribute('data-location');
+      document.getElementById('edit-meeting-link').value = button.getAttribute('data-meeting-link');
+      document.getElementById('edit-notes').value = button.getAttribute('data-notes');
+      document.getElementById('edit-feedback').value = button.getAttribute('data-feedback');
+      document.getElementById('edit-rating').value = button.getAttribute('data-rating');
+
+      const isTechnicalCheckbox = document.getElementById('edit-is-technical');
+      if (isTechnicalCheckbox) {
+        isTechnicalCheckbox.checked = button.getAttribute('data-is-technical') === 'True';
+      }
+
+
+      document.getElementById('edit-duration').value = button.getAttribute('data-duration');
+      document.getElementById('edit-requirements').value = button.getAttribute('data-requirements');
+
+      // Handle attachment display and clear checkbox
+      const currentAttachmentLink = document.getElementById('current-interview-attachment');
+      const clearAttachmentContainer = document.getElementById('clear-interview-attachment-container');
+      const clearAttachmentCheckbox = document.getElementById('clear-interview-attachment-checkbox');
+      const attachmentUrl = button.getAttribute('data-attachment');
+
+      if (currentAttachmentLink) {
+          if (attachmentUrl) {
+            currentAttachmentLink.innerHTML = `<a href="${attachmentUrl}" target="_blank">Current Attachment</a>`;
+            if (clearAttachmentContainer) clearAttachmentContainer.style.display = 'block';
+          } else {
+            currentAttachmentLink.innerHTML = 'No attachment uploaded.';
+            if (clearAttachmentContainer) clearAttachmentContainer.style.display = 'none';
+          }
+      }
+      if (clearAttachmentCheckbox) {
+        clearAttachmentCheckbox.checked = false; // Reset checkbox state
+      }
+    });
   }
+
+  // Populate Delete Interview Confirmation Modal
+  const deleteInterviewConfirmModal = document.getElementById('deleteInterviewConfirmModal');
+  if (deleteInterviewConfirmModal) {
+    deleteInterviewConfirmModal.addEventListener('show.bs.modal', function(event) {
+      const button = event.relatedTarget;
+      const interviewId = button.getAttribute('data-interview-id');
+      document.getElementById('delete-interview-id').value = interviewId;
+    });
+  }
+
 });
-
-function updateButtonText() {
-  const checkedBoxes = document.querySelectorAll('.location-checkbox:checked');
-  const button = document.getElementById('locationDropdown');
-  
-  if (checkedBoxes.length === 0) {
-    button.textContent = 'Select locations...';
-  } else if (checkedBoxes.length > 2) {
-    button.textContent = checkedBoxes.length + ' locations selected';
-  } else {
-    const selectedValues = Array.from(checkedBoxes).map(cb => cb.value);
-    button.textContent = selectedValues.join(', ');
-  }
-}
 </script>
-
-<!-- br  -->
-

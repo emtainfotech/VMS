@@ -818,107 +818,110 @@ def employee_candidate_list(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required    
-def employee_candidate_registration(request) :
-    if request.user.is_authenticated:
-        logged_in_employee = Employee.objects.get(user=request.user)
-        if request.method == 'POST':
-            candidate_name = request.POST.get('candidate_name')
-            # unique_code = request.POST.get('unique_code')
-            candidate_mobile_number = request.POST.get('candidate_mobile_number')
-            candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
-            candidate_email_address = request.POST.get('candidate_email_address')
-            gender = request.POST.get('gender')
-            lead_source = request.POST.get('lead_source')
-            preferred_location = request.POST.getlist('preferred_location')
-            origin_location = request.POST.get('origin_location')
-            qualification = request.POST.get('qualification')
-            diploma = request.POST.get('diploma')
-            sector = request.POST.getlist('sector')
-            department = request.POST.getlist('department')
-            experience_year = request.POST.get('experience_year')
-            experience_month = request.POST.get('experience_month')
-            current_company = request.POST.get('current_company')
-            current_working_status = request.POST.get('current_working_status')
-            current_salary = request.POST.get('current_salary')
-            expected_salary = request.POST.get('expected_salary')
-            candidate_photo = request.FILES.get('candidate_photo')
-            candidate_resume = request.FILES.get('candidate_resume')
-            call_connection = request.POST.get('call_connection')
-            calling_remark = request.POST.get('calling_remark')
-            lead_generate = request.POST.get('lead_generate')
-            send_for_interview = request.POST.get('send_for_interview')
-            next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
-            remark = request.POST.get('remark')
-            submit_by = request.POST.get('submit_by')
-            preferred_location_str = ', '.join(preferred_location)
-            sector_str = ', '.join(sector)
-            department_str = ', '.join(department)
-            other_lead_source = request.POST.get('other_lead_source')
-            other_qualification = request.POST.get('other_qualification')
-            other_origin_location = request.POST.get('other_origin_location')
-            other_preferred_location = request.POST.get('other_preferred_location')
-            other_qualification = request.POST.get('other_qualification')
-            other_sector = request.POST.get('other_sector')
-            other_department = request.POST.get('other_department')
-            current_salary_type = request.POST.get('current_salary_type')
-            expected_salary_type = request.POST.get('expected_salary_type')
-
-            # Check for duplicates
-            duplicate_mobile = Candidate_registration.objects.filter(
+@login_required
+def employee_candidate_registration(request):
+    logged_in_employee = Employee.objects.get(user=request.user)
+    
+    if request.method == 'POST':
+        candidate_mobile_number = request.POST.get('candidate_mobile_number')
+        
+        # Check for duplicates by mobile number
+        try:
+            duplicate_candidate = Candidate_registration.objects.get(
                 candidate_mobile_number=candidate_mobile_number
-            ).exists()
-            
-            if duplicate_mobile:
-                errors = []
-                if duplicate_mobile:
-                    errors.append("Mobile number already registered")
-               
-                return JsonResponse({'status': 'error', 'errors': errors}, status=400)
-           
-            # Save to database
-            Candidate_registration.objects.create(
-                employee_name=logged_in_employee,
-                candidate_name=candidate_name,
-                # unique_code=unique_code,
-                candidate_mobile_number=candidate_mobile_number,
-                candidate_alternate_mobile_number=candidate_alternate_mobile_number,
-                candidate_email_address=candidate_email_address,
-                gender = gender,
-                lead_source=lead_source,
-                preferred_location=preferred_location_str,
-                origin_location=origin_location,
-                qualification=qualification,
-                diploma=diploma,
-                sector = sector_str,
-                department=department_str,
-                experience_year=experience_year,
-                experience_month=experience_month,
-                current_company=current_company,
-                current_working_status=current_working_status,
-                current_salary = current_salary,
-                expected_salary=expected_salary,
-                call_connection=call_connection,
-                calling_remark=calling_remark,
-                lead_generate=lead_generate,
-                send_for_interview=send_for_interview,
-                next_follow_up_date_time = next_follow_up_date_time,
-                candidate_photo=candidate_photo,
-                candidate_resume=candidate_resume,
-                remark=remark,
-                submit_by=submit_by,
-                other_lead_source = other_lead_source,
-                other_qualification = other_qualification,
-                other_origin_location = other_origin_location,
-                other_preferred_location = other_preferred_location,
-                other_sector = other_sector,
-                other_department = other_department,
-                current_salary_type = current_salary_type,
-                expected_salary_type = expected_salary_type
             )
+            # If a duplicate is found, return a JSON response with the candidate's details
+            return JsonResponse({
+                'status': 'duplicate',
+                'message': 'Mobile number already registered.',
+                'candidate_id': duplicate_candidate.id,
+                'candidate_name': duplicate_candidate.candidate_name,
+                'candidate_profile_url': reverse('employee_candidate_profile', args=[duplicate_candidate.id])
+            }, status=409)  # Use status code 409 for Conflict
+        except Candidate_registration.DoesNotExist:
+            pass # No duplicate found, continue with registration
+
+        # Process the form data
+        candidate_name = request.POST.get('candidate_name')
+        candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
+        candidate_email_address = request.POST.get('candidate_email_address')
+        gender = request.POST.get('gender')
+        lead_source = request.POST.get('lead_source')
+        preferred_location = request.POST.getlist('preferred_location')
+        origin_location = request.POST.get('origin_location')
+        qualification = request.POST.get('qualification')
+        diploma = request.POST.get('diploma')
+        sector = request.POST.getlist('sector')
+        department = request.POST.getlist('department')
+        experience_year = request.POST.get('experience_year')
+        experience_month = request.POST.get('experience_month')
+        current_company = request.POST.get('current_company')
+        current_working_status = request.POST.get('current_working_status')
+        current_salary = request.POST.get('current_salary')
+        expected_salary = request.POST.get('expected_salary')
+        candidate_photo = request.FILES.get('candidate_photo')
+        candidate_resume = request.FILES.get('candidate_resume')
+        call_connection = request.POST.get('call_connection')
+        calling_remark = request.POST.get('calling_remark')
+        lead_generate = request.POST.get('lead_generate')
+        send_for_interview = request.POST.get('send_for_interview')
+        next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
+        remark = request.POST.get('remark')
+        submit_by = request.POST.get('submit_by')
+        preferred_location_str = ', '.join(preferred_location)
+        sector_str = ', '.join(sector)
+        department_str = ', '.join(department)
+        other_lead_source = request.POST.get('other_lead_source')
+        other_qualification = request.POST.get('other_qualification')
+        other_origin_location = request.POST.get('other_origin_location')
+        other_preferred_location = request.POST.get('other_preferred_location')
+        other_sector = request.POST.get('other_sector')
+        other_department = request.POST.get('other_department')
+        current_salary_type = request.POST.get('current_salary_type')
+        expected_salary_type = request.POST.get('expected_salary_type')
         
-            return JsonResponse({'status': 'success', 'redirect_url': reverse('employee_candidate_list')})
+        # Save to database
+        Candidate_registration.objects.create(
+            employee_name=logged_in_employee,
+            candidate_name=candidate_name,
+            candidate_mobile_number=candidate_mobile_number,
+            candidate_alternate_mobile_number=candidate_alternate_mobile_number,
+            candidate_email_address=candidate_email_address,
+            gender=gender,
+            lead_source=lead_source,
+            preferred_location=preferred_location_str,
+            origin_location=origin_location,
+            qualification=qualification,
+            diploma=diploma,
+            sector=sector_str,
+            department=department_str,
+            experience_year=experience_year,
+            experience_month=experience_month,
+            current_company=current_company,
+            current_working_status=current_working_status,
+            current_salary=current_salary,
+            expected_salary=expected_salary,
+            call_connection=call_connection,
+            calling_remark=calling_remark,
+            lead_generate=lead_generate,
+            send_for_interview=send_for_interview,
+            next_follow_up_date_time=next_follow_up_date_time,
+            candidate_photo=candidate_photo,
+            candidate_resume=candidate_resume,
+            remark=remark,
+            submit_by=submit_by,
+            other_lead_source=other_lead_source,
+            other_qualification=other_qualification,
+            other_origin_location=other_origin_location,
+            other_preferred_location=other_preferred_location,
+            other_sector=other_sector,
+            other_department=other_department,
+            current_salary_type=current_salary_type,
+            expected_salary_type=expected_salary_type
+        )
         
+        return JsonResponse({'status': 'success', 'redirect_url': reverse('employee_candidate_list')})
+    else:
         # suggested_unique_code = get_next_unique_code()
 
         state = [
@@ -1044,9 +1047,7 @@ def employee_candidate_registration(request) :
             'state_distict' : state_distict
         }
         return render (request,'employee/candidate-registration.html',context)
-    else:
-        # If the user is not an admin, show a 404 page
-        return render(request, 'employee/404.html', status=404)    
+   
 
 # def get_next_unique_code():
 #     candidate = Candidate_registration.objects.filter(unique_code__regex=r'^EC\d{6}$').values_list('unique_code', flat=True)
@@ -1057,13 +1058,33 @@ def employee_candidate_registration(request) :
 #     else:
 #         next_number = 1 
 #     return f"EC{next_number:06d}"
+import datetime as dt
+# from django.shortcuts import render, get_object_or_404, redirect
+# from django.contrib.auth.decorators import login_required
+# from django.http import JsonResponse
+# from django.contrib import messages
+# from django.utils import timezone
+# # Assuming these models are defined in your models.py
+# from .models import Candidate_registration, Employee, VacancyDetails, CandidateActivity, Company_registration, Candidate_Interview
+
+import datetime as dt
+# from django.shortcuts import render, get_object_or_404, redirect
+# from django.contrib.auth.decorators import login_required
+# from django.http import JsonResponse
+# from django.contrib import messages
+# from django.utils import timezone
+# # Import FieldFile for handling file objects in JSON serialization
+from django.db.models.fields.files import FieldFile 
+
+# Assuming these models are defined in your models.py
 
 @login_required
 def employee_candidate_profile(request, id):
     if request.user.is_authenticated:
-        # logged_in_employee = Employee.objects.get(user=request.user)
-        candidate = get_object_or_404(Candidate_registration.objects.prefetch_related('activities__employee'), 
-                                    id=id)
+        logged_in_employee = Employee.objects.get(user=request.user)
+        # Prefetch interviews to avoid N+1 queries when rendering
+        candidate = get_object_or_404(Candidate_registration.objects.prefetch_related('activities__employee', 'interviews'), 
+                                       id=id)
         vacancies = VacancyDetails.objects.filter(
             vacancy_status='Active'
         ).select_related('company').values(
@@ -1071,148 +1092,339 @@ def employee_candidate_profile(request, id):
             'job_profile',
             'company__company_name'
         )
-
+        # Note: 'companies' is not passed from this view's context,
+        # so company dropdown in template will only show pre-selected value or "Other".
+        # If dynamic company list is needed for employees, it should be fetched here.
+        
         if request.method == 'POST':
-            # Store the original candidate data before any updates
-            original_candidate = Candidate_registration.objects.get(id=id)
-            changes = {}
+            # Handle general candidate profile updates
+            if 'submit_all' in request.POST:
+                original_candidate = Candidate_registration.objects.get(id=id)
+                changes = {}
 
-            # Track changes for all fields at once
-            fields_to_track = [
-                # Personal Information
-                'candidate_name', 'candidate_mobile_number', 'candidate_email_address',
-                'gender', 'lead_source',
-                # Candidate Details
-                'candidate_alternate_mobile_number', 'preferred_location', 'origin_location',
-                'qualification', 'diploma', 'sector', 'department', 'experience_year',
-                'experience_month', 'current_company', 'current_working_status',
-                'current_salary', 'expected_salary', 'submit_by',
-                # Calling Remark
-                'call_connection', 'calling_remark', 'lead_generate',
-                'send_for_interview', 'next_follow_up_date_time',
-                # Selection Record
-                'selection_status', 'company_name', 'offered_salary',
-                'selection_date', 'candidate_joining_date', 'emta_commission',
-                'payout_date',
-                'other_lead_source', 'other_qualification', 'other_working_status',
-                'other_call_connection', 'other_lead_generate',
-                'other_interview_status', 'other_selection_status',
-                'other_origin_location'
-            ]
+                fields_to_track = [
+                    # Personal Information
+                    'candidate_name', 'candidate_mobile_number', 'candidate_email_address',
+                    'gender', 'lead_source',
+                    # Candidate Details
+                    'candidate_alternate_mobile_number', 'preferred_location', 'origin_location',
+                    'qualification', 'diploma', 'sector', 'department', 'experience_year',
+                    'experience_month', 'current_company', 'current_working_status',
+                    'current_salary', 'expected_salary', 'submit_by',
+                    # Calling Remark
+                    'call_connection', 'calling_remark', 'lead_generate',
+                    'send_for_interview', 'next_follow_up_date_time',
+                    # Selection Record
+                    'selection_status', 'company_name', 'offered_salary',
+                    'selection_date', 'candidate_joining_date', 'emta_commission',
+                    'payout_date', 'selection_remark', # Added selection_remark here as it was in admin view
+                    'other_lead_source', 'other_qualification', 'other_working_status',
+                    'other_call_connection', 'other_lead_generate',
+                    'other_interview_status', 'other_selection_status',
+                    'other_origin_location', 'other_preferred_location',
+                    'other_qualification', 'other_sector', 'other_department'
+                ]
+                
+                # Check for changes in all fields (excluding files for now, handled separately)
+                for field_name in fields_to_track:
+                    new_value_from_post = request.POST.get(field_name)
+                    old_value_from_db = getattr(original_candidate, field_name)
+                    
+                    # Convert date/datetime objects to string for comparison and JSON serialization
+                    if isinstance(old_value_from_db, (dt.date, dt.datetime)):
+                        old_value_from_db = str(old_value_from_db)
+                    
+                    # For date/datetime fields from POST, ensure they are also strings or None
+                    if new_value_from_post and field_name in ['selection_date', 'candidate_joining_date', 'payout_date', 'next_follow_up_date_time']:
+                        new_value_from_post = str(new_value_from_post) if new_value_from_post else None
+                    
+                    # Compare string representations
+                    if str(old_value_from_db) != str(new_value_from_post):
+                        changes[field_name] = {'old': old_value_from_db, 'new': new_value_from_post}
+
+
+                # Handle file uploads for candidate_photo and candidate_resume
+                # Store file paths/names (strings) for JSON serialization
+                # For candidate_photo
+                if 'candidate_photo' in request.FILES:
+                    current_photo_name = original_candidate.candidate_photo.name if original_candidate.candidate_photo else None
+                    new_photo_name = request.FILES['candidate_photo'].name
+                    if current_photo_name != new_photo_name:
+                        changes['candidate_photo'] = {
+                            'old': current_photo_name,
+                            'new': new_photo_name
+                        }
+                    candidate.candidate_photo = request.FILES['candidate_photo'] # Update the model field
+                elif request.POST.get('candidate_photo-clear') == 'on': # Assuming a clear checkbox input
+                    if original_candidate.candidate_photo:
+                        changes['candidate_photo'] = {
+                            'old': original_candidate.candidate_photo.name,
+                            'new': None
+                        }
+                    candidate.candidate_photo = None # Clear the photo
+
+                # For candidate_resume
+                if 'candidate_resume' in request.FILES:
+                    current_resume_name = original_candidate.candidate_resume.name if original_candidate.candidate_resume else None
+                    new_resume_name = request.FILES['candidate_resume'].name
+                    if current_resume_name != new_resume_name:
+                        changes['candidate_resume'] = {
+                            'old': current_resume_name,
+                            'new': new_resume_name
+                        }
+                    candidate.candidate_resume = request.FILES['candidate_resume'] # Update the model field
+                elif request.POST.get('candidate_resume-clear') == 'on': # Assuming a clear checkbox input
+                    if original_candidate.candidate_resume:
+                        changes['candidate_resume'] = {
+                            'old': original_candidate.candidate_resume.name,
+                            'new': None
+                        }
+                    candidate.candidate_resume = None # Clear the resume
+
+
+                # Get list inputs and convert to string
+                preferred_location_list = request.POST.getlist('preferred_location')
+                sector_list = request.POST.getlist('sector')
+                department_list = request.POST.getlist('department')
+                preferred_state_list = request.POST.getlist('preferred_state')
+
+                # Update multi-select fields (join lists into comma-separated strings)
+                candidate.preferred_location = ', '.join(preferred_location_list)
+                candidate.sector = ', '.join(sector_list)
+                candidate.department = ', '.join(department_list)
+                candidate.preferred_state = ', '.join(preferred_state_list)
+
+                # Update other fields from POST
+                candidate.candidate_name = request.POST.get('candidate_name')
+                candidate.candidate_mobile_number = request.POST.get('candidate_mobile_number')
+                candidate.candidate_email_address = request.POST.get('candidate_email_address')
+                candidate.gender = request.POST.get('gender')
+                candidate.lead_source = request.POST.get('lead_source')
+                
+                candidate.candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
+                candidate.origin_location = request.POST.get('origin_location')
+                candidate.qualification = request.POST.get('qualification')
+                candidate.diploma = request.POST.get('diploma')
+                candidate.experience_year = request.POST.get('experience_year')
+                candidate.experience_month = request.POST.get('experience_month')
+                candidate.current_company = request.POST.get('current_company')
+                candidate.current_working_status = request.POST.get('current_working_status')
+                candidate.current_salary = request.POST.get('current_salary')
+                candidate.current_salary_type = request.POST.get('current_salary_type')
+                candidate.expected_salary = request.POST.get('expected_salary')
+                candidate.expected_salary_type = request.POST.get('expected_salary_type')
+                candidate.submit_by = request.POST.get('submit_by')
+
+                candidate.call_connection = request.POST.get('call_connection')
+                candidate.calling_remark = request.POST.get('calling_remark')
+                candidate.lead_generate = request.POST.get('lead_generate')
+                candidate.send_for_interview = request.POST.get('send_for_interview')
+                candidate.next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
+
+                candidate.selection_status = request.POST.get('selection_status')
+                candidate.company_name = request.POST.get('company_name')
+                candidate.job_title = request.POST.get('job_title')
+                candidate.offered_salary = request.POST.get('offered_salary')
+                candidate.selection_date = request.POST.get('selection_date') or None
+                candidate.candidate_joining_date = request.POST.get('candidate_joining_date') or None
+                candidate.emta_commission = request.POST.get('emta_commission')
+                candidate.payout_date = request.POST.get('payout_date') or None
+                candidate.joining_status = request.POST.get('joining_status')
+                candidate.selection_remark = request.POST.get('selection_remark')
+
+                # "Other" fields
+                candidate.other_lead_source = request.POST.get('other_lead_source')
+                candidate.other_qualification = request.POST.get('other_qualification')
+                candidate.other_working_status = request.POST.get('other_working_status')
+                candidate.other_call_connection = request.POST.get('other_call_connection')
+                candidate.other_lead_generate = request.POST.get('other_lead_generate')
+                candidate.other_interview_status = request.POST.get('other_interview_status')
+                candidate.other_selection_status = request.POST.get('other_selection_status')
+                candidate.other_origin_location = request.POST.get('other_origin_location')
+                candidate.other_preferred_location = request.POST.get('other_preferred_location')
+                candidate.other_qualification = request.POST.get('other_qualification')
+                candidate.other_sector = request.POST.get('other_sector')
+                candidate.other_department = request.POST.get('other_department')
+
+                candidate.updated_by = logged_in_employee
+                candidate.save() # Save changes to the candidate
+
+                # Create activity log if there were changes
+                if changes:
+                    CandidateActivity.objects.create(
+                        candidate=candidate,
+                        employee=logged_in_employee,
+                        action='updated',
+                        changes=changes,
+                        remark="Updated via unified form"
+                    )
+
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Candidate details updated successfully!'
+                    })
+                messages.success(request, 'Candidate details updated successfully!')
+                return redirect('employee_candidate_profile', id=id)
             
-            # Check for changes in all fields
-            for field in fields_to_track:
-                new_value = request.POST.get(field)
-                old_value = getattr(original_candidate, field)
-                if str(old_value) != str(new_value):
-                    changes[field] = {'old': old_value, 'new': new_value}
+            # Handle adding a new interview
+            elif 'add_interview_submit' in request.POST:
+                try:
+                    interview_date_time_str = request.POST.get('interview_date_time')
+                    if interview_date_time_str:
+                        interview_date_time = dt.datetime.strptime(interview_date_time_str, '%Y-%m-%dT%H:%M')
+                    else:
+                        interview_date_time = None
 
-            # Handle file uploads
-            if 'candidate_photo' in request.FILES:
-                changes['candidate_photo'] = {
-                    'old': original_candidate.candidate_photo.name if original_candidate.candidate_photo else None,
-                    'new': request.FILES['candidate_photo'].name
+                    interview = Candidate_Interview.objects.create(
+                        candidate=candidate,
+                        interview_date_time=interview_date_time,
+                        company_name=request.POST.get('interview_company_name'),
+                        job_position=request.POST.get('job_position'),
+                        interviewer_name=request.POST.get('interviewer_name'),
+                        interviewer_email=request.POST.get('interviewer_email'),
+                        interviewer_phone=request.POST.get('interviewer_phone'),
+                        status=request.POST.get('status'),
+                        interview_mode=request.POST.get('interview_mode'),
+                        location=request.POST.get('location'),
+                        meeting_link=request.POST.get('meeting_link'),
+                        notes=request.POST.get('notes'),
+                        feedback=request.POST.get('feedback'),
+                        rating=request.POST.get('rating') or None,
+                        is_technical=request.POST.get('is_technical') == 'on',
+                        duration=request.POST.get('duration') or None,
+                        requirements=request.POST.get('requirements'),
+                        created_by=request.user, 
+                        updated_by=request.user, 
+                    )
+                    if 'interview_attachment' in request.FILES:
+                        interview.attachment = request.FILES['interview_attachment']
+                        interview.save() # Save again to process the file upload
+
+                    messages.success(request, 'Interview added successfully!')
+                except Exception as e:
+                    messages.error(request, f'Error adding interview: {e}')
+                return redirect('employee_candidate_profile', id=id)
+
+            # Handle editing an existing interview
+            elif 'edit_interview_submit' in request.POST:
+                interview_id = request.POST.get('interview_id')
+                interview = get_object_or_404(Candidate_Interview, id=interview_id, candidate=candidate)
+
+                # Store original data for change tracking, handle FieldFile specifically
+                original_interview_data = {}
+                for field in interview._meta.fields:
+                    value = getattr(interview, field.name)
+                    if isinstance(value, FieldFile):
+                        original_interview_data[field.name] = value.name if value else None # Store file name/path
+                    elif isinstance(value, (dt.date, dt.datetime)):
+                        original_interview_data[field.name] = str(value)
+                    else:
+                        original_interview_data[field.name] = value
+
+                interview_changes = {}
+
+                # Update fields with new values from POST
+                interview_date_time_str = request.POST.get('interview_date_time')
+                if interview_date_time_str:
+                    interview.interview_date_time = dt.datetime.strptime(interview_date_time_str, '%Y-%m-%dT%H:%M')
+                else:
+                    interview.interview_date_time = None
+                
+                interview.company_name = request.POST.get('interview_company_name')
+                interview.job_position = request.POST.get('job_position')
+                interview.interviewer_name = request.POST.get('interviewer_name')
+                interview.interviewer_email = request.POST.get('interviewer_email')
+                interview.interviewer_phone = request.POST.get('interviewer_phone')
+                interview.status = request.POST.get('status')
+                interview.interview_mode = request.POST.get('interview_mode')
+                interview.location = request.POST.get('location')
+                interview.meeting_link = request.POST.get('meeting_link')
+                interview.notes = request.POST.get('notes')
+                interview.feedback = request.POST.get('feedback')
+                interview.rating = request.POST.get('rating') or None
+                interview.is_technical = request.POST.get('is_technical') == 'on'
+                interview.duration = request.POST.get('duration') or None
+                interview.requirements = request.POST.get('requirements')
+
+                # Handle attachment file upload or clear checkbox
+                if 'interview_attachment' in request.FILES:
+                    interview.attachment = request.FILES['interview_attachment']
+                elif request.POST.get('clear_interview_attachment') == 'on': # Explicitly check for 'on'
+                    interview.attachment = None
+                # If no new file is uploaded and clear is not checked, the existing file remains.
+
+                interview.updated_by = request.user
+                interview.save() # Save the object first to ensure file changes are processed
+
+                # After saving, get the updated values from the database (including file names/paths)
+                # This ensures we get the FieldFile object's correct `name` attribute after saving any file changes.
+                updated_interview = Candidate_Interview.objects.get(id=interview_id)
+                
+                # Now, build the changes dictionary comparing original serializable values
+                # with the newly updated serializable values from the database.
+                for field_name in original_interview_data.keys():
+                    old_value = original_interview_data[field_name]
+                    new_value_current_object = getattr(updated_interview, field_name) # Get from the freshly fetched object
+
+                    new_value_for_log = None
+                    if isinstance(new_value_current_object, FieldFile):
+                        new_value_for_log = new_value_current_object.name if new_value_current_object else None
+                    elif isinstance(new_value_current_object, (dt.date, dt.datetime)):
+                        new_value_for_log = str(new_value_current_object)
+                    else:
+                        new_value_for_log = new_value_current_object
+
+                    # Compare the serializable representations
+                    if old_value != new_value_for_log:
+                        interview_changes[field_name] = {
+                            'old': old_value,
+                            'new': new_value_for_log
+                        }
+                
+                if interview_changes:
+                    CandidateActivity.objects.create(
+                        candidate=candidate,
+                        employee=logged_in_employee,
+                        action=f'Interview updated (ID: {interview.id})',
+                        changes=interview_changes,
+                        remark=f"Interview details updated by {logged_in_employee.user.username}"
+                    )
+                messages.success(request, 'Interview updated successfully!')
+                return redirect('employee_candidate_profile', id=id)
+
+            # Handle deleting an interview
+            elif 'delete_interview_submit' in request.POST:
+                interview_id = request.POST.get('interview_id')
+                interview = get_object_or_404(Candidate_Interview, id=interview_id, candidate=candidate)
+                
+                # Capture details for logging before deletion
+                interview_details_for_log = {
+                    'company_name': interview.company_name,
+                    'job_position': interview.job_position,
+                    'interview_date_time': str(interview.interview_date_time) if interview.interview_date_time else None,
+                    'attachment_name': interview.attachment.name if interview.attachment else None # Log the attachment name
                 }
-            if 'candidate_resume' in request.FILES:
-                changes['candidate_resume'] = {
-                    'old': original_candidate.candidate_resume.name if original_candidate.candidate_resume else None,
-                    'new': request.FILES['candidate_resume'].name
-                }
-
-            # Get list inputs and convert to string
-            preferred_location = request.POST.getlist('preferred_location')
-            sector = request.POST.getlist('sector')
-            department = request.POST.getlist('department')
-            preferred_state = request.POST.getlist('preferred_state')
-            preferred_state_str = ', '.join(preferred_state)
-            candidate.preferred_state = preferred_state_str
-
-            preferred_location_str = ', '.join(preferred_location)
-            sector_str = ', '.join(sector)
-            department_str = ', '.join(department)
-            # Update all fields at once
-            candidate.candidate_name = request.POST.get('candidate_name')
-            candidate.candidate_mobile_number = request.POST.get('candidate_mobile_number')
-            candidate.candidate_email_address = request.POST.get('candidate_email_address')
-            candidate.gender = request.POST.get('gender')
-            candidate.lead_source = request.POST.get('lead_source')
-
-            if 'candidate_photo' in request.FILES:
-                candidate.candidate_photo = request.FILES['candidate_photo']
-            if 'candidate_resume' in request.FILES:
-                candidate.candidate_resume = request.FILES['candidate_resume']
-
-            # Candidate Details
-            candidate.candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
-            candidate.preferred_location = preferred_location_str
-            candidate.preferred_state = preferred_state_str
-            candidate.origin_location = request.POST.get('origin_location')
-            candidate.qualification = request.POST.get('qualification')
-            candidate.diploma = request.POST.get('diploma')
-            candidate.sector = sector_str
-            candidate.department = department_str
-            candidate.experience_year = request.POST.get('experience_year')
-            candidate.experience_month = request.POST.get('experience_month')
-            candidate.current_company = request.POST.get('current_company')
-            candidate.current_working_status = request.POST.get('current_working_status')
-            candidate.current_salary = request.POST.get('current_salary')
-            candidate.current_salary_type = request.POST.get('current_salary_type')
-            candidate.expected_salary = request.POST.get('expected_salary')
-            candidate.expected_salary_type = request.POST.get('expected_salary_type')
-            candidate.submit_by = request.POST.get('submit_by')
-
-            # Calling Remark
-            candidate.call_connection = request.POST.get('call_connection')
-            candidate.calling_remark = request.POST.get('calling_remark')
-            candidate.lead_generate = request.POST.get('lead_generate')
-            candidate.send_for_interview = request.POST.get('send_for_interview')
-            candidate.next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
-
-            # Selection Record
-            candidate.selection_status = request.POST.get('selection_status')
-            candidate.company_name = request.POST.get('company_name')
-            candidate.job_title = request.POST.get('job_title')
-            candidate.offered_salary = request.POST.get('offered_salary')
-            candidate.selection_date = request.POST.get('selection_date') or None
-            candidate.candidate_joining_date = request.POST.get('candidate_joining_date') or None
-            candidate.emta_commission = request.POST.get('emta_commission')
-            candidate.payout_date = request.POST.get('payout_date') or None
-            candidate.joining_status = request.POST.get('joining_status')
-
-            candidate.other_lead_source = request.POST.get('other_lead_source')
-            candidate.other_qualification = request.POST.get('other_qualification')
-            candidate.other_working_status = request.POST.get('other_working_status')
-            candidate.other_call_connection = request.POST.get('other_call_connection')
-            candidate.other_lead_generate = request.POST.get('other_lead_generate')
-            candidate.other_interview_status = request.POST.get('other_interview_status')
-            candidate.other_selection_status = request.POST.get('other_selection_status')
-            candidate.other_origin_location = request.POST.get('other_origin_location')
-            candidate.other_preferred_location = request.POST.get('other_preferred_location')
-            candidate.other_qualification = request.POST.get('other_qualification')
-            candidate.other_sector = request.POST.get('other_sector')
-            candidate.other_department = request.POST.get('other_department')
-
-            # candidate.updated_by = logged_in_employee
-            candidate.save()
-
-            # Create activity log if there were changes
-            if changes:
+                
+                interview.delete() # Perform the deletion
+                
+                # Log the deletion
                 CandidateActivity.objects.create(
                     candidate=candidate,
-                    # employee=logged_in_employee,
-                    action='updated',
-                    changes=changes,
-                    remark="Updated via unified form"
+                    employee=logged_in_employee,
+                    action=f'Interview deleted',
+                    changes={'deleted_interview': interview_details_for_log}, # Use the serializable dict
+                    remark=f"Interview deleted by {logged_in_employee.user.username}"
                 )
+                messages.success(request, 'Interview deleted successfully!')
+                return redirect('employee_candidate_profile', id=id)
 
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Candidate details updated successfully!'
-                })
-            messages.success(request, 'Candidate details updated successfully!')
+            # Redirect after any POST request that doesn't fall into the above
             return redirect('employee_candidate_profile', id=id)
-        
+            
+        # --- GET request context ---
+        # Define districts, states, job_sectors, and departments directly within the view
+        # or load from constants/settings if they are static and large.
         districts = [
             "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
             "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
@@ -1249,7 +1461,6 @@ def employee_candidate_profile(request, id):
             "Nicobar", "North and Middle Andaman", "South Andaman", "Chandigarh", "Dadra and Nagar Haveli", "Daman", "Diu", "Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi", "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi",
             "Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur",
             "Kargil", "Leh", "Lakshadweep", "Karaikal", "Mahe", "Puducherry", "Yanam"
-
         ]
         
         state = [
@@ -1378,7 +1589,7 @@ def employee_candidate_profile(request, id):
         ]
 
         context = {
-            # 'logged_in_employee': logged_in_employee,
+            'logged_in_employee': logged_in_employee,
             'candidate': candidate,
             'today': timezone.now().date(),
             'districts': districts,
@@ -1386,16 +1597,49 @@ def employee_candidate_profile(request, id):
             'departments': departments,
             'vacancies': vacancies,
             'state': state,
+            'interviews': candidate.interviews.all().order_by('-interview_date_time'), # Pass interviews to template
+            'interview_statuses': Candidate_Interview.INTERVIEW_STATUS, # Pass interview choices (from model)
+            'interview_modes': Candidate_Interview.INTERVIEW_MODE,     # Pass interview choices (from model)
         }
 
+        # Handle AJAX requests for partial form rendering
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return render(request, 'employee/partials/candidate_form.html', context)
             
+        # Standard full page render
         return render(request, 'employee/candidate-profile.html', context)
     else:
+        messages.error(request, "You are not authorized to view this page.") # Added message for clarity
         return render(request, 'employee/404.html', status=404)
-    
-    
+
+
+
+def check_mobile_duplicate(request):
+    mobile_number = request.GET.get('mobile_number')
+    if mobile_number:
+        is_duplicate = Candidate_registration.objects.filter(
+            candidate_mobile_number=mobile_number
+        ).exists()
+        
+        if is_duplicate:
+            try:
+                # Find the duplicate candidate to get their name and ID
+                duplicate_candidate = Candidate_registration.objects.get(candidate_mobile_number=mobile_number)
+                return JsonResponse({
+                    'status': 'duplicate',
+                    'message': 'This mobile number is already registered.',
+                    'candidate_name': duplicate_candidate.candidate_name,
+                    'candidate_id': duplicate_candidate.id,
+                    'candidate_profile_url': reverse('employee_candidate_detail', args=[duplicate_candidate.id])
+                })
+            except Candidate_registration.DoesNotExist:
+                # Fallback, should not happen with exists() check
+                return JsonResponse({'status': 'duplicate', 'message': 'This mobile number is already registered.'})
+        else:
+            return JsonResponse({'status': 'available'})
+
+    return JsonResponse({'status': 'error', 'message': 'Mobile number not provided.'}, status=400)
+
 @login_required
 def employee_company_registration(request):
     if request.user.is_authenticated:
