@@ -780,7 +780,6 @@
   </div>
 </div>
 
-<!-- Add Vacancy Modal -->
 <div class="modal fade" id="addVacancyModal" tabindex="-1" aria-labelledby="addVacancyModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -788,7 +787,7 @@
         <h5 class="modal-title" id="addVacancyModalLabel">Add New Vacancy</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form method="POST" id="vacancyForm">
+      <form method="POST" id="vacancyForm" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="add_vacancy" value="true">
         
@@ -802,8 +801,38 @@
             </div>
             <div class="col-md-6">
               <div class="mb-3">
+                <label class="form-label">Job Profile Type</label>
+                <select name="job_profile_type" class="form-select" required>
+                  <option value="">Select Job Profile Type</option>
+                  <option value="Voice Process">Voice Process</option>
+                  <option value="Non-Voice Process">Non-Voice Process</option>
+                  <option value="Blended Process">Blended Process</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Process Name</label>
+                <input type="text" class="form-control" name="process_name" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Job Position</label>
+                <input type="text" class="form-control" name="job_position" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
                 <label class="form-label">Vacancy Code</label>
                 <input type="text" class="form-control" name="company_vacancy_unique_code" maxLength="5" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Job Description Attachment</label>
+                <input type="file" class="form-control" name="job_description_attachment">
               </div>
             </div>
             <div class="col-md-4">
@@ -879,6 +908,7 @@
               }
             });
             </script>
+
             <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Sector</label>
@@ -937,6 +967,7 @@
                 </select>
               </div>
             </div>
+            
             <div class="col-md-3">
               <div class="mb-3">
                 <label class="form-label">Min Age</label>
@@ -961,10 +992,31 @@
                 <input type="number" name="maximum_experience" class="form-control" min="0" max="50" step="0.1">
               </div>
             </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Experience Type</label>
+                <select name="experience_type" class="form-select" required>
+                  <option value="">Select Experience Type</option>
+                  <option value="In-house">In-house</option>
+                  <option value="BPO">BPO</option>
+                  <option value="Domestic">Domestic</option>
+                  <option value="International">International</option>
+                  <option value="Blended">Blended</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            
             <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">Interview Rounds</label>
                 <input type="text" name="interview_rounds" class="form-control">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Times of Interview</label>
+                <input type="text" name="times_of_interview" class="form-control">
               </div>
             </div>
             <div class="col-md-4">
@@ -1010,6 +1062,32 @@
 
             <div class="col-md-4">
               <div class="mb-3">
+                <label class="form-label">Shift Timings</label>
+                <input type="text" name="shift_timing" class="form-control">
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Shift Timing</label>
+                <input type="text" name="shift_timing" class="form-control">
+              </div>
+            </div>
+            
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Number of Working Days</label>
+                <select name="no_of_workingdays" class="form-select" required>
+                  <option value="">Select Working Days</option>
+                  <option value="5 Days">5 Days</option>
+                  <option value="6 Days">6 Days</option>
+                  <option value="7 Days">7 Days</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="mb-3">
                 <label class="form-label">Cab Facility</label>
                 <select name="cab_facility" class="form-select" id="cabFacilitySelect" required>
                   <option value="" disabled selected>Select Cab Facility</option>
@@ -1044,7 +1122,8 @@
                 }
               });
             });
-</script>
+            </script>
+
             <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">No of Vacancies</label>
@@ -1057,20 +1136,19 @@
                 <input type="date" name="batch_date" class="form-control">
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Lingual Proficiency/ certifications</label>
-                <input type="text" name="lingual_proficiency" class="form-control">
+                <label class="form-label">Lingual Proficiency / Certifications</label>
+                <textarea name="lingual_proficiency_and_certifications" class="form-control" rows="2"></textarea>
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Specialization</label>
-                <input type="text" name="specialization" class="form-control">
+                <label class="form-label">Lingual Proficiency Specialization</label>
+                <textarea name="lingual_proficiency_specialization" class="form-control" rows="2"></textarea>
               </div>
             </div>
             
-
             <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">Qualification</label>
@@ -1085,12 +1163,14 @@
                 </select>
               </div>
             </div>
-            <div class="col-md-4">
+
+            <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Specialization</label>
-                <input type="text" name="specialization" class="form-control">
+                <label class="form-label">Education Specialization</label>
+                <textarea name="specialization" class="form-control" rows="2"></textarea>
               </div>
             </div>
+
             <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">Status of Incentive</label>
@@ -1100,7 +1180,7 @@
                 </select>
               </div>
             </div>
-                             
+                                        
             <div class="col-md-6" id="incentiveDetailsField" style="display: none;">
               <div class="mb-3">
                 <label class="form-label">Incentive Details</label>
@@ -1125,11 +1205,12 @@
               });
             });
             </script>
+            
             <div class="col-md-6 mb-3">
               <label class="form-label">Min Salary (₹)</label>
               <div class="input-group">
                 <input type="number" class="form-control" name="minimum_salary_range"
-                 min="0">
+                       min="0">
                 <select class="form-select" name="minimum_salary_type">
                   <option value="(CTC)">CTC</option>
                   <option value="(Per Month)">Per Month</option>
@@ -1156,12 +1237,7 @@
                 Please enter a valid salary
               </div>
             </div>
-            <!-- <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Max Salary</label>
-                <input type="number" name="maximum_salary_range" class="form-control" min="0" step="1">
-              </div>
-            </div> -->
+
             <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Special Hiring Instructions</label>
@@ -1189,172 +1265,164 @@
           </div>
         </div>
 
-        <!-- Payment Section -->
-<div class="card mt-4">
-  <div class="card-header bg-primary text-white">
-    <h5 class="mb-0">Payment Details</h5>
-  </div>
-  <div class="card-body">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="mb-3">
-          <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
-          <div class="d-flex flex-wrap gap-3">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="payment_mode" id="companyPayRadio" value="Company Pay" required>
-              <label class="form-check-label" for="companyPayRadio">Company Pay</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="payment_mode" id="salaryDeductionRadio" value="Salary Deduction">
-              <label class="form-check-label" for="salaryDeductionRadio">Salary Deduction</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="payment_mode" id="spdcPayRadio" value="SPDC/Candidate Pay">
-              <label class="form-check-label" for="spdcPayRadio">SPDC/Candidate Pay</label>
-            </div>
+        <div class="card mt-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Payment Details</h5>
           </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Company Pay Fields -->
-    <div id="companyPayFields" style="display: none;">
-      <div class="row">
-        <div class="col-md-12">
-          <div class="mb-3">
-            <label class="form-label">Payment Type <span class="text-danger">*</span></label>
-            <div class="d-flex flex-wrap gap-3">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="company_pay_type" id="flatTypeRadio" value="Flat">
-                <label class="form-check-label" for="flatTypeRadio">Flat</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="company_pay_type" id="percentageTypeRadio" value="Percentage of CTC">
-                <label class="form-check-label" for="percentageTypeRadio">% of CTC</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="company_pay_type" id="perDaysTypeRadio" value="Pay as per days">
-                <label class="form-check-label" for="perDaysTypeRadio">Pay as per days</label>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="mb-3">
+                  <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+                  <div class="d-flex flex-wrap gap-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="payment_mode" id="companyPayRadio" value="Company Pay" required>
+                      <label class="form-check-label" for="companyPayRadio">Company Pay</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="payment_mode" id="salaryDeductionRadio" value="Salary Deduction">
+                      <label class="form-check-label" for="salaryDeductionRadio">Salary Deduction</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="payment_mode" id="spdcPayRadio" value="SPDC/Candidate Pay">
+                      <label class="form-check-label" for="spdcPayRadio">SPDC/Candidate Pay</label>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+            
+            <div id="companyPayFields" style="display: none;">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="mb-3">
+                    <label class="form-label">Payment Type <span class="text-danger">*</span></label>
+                    <div class="d-flex flex-wrap gap-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="company_pay_type" id="flatTypeRadio" value="Flat">
+                        <label class="form-check-label" for="flatTypeRadio">Flat</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="company_pay_type" id="percentageTypeRadio" value="Percentage of CTC">
+                        <label class="form-check-label" for="percentageTypeRadio">% of CTC</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="company_pay_type" id="perDaysTypeRadio" value="Pay as per days">
+                        <label class="form-check-label" for="perDaysTypeRadio">Pay as per days</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row" id="flatAmountField" style="display: none;">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
+                    <input type="hidden" name="flat_amount" class="form-control" id="flatAmountJson">
+                    <div id="flatAmountRows">
+                      <div class="d-flex mb-2 flat-amount-row">
+                        <input type="text" class="form-control me-2 flat-amount-key" placeholder="No of Candidates">
+                        <input type="text" class="form-control me-2 flat-amount-value" placeholder="Pay">
+                        <button type="button" class="btn btn-success flat-amount-add">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <script>
+              (function () {
+                const container = document.getElementById("flatAmountField");
+                const rowsContainer = container.querySelector("#flatAmountRows");
+                const hiddenInput = container.querySelector("#flatAmountJson");
+
+                // Delegated event listener
+                rowsContainer.addEventListener("click", function (e) {
+                  if (e.target.classList.contains("flat-amount-add")) {
+                    const newRow = document.createElement("div");
+                    newRow.className = "d-flex mb-2 flat-amount-row";
+                    newRow.innerHTML = `
+                      <input type="text" class="form-control me-2 flat-amount-key" placeholder="No of Candidates">
+                      <input type="text" class="form-control me-2 flat-amount-value" placeholder="Pay">
+                      <button type="button" class="btn btn-danger flat-amount-remove">–</button>
+                    `;
+                    rowsContainer.appendChild(newRow);
+                  }
+
+                  if (e.target.classList.contains("flat-amount-remove")) {
+                    e.target.closest(".flat-amount-row")?.remove();
+                  }
+                });
+
+                // On form submit — convert fields to dictionary string
+                const form = container.closest("form");
+                if (form) {
+                  form.addEventListener("submit", function () {
+                    const keys = container.querySelectorAll(".flat-amount-key");
+                    const values = container.querySelectorAll(".flat-amount-value");
+
+                    const data = {};
+                    for (let i = 0; i < keys.length; i++) {
+                      const key = keys[i].value.trim();
+                      const value = values[i].value.trim();
+                      if (key && value) {
+                        data[key] = value;
+                      }
+                    }
+
+                    // Set JSON string in hidden input field
+                    hiddenInput.value = JSON.stringify(data);
+                  });
+                }
+              })();
+              </script>
+              
+              <div class="row" id="percentageCtcField" style="display: none;">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Percentage of CTC <span class="text-danger">*</span></label>
+                    <input type="number" name="percentage_of_ctc" class="form-control" min="0" max="100" step="0.01">
+                    <small class="text-muted">Enter percentage value (e.g., 10 for 10%)</small>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row" id="payPerDaysField" style="display: none;">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Number of Days <span class="text-danger">*</span></label>
+                    <input type="number" name="pay_per_days" class="form-control" min="1">
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row" id="salaryDeductionFields" style="display: none;">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
+                  <input type="date" name="salary_transfer_date" class="form-control">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Expected Payment Date <span class="text-danger">*</span></label>
+                  <input type="date" name="expected_payment_date" class="form-control">
+                </div>
+              </div>
+            </div>
+            
+            <div class="row" id="spdcFields" style="display: none;">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
+                  <input type="date" name="candidate_salary_transfer_date" class="form-control">
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <!-- Flat Amount Field -->
-<div class="row" id="flatAmountField" style="display: none;">
-  <div class="col-md-6">
-    <div class="mb-3">
-      <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
-      <input type="hidden" name="flat_amount" class="form-control" id="flatAmountJson">
-      <div id="flatAmountRows">
-        <div class="d-flex mb-2 flat-amount-row">
-          <input type="text" class="form-control me-2 flat-amount-key" placeholder="No of Candidates">
-          <input type="text" class="form-control me-2 flat-amount-value" placeholder="Pay">
-          <button type="button" class="btn btn-success flat-amount-add">+</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-(function () {
-  const container = document.getElementById("flatAmountField");
-  const rowsContainer = container.querySelector("#flatAmountRows");
-  const hiddenInput = container.querySelector("#flatAmountJson");
-
-  // Delegated event listener
-  rowsContainer.addEventListener("click", function (e) {
-    if (e.target.classList.contains("flat-amount-add")) {
-      const newRow = document.createElement("div");
-      newRow.className = "d-flex mb-2 flat-amount-row";
-      newRow.innerHTML = `
-        <input type="text" class="form-control me-2 flat-amount-key" placeholder="No of Candidates">
-        <input type="text" class="form-control me-2 flat-amount-value" placeholder="Pay">
-        <button type="button" class="btn btn-danger flat-amount-remove">–</button>
-      `;
-      rowsContainer.appendChild(newRow);
-    }
-
-    if (e.target.classList.contains("flat-amount-remove")) {
-      e.target.closest(".flat-amount-row")?.remove();
-    }
-  });
-
-  // On form submit — convert fields to dictionary string
-  const form = container.closest("form");
-  if (form) {
-    form.addEventListener("submit", function () {
-      const keys = container.querySelectorAll(".flat-amount-key");
-      const values = container.querySelectorAll(".flat-amount-value");
-
-      const data = {};
-      for (let i = 0; i < keys.length; i++) {
-        const key = keys[i].value.trim();
-        const value = values[i].value.trim();
-        if (key && value) {
-          data[key] = value;
-        }
-      }
-
-      // Set JSON string in hidden input field
-      hiddenInput.value = JSON.stringify(data);
-    });
-  }
-})();
-</script>
-
-      
-      <!-- Percentage of CTC Field -->
-      <div class="row" id="percentageCtcField" style="display: none;">
-        <div class="col-md-6">
-          <div class="mb-3">
-            <label class="form-label">Percentage of CTC <span class="text-danger">*</span></label>
-            <input type="number" name="percentage_of_ctc" class="form-control" min="0" max="100" step="0.01">
-            <small class="text-muted">Enter percentage value (e.g., 10 for 10%)</small>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Pay per Days Field -->
-      <div class="row" id="payPerDaysField" style="display: none;">
-        <div class="col-md-6">
-          <div class="mb-3">
-            <label class="form-label">Number of Days <span class="text-danger">*</span></label>
-            <input type="number" name="pay_per_days" class="form-control" min="1">
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Salary Deduction Fields -->
-    <div class="row" id="salaryDeductionFields" style="display: none;">
-      <div class="col-md-6">
-        <div class="mb-3">
-          <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
-          <input type="date" name="salary_transfer_date" class="form-control">
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="mb-3">
-          <label class="form-label">Expected Payment Date <span class="text-danger">*</span></label>
-          <input type="date" name="expected_payment_date" class="form-control">
-        </div>
-      </div>
-    </div>
-    
-    <!-- SPDC/Candidate Pay Fields -->
-    <div class="row" id="spdcFields" style="display: none;">
-      <div class="col-md-6">
-        <div class="mb-3">
-          <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
-          <input type="date" name="candidate_salary_transfer_date" class="form-control">
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -1686,13 +1754,14 @@
   </div>
 </div>
 
-<!-- Edit Vacancy Modal -->
 <div class="modal fade" id="editVacancyModal{{ vacancy.id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <form method="post" action="{% url 'admin_company_profile' company.id %}">
+      <form method="post" action="{% url 'admin_company_profile' company.id %}" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="vacancy_id" value="{{ vacancy.id }}">
+        <input type="hidden" name="edit_vacancy" value="true">
+
         <div class="modal-header">
           <h5 class="modal-title">Edit Vacancy</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1707,14 +1776,44 @@
               <label class="form-label">Vacancy Code</label>
               <input type="text" class="form-control" name="company_vacancy_unique_code" value="{{ vacancy.company_vacancy_unique_code }}" required>
             </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Process Name</label>
+              <input type="text" class="form-control" name="process_name" value="{{ vacancy.process_name }}">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Job Position</label>
+              <input type="text" class="form-control" name="job_position" value="{{ vacancy.job_position }}">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Job Profile Type</label>
+              <select name="job_profile_type" class="form-select" required>
+                <option value="">Select Job Profile Type</option>
+                <option value="Voice Process" {% if vacancy.job_profile_type == 'Voice Process' %}selected{% endif %}>Voice Process</option>
+                <option value="Non-Voice Process" {% if vacancy.job_profile_type == 'Non-Voice Process' %}selected{% endif %}>Non-Voice Process</option>
+                <option value="Blended Process" {% if vacancy.job_profile_type == 'Blended Process' %}selected{% endif %}>Blended Process</option>
+                <option value="Other" {% if vacancy.job_profile_type == 'Other' %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Job Description Attachment</label>
+              <input type="file" class="form-control" name="job_description_attachment">
+              {% if vacancy.job_description_attachment %}
+                <small class="form-text text-muted">Current file: <a href="{{ vacancy.job_description_attachment.url }}" target="_blank">{{ vacancy.job_description_attachment.name }}</a></small>
+              {% endif %}
+            </div>
           </div>
           
           <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Payroll</label>
-              <input type="text" class="form-control" name="payroll" value="{{ vacancy.payroll }}">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Opening Date</label>
+              <input type="date" class="form-control" name="vacancy_opening_date" value="{{ vacancy.vacancy_opening_date|date:'Y-m-d' }}">
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Closing Date</label>
+              <input type="date" class="form-control" name="vacancy_closing_date" value="{{ vacancy.vacancy_closing_date|date:'Y-m-d'|default:'' }}">
+            </div>
+            <div class="col-md-4 mb-3">
               <label class="form-label">Status</label>
               <select class="form-select" name="vacancy_status">
                 <option value="Active" {% if vacancy.vacancy_status == 'Active' %}selected{% endif %}>Active</option>
@@ -1726,16 +1825,52 @@
           
           <div class="row">
             <div class="col-md-6 mb-3">
-              <label class="form-label">Opening Date</label>
-              <input type="date" class="form-control" name="vacancy_opening_date" value="{{ vacancy.vacancy_opening_date|date:'Y-m-d' }}">
+              <label class="form-label">Job Opening Origin</label>
+              <select name="job_opening_origin" class="form-select" id="editJobOpeningOriginSelect{{ vacancy.id }}" required>
+                <option value="">Select Origin</option>
+                <option value="EVMS" {% if vacancy.job_opening_origin == 'EVMS' %}selected{% endif %}>EVMS</option>
+                <option value="Walk-In" {% if vacancy.job_opening_origin == 'Walk-In' %}selected{% endif %}>Walk-In</option>
+                <option value="Job Hai" {% if vacancy.job_opening_origin == 'Job Hai' %}selected{% endif %}>Job Hai</option>
+                <option value="Naukari" {% if vacancy.job_opening_origin == 'Naukari' %}selected{% endif %}>Naukari</option>
+                <option value="Apna" {% if vacancy.job_opening_origin == 'Apna' %}selected{% endif %}>Apna</option>
+                <option value="Expertia" {% if vacancy.job_opening_origin == 'Expertia' %}selected{% endif %}>Expertia</option>
+                <option value="Instagram" {% if vacancy.job_opening_origin == 'Instagram' %}selected{% endif %}>Instagram</option>
+                <option value="Website" {% if vacancy.job_opening_origin == 'Website' %}selected{% endif %}>Website</option>
+                <option value="Indeed" {% if vacancy.job_opening_origin == 'Indeed' %}selected{% endif %}>Indeed</option>
+                <option value="Facebook" {% if vacancy.job_opening_origin == 'Facebook' %}selected{% endif %}>Facebook</option>
+                <option value="Linkedin" {% if vacancy.job_opening_origin == 'Linkedin' %}selected{% endif %}>Linkedin</option>
+                <option value="Personal Reference" {% if vacancy.job_opening_origin == 'Personal Reference' %}selected{% endif %}>Personal Reference</option>
+                <option value="Employee Reference" {% if vacancy.job_opening_origin == 'Employee Reference' %}selected{% endif %}>Employee Reference</option>
+                <option value="Other" {% if vacancy.job_opening_origin == 'Other' %}selected{% endif %}>Other</option>
+              </select>
             </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Closing Date</label>
-              <input type="date" class="form-control" name="vacancy_closing_date" value="{{ vacancy.vacancy_closing_date|date:'Y-m-d'|default:'' }}">
+            <div class="col-md-6" id="editJobOpeningOriginOtherField{{ vacancy.id }}" style="display: {% if vacancy.job_opening_origin == 'Other' %}block{% else %}none{% endif %};">
+              <div class="mb-3">
+                <label class="form-label">Please Specify Job Opening Origin</label>
+                <input type="text" name="job_opening_origin_other" class="form-control" value="{{ vacancy.job_opening_origin_other }}" placeholder="Enter details">
+              </div>
             </div>
-          </div>
-          
-          <div class="row">
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                const originSelect = document.getElementById('editJobOpeningOriginSelect{{ vacancy.id }}');
+                const otherField = document.getElementById('editJobOpeningOriginOtherField{{ vacancy.id }}');
+                const otherInput = otherField.querySelector('input');
+                originSelect.addEventListener('change', function() {
+                  if (this.value === 'Other') {
+                    otherField.style.display = 'block';
+                    otherInput.setAttribute('required', 'required');
+                  } else {
+                    otherField.style.display = 'none';
+                    otherInput.removeAttribute('required');
+                    otherInput.value = '';
+                  }
+                });
+                if (originSelect.value === 'Other') {
+                  otherField.style.display = 'block';
+                  otherInput.setAttribute('required', 'required');
+                }
+              });
+            </script>
             <div class="col-md-6 mb-3">
               <label class="form-label">Sector Type</label>
               <select class="form-select" name="sector_type">
@@ -1752,393 +1887,478 @@
                 {% endfor %}
               </select>
             </div>
-          
-            <div class="col-md-4">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Payroll</label>
+              <select name="payroll" class="form-select" id="editPayrollSelect{{ vacancy.id }}" required>
+                <option value="">Select Option</option>
+                <option value="Self" {% if vacancy.payroll == 'Self' %}selected{% endif %}>Self</option>
+                <option value="Third Party" {% if vacancy.payroll == 'Third Party' %}selected{% endif %}>Third Party</option>
+              </select>
+            </div>
+            <div class="col-md-6" id="editThirdPartyInput{{ vacancy.id }}" style="display: {% if vacancy.payroll == 'Third Party' %}block{% else %}none{% endif %};">
               <div class="mb-3">
-                <label class="form-label">Interview Rounds</label>
-                <input type="text" name="interview_rounds" value="{{ vacancy.interview_rounds }}" class="form-control">
+                <label class="form-label">Third-Party Name</label>
+                <input type="text" name="third_party_name" class="form-control" value="{{ vacancy.third_party_name }}">
               </div>
             </div>
-            <div class="col-md-4">
-  <div class="mb-3">
-    <label class="form-label">Working Shift & Off's</label>
-    <select name="working_shift" class="form-select" required id="workingShiftSelect">
-      <option value="" disabled selected>Select Shift</option>
-      <option value="Day" {% if vacancy.working_shift == 'Day' %}selected{% endif %}>Day</option>
-      <option value="Night" {% if vacancy.working_shift == 'Night' %}selected{% endif %}>Night</option>
-      <option value="Flexible" {% if vacancy.working_shift == 'Flexible' %}selected{% endif %}>Flexible</option>
-      <option value="Rotational" {% if vacancy.working_shift == 'Rotational' %}selected{% endif %}>Rotational</option>
-      <option value="Other" {% if vacancy.working_shift == 'Other' %}selected{% endif %}>Other</option>
-    </select>
-  </div>
-</div>
-
-<div class="col-md-4" id="workingShiftOtherContainer" style="display: none;">
-  <div class="mb-3">
-    <label class="form-label">Please Specify Working Shift</label>
-    <input type="text" name="working_shift_other" class="form-control" id="workingShiftOtherInput" value="{{ vacancy.working_shift_other }}" placeholder="Enter details">
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const shiftSelector = document.getElementById('workingShiftSelect');
-  const shiftOtherContainer = document.getElementById('workingShiftOtherContainer');
-  const shiftOtherInput = document.getElementById('workingShiftOtherInput');
-
-  if (shiftSelector) {
-    shiftSelector.addEventListener('change', function() {
-      if (this.value === 'Other') {
-        shiftOtherContainer.style.display = 'block';
-        shiftOtherInput.setAttribute('required', 'required');
-      } else {
-        shiftOtherContainer.style.display = 'none';
-        shiftOtherInput.removeAttribute('required');
-        shiftOtherInput.value = '';
-      }
-    });
-
-    // Initialize on page load if 'Other' is already selected
-    if (shiftSelector.value === 'Other') {
-      shiftOtherContainer.style.display = 'block';
-      shiftOtherInput.setAttribute('required', 'required');
-    }
-  }
-});
-</script>
-
-            <div class="col-md-4">
-  <div class="mb-3">
-    <label class="form-label">Cab Facility</label>
-    <select name="cab_facility" class="form-select" id="cabFacilitySelect" required>
-      <option value="" disabled selected>Select Cab Facility</option>
-      <option value="Yes" {% if vacancy.cab_facility == 'Yes' %}selected{% endif %}>Yes</option>
-      <option value="No" {% if vacancy.cab_facility == 'No' %}selected{% endif %}>No</option>
-      <option value="Paid" {% if vacancy.cab_facility == 'Paid' %}selected{% endif %}>Paid</option>
-      <option value="Others" {% if vacancy.cab_facility == 'Others' %}selected{% endif %}>Others</option>
-    </select>
-  </div>
-</div>
-
-<div class="col-md-4" id="cabFacilityOtherContainer" style="display: none;">
-  <div class="mb-3">
-    <label class="form-label">Please Specify Cab Facility</label>
-    <input type="text" name="cab_facility_other" id="cabFacilityOtherInput" value="{{ vacancy.cab_facility_other }}" class="form-control" placeholder="Enter details">
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const cabSelector = document.getElementById('cabFacilitySelect');
-  const cabOtherContainer = document.getElementById('cabFacilityOtherContainer');
-  const cabOtherInput = document.getElementById('cabFacilityOtherInput');
-
-  if (cabSelector) {
-    cabSelector.addEventListener('change', function() {
-      if (this.value === 'Others') {
-        cabOtherContainer.style.display = 'block';
-        cabOtherInput.setAttribute('required', 'required');
-      } else {
-        cabOtherContainer.style.display = 'none';
-        cabOtherInput.removeAttribute('required');
-        cabOtherInput.value = '';
-      }
-    });
-
-    // Initialize on page load if 'Others' is already selected
-    if (cabSelector.value === 'Others') {
-      cabOtherContainer.style.display = 'block';
-      cabOtherInput.setAttribute('required', 'required');
-    }
-  }
-});
-</script>
-            <div class="col-md-4">
-              <div class="mb-3">
-                <label class="form-label">No of Vacancies</label>
-                <input type="text" name="no_of_vacancies" class="form-control" value="{{ vacancy.no_of_vacancies }}">
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="mb-3">
-                <label class="form-label">Batch Date</label>
-                <input type="date" name="batch_date" class="form-control" value="{{ vacancy.batch_date|date:'Y-m-d' }}">
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="mb-3">
-                <label class="form-label">Lingual Proficiency/ certifications</label>
-                <input type="text" name="lingual_proficiency" class="form-control" value="{{ vacancy.lingual_proficiency }}">
-              </div>
-            </div>
-            </div>
-          
-          <div class="row">
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                const payrollSelect = document.getElementById('editPayrollSelect{{ vacancy.id }}');
+                const thirdPartyInput = document.getElementById('editThirdPartyInput{{ vacancy.id }}');
+                payrollSelect.addEventListener('change', function() {
+                  if (this.value === 'Third Party') {
+                    thirdPartyInput.style.display = 'block';
+                    thirdPartyInput.querySelector('input').setAttribute('required', 'required');
+                  } else {
+                    thirdPartyInput.style.display = 'none';
+                    thirdPartyInput.querySelector('input').removeAttribute('required');
+                    thirdPartyInput.querySelector('input').value = '';
+                  }
+                });
+              });
+            </script>
             <div class="col-md-6 mb-3">
-              <label class="form-label">Minimum Salary</label>
-              <input type="number" class="form-control" name="minimum_salary_range" value="{{ vacancy.minimum_salary_range }}" step="0.1">
+              <label class="form-label">Fresher Allowed</label>
+              <select name="fresher_status" class="form-select" required>
+                <option value="Both" {% if vacancy.fresher_status == 'Both' %}selected{% endif %}>Both</option>
+                <option value="Yes" {% if vacancy.fresher_status == 'Yes' %}selected{% endif %}>Yes</option>
+                <option value="No" {% if vacancy.fresher_status == 'No' %}selected{% endif %}>No</option>
+              </select>
             </div>
             <div class="col-md-6 mb-3">
-              <label class="form-label">Maximum Salary</label>
-              <input type="number" class="form-control" name="maximum_salary_range" value="{{ vacancy.maximum_salary_range }}" step="0.1">
-            </div>
-          </div>
-          
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Minimum Experience (years)</label>
-              <input type="number" class="form-control" name="minimum_experience" value="{{ vacancy.minimum_experience }}" step="0.1">
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Maximum Experience (years)</label>
-              <input type="number" class="form-control" name="maximum_experience" value="{{ vacancy.maximum_experience }}" step="0.1">
+              <label class="form-label">Gender Preference</label>
+              <select name="gender" class="form-select" required>
+                <option value="Both" {% if vacancy.gender == 'Both' %}selected{% endif %}>Both</option>
+                <option value="Male" {% if vacancy.gender == 'Male' %}selected{% endif %}>Male</option>
+                <option value="Female" {% if vacancy.gender == 'Female' %}selected{% endif %}>Female</option>
+              </select>
             </div>
           </div>
 
           <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Minimum Age (years)</label>
-              <input type="number" class="form-control" name="minimum_age" value="{{ vacancy.minimum_age }}" step="0.1">
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Min Age</label>
+              <input type="number" name="minimum_age" class="form-control" value="{{ vacancy.minimum_age }}" min="18" max="70" step="0.1">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Max Age</label>
+              <input type="number" name="maximum_age" class="form-control" value="{{ vacancy.maximum_age }}" min="18" max="70" step="0.1">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Min Experience</label>
+              <input type="number" name="minimum_experience" class="form-control" value="{{ vacancy.minimum_experience }}" min="0" max="50" step="0.1">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Max Experience</label>
+              <input type="number" name="maximum_experience" class="form-control" value="{{ vacancy.maximum_experience }}" min="0" max="50" step="0.1">
             </div>
             <div class="col-md-6 mb-3">
-              <label class="form-label">Maximum Age (years)</label>
-              <input type="number" class="form-control" name="maximum_age" value="{{ vacancy.maximum_age }}" step="0.1">
+              <label class="form-label">Experience Type</label>
+              <select name="experience_type" class="form-select" required>
+                <option value="">Select Experience Type</option>
+                <option value="In-house" {% if vacancy.experience_type == 'In-house' %}selected{% endif %}>In-house</option>
+                <option value="BPO" {% if vacancy.experience_type == 'BPO' %}selected{% endif %}>BPO</option>
+                <option value="Domestic" {% if vacancy.experience_type == 'Domestic' %}selected{% endif %}>Domestic</option>
+                <option value="International" {% if vacancy.experience_type == 'International' %}selected{% endif %}>International</option>
+                <option value="Blended" {% if vacancy.experience_type == 'Blended' %}selected{% endif %}>Blended</option>
+                <option value="Other" {% if vacancy.experience_type == 'Other' %}selected{% endif %}>Other</option>
+              </select>
             </div>
           </div>
           
-          <div class="mb-3">
-            <label class="form-label">Special Instructions</label>
-            <textarea class="form-control" name="special_instruction" rows="3">{{ vacancy.special_instruction }}</textarea>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Interview Rounds</label>
+              <input type="text" name="interview_rounds" value="{{ vacancy.interview_rounds }}" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Times of Interview</label>
+              <input type="text" name="times_of_interview" value="{{ vacancy.times_of_interview }}" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Working Shift & Off's</label>
+              <select name="working_shift" class="form-select" required id="editWorkingShiftSelect{{ vacancy.id }}">
+                <option value="" disabled>Select Shift</option>
+                <option value="Day" {% if vacancy.working_shift == 'Day' %}selected{% endif %}>Day</option>
+                <option value="Night" {% if vacancy.working_shift == 'Night' %}selected{% endif %}>Night</option>
+                <option value="Flexible" {% if vacancy.working_shift == 'Flexible' %}selected{% endif %}>Flexible</option>
+                <option value="Rotational" {% if vacancy.working_shift == 'Rotational' %}selected{% endif %}>Rotational</option>
+                <option value="Other" {% if vacancy.working_shift == 'Other' or not vacancy.working_shift in 'Day,Night,Flexible,Rotational' and vacancy.working_shift %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-3" id="editWorkingShiftOtherContainer{{ vacancy.id }}" style="display: {% if vacancy.working_shift == 'Other' or not vacancy.working_shift in 'Day,Night,Flexible,Rotational' and vacancy.working_shift %}block{% else %}none{% endif %};">
+              <label class="form-label">Please Specify Working Shift</label>
+              <input type="text" name="working_shift_other" class="form-control" id="editWorkingShiftOtherInput{{ vacancy.id }}" value="{{ vacancy.working_shift_other|default:vacancy.working_shift }}" placeholder="Enter details">
+            </div>
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                const shiftSelector = document.getElementById('editWorkingShiftSelect{{ vacancy.id }}');
+                const shiftOtherContainer = document.getElementById('editWorkingShiftOtherContainer{{ vacancy.id }}');
+                const shiftOtherInput = document.getElementById('editWorkingShiftOtherInput{{ vacancy.id }}');
+                shiftSelector.addEventListener('change', function() {
+                  if (this.value === 'Other') {
+                    shiftOtherContainer.style.display = 'block';
+                    shiftOtherInput.setAttribute('required', 'required');
+                  } else {
+                    shiftOtherContainer.style.display = 'none';
+                    shiftOtherInput.removeAttribute('required');
+                    shiftOtherInput.value = '';
+                  }
+                });
+                if (shiftSelector.value === 'Other') {
+                  shiftOtherContainer.style.display = 'block';
+                  shiftOtherInput.setAttribute('required', 'required');
+                }
+              });
+            </script>
+
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Shift Timings</label>
+              <input type="text" name="shift_timings" value="{{ vacancy.shift_timings }}" class="form-control">
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Number of Working Days</label>
+              <select name="no_of_workingdays" class="form-select" required>
+                <option value="">Select Working Days</option>
+                <option value="5 Days" {% if vacancy.no_of_workingdays == '5 Days' %}selected{% endif %}>5 Days</option>
+                <option value="6 Days" {% if vacancy.no_of_workingdays == '6 Days' %}selected{% endif %}>6 Days</option>
+                <option value="7 Days" {% if vacancy.no_of_workingdays == '7 Days' %}selected{% endif %}>7 Days</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Cab Facility</label>
+              <select name="cab_facility" class="form-select" id="editCabFacilitySelect{{ vacancy.id }}" required>
+                <option value="" disabled>Select Cab Facility</option>
+                <option value="Yes" {% if vacancy.cab_facility == 'Yes' %}selected{% endif %}>Yes</option>
+                <option value="No" {% if vacancy.cab_facility == 'No' %}selected{% endif %}>No</option>
+                <option value="Paid" {% if vacancy.cab_facility == 'Paid' %}selected{% endif %}>Paid</option>
+                <option value="Others" {% if vacancy.cab_facility == 'Others' or not vacancy.cab_facility in 'Yes,No,Paid' and vacancy.cab_facility %}selected{% endif %}>Others</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-3" id="editCabFacilityOtherContainer{{ vacancy.id }}" style="display: {% if vacancy.cab_facility == 'Others' or not vacancy.cab_facility in 'Yes,No,Paid' and vacancy.cab_facility %}block{% else %}none{% endif %};">
+              <label class="form-label">Please Specify Cab Facility</label>
+              <input type="text" name="cab_facility_other" id="editCabFacilityOtherInput{{ vacancy.id }}" value="{{ vacancy.cab_facility_other|default:vacancy.cab_facility }}" class="form-control" placeholder="Enter details">
+            </div>
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                const cabSelector = document.getElementById('editCabFacilitySelect{{ vacancy.id }}');
+                const cabOtherContainer = document.getElementById('editCabFacilityOtherContainer{{ vacancy.id }}');
+                const cabOtherInput = document.getElementById('editCabFacilityOtherInput{{ vacancy.id }}');
+                cabSelector.addEventListener('change', function() {
+                  if (this.value === 'Others') {
+                    cabOtherContainer.style.display = 'block';
+                    cabOtherInput.setAttribute('required', 'required');
+                  } else {
+                    cabOtherContainer.style.display = 'none';
+                    cabOtherInput.removeAttribute('required');
+                    cabOtherInput.value = '';
+                  }
+                });
+                if (cabSelector.value === 'Others') {
+                  cabOtherContainer.style.display = 'block';
+                  cabOtherInput.setAttribute('required', 'required');
+                }
+              });
+            </script>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">No of Vacancies</label>
+              <input type="text" name="no_of_vacancies" class="form-control" value="{{ vacancy.no_of_vacancies }}">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Batch Date</label>
+              <input type="date" name="batch_date" class="form-control" value="{{ vacancy.batch_date|date:'Y-m-d' }}">
+            </div>
           </div>
           
-          <!-- Payment Section -->
-<div class="card mt-4">
-  <div class="card-header bg-primary text-white">
-    <h5 class="mb-0">Payment Details</h5>
-  </div>
-  <div class="card-body">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="mb-3">
-          <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
-          <div class="d-flex flex-wrap gap-3">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="payment_mode" id="companyPayRadioEdit{{ vacancy.id }}" 
-                     value="Company Pay" {% if vacancy.payment_mode == 'Company Pay' %}checked{% endif %} required>
-              <label class="form-check-label" for="companyPayRadioEdit{{ vacancy.id }}">Company Pay</label>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Lingual Proficiency / Certifications</label>
+              <textarea name="lingual_proficiency" class="form-control" rows="2">{{ vacancy.lingual_proficiency }}</textarea>
             </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="payment_mode" id="salaryDeductionRadioEdit{{ vacancy.id }}" 
-                     value="Salary Deduction" {% if vacancy.payment_mode == 'Salary Deduction' %}checked{% endif %}>
-              <label class="form-check-label" for="salaryDeductionRadioEdit{{ vacancy.id }}">Salary Deduction</label>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Lingual Proficiency Specialization</label>
+              <textarea name="lingual_proficiency_specialization" class="form-control" rows="2">{{ vacancy.lingual_proficiency_specialization }}</textarea>
             </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="payment_mode" id="spdcPayRadioEdit{{ vacancy.id }}" 
-                     value="SPDC/Candidate Pay" {% if vacancy.payment_mode == 'SPDC/Candidate Pay' %}checked{% endif %}>
-              <label class="form-check-label" for="spdcPayRadioEdit{{ vacancy.id }}">SPDC/Candidate Pay</label>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Qualification</label>
+              <select name="minimum_education_qualification" class="form-select" required>
+                <option value="">Select Qualification</option>
+                <option value="Secondary School" {% if vacancy.minimum_education_qualification == 'Secondary School' %}selected{% endif %}>Secondary School</option>
+                <option value="Higher Secondary School" {% if vacancy.minimum_education_qualification == 'Higher Secondary School' %}selected{% endif %}>Higher Secondary School</option>
+                <option value="Graduate" {% if vacancy.minimum_education_qualification == 'Graduate' %}selected{% endif %}>Graduate</option>
+                <option value="Post-Graduate" {% if vacancy.minimum_education_qualification == 'Post-Graduate' %}selected{% endif %}>Post-Graduate</option>
+                <option value="Ph.D." {% if vacancy.minimum_education_qualification == 'Ph.D.' %}selected{% endif %}>Ph.D.</option>
+                <option value="Others" {% if vacancy.minimum_education_qualification == 'Others' %}selected{% endif %}>Others</option>
+              </select>
             </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Educational Specialization</label>
+              <textarea name="specialization" class="form-control" rows="2">{{ vacancy.specialization }}</textarea>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Status of Incentive</label>
+              <select name="status_of_incentive" class="form-select" id="editStatusOfIncentiveSelect{{ vacancy.id }}" required>
+                <option value="No" {% if vacancy.status_of_incentive == 'No' %}selected{% endif %}>No</option>
+                <option value="Yes" {% if vacancy.status_of_incentive == 'Yes' %}selected{% endif %}>Yes</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3" id="editIncentiveDetailsField{{ vacancy.id }}" style="display: {% if vacancy.status_of_incentive == 'Yes' %}block{% else %}none{% endif %};">
+              <label class="form-label">Incentive Details</label>
+              <textarea name="incentive_details" class="form-control" rows="2">{{ vacancy.incentive_details }}</textarea>
+            </div>
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                const incentiveSelect = document.getElementById('editStatusOfIncentiveSelect{{ vacancy.id }}');
+                const detailsField = document.getElementById('editIncentiveDetailsField{{ vacancy.id }}');
+                incentiveSelect.addEventListener('change', function() {
+                  if (this.value === 'Yes') {
+                    detailsField.style.display = 'block';
+                    detailsField.querySelector('textarea').setAttribute('required', 'required');
+                  } else {
+                    detailsField.style.display = 'none';
+                    detailsField.querySelector('textarea').removeAttribute('required');
+                    detailsField.querySelector('textarea').value = '';
+                  }
+                });
+                if (incentiveSelect.value === 'Yes') {
+                  detailsField.style.display = 'block';
+                  detailsField.querySelector('textarea').setAttribute('required', 'required');
+                }
+              });
+            </script>
           </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Company Pay Fields -->
-    <div id="companyPayFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'Company Pay' %}block{% else %}none{% endif %};">
-      <div class="row">
-        <div class="col-md-12">
-          <div class="mb-3">
-            <label class="form-label">Payment Type <span class="text-danger">*</span></label>
-            <div class="d-flex flex-wrap gap-3">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="company_pay_type" id="flatTypeRadioEdit{{ vacancy.id }}" 
-                       value="Flat" {% if vacancy.company_pay_type == 'Flat' %}checked{% endif %}>
-                <label class="form-check-label" for="flatTypeRadioEdit{{ vacancy.id }}">Flat</label>
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Minimum Salary (₹)</label>
+              <div class="input-group">
+                <input type="number" class="form-control" name="minimum_salary_range" value="{{ vacancy.minimum_salary_range }}" min="0" step="0.1">
+                <select class="form-select" name="minimum_salary_type">
+                  <option value="(CTC)" {% if vacancy.minimum_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
+                  <option value="(Per Month)" {% if vacancy.minimum_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
+                  <option value="(In Hand)" {% if vacancy.minimum_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
+                  <option value="(Per Annum)" {% if vacancy.minimum_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
+                </select>
               </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="company_pay_type" id="percentageTypeRadioEdit{{ vacancy.id }}" 
-                       value="Percentage of CTC" {% if vacancy.company_pay_type == 'Percentage of CTC' %}checked{% endif %}>
-                <label class="form-check-label" for="percentageTypeRadioEdit{{ vacancy.id }}">% of CTC</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="company_pay_type" id="perDaysTypeRadioEdit{{ vacancy.id }}" 
-                       value="Pay as per days" {% if vacancy.company_pay_type == 'Pay as per days' %}checked{% endif %}>
-                <label class="form-check-label" for="perDaysTypeRadioEdit{{ vacancy.id }}">Pay as per days</label>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Maximum Salary (₹)</label>
+              <div class="input-group">
+                <input type="number" class="form-control" name="maximum_salary_range" value="{{ vacancy.maximum_salary_range }}" min="0" step="0.1">
+                <select class="form-select" name="maximum_salary_type">
+                  <option value="(CTC)" {% if vacancy.maximum_salary_type == '(CTC)' %}selected{% endif %}>CTC</option>
+                  <option value="(Per Month)" {% if vacancy.maximum_salary_type == '(Per Month)' %}selected{% endif %}>Per Month</option>
+                  <option value="(In Hand)" {% if vacancy.maximum_salary_type == '(In Hand)' %}selected{% endif %}>In Hand</option>
+                  <option value="(Per Annum)" {% if vacancy.maximum_salary_type == '(Per Annum)' %}selected{% endif %}>Per Annum</option>
+                </select>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      
-<!-- Flat Amount Field -->
-<div class="row" id="flatAmountFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Flat' %}block{% else %}none{% endif %};">
-  <div class="col-md-6">
-    <div class="mb-3">
-      <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
-      <input type="hidden" name="flat_amount" class="form-control" id="flatAmountJsonEdit{{ vacancy.id }}" 
-             value="{{ vacancy.flat_amount|default:'{}' }}">
-      <div id="flatAmountRowsEdit{{ vacancy.id }}">
-        <!-- Default empty row -->
-        <div class="d-flex mb-2 flat-amount-row">
-          <input type="text" class="form-control me-2 flat-amount-key" placeholder="No of Candidates">
-          <input type="text" class="form-control me-2 flat-amount-value" placeholder="Pay">
-          <button type="button" class="btn btn-success flat-amount-add">+</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-(function () {
-  const container = document.getElementById("flatAmountFieldEdit{{ vacancy.id }}");
-  if (!container) return;
-
-  const rowsContainer = container.querySelector("#flatAmountRowsEdit{{ vacancy.id }}");
-  const hiddenInput = container.querySelector("#flatAmountJsonEdit{{ vacancy.id }}");
-
-  // Function to add a new row
-  function addNewRow(key = '', value = '', isFirst = false) {
-    const newRow = document.createElement("div");
-    newRow.className = "d-flex mb-2 flat-amount-row";
-    newRow.innerHTML = `
-      <input type="text" class="form-control me-2 flat-amount-key" placeholder="No of Candidates" value="${key}">
-      <input type="text" class="form-control me-2 flat-amount-value" placeholder="Pay" value="${value}">
-      <button type="button" class="btn ${isFirst ? 'btn-success flat-amount-add' : 'btn-danger flat-amount-remove'}">
-        ${isFirst ? '+' : '–'}
-      </button>
-    `;
-    rowsContainer.appendChild(newRow);
-  }
-
-  // Delegated event listener for add/remove buttons
-  rowsContainer.addEventListener("click", function (e) {
-    if (e.target.classList.contains("flat-amount-add")) {
-      addNewRow();
-    }
-
-    if (e.target.classList.contains("flat-amount-remove")) {
-      e.target.closest(".flat-amount-row")?.remove();
-    }
-  });
-
-  // On form submit — convert fields to dictionary string
-  const form = container.closest("form");
-  if (form) {
-    form.addEventListener("submit", function () {
-      const keys = container.querySelectorAll(".flat-amount-key");
-      const values = container.querySelectorAll(".flat-amount-value");
-
-      const data = {};
-      for (let i = 0; i < keys.length; i++) {
-        const key = keys[i].value.trim();
-        const value = values[i].value.trim();
-        if (key && value) {
-          data[key] = value;
-        }
-      }
-
-      // Set JSON string in hidden input field (without parentheses)
-      hiddenInput.value = JSON.stringify(data);
-    });
-  }
-
-  // Initialize with existing data
-  function initializeFlatAmountData() {
-    try {
-      // Remove any surrounding parentheses if present
-      let jsonString = hiddenInput.value.trim();
-      if (jsonString.startsWith('(') && jsonString.endsWith(')')) {
-        jsonString = jsonString.slice(1, -1);
-      }
-      
-      const existingData = JSON.parse(jsonString || '{}');
-      const entries = Object.entries(existingData);
-      
-      // Clear default empty row if we have existing data
-      if (entries.length > 0) {
-        rowsContainer.innerHTML = '';
-      }
-      
-      // Add rows for each key-value pair
-      entries.forEach(([key, value], index) => {
-        addNewRow(key, value, index === 0);
-      });
-      
-      // If no data, ensure we have at least one empty row
-      if (entries.length === 0) {
-        addNewRow('', '', true);
-      }
-    } catch (e) {
-      console.error("Error parsing flat amount data", e);
-      // Fallback to single empty row if parsing fails
-      rowsContainer.innerHTML = '';
-      addNewRow('', '', true);
-    }
-  }
-  
-  // Initialize when DOM is ready
-  initializeFlatAmountData();
-})();
-</script>
-      
-      <!-- Percentage of CTC Field -->
-      <div class="row" id="percentageCtcFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Percentage of CTC' %}block{% else %}none{% endif %};">
-        <div class="col-md-6">
-          <div class="mb-3">
-            <label class="form-label">Percentage of CTC <span class="text-danger">*</span></label>
-            <input type="number" name="percentage_of_ctc" class="form-control" min="0" max="100" step="0.01" 
-                   value="{{ vacancy.percentage_of_ctc|default:'' }}" >
-            <small class="text-muted">Enter percentage value (e.g., 10 for 10%)</small>
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Special Hiring Instructions</label>
+              <textarea class="form-control" name="special_instruction" rows="2">{{ vacancy.special_instruction }}</textarea>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Company USP</label>
+              <textarea class="form-control" name="company_usp" rows="2">{{ vacancy.company_usp }}</textarea>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Replacement Criteria (Days)</label>
+              <input type="text" name="replacement_criteria_days" class="form-control" value="{{ vacancy.replacement_criteria_days }}">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Replacement Criteria</label>
+              <textarea name="replacement_criteria" class="form-control" rows="2">{{ vacancy.replacement_criteria }}</textarea>
+            </div>
           </div>
-        </div>
-      </div>
-      
-      <!-- Pay per Days Field -->
-      <div class="row" id="payPerDaysFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Pay as per days' %}block{% else %}none{% endif %};">
-        <div class="col-md-6">
-          <div class="mb-3">
-            <label class="form-label">Number of Days <span class="text-danger">*</span></label>
-            <input type="number" name="pay_per_days" class="form-control" min="1" 
-                   value="{{ vacancy.pay_per_days|default:'' }}" >
+          
+          <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">Payment Details</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="mb-3">
+                    <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+                    <div class="d-flex flex-wrap gap-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="payment_mode" id="companyPayRadioEdit{{ vacancy.id }}" value="Company Pay" {% if vacancy.payment_mode == 'Company Pay' %}checked{% endif %} required>
+                        <label class="form-check-label" for="companyPayRadioEdit{{ vacancy.id }}">Company Pay</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="payment_mode" id="salaryDeductionRadioEdit{{ vacancy.id }}" value="Salary Deduction" {% if vacancy.payment_mode == 'Salary Deduction' %}checked{% endif %}>
+                        <label class="form-check-label" for="salaryDeductionRadioEdit{{ vacancy.id }}">Salary Deduction</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="payment_mode" id="spdcPayRadioEdit{{ vacancy.id }}" value="SPDC/Candidate Pay" {% if vacancy.payment_mode == 'SPDC/Candidate Pay' %}checked{% endif %}>
+                        <label class="form-check-label" for="spdcPayRadioEdit{{ vacancy.id }}">SPDC/Candidate Pay</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div id="companyPayFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'Company Pay' %}block{% else %}none{% endif %};">
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="mb-3">
+                      <label class="form-label">Payment Type <span class="text-danger">*</span></label>
+                      <div class="d-flex flex-wrap gap-3">
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="company_pay_type" id="flatTypeRadioEdit{{ vacancy.id }}" value="Flat" {% if vacancy.company_pay_type == 'Flat' %}checked{% endif %}>
+                          <label class="form-check-label" for="flatTypeRadioEdit{{ vacancy.id }}">Flat</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="company_pay_type" id="percentageTypeRadioEdit{{ vacancy.id }}" value="Percentage of CTC" {% if vacancy.company_pay_type == 'Percentage of CTC' %}checked{% endif %}>
+                          <label class="form-check-label" for="percentageTypeRadioEdit{{ vacancy.id }}">% of CTC</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="company_pay_type" id="perDaysTypeRadioEdit{{ vacancy.id }}" value="Pay as per days" {% if vacancy.company_pay_type == 'Pay as per days' %}checked{% endif %}>
+                          <label class="form-check-label" for="perDaysTypeRadioEdit{{ vacancy.id }}">Pay as per days</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row" id="flatAmountFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Flat' %}block{% else %}none{% endif %};">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">Flat Amount <span class="text-danger">*</span></label>
+                      <input type="hidden" name="flat_amount" class="form-control" id="flatAmountJsonEdit{{ vacancy.id }}" value="{{ vacancy.flat_amount|default:'{}' }}">
+                      <div id="flatAmountRowsEdit{{ vacancy.id }}">
+                        </div>
+                    </div>
+                  </div>
+                </div>
+                <script>
+                  (function () {
+                    const container = document.getElementById("flatAmountFieldEdit{{ vacancy.id }}");
+                    if (!container) return;
+
+                    const rowsContainer = container.querySelector("#flatAmountRowsEdit{{ vacancy.id }}");
+                    const hiddenInput = container.querySelector("#flatAmountJsonEdit{{ vacancy.id }}");
+
+                    function addNewRow(key = '', value = '', isFirst = false) {
+                      const newRow = document.createElement("div");
+                      newRow.className = "d-flex mb-2 flat-amount-row";
+                      newRow.innerHTML = `
+                        <input type="text" class="form-control me-2 flat-amount-key" placeholder="No of Candidates" value="${key}">
+                        <input type="text" class="form-control me-2 flat-amount-value" placeholder="Pay" value="${value}">
+                        <button type="button" class="btn ${isFirst ? 'btn-success flat-amount-add' : 'btn-danger flat-amount-remove'}">
+                          ${isFirst ? '+' : '–'}
+                        </button>
+                      `;
+                      rowsContainer.appendChild(newRow);
+                    }
+
+                    rowsContainer.addEventListener("click", function (e) {
+                      if (e.target.classList.contains("flat-amount-add")) {
+                        addNewRow();
+                      }
+                      if (e.target.classList.contains("flat-amount-remove")) {
+                        e.target.closest(".flat-amount-row")?.remove();
+                      }
+                    });
+
+                    const form = container.closest("form");
+                    if (form) {
+                      form.addEventListener("submit", function () {
+                        const keys = container.querySelectorAll(".flat-amount-key");
+                        const values = container.querySelectorAll(".flat-amount-value");
+                        const data = {};
+                        for (let i = 0; i < keys.length; i++) {
+                          const key = keys[i].value.trim();
+                          const value = values[i].value.trim();
+                          if (key && value) {
+                            data[key] = value;
+                          }
+                        }
+                        hiddenInput.value = JSON.stringify(data);
+                      });
+                    }
+
+                    function initializeFlatAmountData() {
+                      try {
+                        let jsonString = hiddenInput.value.trim();
+                        if (jsonString.startsWith('(') && jsonString.endsWith(')')) {
+                          jsonString = jsonString.slice(1, -1);
+                        }
+                        const existingData = JSON.parse(jsonString || '{}');
+                        const entries = Object.entries(existingData);
+                        
+                        rowsContainer.innerHTML = '';
+                        if (entries.length > 0) {
+                          entries.forEach(([key, value], index) => {
+                            addNewRow(key, value, index === entries.length - 1);
+                          });
+                        } else {
+                          addNewRow('', '', true);
+                        }
+                      } catch (e) {
+                        console.error("Error parsing flat amount data", e);
+                        rowsContainer.innerHTML = '';
+                        addNewRow('', '', true);
+                      }
+                    }
+                    
+                    initializeFlatAmountData();
+                  })();
+                </script>
+                
+                <div class="row" id="percentageCtcFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Percentage of CTC' %}block{% else %}none{% endif %};">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">Percentage of CTC <span class="text-danger">*</span></label>
+                      <input type="number" name="percentage_of_ctc" class="form-control" min="0" max="100" step="0.01" value="{{ vacancy.percentage_of_ctc|default:'' }}">
+                      <small class="text-muted">Enter percentage value (e.g., 10 for 10%)</small>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row" id="payPerDaysFieldEdit{{ vacancy.id }}" style="display: {% if vacancy.company_pay_type == 'Pay as per days' %}block{% else %}none{% endif %};">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">Number of Days <span class="text-danger">*</span></label>
+                      <input type="number" name="pay_per_days" class="form-control" min="1" value="{{ vacancy.pay_per_days|default:'' }}">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row" id="salaryDeductionFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'Salary Deduction' %}block{% else %}none{% endif %};">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
+                    <input type="date" name="salary_transfer_date" class="form-control" value="{{ vacancy.salary_transfer_date|date:'Y-m-d'|default:'' }}">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Expected Payment Date <span class="text-danger">*</span></label>
+                    <input type="date" name="expected_payment_date" class="form-control" value="{{ vacancy.expected_payment_date|date:'Y-m-d'|default:'' }}">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row" id="spdcFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'SPDC/Candidate Pay' %}block{% else %}none{% endif %};">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
+                    <input type="date" name="candidate_salary_transfer_date" class="form-control" value="{{ vacancy.candidate_salary_transfer_date|date:'Y-m-d'|default:'' }}">
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Salary Deduction Fields -->
-    <div class="row" id="salaryDeductionFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'Salary Deduction' %}block{% else %}none{% endif %};">
-      <div class="col-md-6">
-        <div class="mb-3">
-          <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
-          <input type="date" name="salary_transfer_date" class="form-control" 
-                 value="{{ vacancy.salary_transfer_date|date:'Y-m-d'|default:'' }}" >
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="mb-3">
-          <label class="form-label">Expected Payment Date <span class="text-danger">*</span></label>
-          <input type="date" name="expected_payment_date" class="form-control" 
-                 value="{{ vacancy.expected_payment_date|date:'Y-m-d'|default:'' }}" >
-        </div>
-      </div>
-    </div>
-    
-    <!-- SPDC/Candidate Pay Fields -->
-    <div class="row" id="spdcFieldsEdit{{ vacancy.id }}" style="display: {% if vacancy.payment_mode == 'SPDC/Candidate Pay' %}block{% else %}none{% endif %};">
-      <div class="col-md-6">
-        <div class="mb-3">
-          <label class="form-label">Salary Transfer Date <span class="text-danger">*</span></label>
-          <input type="date" name="candidate_salary_transfer_date" class="form-control" 
-                 value="{{ vacancy.candidate_salary_transfer_date|date:'Y-m-d'|default:'' }}" >
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" class="btn btn-primary" name="edit_vacancy">Save changes</button>
+          <button type="submit" class="btn btn-primary">Save changes</button>
         </div>
       </form>
     </div>

@@ -1122,7 +1122,18 @@ class VacancyDetails(models.Model):
     incentive_details = models.TextField(blank=True, null=True)
     minimum_salary_type = models.CharField(max_length=50, blank=True, null=True)
     maximum_salary_type = models.CharField(max_length=50, blank=True, null=True)
-    
+    process_name = models.CharField(max_length=255, blank=True, null=True)
+    job_profile_type = models.CharField(max_length=255, blank=True, null=True)
+    job_position = models.CharField(max_length=255, blank=True, null=True)
+    job_description_attachment = models.FileField(upload_to='job_profile_attachments/', blank=True, null=True)
+    experience_type = models.CharField(max_length=50, blank=True, null=True)
+    no_of_workingdays = models.CharField(max_length=255, blank=True, null=True)
+    shift_timing = models.CharField(max_length=255, blank=True, null=True)
+    lingual_proficiency_specialization = models.CharField(max_length=255, blank=True, null=True)
+    times_of_interview = models.CharField(max_length=255, blank=True, null=True)
+
+
+
     # New payment-related fields
     PAYMENT_MODE_CHOICES = [
         ('Company Pay', 'Company Pay'),

@@ -1049,6 +1049,37 @@ def employee_candidate_registration(request):
         return render (request,'employee/candidate-registration.html',context)
    
 
+@login_required
+@require_POST
+def check_mobile_number_duplicate(request):
+    """
+    Checks if a mobile number already exists in the database.
+    Returns a JSON response with a 'duplicate' status if a match is found.
+    """
+    try:
+        # Decode the JSON payload from the AJAX request
+        data = json.loads(request.body)
+        mobile_number = data.get('mobile_number')
+    except (json.JSONDecodeError, KeyError):
+        return JsonResponse({'error': 'Invalid request body'}, status=400)
+
+    # Perform the database lookup
+    if mobile_number:
+        try:
+            duplicate_candidate = Candidate_registration.objects.get(
+                candidate_mobile_number=mobile_number
+            )
+            # If a candidate is found, return a 409 Conflict status
+            return JsonResponse({
+                'status': 'duplicate',
+                'candidate_name': duplicate_candidate.candidate_name,
+            }, status=409)
+        except Candidate_registration.DoesNotExist:
+            # If no candidate is found, return a success status
+            return JsonResponse({'status': 'unique'}, status=200)
+
+    return JsonResponse({'error': 'Mobile number is required'}, status=400)
+
 # def get_next_unique_code():
 #     candidate = Candidate_registration.objects.filter(unique_code__regex=r'^EC\d{6}$').values_list('unique_code', flat=True)
 #     numbers = [int(re.search(r'\d{6}', unique_code).group()) for unique_code in candidate]
@@ -1613,32 +1644,6 @@ def employee_candidate_profile(request, id):
         return render(request, 'employee/404.html', status=404)
 
 
-
-def check_mobile_duplicate(request):
-    mobile_number = request.GET.get('mobile_number')
-    if mobile_number:
-        is_duplicate = Candidate_registration.objects.filter(
-            candidate_mobile_number=mobile_number
-        ).exists()
-        
-        if is_duplicate:
-            try:
-                # Find the duplicate candidate to get their name and ID
-                duplicate_candidate = Candidate_registration.objects.get(candidate_mobile_number=mobile_number)
-                return JsonResponse({
-                    'status': 'duplicate',
-                    'message': 'This mobile number is already registered.',
-                    'candidate_name': duplicate_candidate.candidate_name,
-                    'candidate_id': duplicate_candidate.id,
-                    'candidate_profile_url': reverse('employee_candidate_detail', args=[duplicate_candidate.id])
-                })
-            except Candidate_registration.DoesNotExist:
-                # Fallback, should not happen with exists() check
-                return JsonResponse({'status': 'duplicate', 'message': 'This mobile number is already registered.'})
-        else:
-            return JsonResponse({'status': 'available'})
-
-    return JsonResponse({'status': 'error', 'message': 'Mobile number not provided.'}, status=400)
 
 @login_required
 def employee_company_registration(request):

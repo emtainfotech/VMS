@@ -1683,6 +1683,15 @@ def admin_company_profile(request, id):
                         incentive_details = request.POST.get('incentive_details'),
                         minimum_salary_type = request.POST.get('minimum_salary_type'),
                         maximum_salary_type = request.POST.get('maximum_salary_type'),
+                        process_name = request.POST.get('process_name'),
+                        job_profile_type = request.POST.get('job_profile_type'),
+                        job_position = request.POST.get('job_position'),
+                        job_description_attachment = request.FILES.get('job_description_attachment'),
+                        experience_type = request.POST.get('experience_type'),
+                        no_of_workingdays = request.POST.get('no_of_workingdays'),
+                        shift_timing = request.POST.get('shift_timing'),
+                        lingual_proficiency_specialization = request.POST.get('lingual_proficiency_specialization'),
+                        times_of_interview = request.POST.get('times_of_interview')
                     )
                     vacancy.save(user=request.user, form_name=form_name)
                     messages.success(request, 'Vacancy added successfully!')
@@ -1727,8 +1736,16 @@ def admin_company_profile(request, id):
                     vacancy.status_of_incentive = request.POST.get('status_of_incentive', '')
                     vacancy.replacement_criteria_days = request.POST.get('replacement_criteria_days', '')
                     vacancy.replacement_criteria = request.POST.get('replacement_criteria', '')
-                    vacancy.updated_by = request.user
-                    
+                    vacancy.process_name = request.POST.get('process_name', '')
+                    vacancy.job_profile_type = request.POST.get('job_profile_type', '')
+                    vacancy.job_position = request.POST.get('job_position', '')
+                    vacancy.job_description_attachment = request.FILES.get('job_description_attachment', None)
+                    vacancy.experience_type = request.POST.get('experience_type', '')
+                    vacancy.no_of_workingdays = request.POST.get('no_of_workingdays', '')
+                    vacancy.shift_timing = request.POST.get('shift_timing', '')
+                    vacancy.lingual_proficiency_specialization = request.POST.get('lingual_proficiency_specialization', '')
+                    vacancy.times_of_interview = request.POST.get('times_of_interview', '')
+
                     # Payment fields
                     vacancy.payment_mode = request.POST.get('payment_mode', '')
                     vacancy.company_pay_type = request.POST.get('company_pay_type', '')

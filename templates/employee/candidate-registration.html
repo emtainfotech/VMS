@@ -866,6 +866,70 @@
         margin-bottom: 0;
     }
     </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+    const mobileNumberInput = document.querySelector('[name="candidate_mobile_number"]');
+    const mobileNumberField = mobileNumberInput.closest('.mb-3');
+
+    // Debounce function to limit API calls
+    function debounce(func, delay) {
+        let timeoutId;
+        return function(...args) {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                func.apply(this, args);
+            }, delay);
+        };
+    }
+
+    // Real-time duplicate check for mobile number
+    if (mobileNumberInput) {
+        mobileNumberInput.addEventListener('input', debounce(function() {
+            const mobileNumber = this.value;
+
+            // Clear previous validation state and messages
+            mobileNumberInput.classList.remove('is-invalid', 'is-valid');
+            const existingFeedback = mobileNumberField.querySelector('.duplicate-feedback');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+
+            // Only check if the input is a valid 10-digit number
+            if (mobileNumber.length === 10 && /^\d{10}$/.test(mobileNumber)) {
+                fetch(`/employee/check-mobile-number/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: JSON.stringify({ 'mobile_number': mobileNumber })
+                    })
+                    .then(response => {
+                        // Check for a 409 Conflict status code, indicating a duplicate
+                        if (response.status === 409) {
+                            return response.json();
+                        }
+                        return null;
+                    })
+                    .then(data => {
+                        if (data && data.status === 'duplicate') {
+                            mobileNumberInput.classList.add('is-invalid');
+                            const feedbackDiv = document.createElement('div');
+                            feedbackDiv.classList.add('invalid-feedback', 'd-block', 'duplicate-feedback');
+                            feedbackDiv.innerHTML = `The mobile number is already registered under the name of <strong>${data.candidate_name}</strong>.`;
+                            mobileNumberField.appendChild(feedbackDiv);
+                        } else {
+                            mobileNumberInput.classList.add('is-valid');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+        }, 500));
+    }
+});
+    </script>
 </body>
 </html>
 {% endblock content %}
