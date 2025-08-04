@@ -59,6 +59,9 @@ urlpatterns = [
     path('bulk-candidate-invoice-generate/<int:company_id>/', bulk_candidate_invoice_generate, name='bulk_candidate_invoice_generate'),
     path('admin-invoice-bulk-generate/<int:company_id>/', generate_bulk_candidate_invoice, name='generate_bulk_candidate_invoice'),
     path('candidate-assignment/', admin_assign_candidate, name='admin_assign_candidate'),
+    path('crm-dashboard/employee/<str:employee_name>/<str:filter_type>/', employee_candidates_list, name='employee_candidates_list'),
+
+
     path('admin/', admin.site.urls),
 ]
 

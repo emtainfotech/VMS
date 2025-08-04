@@ -62,24 +62,47 @@ def crm_admin_logout(request):
     logout(request)
     return redirect(crm_admin_login)
 
+from django.shortcuts import render
+from django.db.models import Count, Q
+from django.contrib.auth.decorators import login_required
+from datetime import datetime, timedelta
+from itertools import chain
+# from .models import Candidate_registration, Candidate, Candidate_Interview, EVMS_Candidate_Interview
+from django.utils import timezone
+
+
+from django.shortcuts import render
+from django.db.models import Count, Q
+from django.contrib.auth.decorators import login_required
+from datetime import datetime, timedelta
+from itertools import chain
+# from .models import Candidate_registration, Candidate, Candidate_Interview, EVMS_Candidate_Interview
+from django.utils import timezone
+
+
 @login_required
 def crm_dashboard(request):
+    """
+    Renders the CRM dashboard with various performance metrics.
+    Handles filtering by time period and custom date ranges.
+    Combines data from two different candidate models.
+    """
     if request.user.is_staff or request.user.is_superuser:
         # Time period filter
         period = request.GET.get('period', 'day')
         custom_start = request.GET.get('start_date')
         custom_end = request.GET.get('end_date')
-        
+
         # Initialize date ranges
         today = datetime.now().date()
         start_date = None
         end_date = None
-        
+
         # Handle custom date range
         if custom_start and custom_end:
             try:
                 start_date = datetime.strptime(custom_start, '%Y-%m-%d').date()
-                end_date = datetime.strptime(custom_end, '%Y-%m-%d').date()
+                end_date = datetime.strptime(custom_end, '%Y-%m-%d').date() + timedelta(days=1)
                 period = 'custom'
             except ValueError:
                 pass
@@ -93,102 +116,58 @@ def crm_dashboard(request):
                 end_date = start_date + timedelta(days=7)
             elif period == 'month':
                 start_date = today.replace(day=1)
-                end_date = (start_date.replace(month=start_date.month+1) 
-                        if start_date.month < 12 
-                        else start_date.replace(year=start_date.year+1, month=1))
+                end_date = (start_date.replace(month=start_date.month + 1)
+                            if start_date.month < 12
+                            else start_date.replace(year=start_date.year + 1, month=1))
             elif period == 'year':
                 start_date = today.replace(month=1, day=1)
-                end_date = start_date.replace(year=start_date.year+1)
-        
-        today_follow_up = timezone.now().date()
-        date_range_start = today_follow_up - timedelta(days=2)  # 25th if today_follow_up is 27th
-        date_range_end = today_follow_up + timedelta(days=3)    # 30th if today is 27th
+                end_date = start_date.replace(year=start_date.year + 1)
 
-        # Get candidates from both databases
+        # --- Dashboard Card and other data preparation (as per your original code) ---
+        today_follow_up = timezone.now().date()
+        date_range_start = today_follow_up - timedelta(days=2)
+        date_range_end = today_follow_up + timedelta(days=3)
+
         interview_detail_reg = Candidate_Interview.objects.filter(
             interview_date_time__date=today,
             status__in=['scheduled', 'rescheduled']
         ).order_by('interview_date_time')
-        
         interview_detail_can = EVMS_Candidate_Interview.objects.filter(
             interview_date_time__date=today,
             status__in=['scheduled', 'rescheduled']
         ).order_by('interview_date_time')
-        
-        # Combine both querysets
-            # Combine both querysets and sort by register_time (descending)
         interview_detail = list(chain(interview_detail_reg, interview_detail_can))
         interview_detail.sort(key=lambda x: x.interview_date_time if x.interview_date_time else datetime.min.date(), reverse=False)
-        
-        
-        
-        # Get candidates from both databases
+
         follow_up_candidates_reg = Candidate_registration.objects.filter(
             next_follow_up_date_time__isnull=False,
             next_follow_up_date_time__gte=date_range_start,
             next_follow_up_date_time__lte=date_range_end
         ).order_by('next_follow_up_date_time')
-        
         follow_up_candidates_can = Candidate.objects.filter(
             next_follow_up_date_time__isnull=False,
             next_follow_up_date_time__gte=date_range_start,
             next_follow_up_date_time__lte=date_range_end
         ).order_by('next_follow_up_date_time')
-        
-        # Combine both querysets
-            # Combine both querysets and sort by register_time (descending)
         follow_up_candidates = list(chain(follow_up_candidates_reg, follow_up_candidates_can))
         follow_up_candidates.sort(key=lambda x: x.next_follow_up_date_time if x.next_follow_up_date_time else datetime.min.date(), reverse=False)
-        
 
-
-        # Base querysets for both databases
+        # Base querysets for both databases for the current period
         current_qs_reg = Candidate_registration.objects.all()
         current_qs_can = Candidate.objects.all()
-        
+
         if start_date and end_date:
             current_qs_reg = current_qs_reg.filter(register_time__date__range=[start_date, end_date - timedelta(days=1)])
             current_qs_can = current_qs_can.filter(register_time__date__range=[start_date, end_date - timedelta(days=1)])
-        
-        # Calculate previous period date ranges for comparison
-        prev_day = today - timedelta(days=1)
-        prev_week_start = (today - timedelta(days=today.weekday() + 7))
-        prev_month_start = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
-        prev_year_start = today.replace(year=today.year-1, month=1, day=1)
-        
-        # Previous period querysets for both databases
-        prev_day_qs_reg = Candidate_registration.objects.filter(register_time__date=prev_day)
-        prev_day_qs_can = Candidate.objects.filter(register_time__date=prev_day)
-        
-        prev_week_qs_reg = Candidate_registration.objects.filter(
-            register_time__date__range=[prev_week_start, prev_week_start + timedelta(days=6)])
-        prev_week_qs_can = Candidate.objects.filter(
-            register_time__date__range=[prev_week_start, prev_week_start + timedelta(days=6)])
-        
-        prev_month_qs_reg = Candidate_registration.objects.filter(
-            register_time__date__range=[prev_month_start, 
-                                    (prev_month_start.replace(month=prev_month_start.month+1) 
-                                        if prev_month_start.month < 12 
-                                        else prev_month_start.replace(year=prev_month_start.year+1, month=1)) - timedelta(days=1)])
-        prev_month_qs_can = Candidate.objects.filter(
-            register_time__date__range=[prev_month_start, 
-                                    (prev_month_start.replace(month=prev_month_start.month+1) 
-                                        if prev_month_start.month < 12 
-                                        else prev_month_start.replace(year=prev_month_start.year+1, month=1)) - timedelta(days=1)])
-        
-        prev_year_qs_reg = Candidate_registration.objects.filter(
-            register_time__date__range=[prev_year_start, prev_year_start.replace(year=prev_year_start.year+1) - timedelta(days=1)])
-        prev_year_qs_can = Candidate.objects.filter(
-            register_time__date__range=[prev_year_start, prev_year_start.replace(year=prev_year_start.year+1) - timedelta(days=1)])
-        
-        # Employee performance metrics for both databases
+
+        # Employee performance metrics for both databases (for cards)
         employee_performance_reg = list(current_qs_reg.values('employee_name').annotate(
             total_candidates=Count('id'),
             selected_candidates=Count('id', filter=Q(selection_status='Selected')),
             pending_candidates=Count('id', filter=Q(selection_status='Pending')),
             rejected_candidates=Count('id', filter=Q(selection_status='Rejected'))
         ).order_by('-total_candidates'))
-        
+
         employee_performance_can = list(current_qs_can.values('employee_name').annotate(
             total_candidates=Count('id'),
             selected_candidates=Count('id', filter=Q(selection_status='Selected')),
@@ -196,30 +175,26 @@ def crm_dashboard(request):
             rejected_candidates=Count('id', filter=Q(selection_status='Rejected'))
         ).order_by('-total_candidates'))
         
-        # Combine and deduplicate employee performance data by employee_name
         employee_performance_dict = {}
         for entry in employee_performance_reg + employee_performance_can:
             emp = entry['employee_name']
             if emp not in employee_performance_dict:
                 employee_performance_dict[emp] = entry
             else:
-                # Sum up the values if duplicate
                 employee_performance_dict[emp]['total_candidates'] += entry['total_candidates']
                 employee_performance_dict[emp]['selected_candidates'] += entry['selected_candidates']
                 employee_performance_dict[emp]['pending_candidates'] += entry['pending_candidates']
                 employee_performance_dict[emp]['rejected_candidates'] += entry['rejected_candidates']
         employee_performance = sorted(employee_performance_dict.values(), key=lambda x: x['total_candidates'], reverse=True)
 
-        # Lead generation for both databases
         lead_generation_reg = list(current_qs_reg.filter(lead_generate__in=['Hot', 'Converted']).values('employee_name').annotate(
             lead_count=Count('id')
         ).order_by('-lead_count'))
-        
+
         lead_generation_can = list(current_qs_can.filter(lead_generate__in=['Hot', 'Converted']).values('employee_name').annotate(
             lead_count=Count('id')
         ).order_by('-lead_count'))
-        
-        # Combine and deduplicate lead generation data by employee_name
+
         lead_generation_dict = {}
         for entry in lead_generation_reg + lead_generation_can:
             emp = entry['employee_name']
@@ -228,24 +203,19 @@ def crm_dashboard(request):
             else:
                 lead_generation_dict[emp]['lead_count'] += entry['lead_count']
         lead_generation = sorted(lead_generation_dict.values(), key=lambda x: x['lead_count'], reverse=True)
-        
-        # Total lead generation
         total_lead_generation = sum([entry['lead_count'] for entry in lead_generation])
-
-        # Call connection status for both databases
+        
         call_connection_reg = list(current_qs_reg.exclude(call_connection__isnull=True).exclude(call_connection__exact='').values(
             'employee_name', 'call_connection'
         ).annotate(
             count=Count('id')
         ).order_by('employee_name', '-count'))
-        
         call_connection_can = list(current_qs_can.exclude(call_connection__isnull=True).exclude(call_connection__exact='').values(
             'employee_name', 'call_connection'
         ).annotate(
             count=Count('id')
         ).order_by('employee_name', '-count'))
         
-        # Combine and deduplicate call connection data by (employee_name, call_connection)
         call_connection_dict = {}
         for entry in call_connection_reg + call_connection_can:
             key = (entry['employee_name'], entry['call_connection'])
@@ -254,83 +224,167 @@ def crm_dashboard(request):
             else:
                 call_connection_dict[key]['count'] += entry['count']
         call_connection = sorted(call_connection_dict.values(), key=lambda x: (x['employee_name'], -x['count']))
-
-        # Interview status for both databases
+        
         interview_candidates = current_qs_reg.filter(send_for_interview__in=['Scheduled', 'Rescheduled']).count() + current_qs_can.filter(send_for_interview__in=['Scheduled', 'Rescheduled']).count()
-
-        # Status counts with comparison percentages
-        def get_status_comparison(current_reg, current_can, previous_reg, previous_can):
-            current_total = current_reg + current_can
-            previous_total = previous_reg + previous_can
-            if previous_total > 0:
-                change = ((current_total - previous_total) / previous_total) * 100
-                return f"{change:+.1f}%"
-            elif current_total > 0:
-                return "+100%"
+        
+        # --- NEW & MODIFIED CODE FOR THE TABLE DATA ---
+        
+        # Helper function to calculate time ago string
+        def time_ago_string(dt):
+            if not dt:
+                return "N/A"
+            now = timezone.now()
+            diff = now - dt
+            if diff.days > 0:
+                return f"{diff.days} day{'s' if diff.days > 1 else ''} ago"
+            elif diff.seconds >= 3600:
+                hours = diff.seconds // 3600
+                return f"{hours} hour{'s' if hours > 1 else ''} ago"
+            elif diff.seconds >= 60:
+                minutes = diff.seconds // 60
+                return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
             else:
-                return "0%"
+                return "Just now"
+
+        # Aggregate all unique employee names from both databases
+        employee_names_reg = list(current_qs_reg.values_list('employee_name', flat=True).distinct())
+        employee_names_can = list(current_qs_can.values_list('employee_name', flat=True).distinct())
+        all_employees = sorted(list(set(employee_names_reg + employee_names_can)))
+
+        # Prepare a dictionary to hold the aggregated data for each employee
+        employee_table_data = {}
+        for emp_name in all_employees:
+            employee_table_data[emp_name] = {
+                'emp_name': emp_name,
+                # 'emp_code': 'N/A', # Placeholder if not available in your models
+                'total_calls_made': 0,
+                'connected_calls': 0,
+                'connection_rate': '0.0%',
+                'leads_generated': 0,
+                'last_call_made_time_ago': 'N/A',
+                'last_action_timestamp': None, # New field for JavaScript
+                'has_last_call': False, # New flag for JavaScript
+            }
+
+        # Fetch and merge call data
+        call_data_reg = list(current_qs_reg.filter(employee_name__in=all_employees).values('employee_name', 'call_connection').annotate(count=Count('id')))
+        call_data_can = list(current_qs_can.filter(employee_name__in=all_employees).values('employee_name', 'call_connection').annotate(count=Count('id')))
         
-        # Current status for both databases
-        current_status_reg = list(current_qs_reg.values('selection_status').annotate(
-            count=Count('id')
-        ).order_by('-count'))
+        for entry in call_data_reg + call_data_can:
+            emp_name = entry['employee_name']
+            if emp_name in employee_table_data:
+                count = entry['count']
+                employee_table_data[emp_name]['total_calls_made'] += count
+                if entry['call_connection'] in ['Yes', 'Connected']:
+                    employee_table_data[emp_name]['connected_calls'] += count
+
+        # Fetch the most recent register_time for each employee
+        last_action_times_reg = current_qs_reg.values('employee_name').annotate(last_action_time=Max('register_time'))
+        last_action_times_can = current_qs_can.values('employee_name').annotate(last_action_time=Max('register_time'))
         
-        current_status_can = list(current_qs_can.values('selection_status').annotate(
-            count=Count('id')
-        ).order_by('-count'))
+        last_action_times_dict = {}
+        for entry in list(last_action_times_reg) + list(last_action_times_can):
+            emp_name = entry['employee_name']
+            last_action_time = entry['last_action_time']
+            if emp_name not in last_action_times_dict or last_action_time > last_action_times_dict[emp_name]:
+                last_action_times_dict[emp_name] = last_action_time
+
+        # Calculate connection rate and last call time string
+        for emp_name, data in employee_table_data.items():
+            total_calls = data['total_calls_made']
+            connected_calls = data['connected_calls']
+            if total_calls > 0:
+                rate = (connected_calls / total_calls) * 100
+                data['connection_rate'] = f"{rate:.1f}%"
+            
+            # Populate the last call made time using the last action time
+            last_action_dt = last_action_times_dict.get(emp_name)
+            if last_action_dt:
+                data['last_call_made_time_ago'] = time_ago_string(last_action_dt)
+                data['last_action_timestamp'] = last_action_dt.isoformat() # ISO format for JS
+                data['has_last_call'] = True
+
+        # Fetch and merge lead data
+        lead_data_reg = list(current_qs_reg.filter(employee_name__in=all_employees, lead_generate__in=['Hot', 'Converted']).values('employee_name').annotate(count=Count('id')))
+        lead_data_can = list(current_qs_can.filter(employee_name__in=all_employees, lead_generate__in=['Hot', 'Converted']).values('employee_name').annotate(count=Count('id')))
         
-        # Combine and deduplicate current status data by selection_status
+        for entry in lead_data_reg + lead_data_can:
+            emp_name = entry['employee_name']
+            if emp_name in employee_table_data:
+                employee_table_data[emp_name]['leads_generated'] += entry['count']
+
+        # Convert the dictionary back to a list for template iteration
+        employee_table_list = sorted(list(employee_table_data.values()), key=lambda x: x['total_calls_made'], reverse=True)
+
+        # --- End of new code for table data ---
+
+        # Calculate other dashboard cards (unchanged)
+        def get_status_comparison(current_count, previous_count):
+            if previous_count > 0:
+                change = ((current_count - previous_count) / previous_count) * 100
+                return f"{change:+.1f}%"
+            elif current_count > 0:
+                return "+100.0%"
+            else:
+                return "0.0%"
+
+        prev_qs_reg = Candidate_registration.objects.none()
+        prev_qs_can = Candidate.objects.none()
+        if period != 'custom':
+             # Calculate previous period date ranges for comparison
+            if period == 'day':
+                prev_start = start_date - timedelta(days=1)
+                prev_end = end_date - timedelta(days=1)
+            elif period == 'week':
+                prev_start = start_date - timedelta(days=7)
+                prev_end = end_date - timedelta(days=7)
+            elif period == 'month':
+                prev_start = (start_date.replace(day=1) - timedelta(days=1)).replace(day=1)
+                prev_end = start_date.replace(day=1)
+            elif period == 'year':
+                prev_start = start_date.replace(year=start_date.year - 1)
+                prev_end = end_date.replace(year=end_date.year - 1)
+            
+            prev_qs_reg = Candidate_registration.objects.filter(register_time__date__range=[prev_start, prev_end - timedelta(days=1)])
+            prev_qs_can = Candidate.objects.filter(register_time__date__range=[prev_start, prev_end - timedelta(days=1)])
+
+        total_candidates = current_qs_reg.count() + current_qs_can.count()
+        selected_candidates = (current_qs_reg.filter(selection_status='Selected').count() +
+                               current_qs_can.filter(selection_status='Selected').count())
+        pending_candidates = (current_qs_reg.filter(selection_status='Pending').count() +
+                              current_qs_can.filter(selection_status='Pending').count())
+        rejected_candidates = (current_qs_reg.filter(selection_status='Rejected').count() +
+                               current_qs_can.filter(selection_status='Rejected').count())
+        prev_total_candidates = prev_qs_reg.count() + prev_qs_can.count()
+
+        status_comparison = {
+            'day': get_status_comparison(total_candidates, prev_total_candidates if period == 'day' else 0),
+            'week': get_status_comparison(total_candidates, prev_total_candidates if period == 'week' else 0),
+            'month': get_status_comparison(total_candidates, prev_total_candidates if period == 'month' else 0),
+            'year': get_status_comparison(total_candidates, prev_total_candidates if period == 'year' else 0),
+        }
+        
+        current_status_reg_list = list(current_qs_reg.values('selection_status').annotate(count=Count('id')))
+        current_status_can_list = list(current_qs_can.values('selection_status').annotate(count=Count('id')))
         current_status_dict = {}
-        for entry in current_status_reg + current_status_can:
+        for entry in current_status_reg_list + current_status_can_list:
             status = entry['selection_status']
             if status not in current_status_dict:
                 current_status_dict[status] = entry
             else:
                 current_status_dict[status]['count'] += entry['count']
         current_status = sorted(current_status_dict.values(), key=lambda x: -x['count'])
-        
-        # Status comparison for both databases
-        status_comparison = {
-            'day': get_status_comparison(
-                prev_day_qs_reg.count(), prev_day_qs_can.count(),
-                prev_day_qs_reg.count(), prev_day_qs_can.count()
-            ),
-            'week': get_status_comparison(
-                prev_week_qs_reg.count(), prev_week_qs_can.count(),
-                prev_week_qs_reg.count(), prev_week_qs_can.count()
-            ),
-            'month': get_status_comparison(
-                prev_month_qs_reg.count(), prev_month_qs_can.count(),
-                prev_month_qs_reg.count(), prev_month_qs_can.count()
-            ),
-            'year': get_status_comparison(
-                prev_year_qs_reg.count(), prev_year_qs_can.count(),
-                prev_year_qs_reg.count(), prev_year_qs_can.count()
-            ),
-        }
-        
-        # Calculate total counts for both databases
-        total_candidates = current_qs_reg.count() + current_qs_can.count()
-        selected_candidates = (current_qs_reg.filter(selection_status='Selected').count() + 
-                             current_qs_can.filter(selection_status='Selected').count())
-        pending_candidates = (current_qs_reg.filter(selection_status='Pending').count() + 
-                             current_qs_can.filter(selection_status='Pending').count())
-        rejected_candidates = (current_qs_reg.filter(selection_status='Rejected').count() + 
-                             current_qs_can.filter(selection_status='Rejected').count())
-        
-        # Previous period counts for both databases
-        prev_day_count = prev_day_qs_reg.count() + prev_day_qs_can.count()
-        prev_week_count = prev_week_qs_reg.count() + prev_week_qs_can.count()
-        prev_month_count = prev_month_qs_reg.count() + prev_month_qs_can.count()
-        prev_year_count = prev_year_qs_reg.count() + prev_year_qs_can.count()
 
-        
-        
+
         # Prepare context for template
         context = {
+            # New context for the table
+            'employee_table_data': employee_table_list,
+            
+            # Existing context variables
             'employee_performance': employee_performance,
             'lead_generation': lead_generation,
-            'total_lead_generation' : total_lead_generation,
+            'total_lead_generation': total_lead_generation,
             'call_connection': call_connection,
             'interview_candidates': interview_candidates,
             'current_status': current_status,
@@ -338,26 +392,110 @@ def crm_dashboard(request):
             'period': period,
             'start_date': start_date,
             'end_date': end_date - timedelta(days=1) if end_date else None,
+            'custom_start': custom_start,
+            'custom_end': custom_end,
             'total_candidates': total_candidates,
             'selected_candidates': selected_candidates,
             'pending_candidates': pending_candidates,
             'rejected_candidates': rejected_candidates,
-            'prev_day_count': prev_day_count,
-            'prev_week_count': prev_week_count,
-            'prev_month_count': prev_month_count,
-            'prev_year_count': prev_year_count,
-            'period': period,
-            'start_date': start_date,
-            'end_date': end_date - timedelta(days=1) if end_date else None,
-            'custom_start': custom_start,
-            'custom_end': custom_end,
             'interview_detail': interview_detail,
             'follow_up_candidates': follow_up_candidates,
         }
         return render(request, 'crm/crm-dashboard.html', context)
     else:
-        # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
+    
+@login_required
+def employee_candidates_list(request, employee_name, filter_type):
+    """
+    Renders a page with a list of all candidates for a specific employee,
+    filtered by the selected time period and performance category.
+    """
+    if request.user.is_staff or request.user.is_superuser:
+        # Get filtering data from URL parameters
+        period = request.GET.get('period', 'all')
+        custom_start_str = request.GET.get('start_date')
+        custom_end_str = request.GET.get('end_date')
+
+        start_date = None
+        end_date = None
+        date_range_display = "All Time"
+
+        if custom_start_str and custom_end_str:
+            try:
+                start_date = datetime.strptime(custom_start_str, '%Y-%m-%d').date()
+                end_date = datetime.strptime(custom_end_str, '%Y-%m-%d').date() + timedelta(days=1)
+                date_range_display = f"{start_date.strftime('%b %d, %Y')} - {datetime.strptime(custom_end_str, '%Y-%m-%d').date().strftime('%b %d, %Y')}"
+            except (ValueError, TypeError):
+                pass
+        else:
+            today = datetime.now().date()
+            if period == 'day':
+                start_date = today
+                end_date = today + timedelta(days=1)
+                date_range_display = "Today"
+            elif period == 'week':
+                start_date = today - timedelta(days=today.weekday())
+                end_date = start_date + timedelta(days=7)
+                date_range_display = "This Week"
+            elif period == 'month':
+                start_date = today.replace(day=1)
+                end_date = (start_date.replace(month=start_date.month + 1)
+                            if start_date.month < 12
+                            else start_date.replace(year=start_date.year + 1, month=1))
+                date_range_display = "This Month"
+            elif period == 'year':
+                start_date = today.replace(month=1, day=1)
+                end_date = start_date.replace(year=start_date.year + 1)
+                date_range_display = "This Year"
+
+        # Initialize base querysets for both models
+        candidates_reg = Candidate_registration.objects.filter(employee_name=employee_name)
+        candidates_can = Candidate.objects.filter(employee_name=employee_name)
+
+        # Apply date filters
+        if start_date and end_date:
+            candidates_reg = candidates_reg.filter(register_time__date__range=[start_date, end_date - timedelta(days=1)])
+            candidates_can = candidates_can.filter(register_time__date__range=[start_date, end_date - timedelta(days=1)])
+
+        # Apply additional filters based on filter_type
+        filter_title = ""
+        if filter_type == 'leads':
+            candidates_reg = candidates_reg.filter(lead_generate__in=['Hot', 'Converted'])
+            candidates_can = candidates_can.filter(lead_generate__in=['Hot', 'Converted'])
+            filter_title = "Lead Generation"
+        elif filter_type == 'calls':
+            candidates_reg = candidates_reg.filter(Q(call_connection='Yes') | Q(call_connection='Connected'))
+            candidates_can = candidates_can.filter(Q(call_connection='Yes') | Q(call_connection='Connected'))
+            filter_title = "Call Connections"
+        elif filter_type == 'performance':
+            filter_title = "Performance"
+        else:
+            filter_title = "All Candidates"
+
+        # Combine the querysets and sort
+        candidates = list(chain(candidates_reg, candidates_can))
+        candidates.sort(key=lambda x: x.register_time if x.register_time else datetime.min, reverse=True)
+        
+        # --- DEBUGGING STATEMENT ---
+        # This will print the number of candidates found to your console
+        print(f"Employee Candidates List - Employee: {employee_name}, Filter: {filter_type}, Period: {period}, Candidates found: {len(candidates)}")
+        # --- END OF DEBUGGING STATEMENT ---
+
+        context = {
+            'employee_name': employee_name,
+            'filter_title': filter_title,
+            'candidates': candidates,
+            'period': period,
+            'date_range_display': date_range_display,
+            'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
+            'end_date': (end_date - timedelta(days=1)).strftime('%Y-%m-%d') if end_date else '',
+            'filter_type': filter_type,
+        }
+        return render(request, 'crm/employee-candidates-list.html', context)
+    else:
+        return render(request, 'crm/404.html', status=404)
+
 
 import datetime as dt
 from django.db.models.fields.files import FieldFile # Make sure this is imported!

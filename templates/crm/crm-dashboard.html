@@ -1,10 +1,8 @@
 {% extends "crm/base.html" %}
-
 {% block content %}
 <div class="page-body">
     <div class="container-xl">
         <div class="container-fluid px-4">
-            <!-- Header Section -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="mb-0">Performance Dashboard</h1>
                 <div class="daterange-display badge bg-light text-dark p-2">
@@ -16,12 +14,10 @@
                     {% endif %}
                 </div>
             </div>
-        
-            <!-- Combined Filter Card -->
+
             <div class="card mb-4 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="row align-items-center">
-                        <!-- Quick Period Buttons -->
                         <div class="col-lg-6 mb-3 mb-lg-0">
                             <div class="btn-group btn-group-segmented w-100" role="group">
                                 <a href="?period=day" class="btn btn-period {% if period == 'day' %}active{% endif %}">
@@ -42,22 +38,21 @@
                                 </a>
                             </div>
                         </div>
-                        
-                        <!-- Date Range Picker -->
+
                         <div class="col-lg-6">
                             <form method="get" class="row g-2 align-items-center">
                                 <div class="col-md-5">
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text bg-light"><i class="fas fa-calendar-day text-muted"></i></span>
-                                        <input type="date" class="form-control border-start-0" id="start_date" name="start_date" 
-                                               value="{{ custom_start|default:'' }}" placeholder="Start date">
+                                        <input type="date" class="form-control border-start-0" id="start_date" name="start_date"
+                                                value="{{ custom_start|default:'' }}" placeholder="Start date">
                                     </div>
                                 </div>
                                 <div class="col-md-5">
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text bg-light"><i class="fas fa-calendar-day text-muted"></i></span>
-                                        <input type="date" class="form-control border-start-0" id="end_date" name="end_date" 
-                                               value="{{ custom_end|default:'' }}" placeholder="End date">
+                                        <input type="date" class="form-control border-start-0" id="end_date" name="end_date"
+                                                value="{{ custom_end|default:'' }}" placeholder="End date">
                                     </div>
                                 </div>
                                 <div class="col-md-2 d-flex">
@@ -76,14 +71,13 @@
                 </div>
             </div>
         </div>
-        
+
         <style>
             /* Filter Section Styles */
             .daterange-display {
                 font-size: 0.85rem;
                 border: 1px solid rgba(0,0,0,0.1);
             }
-            
             .btn-period {
                 border: 1px solid #e0e0e0;
                 background-color: #f8f9fa;
@@ -97,22 +91,9 @@
                 text-align: center;
                 white-space: nowrap;
             }
-            
-            .btn-period:first-child {
-                border-radius: 6px 0 0 6px;
-            }
-            
-            .btn-period:last-child {
-                border-radius: 0 6px 6px 0;
-                margin-right: 0;
-            }
-            
-            .btn-period:hover {
-                background-color: #f1f3f5;
-                color: #495057;
-                z-index: 1;
-            }
-            
+            .btn-period:first-child { border-radius: 6px 0 0 6px; }
+            .btn-period:last-child { border-radius: 0 6px 6px 0; margin-right: 0; }
+            .btn-period:hover { background-color: #f1f3f5; color: #495057; z-index: 1; }
             .btn-period.active {
                 background-color: rgba(13, 110, 253, 0.1);
                 color: #0d6efd;
@@ -120,51 +101,47 @@
                 font-weight: 500;
                 z-index: 2;
             }
-            
-            .btn-group-segmented {
-                border-radius: 6px;
-                display: flex;
+            .btn-group-segmented { border-radius: 6px; display: flex; }
+            .input-group.input-group-sm .input-group-text { padding: 0.375rem 0.5rem; font-size: 0.775rem; }
+            .input-group.input-group-sm .form-control { padding: 0.375rem 0.5rem; font-size: 0.775rem; }
+
+            /* New light color styles for the table rows */
+            .table-warning-light {
+                background-color: #ffc10770 !important; /* A light yellow-orange */
+                border-left: 3px solid #ffc107;
             }
-            
-            .input-group.input-group-sm .input-group-text {
-                padding: 0.375rem 0.5rem;
-                font-size: 0.775rem;
+            .table-danger-light {
+                background-color: #ff28283b !important; /* A very light red */
+                border-left: 3px solid #dc3545;
             }
-            
-            .input-group.input-group-sm .form-control {
-                padding: 0.375rem 0.5rem;
-                font-size: 0.775rem;
+
+            /* Fix for hover effect on colored rows */
+            #recruiter-table-body tr.table-warning-light:hover, 
+            #recruiter-table-body tr.table-danger-light:hover {
+                background-color: #e9ecef !important; /* Keep the default hover color */
             }
-            
+
             /* Responsive adjustments */
             @media (max-width: 992px) {
-                .btn-period {
-                    padding: 0.5rem 0.5rem;
-                    font-size: 0.75rem;
-                }
-                
-                .btn-period i {
-                    margin-right: 0.25rem !important;
-                }
+                .btn-period { padding: 0.5rem 0.5rem; font-size: 0.75rem; }
+                .btn-period i { margin-right: 0.25rem !important; }
             }
-            
             @media (max-width: 768px) {
-                .btn-period span.badge {
-                    display: none;
-                }
+                .btn-period span.badge { display: none; }
+            }
+
+            .clickable-row {
+                cursor: pointer;
             }
         </style>
-        
+
         <script>
             // Set max date for end date to today
             document.addEventListener('DOMContentLoaded', function() {
                 const today = new Date().toISOString().split('T')[0];
                 const endDateField = document.getElementById('end_date');
-                
                 if (endDateField) {
                     endDateField.max = today;
-                    
-                    // When start date changes, update end date min
                     const startDateField = document.getElementById('start_date');
                     if (startDateField) {
                         startDateField.max = today;
@@ -176,32 +153,141 @@
                         });
                     }
                 }
+
+                // Make table rows clickable for navigation
+                const clickableRows = document.querySelectorAll('.clickable-row');
+                clickableRows.forEach(row => {
+                    row.addEventListener('click', function(event) {
+                           // Prevents the click from triggering if the event target is an 'a' tag
+                        if (event.target.tagName === 'A') {
+                            return;
+                        }
+                        const url = this.dataset.url;
+                        if (url) {
+                            window.location.href = url;
+                        }
+                    });
+                });
             });
         </script>
-    
-    <!-- Key Metrics Row -->
-    <div class="row mb-4">
-        <!-- Total Candidates -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-start-lg border-start-primary h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-primary small fw-bold">TOTAL CANDIDATES</div>
-                            <div class="fs-3 fw-bold">{{ total_candidates }}</div>
-                        </div>
-                        <div class="text-end">
-                            <div class="text-xs">
-                                <span class="{% if status_comparison.day|slice:'1' == '+' %}text-success{% else %}text-danger{% endif %}">
-                                    <i class="fas fa-caret-{% if status_comparison.day|slice:'1' == '+' %}up{% else %}down{% endif %}"></i>
-                                    {{ status_comparison.day }}
-                                </span> vs yesterday
+        
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-start-lg border-start-primary h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-primary small fw-bold">TOTAL CANDIDATES</div>
+                                <div class="fs-3 fw-bold">{{ total_candidates }}</div>
                             </div>
-                            <div class="text-xs">
-                                <span class="{% if status_comparison.month|slice:'1' == '+' %}text-success{% else %}text-danger{% endif %}">
-                                    <i class="fas fa-caret-{% if status_comparison.month|slice:'1' == '+' %}up{% else %}down{% endif %}"></i>
-                                    {{ status_comparison.month }}
-                                </span> vs last month
+                            <div class="text-end">
+                                <div class="text-xs">
+                                    <span class="{% if status_comparison.day|slice:'1' == '+' %}text-success{% else %}text-danger{% endif %}">
+                                        <i class="fas fa-caret-{% if status_comparison.day|slice:'1' == '+' %}up{% else %}down{% endif %}"></i>
+                                        {{ status_comparison.day }}
+                                    </span> vs yesterday
+                                </div>
+                                <div class="text-xs">
+                                    <span class="{% if status_comparison.month|slice:'1' == '+' %}text-success{% else %}text-danger{% endif %}">
+                                        <i class="fas fa-caret-{% if status_comparison.month|slice:'1' == '+' %}up{% else %}down{% endif %}"></i>
+                                        {{ status_comparison.month }}
+                                    </span> vs last month
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-start-lg border-start-success h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-success small fw-bold">SELECTED</div>
+                                <div class="fs-3 fw-bold">{{ selected_candidates }}</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-xs">SUCCESS RATE</div>
+                                <div class="fs-5 fw-bold">
+                                    {% if total_candidates > 0 %}
+                                        {{ selected_candidates|floatformat:1 }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar bg-success" role="progressbar"
+                                        style="width: {% if total_candidates > 0 %}{{ selected_candidates|floatformat:0 }}{% else %}0{% endif %}%"
+                                        aria-valuenow="{{ selected_candidates }}"
+                                        aria-valuemin="0"
+                                        aria-valuemax="{{ total_candidates }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-start-lg border-start-info h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-info small fw-bold">INTERVIEW STAGE</div>
+                                <div class="fs-3 fw-bold">{{ interview_candidates }}</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-xs">CONVERSION RATE</div>
+                                <div class="fs-5 fw-bold">
+                                    {% if total_candidates > 0 %}
+                                        {{ interview_candidates|floatformat:1 }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar bg-info" role="progressbar"
+                                        style="width: {% if total_candidates > 0 %}{{ interview_candidates|floatformat:0 }}{% else %}0{% endif %}%"
+                                        aria-valuenow="{{ interview_candidates }}"
+                                        aria-valuemin="0"
+                                        aria-valuemax="{{ total_candidates }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-start-lg border-start-warning h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-warning small fw-bold">LEADS GENERATED</div>
+                                <div class="fs-3 fw-bold">{{ total_lead_generation}}</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-xs">ACTIVE RECRUITERS</div>
+                                <div class="fs-5 fw-bold">
+                                    {{ employee_performance|length }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar bg-warning" role="progressbar"
+                                        style="width: {% if employee_performance|length > 0 %}{{ lead_generation|length|floatformat:0 }}{% else %}0{% endif %}%"
+                                        aria-valuenow="{{ lead_generation|length }}"
+                                        aria-valuemin="0"
+                                        aria-valuemax="{{ employee_performance|length }}">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -209,976 +295,788 @@
             </div>
         </div>
         
-        <!-- Selected Candidates -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-start-lg border-start-success h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-success small fw-bold">SELECTED</div>
-                            <div class="fs-3 fw-bold">{{ selected_candidates }}</div>
-                        </div>
-                        <div class="text-end">
-                            <div class="text-xs">SUCCESS RATE</div>
-                            <div class="fs-5 fw-bold">
-                                {% if total_candidates > 0 %}
-                                    {{ selected_candidates|floatformat:1 }}%
-                                {% else %}
-                                    0%
-                                {% endif %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-list-ul me-1 text-secondary"></i>
+                                <span class="fw-bold">Recruiter Activity Report</span>
                             </div>
                         </div>
                     </div>
-                    <div class="mt-2">
-                        <div class="progress" style="height: 4px;">
-                            <div class="progress-bar bg-success" role="progressbar" 
-                                 style="width: {% if total_candidates > 0 %}{{ selected_candidates|floatformat:0 }}{% else %}0{% endif %}%" 
-                                 aria-valuenow="{{ selected_candidates }}" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="{{ total_candidates }}">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Interview Candidates -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-start-lg border-start-info h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-info small fw-bold">INTERVIEW STAGE</div>
-                            <div class="fs-3 fw-bold">{{ interview_candidates }}</div>
-                        </div>
-                        <div class="text-end">
-                            <div class="text-xs">CONVERSION RATE</div>
-                            <div class="fs-5 fw-bold">
-                                {% if total_candidates > 0 %}
-                                    {{ interview_candidates|floatformat:1 }}%
-                                {% else %}
-                                    0%
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-2">
-                        <div class="progress" style="height: 4px;">
-                            <div class="progress-bar bg-info" role="progressbar" 
-                                 style="width: {% if total_candidates > 0 %}{{ interview_candidates|floatformat:0 }}{% else %}0{% endif %}%" 
-                                 aria-valuenow="{{ interview_candidates }}" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="{{ total_candidates }}">
-                            </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="">
+                                    <tr>
+                                        <th>Emp Name</th>
+                                        <!-- <th>Emp Code</th> -->
+                                        <th class="text-end">No. of Calls Made</th>
+                                        <th class="text-end">Connected</th>
+                                        <th class="text-end">% of Connection</th>
+                                        <th class="text-end">Leads</th>
+                                        <th class="text-end">Last Call Made Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recruiter-table-body">
+                                    {% for emp in employee_table_data %}
+                                        <tr data-last-call-timestamp="{{ emp.last_action_timestamp }}" data-has-call="{{ emp.has_last_call }}">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar avatar-sm me-2 bg-secondary bg-opacity-10 text-white">
+                                                        <i class="fas fa-user-circle"></i>
+                                                    </div>
+                                                    <span>{{ emp.emp_name }}</span>
+                                                </div>
+                                            </td>
+                                            <!-- <td>{{ emp.emp_code }}</td> -->
+                                            <td class="text-end">{{ emp.total_calls_made }}</td>
+                                            <td class="text-end text-success">{{ emp.connected_calls }}</td>
+                                            <td class="text-end">{{ emp.connection_rate }}</td>
+                                            <td class="text-end">{{ emp.leads_generated }}</td>
+                                            <td class="text-end last-call-time">{{ emp.last_call_made_time_ago }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4 text-muted">
+                                                <i class="fas fa-exclamation-circle me-1"></i>
+                                                No data available for the selected period.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Lead Generation -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-start-lg border-start-warning h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-warning small fw-bold">LEADS GENERATED</div>
-                            <div class="fs-3 fw-bold">{{ total_lead_generation}}</div>
-                        </div>
-                        <div class="text-end">
-                            <div class="text-xs">ACTIVE RECRUITERS</div>
-                            <div class="fs-5 fw-bold">
-                                {{ employee_performance|length }}
+
+        <div class="row mt-4">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header ">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-bullseye me-1 text-warning"></i>
+                                <span class="fw-bold">Lead Generation Performance</span>
                             </div>
                         </div>
                     </div>
-                    <div class="mt-2">
-                        <div class="progress" style="height: 4px;">
-                            <div class="progress-bar bg-warning" role="progressbar" 
-                                 style="width: {% if employee_performance|length > 0 %}{{ lead_generation|length|floatformat:0 }}{% else %}0{% endif %}%" 
-                                 aria-valuenow="{{ lead_generation|length }}" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="{{ employee_performance|length }}">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="">
+                                    <tr>
+                                        <th>Recruiter</th>
+                                        <th class="text-end">Leads</th>
+                                        <th class="text-end">% of Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for emp in lead_generation %}
+                                    {% with custom_end_date_str=custom_end|default:end_date|date:"Y-m-d" %}
+                                    {% with start_date_str=start_date|date:"Y-m-d" %}
+                                    <tr class="clickable-row" data-url="{% url 'employee_candidates_list' employee_name=emp.employee_name filter_type='leads' %}?period={{ period }}&start_date={{ start_date_str }}&end_date={{ custom_end_date_str }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar avatar-sm me-2 bg-warning bg-opacity-10 text-white">
+                                                    <i class="fas fa-user-tie"></i>
+                                                </div>
+                                                <span>{{ emp.employee_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end fw-bold">{{ emp.lead_count }}</td>
+                                        <td class="text-end">
+                                            {% if total_candidates > 0 %}
+                                                {{ emp.lead_count|floatformat:1 }}%
+                                            {% else %}
+                                                0%
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                    {% endwith %}
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            No lead generation data available
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header ">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-phone me-1 text-primary"></i>
+                                <span class="fw-bold">Call Connection Analytics</span>
                             </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="">
+                                    <tr>
+                                        <th>Recruiter</th>
+                                        <th class="text-end">Connected</th>
+                                        <th class="text-end">Not Connected</th>
+                                        <th class="text-end">Success Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="call-data-body">
+                                    {% regroup call_connection by employee_name as employee_list %}
+                                    {% with custom_end_date_str=custom_end|default:end_date|date:"Y-m-d" %}
+                                    {% with start_date_str=start_date|date:"Y-m-d" %}
+                                    {% for employee in employee_list %}
+                                    <tr class="call-row clickable-row" data-url="{% url 'employee_candidates_list' employee_name=employee.grouper filter_type='calls' %}?period={{ period }}&start_date={{ start_date_str }}&end_date={{ custom_end_date_str }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar avatar-sm me-2 bg-primary bg-opacity-10 text-white">
+                                                    <i class="fas fa-headset"></i>
+                                                </div>
+                                                <span class="employee-name">{{ employee.grouper }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="yes-connected-total text-end fw-bold"></td>
+                                        <td class="other-calls-total text-end"></td>
+                                        <td class="percentage text-end fw-bold text-success"></td>
+                                        <td class="d-none call-data">
+                                            {% for item in employee.list %}
+                                            <span data-connection="{{ item.call_connection }}" data-count="{{ item.count }}"></span>
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% endwith %}
+                                    {% endwith %}
+                                </tbody>
+                                <script>
+                                    document.addEventListener("DOMContentLoaded", function () {
+                                        const rows = document.querySelectorAll(".call-row");
+                                        rows.forEach(row => {
+                                            let yesConnectedTotal = 0;
+                                            let otherCallsTotal = 0;
+                                            row.querySelectorAll(".call-data span").forEach(span => {
+                                                const type = span.dataset.connection.trim();
+                                                const count = parseInt(span.dataset.count) || 0;
+                                                if (type === "Yes" || type === "Connected") {
+                                                    yesConnectedTotal += count;
+                                                } else {
+                                                    otherCallsTotal += count;
+                                                }
+                                            });
+                                            const total = yesConnectedTotal + otherCallsTotal;
+                                            const percentage = total ? ((yesConnectedTotal / total) * 100).toFixed(1) : "0.0";
+                                            row.querySelector(".yes-connected-total").textContent = yesConnectedTotal;
+                                            row.querySelector(".other-calls-total").textContent = otherCallsTotal;
+                                            row.querySelector(".percentage").textContent = `${percentage}%`;
+                                        });
+                                    });
+                                </script>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header ">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-user-tie me-1 text-info"></i>
+                                <span class="fw-bold">Interview Pipeline</span>
+                            </div>
+                            <span class="badge   text-info">
+                                {{ interview_candidates }} Candidates
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <span class="fw-bold">Conversion Rate</span>
+                                <h3 class="mt-1">
+                                    {% if total_candidates > 0 %}
+                                        {{ interview_candidates|floatformat:1 }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </h3>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-muted small">of total candidates</div>
+                                <div class="fw-bold">{{ total_candidates }} Total</div>
+                            </div>
+                        </div>
+                        <div class="progress mb-3" style="height: 10px;">
+                            <div class="progress-bar bg-info" role="progressbar"
+                                    style="width: {% if total_candidates > 0 %}{{ interview_candidates|floatformat:0 }}{% else %}0{% endif %}%"
+                                    aria-valuenow="{{ interview_candidates }}"
+                                    aria-valuemin="0"
+                                    aria-valuemax="{{ total_candidates }}">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <div>0%</div>
+                            <div>50%</div>
+                            <div>100%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header ">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-trophy me-1 text-success"></i>
+                                <span class="fw-bold">Top Performers</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="">
+                                    <tr>
+                                        <th>Recruiter</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-end">Selected</th>
+                                        <th class="text-end">Success Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for emp in employee_performance|slice:":5" %}
+                                    {% with custom_end_date_str=custom_end|default:end_date|date:"Y-m-d" %}
+                                    {% with start_date_str=start_date|date:"Y-m-d" %}
+                                    <tr class="clickable-row" data-url="{% url 'employee_candidates_list' employee_name=emp.employee_name filter_type='performance' %}?period={{ period }}&start_date={{ start_date_str }}&end_date={{ custom_end_date_str }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar avatar-sm me-2 bg-success bg-opacity-10 text-white">
+                                                    {{ forloop.counter }}
+                                                </div>
+                                                <span>{{ emp.employee_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">{{ emp.total_candidates }}</td>
+                                        <td class="text-end fw-bold text-success">{{ emp.selected_candidates }}</td>
+                                        <td class="text-end fw-bold">
+                                            {% if emp.total_candidates > 0 %}
+                                                {{ emp.selected_candidates|floatformat:1 }}%
+                                            {% else %}
+                                                0%
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                    {% endwith %}
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            No performance data available
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Today's Interviews</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter table-hover">
+                                <thead class="">
+                                    <tr>
+                                        <th>Candidate</th>
+                                        <th>Status</th>
+                                        <th>Time</th>
+                                        <th class="w-1"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for interview in interview_detail %}
+                                    <tr class="interview-row clickable-row" data-date="{{ interview.interview_date_time|date:'Y-m-d' }}" data-interview-id="{{ interview.id }}"
+                                        data-url="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}">
+                                        <td>{{ interview.candidate.candidate_name }}</td>
+                                        <td>{{ interview.status }}</td>
+                                        <td class="interview-time" data-time="{{ interview.interview_date_time|date:'H:i' }}">{{ interview.interview_date_time|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            <a href="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}" class="btn btn-link">
+                                                View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <div class="empty">
+                                                <div class="empty-icon">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                                        <path d="M9 10l.01 0" />
+                                                        <path d="M15 10l.01 0" />
+                                                        <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
+                                                    </svg>
+                                                </div>
+                                                <p class="empty-title">No interviews scheduled for today</p>
+                                                <p class="empty-subtitle text-muted">
+                                                    Check back later for updates
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Today's Follow Ups</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter table-hover">
+                                <thead class="">
+                                    <tr>
+                                        <th>Candidate</th>
+                                        <th>Unique Code</th>
+                                        <th>Mobile Number</th>
+                                        <th>Time</th>
+                                        <th class="w-1"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for follow_up in follow_up_candidates %}
+                                    <tr class="followup-row clickable-row" data-date="{{ follow_up.next_follow_up_date_time|date:'Y-m-d' }}" data-followup-id="{{ follow_up.id }}"
+                                        data-url="{% if follow_up.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' follow_up.id %}{% else %}{% url 'admin_candidate_profile' follow_up.id %}{% endif %}">
+                                        <td>{{ follow_up.candidate_name }}</td>
+                                        <td>
+                                            {% if follow_up.lead_source == 'EVMS' %}
+                                                {{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}
+                                            {% else %}
+                                                {{ follow_up.unique_code|default:"-" }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ follow_up.candidate_mobile_number|default:"-" }}</td>
+                                        <td class="followup-time" data-time="{{ follow_up.next_follow_up_date_time|date:'H:i' }}">{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            {% if follow_up.lead_source == 'EVMS' %}
+                                                <a href="{% url 'evms_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
+                                                    View
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'admin_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
+                                                    View
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Main Content Row -->
-    <div class="row">
-        <!-- Lead Generation Performance -->
-        <div class="col-lg-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header ">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-bullseye me-1 text-warning"></i>
-                            <span class="fw-bold">Lead Generation Performance</span>
-                        </div>
-                        {% comment %} <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
-                                    id="leadDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="leadDropdown">
-                                <li><a class="dropdown-item" href="#">Export</a></li>
-                                <li><a class="dropdown-item" href="#">View All</a></li>
-                            </ul>
-                        </div> {% endcomment %}
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Recruiter</th>
-                                    <th class="text-end">Leads</th>
-                                    <th class="text-end">% of Total</th>
-                                    {% comment %} <th class="text-end">Trend</th> {% endcomment %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for emp in lead_generation %}
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar avatar-sm me-2 bg-warning bg-opacity-10 text-white">
-                                                <i class="fas fa-user-tie"></i>
-                                            </div>
-                                            <span>{{ emp.employee_name }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-end fw-bold">{{ emp.lead_count }}</td>
-                                    <td class="text-end">
-                                        {% if total_candidates > 0 %}
-                                            {{ emp.lead_count|floatformat:1 }}%
-                                        {% else %}
-                                            0%
-                                        {% endif %}
-                                    </td>
-                                    {% comment %} <td class="text-end">
-                                        <span class="badge bg-success bg-opacity-10 text-success">
-                                            <i class="fas fa-caret-up"></i> 5.2%
-                                        </span>
-                                    </td> {% endcomment %}
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center py-4 text-muted">
-                                        <i class="fas fa-exclamation-circle me-1"></i>
-                                        No lead generation data available
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Call Connection Analytics -->
-        <div class="col-lg-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header ">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-phone me-1 text-primary"></i>
-                            <span class="fw-bold">Call Connection Analytics</span>
-                        </div>
-                        {% comment %} <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
-                                    id="callDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="callDropdown">
-                                <li><a class="dropdown-item" href="#">Export</a></li>
-                                <li><a class="dropdown-item" href="#">View All</a></li>
-                            </ul>
-                        </div> {% endcomment %}
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Recruiter</th>
-                                    <th class="text-end">Connected</th>
-                                    <th class="text-end">Not Connected</th>
-                                    <th class="text-end">Success Rate</th>
-                                </tr>
-                            </thead>
-                            <tbody id="call-data-body">
-    {% regroup call_connection by employee_name as employee_list %}
-    {% for employee in employee_list %}
-    <tr class="call-row">
-        <td>
-            <div class="d-flex align-items-center">
-                <div class="avatar avatar-sm me-2 bg-primary bg-opacity-10 text-white">
-                    <i class="fas fa-headset"></i>
-                </div>
-                <span class="employee-name">{{ employee.grouper }}</span>
-            </div>
-        </td>
-        <td class="yes-connected-total text-end fw-bold"></td>
-        <td class="other-calls-total text-end"></td>
-        <td class="percentage text-end fw-bold text-success"></td>
 
-        <!-- hidden data for JS -->
-        <td class="d-none call-data">
-            {% for item in employee.list %}
-                <span data-connection="{{ item.call_connection }}" data-count="{{ item.count }}"></span>
-            {% endfor %}
-        </td>
-    </tr>
-    {% endfor %}
-</tbody>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const rows = document.querySelectorAll(".call-row");
+    <style>
+        .avatar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+        }
+        .progress { border-radius: 2px; }
+        .card { border: none; box-shadow: 0 0.15rem 1.75rem 0 rgba(33, 40, 50, 0.15); }
+        .card-header { border-bottom: 1px solid rgba(33, 40, 50, 0.125); }
+        .border-start-lg { border-left-width: 0.25rem !important; }
+        .table th { font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+        .table td { vertical-align: middle; }
+    </style>
 
-    rows.forEach(row => {
-        let yesConnectedTotal = 0;
-        let otherCallsTotal = 0;
+    <style>
+        .notification-container {
+          position: fixed;
+          /* bottom: 20px;
+          right: 20px; */
+          z-index: 9999;
+          display: flex;
+          flex-direction: column-reverse;
+          gap: 15px;
+          max-height: calc(100vh - 40px);
+          overflow-y: auto;
+        }
 
-        // Loop through hidden spans
-        row.querySelectorAll(".call-data span").forEach(span => {
-            const type = span.dataset.connection.trim();
-            const count = parseInt(span.dataset.count) || 0;
+        .notification-card {
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          width: 350px;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          animation: slideIn 0.3s ease-out;
+          transform-origin: right bottom;
+        }
 
-            if (type === "Yes" || type === "Connected") {
-                yesConnectedTotal += count;
-            } else {
-                otherCallsTotal += count;
+        @keyframes slideIn {
+          from { transform: translateX(100%) scale(0.9); opacity: 0; }
+          to { transform: translateX(0) scale(1); opacity: 1; }
+        }
+
+        .notification-header {
+          padding: 12px 16px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-radius: 8px 8px 0 0;
+          color: white;
+        }
+
+        .followup-header { background: #4a6bdf; }
+        .interview-header { background: #ff9800; }
+        .notification-title { margin: 0; font-size: 16px; font-weight: 600; }
+        .notification-close { background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0; line-height: 1; }
+        .notification-body { padding: 16px; color: #333; }
+        .notification-details { margin-top: 12px; background: #f8f9fa; padding: 12px; border-radius: 6px; }
+        .detail-label { font-weight: 600; color: #555; display: inline-block; width: 100px; }
+        .detail-value { color: #222; }
+        .notification-footer { display: flex; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid #eee; gap: 8px; }
+        .notification-btn { padding: 8px 16px; border-radius: 4px; font-size: 14px; cursor: pointer; text-decoration: none; border: none; transition: all 0.2s; }
+        .notification-btn.primary { background: #4a6bdf; color: white; }
+        .notification-btn.warning { background: #ff9800; color: white; }
+        .notification-btn.secondary { background: #f0f0f0; color: #333; }
+        .notification-btn.danger { background: #f44336; color: white; }
+        .notification-container::-webkit-scrollbar { width: 6px; }
+        .notification-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+        .notification-container::-webkit-scrollbar-track { background: transparent; }
+    </style>
+    <div class="notification-container" id="notificationContainer"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Notification system setup
+            const notificationContainer = document.getElementById('notificationContainer');
+            let activeNotifications = new Set();
+            let notificationQueue = [];
+            let isProcessingQueue = false;
+
+            // Load snoozed notifications from localStorage
+            let snoozedNotifications = JSON.parse(localStorage.getItem('snoozedNotifications')) || {};
+
+            // Clean up expired snoozes on load
+            const now = Date.now();
+            for (const id in snoozedNotifications) {
+                if (snoozedNotifications[id] < now) {
+                    delete snoozedNotifications[id];
+                }
             }
+            localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
+
+            // Audio elements
+            const followUpSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            const interviewSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            followUpSound.volume = 0.5;
+            interviewSound.volume = 0.5;
+
+            // ===== FOLLOW UP NOTIFICATIONS =====
+            const followUpRows = document.querySelectorAll('.followup-row');
+            let followUpAlarmIntervals = {};
+
+            // ===== INTERVIEW NOTIFICATIONS =====
+            const interviewRows = document.querySelectorAll('.interview-row');
+            let interviewAlarmIntervals = {};
+
+            // ===== COMMON NOTIFICATION FUNCTIONS =====
+            function isValidNotification(data) {
+                const requiredFields = ['id', 'candidateName', 'time'];
+                return requiredFields.every(field =>
+                    data[field] !== undefined &&
+                    data[field] !== null &&
+                    data[field].toString().trim() !== ''
+                );
+            }
+
+            function createNotificationCard(type, data) {
+                if (!isValidNotification(data)) {
+                    console.log('Invalid notification data:', data);
+                    return null;
+                }
+
+                const notificationId = 'notification-' + Date.now() + '-' + data.id;
+                const headerClass = type === 'followup' ? 'followup-header' : 'interview-header';
+                const btnClass = type === 'followup' ? 'primary' : 'warning';
+
+                const card = document.createElement('div');
+                card.className = 'notification-card';
+                card.id = notificationId;
+
+                if (type === 'followup') {
+                    card.innerHTML = `
+                        <div class="notification-header ${headerClass}">
+                            <h5 class="notification-title">⏰ Follow Up Reminder</h5>
+                            <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">×</button>
+                        </div>
+                        <div class="notification-body">
+                            <p>It's time for your follow up with <strong>${data.candidateName}</strong></p>
+                            <div class="notification-details">
+                                <div><span class="detail-label">Unique Code:</span> <span class="detail-value">${data.uniqueCode || '-'}</span></div>
+                                <div><span class="detail-label">Mobile:</span> <span class="detail-value">${data.mobile || '-'}</span></div>
+                                <div><span class="detail-label">Follow Up Time:</span> <span class="detail-value">${data.time}</span></div>
+                            </div>
+                        </div>
+                        <div class="notification-footer">
+                            <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'followup')">Snooze (5 min)</button>
+                            <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">Close</button>
+                            <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'followup'); removeNotification('${notificationId}', '${data.id}', 'followup')">View Details</a>
+                        </div>
+                    `;
+                } else { // Interview
+                    card.innerHTML = `
+                        <div class="notification-header ${headerClass}">
+                            <h5 class="notification-title">🎤 Interview Alert</h5>
+                            <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">×</button>
+                        </div>
+                        <div class="notification-body">
+                            <p>Interview with <strong>${data.candidateName}</strong> is scheduled in 15 minutes!</p>
+                            <div class="notification-details">
+                                <div><span class="detail-label">Time:</span> <span class="detail-value">${data.time}</span></div>
+                                <div><span class="detail-label">Location:</span> <span class="detail-value">${data.location || 'Not specified'}</span></div>
+                                ${data.position ? `<div><span class="detail-label">Position:</span> <span class="detail-value">${data.position}</span></div>` : ''}
+                            </div>
+                        </div>
+                        <div class="notification-footer">
+                            <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'interview')">Snooze (5 min)</button>
+                            <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">Close</button>
+                            <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'interview'); removeNotification('${notificationId}', '${data.id}', 'interview')">View Details</a>
+                        </div>
+                    `;
+                }
+                return { card, notificationId, id: data.id, type };
+            }
+
+            function showNotification(type, data) {
+                // Check if this notification is currently snoozed
+                if (snoozedNotifications[data.id] && snoozedNotifications[data.id] > Date.now()) {
+                    return;
+                }
+
+                const notification = createNotificationCard(type, data);
+                if (!notification) return;
+
+                const { card, notificationId, id } = notification;
+                notificationContainer.prepend(card);
+                activeNotifications.add(notificationId);
+
+                // Play appropriate sound
+                const sound = type === 'followup' ? followUpSound : interviewSound;
+                sound.currentTime = 0;
+                sound.play().catch(error => console.log('Error playing sound:', error));
+
+                // Auto-remove after timeout
+                const timeout = type === 'followup' ? 60000 : 30000;
+                setTimeout(() => {
+                    if (activeNotifications.has(notificationId)) {
+                        removeNotification(notificationId, id, type);
+                    }
+                }, timeout);
+            }
+
+            function processQueue() {
+                if (notificationQueue.length === 0 || isProcessingQueue) return;
+
+                isProcessingQueue = true;
+                const { type, data } = notificationQueue.shift();
+                showNotification(type, data);
+
+                setTimeout(() => {
+                    isProcessingQueue = false;
+                    if (notificationQueue.length > 0) {
+                        processQueue();
+                    }
+                }, 1000);
+            }
+
+            // ===== GLOBAL FUNCTIONS =====
+            window.removeNotification = function(notificationId, id, type) {
+                const notification = document.getElementById(notificationId);
+                if (notification) {
+                    notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                    setTimeout(() => {
+                        notification.remove();
+                        activeNotifications.delete(notificationId);
+                    }, 250);
+                }
+
+                if (type === 'interview') {
+                    stopNotificationSound('interview');
+                }
+            };
+
+            window.snoozeNotification = function(notificationId, id, type) {
+                window.stopNotificationSound(type);
+                window.removeNotification(notificationId, id, type);
+                snoozedNotifications[id] = Date.now() + (5 * 60 * 1000);
+                localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
+                setTimeout(() => {
+                    delete snoozedNotifications[id];
+                    localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
+                }, 5 * 60 * 1000);
+            };
+
+            window.stopNotificationAlarm = function(id, type) {
+                if (type === 'followup' && followUpAlarmIntervals[id]) {
+                    clearInterval(followUpAlarmIntervals[id]);
+                    delete followUpAlarmIntervals[id];
+                } else if (type === 'interview' && interviewAlarmIntervals[id]) {
+                    clearInterval(interviewAlarmIntervals[id]);
+                    delete interviewAlarmIntervals[id];
+                }
+            };
+
+            window.stopNotificationSound = function(type) {
+                const sound = type === 'followup' ? followUpSound : interviewSound;
+                sound.pause();
+                sound.currentTime = 0;
+            };
+
+            // ===== COMBINED TIME CHECK =====
+            function checkAllNotifications() {
+                const now = new Date();
+                const currentDate = now.toISOString().split('T')[0];
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+                followUpRows.forEach(row => {
+                    const followUpDate = row.dataset.date;
+                    const followUpTime = row.querySelector('.followup-time').getAttribute('data-time');
+                    const [hours, minutes] = followUpTime.split(':').map(Number);
+                    const followUpDateTime = hours * 60 + minutes;
+                    const followUpId = row.dataset.followupId;
+
+                    if (followUpDate === currentDate) {
+                        const timeUntilFollowUp = followUpDateTime - currentTime;
+                        if (timeUntilFollowUp > 0 && timeUntilFollowUp <= 30) {
+                            if (!followUpAlarmIntervals[followUpId] && !(snoozedNotifications[followUpId] && snoozedNotifications[followUpId] > Date.now())) {
+                                const data = {
+                                    id: followUpId,
+                                    candidateName: row.cells[0].textContent,
+                                    uniqueCode: row.cells[1].textContent.trim(),
+                                    mobile: row.cells[2].textContent,
+                                    time: row.querySelector('.followup-time').textContent,
+                                    viewLink: row.querySelector('a')?.href
+                                };
+                                if (isValidNotification(data)) {
+                                    notificationQueue.push({ type: 'followup', data });
+                                    followUpAlarmIntervals[followUpId] = setInterval(() => {
+                                        notificationQueue.push({ type: 'followup', data });
+                                    }, 5 * 60 * 1000);
+                                }
+                            }
+                        }
+                    }
+                });
+                interviewRows.forEach(row => {
+                    const interviewDate = row.dataset.date;
+                    const interviewTimeStr = row.querySelector('.interview-time').getAttribute('data-time');
+                    const [hours, minutes] = interviewTimeStr.split(':').map(Number);
+                    const interviewTime = hours * 60 + minutes;
+                    const timeUntilInterview = interviewTime - currentTime;
+                    const interviewId = row.dataset.interviewId;
+
+                    if (interviewDate === currentDate) {
+                        if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
+                            if (!interviewAlarmIntervals[interviewId] && !(snoozedNotifications[interviewId] && snoozedNotifications[interviewId] > Date.now())) {
+                                const data = {
+                                    id: interviewId,
+                                    candidateName: row.cells[0].textContent,
+                                    time: row.querySelector('.interview-time').textContent,
+                                    location: row.cells[4]?.textContent || 'Not specified',
+                                    position: row.cells[3]?.textContent,
+                                    viewLink: row.querySelector('a')?.href
+                                };
+
+                                if (isValidNotification(data)) {
+                                    notificationQueue.push({ type: 'interview', data });
+                                    interviewAlarmIntervals[interviewId] = setInterval(() => {
+                                        notificationQueue.push({ type: 'interview', data });
+                                    }, 5 * 60 * 1000);
+                                }
+                            }
+                        }
+                    }
+                });
+                processQueue();
+            }
+            setInterval(checkAllNotifications, 60 * 1000);
+            checkAllNotifications();
         });
+    </script>
+    <!-- New JavaScript for real-time table row coloring -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tableBody = document.getElementById('recruiter-table-body');
+            
+            function updateRowColors() {
+                const now = new Date();
+                const rows = tableBody.querySelectorAll('tr');
 
-        const total = yesConnectedTotal + otherCallsTotal;
-        const percentage = total ? ((yesConnectedTotal / total) * 100).toFixed(1) : "0.0";
+                rows.forEach(row => {
+                    // Check if there's a valid timestamp to work with
+                    if (row.dataset.hasCall === 'True') {
+                        const lastCallTimestampStr = row.dataset.lastCallTimestamp;
+                        if (!lastCallTimestampStr) return;
 
-        // Fill in calculated values
-        row.querySelector(".yes-connected-total").textContent = yesConnectedTotal;
-        row.querySelector(".other-calls-total").textContent = otherCallsTotal;
-        row.querySelector(".percentage").textContent = `${percentage}%`;
-    });
-});
-</script>
+                        const lastCallTime = new Date(lastCallTimestampStr);
+                        const diffInMinutes = (now - lastCallTime) / (1000 * 60);
 
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Second Content Row -->
-    <div class="row">
-        <!-- Interview Pipeline -->
-        <div class="col-lg-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header ">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-user-tie me-1 text-info"></i>
-                            <span class="fw-bold">Interview Pipeline</span>
-                        </div>
-                        <span class="badge   text-info">
-                            {{ interview_candidates }} Candidates
-                        </span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <span class="fw-bold">Conversion Rate</span>
-                            <h3 class="mt-1">
-                                {% if total_candidates > 0 %}
-                                    {{ interview_candidates|floatformat:1 }}%
-                                {% else %}
-                                    0%
-                                {% endif %}
-                            </h3>
-                        </div>
-                        <div class="text-end">
-                            <div class="text-muted small">of total candidates</div>
-                            <div class="fw-bold">{{ total_candidates }} Total</div>
-                        </div>
-                    </div>
-                    <div class="progress mb-3" style="height: 10px;">
-                        <div class="progress-bar bg-info" role="progressbar" 
-                             style="width: {% if total_candidates > 0 %}{{ interview_candidates|floatformat:0 }}{% else %}0{% endif %}%" 
-                             aria-valuenow="{{ interview_candidates }}" 
-                             aria-valuemin="0" 
-                             aria-valuemax="{{ total_candidates }}">
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-between small text-muted">
-                        <div>0%</div>
-                        <div>50%</div>
-                        <div>100%</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Employee Performance -->
-        <div class="col-lg-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header ">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-trophy me-1 text-success"></i>
-                            <span class="fw-bold">Top Performers</span>
-                        </div>
-                        {% comment %} <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
-                                    id="perfDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="perfDropdown">
-                                <li><a class="dropdown-item" href="#">Export</a></li>
-                                <li><a class="dropdown-item" href="#">View All</a></li>
-                            </ul>
-                        </div> {% endcomment %}
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Recruiter</th>
-                                    <th class="text-end">Total</th>
-                                    <th class="text-end">Selected</th>
-                                    <th class="text-end">Success Rate</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for emp in employee_performance|slice:":5" %}
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar avatar-sm me-2 bg-success bg-opacity-10 text-white">
-                                                {{ forloop.counter }}
-                                            </div>
-                                            <span>{{ emp.employee_name }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-end">{{ emp.total_candidates }}</td>
-                                    <td class="text-end fw-bold text-success">{{ emp.selected_candidates }}</td>
-                                    <td class="text-end fw-bold">
-                                        {% if emp.total_candidates > 0 %}
-                                            {{ emp.selected_candidates|floatformat:1 }}%
-                                        {% else %}
-                                            0%
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center py-4 text-muted">
-                                        <i class="fas fa-exclamation-circle me-1"></i>
-                                        No performance data available
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Third Content Row -->
-     <!-- Third Content Row - Interview Sections -->
-     <div class="row mt-4">
-        <div class="col-lg-6">
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Today's Interviews</h3>
-            </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-vcenter table-hover table-striped">
-                  <thead>
-                    <tr>
-                      <th>Candidate</th>
-                      <th>Status</th>
-                      <th>Time</th>
-                      <th class="w-1"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for interview in interview_detail %}
-                    <tr class="interview-row" data-date="{{ interview.interview_date_time|date:'Y-m-d' }}" data-interview-id="{{ interview.id }}">
-                      <td>{{ interview.candidate.candidate_name }}</td>
-                      <td>{{ interview.status }}</td>
-                      <td class="interview-time" data-time="{{ interview.interview_date_time|date:'H:i' }}">{{ interview.interview_date_time|date:"M d, Y H:i" }}</td>
-                      <td>
-                        {% if interview.candidate.lead_source == 'EVMS' %}
-                          <a href="{% url 'evms_candidate_profile' interview.candidate.id %}" class="btn btn-link">
-                            View
-                          </a>
-                        {% else %}
-                          <a href="{% url 'admin_candidate_profile' interview.candidate.id %}" class="btn btn-link">
-                            View
-                          </a>
-                        {% endif %}
-                      </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="7" class="text-center py-4">
-                        <div class="empty">
-                          <div class="empty-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                              <path d="M9 10l.01 0" />
-                              <path d="M15 10l.01 0" />
-                              <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
-                            </svg>
-                          </div>
-                          <p class="empty-title">No interviews scheduled for today</p>
-                          <p class="empty-subtitle text-muted">
-                            Check back later for updates
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      
-        <div class="col-lg-6">
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Today's Follow Ups</h3>
-            </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-vcenter table-hover table-striped">
-                  <thead>
-                    <tr>
-                      <th>Candidate</th>
-                      <th>Unique Code</th>
-                      <th>Mobile Number</th>
-                      <th>Time</th>
-                      <th class="w-1"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for follow_up in follow_up_candidates %}
-                    <tr class="followup-row" data-date="{{ follow_up.next_follow_up_date_time|date:'Y-m-d' }}" data-followup-id="{{ follow_up.id }}">
-                      <td>{{ follow_up.candidate_name }}</td>
-                      <td>
-                        {% if follow_up.lead_source == 'EVMS' %}
-                          {{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}
-                        {% else %}
-                          {{ follow_up.unique_code|default:"-" }}
-                        {% endif %}
-                      </td>
-                      <td>{{ follow_up.candidate_mobile_number|default:"-" }}</td>
-                      <td class="followup-time" data-time="{{ follow_up.next_follow_up_date_time|date:'H:i' }}">{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td>
-                      <td>
-                        {% if follow_up.lead_source == 'EVMS' %}
-                          <a href="{% url 'evms_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
-                            View
-                          </a>
-                        {% else %}
-                          <a href="{% url 'admin_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
-                            View
-                          </a>
-                        {% endif %}
-                      </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="7" class="text-center py-4">
-                        <div class="empty">
-                          <div class="empty-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                              <path d="M9 10l.01 0" />
-                              <path d="M15 10l.01 0" />
-                              <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
-                            </svg>
-                          </div>
-                          <p class="empty-title">No follow-ups scheduled for today</p>
-                          <p class="empty-subtitle text-muted">
-                            Check back later for updates
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-</div>
-
-<style>
-    .avatar {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-    }
-    .progress {
-        border-radius: 2px;
-    }
-    .card {
-        border: none;
-        box-shadow: 0 0.15rem 1.75rem 0 rgba(33, 40, 50, 0.15);
-    }
-    .card-header {
-        border-bottom: 1px solid rgba(33, 40, 50, 0.125);
-    }
-    .border-start-lg {
-        border-left-width: 0.25rem !important;
-    }
-    .table th {
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 0.5px;
-    }
-    .table td {
-        vertical-align: middle;
-    }
-</style>
-
- 
-<style>
-    .notification-container {
-      position: fixed;
-      /* bottom: 20px;
-      right: 20px; */
-      z-index: 9999;
-      display: flex;
-      flex-direction: column-reverse;
-      gap: 15px;
-      max-height: calc(100vh - 40px);
-      overflow-y: auto;
-    }
-    
-    .notification-card {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      width: 350px;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      animation: slideIn 0.3s ease-out;
-      transform-origin: right bottom;
-    }
-    
-    @keyframes slideIn {
-      from { transform: translateX(100%) scale(0.9); opacity: 0; }
-      to { transform: translateX(0) scale(1); opacity: 1; }
-    }
-    
-    .notification-header {
-      padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-radius: 8px 8px 0 0;
-      color: white;
-    }
-    
-    .followup-header {
-      background: #4a6bdf;
-    }
-    
-    .interview-header {
-      background: #ff9800;
-    }
-    
-    .notification-title {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
-    }
-    
-    .notification-close {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 20px;
-      cursor: pointer;
-      padding: 0;
-      line-height: 1;
-    }
-    
-    .notification-body {
-      padding: 16px;
-      color: #333;
-    }
-    
-    .notification-details {
-      margin-top: 12px;
-      background: #f8f9fa;
-      padding: 12px;
-      border-radius: 6px;
-    }
-    
-    .detail-label {
-      font-weight: 600;
-      color: #555;
-      display: inline-block;
-      width: 100px;
-    }
-    
-    .detail-value {
-      color: #222;
-    }
-    
-    .notification-footer {
-      display: flex;
-      justify-content: flex-end;
-      padding: 12px 16px;
-      border-top: 1px solid #eee;
-      gap: 8px;
-    }
-    
-    .notification-btn {
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-size: 14px;
-      cursor: pointer;
-      text-decoration: none;
-      border: none;
-      transition: all 0.2s;
-    }
-    
-    .notification-btn.primary {
-      background: #4a6bdf;
-      color: white;
-    }
-    
-    .notification-btn.warning {
-      background: #ff9800;
-      color: white;
-    }
-    
-    .notification-btn.secondary {
-      background: #f0f0f0;
-      color: #333;
-    }
-    
-    .notification-btn.danger {
-      background: #f44336;
-      color: white;
-    }
-    
-    .notification-container::-webkit-scrollbar {
-      width: 6px;
-    }
-    
-    .notification-container::-webkit-scrollbar-thumb {
-      background: #ccc;
-      border-radius: 3px;
-    }
-    
-    .notification-container::-webkit-scrollbar-track {
-      background: transparent;
-    }
-  </style>
-  <!-- Notification Container -->
-<div class="notification-container" id="notificationContainer"></div>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Notification system setup
-    const notificationContainer = document.getElementById('notificationContainer');
-    let activeNotifications = new Set();
-    let notificationQueue = [];
-    let isProcessingQueue = false;
-    
-    // Load snoozed notifications from localStorage
-    let snoozedNotifications = JSON.parse(localStorage.getItem('snoozedNotifications')) || {};
-    
-    // Clean up expired snoozes on load
-    const now = Date.now();
-    for (const id in snoozedNotifications) {
-      if (snoozedNotifications[id] < now) {
-        delete snoozedNotifications[id];
-      }
-    }
-    localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
-
-    // Audio elements
-    const followUpSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-    const interviewSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-    followUpSound.volume = 0.5;
-    interviewSound.volume = 0.5;
-
-    // ===== FOLLOW UP NOTIFICATIONS =====
-    const followUpRows = document.querySelectorAll('.followup-row');
-    let followUpAlarmIntervals = {};
-
-    // ===== INTERVIEW NOTIFICATIONS =====
-    const interviewRows = document.querySelectorAll('.interview-row');
-    let interviewAlarmIntervals = {};
-
-    // ===== COMMON NOTIFICATION FUNCTIONS =====
-    function isValidNotification(data) {
-      // Make sure required fields exist and have values
-      const requiredFields = ['id', 'candidateName', 'time'];
-      return requiredFields.every(field => 
-        data[field] !== undefined && 
-        data[field] !== null && 
-        data[field].toString().trim() !== ''
-      );
-    }
-
-    function createNotificationCard(type, data) {
-      if (!isValidNotification(data)) {
-        console.log('Invalid notification data:', data);
-        return null;
-      }
-      
-      const notificationId = 'notification-' + Date.now() + '-' + data.id;
-      const headerClass = type === 'followup' ? 'followup-header' : 'interview-header';
-      const btnClass = type === 'followup' ? 'primary' : 'warning';
-      
-      const card = document.createElement('div');
-      card.className = 'notification-card';
-      card.id = notificationId;
-      
-      if (type === 'followup') {
-        card.innerHTML = `
-          <div class="notification-header ${headerClass}">
-            <h5 class="notification-title">⏰ Follow Up Reminder</h5>
-            <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">×</button>
-          </div>
-          <div class="notification-body">
-            <p>It's time for your follow up with <strong>${data.candidateName}</strong></p>
-            <div class="notification-details">
-              <div><span class="detail-label">Unique Code:</span> <span class="detail-value">${data.uniqueCode || '-'}</span></div>
-              <div><span class="detail-label">Mobile:</span> <span class="detail-value">${data.mobile || '-'}</span></div>
-              <div><span class="detail-label">Follow Up Time:</span> <span class="detail-value">${data.time}</span></div>
-            </div>
-          </div>
-          <div class="notification-footer">
-            <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'followup')">Snooze (5 min)</button>
-            <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">Close</button>
-            <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'followup'); removeNotification('${notificationId}', '${data.id}', 'followup')">View Details</a>
-          </div>
-        `;
-      } else { // Interview
-        card.innerHTML = `
-          <div class="notification-header ${headerClass}">
-            <h5 class="notification-title">🎤 Interview Alert</h5>
-            <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">×</button>
-          </div>
-          <div class="notification-body">
-            <p>Interview with <strong>${data.candidateName}</strong> is scheduled in 15 minutes!</p>
-            <div class="notification-details">
-              <div><span class="detail-label">Time:</span> <span class="detail-value">${data.time}</span></div>
-              <div><span class="detail-label">Location:</span> <span class="detail-value">${data.location || 'Not specified'}</span></div>
-              ${data.position ? `<div><span class="detail-label">Position:</span> <span class="detail-value">${data.position}</span></div>` : ''}
-            </div>
-          </div>
-          <div class="notification-footer">
-            <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'interview')">Snooze (5 min)</button>
-            <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">Close</button>
-            <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'interview'); removeNotification('${notificationId}', '${data.id}', 'interview')">View Details</a>
-          </div>
-        `;
-      }
-      
-      return { card, notificationId, id: data.id, type };
-    }
-
-    function showNotification(type, data) {
-      // Check if this notification is currently snoozed
-      if (snoozedNotifications[data.id] && snoozedNotifications[data.id] > Date.now()) {
-        return;
-      }
-      
-      const notification = createNotificationCard(type, data);
-      if (!notification) return;
-      
-      const { card, notificationId, id } = notification;
-      notificationContainer.prepend(card);
-      activeNotifications.add(notificationId);
-      
-      // Play appropriate sound
-      const sound = type === 'followup' ? followUpSound : interviewSound;
-      sound.currentTime = 0;
-      sound.play().catch(error => console.log('Error playing sound:', error));
-      
-      // Auto-remove after timeout
-      const timeout = type === 'followup' ? 60000 : 30000;
-      setTimeout(() => {
-        if (activeNotifications.has(notificationId)) {
-          removeNotification(notificationId, id, type);
-        }
-      }, timeout);
-    }
-
-    function processQueue() {
-      if (notificationQueue.length === 0 || isProcessingQueue) return;
-      
-      isProcessingQueue = true;
-      const { type, data } = notificationQueue.shift();
-      showNotification(type, data);
-      
-      setTimeout(() => {
-        isProcessingQueue = false;
-        if (notificationQueue.length > 0) {
-          processQueue();
-        }
-      }, 1000);
-    }
-
-    // ===== GLOBAL FUNCTIONS =====
-    window.removeNotification = function(notificationId, id, type) {
-      const notification = document.getElementById(notificationId);
-      if (notification) {
-        notification.style.animation = 'slideIn 0.3s ease-out reverse';
-        setTimeout(() => {
-          notification.remove();
-          activeNotifications.delete(notificationId);
-        }, 250);
-      }
-      
-      if (type === 'interview') {
-        stopNotificationSound('interview');
-      }
-    };
-
-    window.snoozeNotification = function(notificationId, id, type) {
-      // Stop the sound immediately
-      window.stopNotificationSound(type);
-      
-      // Remove the current notification
-      window.removeNotification(notificationId, id, type);
-      
-      // Set snooze time (5 minutes from now)
-      snoozedNotifications[id] = Date.now() + (5 * 60 * 1000);
-      localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
-      
-      // Clear the snooze after 5 minutes
-      setTimeout(() => {
-        delete snoozedNotifications[id];
-        localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
-      }, 5 * 60 * 1000);
-    };
-
-    window.stopNotificationAlarm = function(id, type) {
-      if (type === 'followup' && followUpAlarmIntervals[id]) {
-        clearInterval(followUpAlarmIntervals[id]);
-        delete followUpAlarmIntervals[id];
-      } else if (type === 'interview' && interviewAlarmIntervals[id]) {
-        clearInterval(interviewAlarmIntervals[id]);
-        delete interviewAlarmIntervals[id];
-      }
-    };
-
-    window.stopNotificationSound = function(type) {
-      const sound = type === 'followup' ? followUpSound : interviewSound;
-      sound.pause();
-      sound.currentTime = 0;
-    };
-
-    // ===== COMBINED TIME CHECK =====
-    function checkAllNotifications() {
-      const now = new Date();
-      const currentDate = now.toISOString().split('T')[0];
-      const currentTime = now.getHours() * 60 + now.getMinutes();
-
-      // Check follow-ups (within 30 minutes)
-      followUpRows.forEach(row => {
-        const followUpDate = row.dataset.date;
-        const followUpTime = row.querySelector('.followup-time').getAttribute('data-time');
-        const [hours, minutes] = followUpTime.split(':').map(Number);
-        const followUpDateTime = hours * 60 + minutes;
-        const followUpId = row.dataset.followupId;
-
-        if (followUpDate === currentDate) {
-          const timeUntilFollowUp = followUpDateTime - currentTime;
-          
-          if (timeUntilFollowUp > 0 && timeUntilFollowUp <= 30) {
-            if (!followUpAlarmIntervals[followUpId] && !(snoozedNotifications[followUpId] && snoozedNotifications[followUpId] > Date.now())) {
-              const data = {
-                id: followUpId,
-                candidateName: row.cells[0].textContent,
-                uniqueCode: row.cells[1].textContent.trim(),
-                mobile: row.cells[2].textContent,
-                time: row.querySelector('.followup-time').textContent,
-                viewLink: row.querySelector('a')?.href
-              };
-              
-              if (isValidNotification(data)) {
-                notificationQueue.push({ type: 'followup', data });
-                followUpAlarmIntervals[followUpId] = setInterval(() => {
-                  notificationQueue.push({ type: 'followup', data });
-                }, 5 * 60 * 1000);
-              }
+                        row.classList.remove('table-warning-light', 'table-danger-light');
+                        
+                        if (diffInMinutes > 25) {
+                            row.classList.add('table-danger-light');
+                        } else if (diffInMinutes > 10) {
+                            row.classList.add('table-warning-light');
+                        }
+                    }
+                });
             }
-          }
-        }
-      });
 
-      // Check interviews (within 15 minutes)
-      interviewRows.forEach(row => {
-        const interviewDate = row.dataset.date;
-        const interviewTimeStr = row.querySelector('.interview-time').getAttribute('data-time');
-        const [hours, minutes] = interviewTimeStr.split(':').map(Number);
-        const interviewTime = hours * 60 + minutes;
-        const timeUntilInterview = interviewTime - currentTime;
-        const interviewId = row.dataset.interviewId;
+            // Update on page load
+            updateRowColors();
 
-        if (interviewDate === currentDate) {
-          if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
-            if (!interviewAlarmIntervals[interviewId] && !(snoozedNotifications[interviewId] && snoozedNotifications[interviewId] > Date.now())) {
-              const data = {
-                id: interviewId,
-                candidateName: row.cells[0].textContent,
-                time: row.querySelector('.interview-time').textContent,
-                location: row.cells[4]?.textContent || 'Not specified',
-                position: row.cells[3]?.textContent,
-                viewLink: row.querySelector('a')?.href
-              };
-              
-              if (isValidNotification(data)) {
-                notificationQueue.push({ type: 'interview', data });
-                interviewAlarmIntervals[interviewId] = setInterval(() => {
-                  notificationQueue.push({ type: 'interview', data });
-                }, 5 * 60 * 1000);
-              }
-            }
-          }
-        }
-      });
-
-      // Process any queued notifications
-      processQueue();
-    }
-
-    // ===== INITIALIZE CHECKS =====
-    setInterval(checkAllNotifications, 60 * 1000);
-    checkAllNotifications();
-  });
-</script>
-  
+            // Update every 30 seconds for a real-time feel
+            setInterval(updateRowColors, 30 * 1000);
+        });
+    </script>
 {% endblock %}
