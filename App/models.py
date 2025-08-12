@@ -5,6 +5,12 @@ import pytz
 from django.utils.timezone import now, timezone
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+import datetime as dt
+from django.db import models, IntegrityError, transaction
+from django.utils import timezone
+# from django.core.files.base import FieldFile
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 # Helper function to get current user
@@ -733,10 +739,11 @@ def get_next_unique_code():
     return f"EC{last_number + 1:06d}"
 
 
+
 class Candidate_registration(models.Model):
     employee_name = models.CharField(max_length=50)
     employee_assigned = models.CharField(max_length=50)
-    register_time = models.DateTimeField(default=now)
+    register_time = models.DateTimeField(default=timezone.now)
 
     candidate_name = models.CharField(max_length=255)
     unique_code = models.CharField(max_length=255, unique=True, editable=False, db_index=True)
@@ -768,8 +775,8 @@ class Candidate_registration(models.Model):
     send_for_interview = models.CharField(max_length=255, blank=True, null=True)
     next_follow_up_date_time = models.DateTimeField(blank=True, null=True)
 
-    candidate_photo = models.FileField(upload_to='candidate-photo/')
-    candidate_resume = models.FileField(upload_to='candidate-resume/')
+    candidate_photo = models.FileField(upload_to='candidate-photo/', blank=True, null=True)
+    candidate_resume = models.FileField(upload_to='candidate-resume/', blank=True, null=True)
     remark = models.CharField(max_length=255, blank=True, null=True)
 
     submit_by = models.CharField(max_length=100, blank=True, null=True)
@@ -796,7 +803,6 @@ class Candidate_registration(models.Model):
     other_sector = models.CharField(max_length=255, blank=True, null=True)
     other_department = models.CharField(max_length=255, blank=True, null=True)
     
-
     invoice_status = models.CharField(max_length=255, blank=True, null=True)
     invoice_paid_status = models.CharField(max_length=255, blank=True, null=True)
     invoice_number = models.CharField(max_length=255, blank=True, null=True)
@@ -824,9 +830,9 @@ class Candidate_registration(models.Model):
         user = kwargs.pop('user', None)
         is_new = self._state.adding
 
-        # If new and unique_code not set, try safe auto-generation
         if is_new and not self.unique_code:
-            for _ in range(5):  # Retry up to 5 times
+            # Existing code for creating a new record remains the same.
+            for _ in range(5):
                 try:
                     with transaction.atomic():
                         self.unique_code = get_next_unique_code()
@@ -837,52 +843,101 @@ class Candidate_registration(models.Model):
                             candidate=self,
                             employee=user,
                             action='created',
-                            changes={'initial': 'Record created'}
+                            changes={'initial': 'Record created'},
+                            remark="Record created"
                         )
-                        return
+                    return
                 except IntegrityError:
                     self.unique_code = None
             raise IntegrityError("Failed to generate a unique code after multiple attempts.")
 
-        # If updating an existing record
         if not is_new:
-            old_record = Candidate_registration.objects.get(pk=self.pk)
+            try:
+                old_record = Candidate_registration.objects.get(pk=self.pk)
+            except Candidate_registration.DoesNotExist:
+                old_record = None
+            
             changes = {}
+            call_made_changes = {}
 
-            for field in self._meta.fields:
-                field_name = field.name
-                if field_name in ['updated_at', 'created_at']:
-                    continue
-                old_value = getattr(old_record, field_name)
+            # Fields to check for a 'call made' action
+            call_fields = [
+                'call_connection', 'calling_remark', 'lead_generate',
+                'send_for_interview', 'next_follow_up_date_time', 'remark'
+            ]
+            
+            # List of all fields to check for general changes
+            fields_to_check = [f.name for f in self._meta.fields]
+            fields_to_check_ignore = ['updated_at', 'created_at', 'updated_by', 'created_by', 'employee_name', 'unique_code']
+            fields_to_check = [f for f in fields_to_check if f not in fields_to_check_ignore]
+
+            for field_name in fields_to_check:
+                old_value = getattr(old_record, field_name) if old_record else None
                 new_value = getattr(self, field_name)
-                if old_value != new_value:
+
+                # Special handling for FieldFile and datetime
+                if isinstance(old_record._meta.get_field(field_name), models.FileField):
+                    old_value = old_value.name if old_value else None
+                    new_value = new_value.name if new_value else None
+                elif isinstance(old_value, (dt.date, dt.datetime)):
+                    old_value = str(old_value)
+                elif isinstance(new_value, (dt.date, dt.datetime)):
+                    new_value = str(new_value)
+
+                if str(old_value) != str(new_value):
+                    # Check if the changed field is one of the call fields
+                    if field_name in call_fields:
+                        call_made_changes[field_name] = {'old': str(old_value), 'new': str(new_value)}
+                    
                     changes[field_name] = {'old': str(old_value), 'new': str(new_value)}
 
+            # Set the updated_by field
             if user:
                 self.updated_by = user
-
+            
+            # Now, save the object itself
             super().save(*args, **kwargs)
 
-            if changes:
+            # Check for a 'call made' activity first
+            if call_made_changes:
+                # If there are other changes too, these will be logged in a separate 'updated' action
+                CandidateActivity.objects.create(
+                    candidate=self,
+                    employee=user,
+                    action='call_made',
+                    changes=call_made_changes,
+                    remark="Call made and details updated"
+                )
+                
+            # If there are changes that are NOT part of a 'call made', create a separate activity log
+            other_changes = {k: v for k, v in changes.items() if k not in call_fields}
+            if other_changes:
                 CandidateActivity.objects.create(
                     candidate=self,
                     employee=user,
                     action='updated',
-                    changes=changes
+                    changes=other_changes,
+                    remark="Updated via unified form"
                 )
-     
+        else:
+            super().save(*args, **kwargs)
+    
 class CandidateActivity(models.Model):
     ACTION_CHOICES = [
         ('created', 'Created'),
         ('updated', 'Updated'),
+        ('call_made', 'Call Made'),
         ('status_changed', 'Status Changed'),
+        ('interview_updated', 'Interview Updated'),
+        ('interview_deleted', 'Interview Deleted'),
+        ('invoice_updated', 'Invoice Updated'),
     ]
     
     candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE, related_name='activities')
-    employee = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True)
-    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    employee = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True)
+    action = models.CharField(max_length=50, choices=ACTION_CHOICES) # Increased max_length
     timestamp = models.DateTimeField(default=timezone.now)
-    changes = models.JSONField(default=dict)  # Stores field names and their old/new values
+    changes = models.JSONField(default=dict)
     remark = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -891,6 +946,7 @@ class CandidateActivity(models.Model):
 
     def __str__(self):
         return f"{self.get_action_display()} by {self.employee} on {self.candidate}"
+    
 
 class Candidate_chat(models.Model):
     candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE, related_name='chats')

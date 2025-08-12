@@ -1248,6 +1248,7 @@ def employee_candidate_profile(request, id):
 
                 candidate.call_connection = request.POST.get('call_connection')
                 candidate.calling_remark = request.POST.get('calling_remark')
+                candidate.remark = request.POST.get('remark')
                 candidate.lead_generate = request.POST.get('lead_generate')
                 candidate.send_for_interview = request.POST.get('send_for_interview')
                 candidate.next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
