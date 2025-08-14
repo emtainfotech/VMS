@@ -1168,6 +1168,10 @@ def employee_candidate_profile(request, id):
                 candidate.candidate_email_address = request.POST.get('candidate_email_address')
                 candidate.gender = request.POST.get('gender')
                 candidate.lead_source = request.POST.get('lead_source')
+                if 'candidate_photo' in request.FILES:
+                    candidate.candidate_photo = request.FILES.get('candidate_photo')
+                if 'candidate_resume' in request.FILES:
+                    candidate.candidate_resume = request.FILES.get('candidate_resume')
                 
                 candidate.candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
                 candidate.origin_location = request.POST.get('origin_location')

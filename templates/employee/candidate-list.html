@@ -139,6 +139,7 @@
                                 <th>Source</th>
                                 <th>Lead Status</th>
                                 <th>Experience</th>
+                                <th>Calling Remark</th>
                                 <th>Current Status</th>
                                 <th>Registered</th>
                                 <th class="text-center">Actions</th>
@@ -150,7 +151,7 @@
                                 data-connection-status="{{ candidate.call_connection|lower|default:'unknown'|slugify }}"
                                 data-lead-source="{{ candidate.lead_source|lower|slugify }}"
                                 data-date="{{ candidate.register_time|date:'Y-m-d' }}"
-                                data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }} {{ candidate.current_working_status|lower }} {{ candidate.lead_source|lower }} {% if candidate.other_lead_generate %}{{ candidate.other_lead_generate|lower }}{% endif %} {{ candidate.register_time|date:'M d, Y'|lower }}">
+                                data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }} {{ candidate.current_working_status|lower }} {{ candidate.calling_remark|lower }} {{ candidate.lead_source|lower }} {% if candidate.other_lead_generate %}{{ candidate.other_lead_generate|lower }}{% endif %} {{ candidate.register_time|date:'M d, Y'|lower }}">
                                 <td>{{ forloop.counter }}</td>
                                 <td>
                                     {% if candidate.call_connection %}
@@ -252,6 +253,11 @@
                                         {% else %}
                                         Fresher
                                         {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-muted">
+                                        {{ candidate.calling_remark }}
                                     </div>
                                 </td>
                                 <td>
