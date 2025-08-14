@@ -1,0 +1,76 @@
+{% extends 'employee/base.html' %} 
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">Candidates with Call Activity</h2>
+                    <div class="text-muted mt-1">Showing candidates with calls made during the **{{ period }}** period ({{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }})</div>
+                </div>
+                <div class="col-auto ms-auto">
+                    <a href="{% url 'employee_performance_dashboard' %}?period={{ period }}" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M9 11l-4 4l4 4m-4 -4h11a4 4 0 0 0 0 -8h-1" />
+                        </svg>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table card-table table-vcenter text-nowrap datatable">
+                            <thead>
+                                <tr>
+                                    <th>Candidate Name</th>
+                                    <th>Unique Code</th>
+                                    <th>Mobile Number</th>
+                                    <th>Last Called</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for candidate in candidates %}
+                                <tr>
+                                    <td>{{ candidate.candidate_name }}</td>
+                                    <td>{{ candidate.unique_code }}</td>
+                                    <td>{{ candidate.candidate_mobile_number }}</td>
+                                    <td>
+                                        {% if candidate.last_call_timestamp %}
+                                            {{ candidate.last_call_timestamp|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge text-white bg-{% if candidate.selection_status == 'Selected' %}success{% elif candidate.selection_status == 'Pending' %}warning{% else %}danger{% endif %}">
+                                            {{ candidate.selection_status }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-link">View Profile</a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No candidates with call activity found for this period.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

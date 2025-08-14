@@ -2,1059 +2,1083 @@
 
 {% block content %}
 <div class="page-wrapper">
-  <!-- Page header -->
-  <div class="page-header d-print-none">
-    <div class="container-xl">
-      <div class="row g-2 align-items-center">
-        <div class="col">
-          <h2 class="page-title">My Performance Dashboard</h2>
-          <div class="text-muted mt-1">Welcome back, {{ user.employee.first_name|default:request.user.username }} {{ user.employee.last_name }}</div>
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">My Performance Dashboard</h2>
+                    <div class="text-muted mt-1">Welcome back, {{ user.employee.first_name|default:request.user.username }} {{ user.employee.last_name }}</div>
+                </div>
+                <div class="col-auto ms-auto">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-primary period-btn {% if period == 'today' %}active{% endif %}" data-period="today">Today</button>
+                        <button type="button" class="btn btn-outline-primary period-btn {% if period == 'week' %}active{% endif %}" data-period="week">Week</button>
+                        <button type="button" class="btn btn-outline-primary period-btn {% if period == 'month' %}active{% endif %}" data-period="month">Month</button>
+                        <button type="button" class="btn btn-outline-primary period-btn {% if period == 'year' %}active{% endif %}" data-period="year">Year</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-auto ms-auto">
-          <div class="btn-group">
-            <button type="button" class="btn btn-outline-primary period-btn {% if period == 'today' %}active{% endif %}" data-period="today">Today</button>
-            <button type="button" class="btn btn-outline-primary period-btn {% if period == 'week' %}active{% endif %}" data-period="week">Week</button>
-            <button type="button" class="btn btn-outline-primary period-btn {% if period == 'month' %}active{% endif %}" data-period="month">Month</button>
-            <button type="button" class="btn btn-outline-primary period-btn {% if period == 'year' %}active{% endif %}" data-period="year">Year</button>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <!-- Page body -->
-  <div class="page-body">
-    <div class="container-xl">
-      <!-- Stats Cards -->
-      <div class="row row-deck row-cards">
-        <!-- Total Candidates -->
-        <div class="col-sm-6 col-lg-3">
-          <div class="card card-sm">
-            <div class="card-body">
-              <div class="row align-items-center">
-                <div class="col-auto">
-                  <span class="bg-primary text-white avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                      <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-                      <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                      <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="col">
-                  <div class="font-weight-medium">Total Candidates</div>
-                  <div class="text-muted">{{ metrics.total_candidates }}</div>
-                </div>
-                <div class="col-auto">
-                  <span class="badge bg-{% if metrics.total_change >= 0 %}success{% else %}danger{% endif %}-lt">
-                    {{ metrics.total_change }}% vs last {{ period }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Selected Candidates -->
-        <div class="col-sm-6 col-lg-3">
-          <div class="card card-sm">
-            <div class="card-body">
-              <div class="row align-items-center">
-                <div class="col-auto">
-                  <span class="bg-success text-white avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                      <path d="M7 12l5 5l10 -10" />
-                      <path d="M2 12l5 5m5 -5l5 -5" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="col">
-                  <div class="font-weight-medium">Selected</div>
-                  <div class="text-muted">{{ metrics.selected_candidates }} ({{ metrics.selection_rate }}%)</div>
-                </div>
-                <div class="col-auto">
-                  <span class="badge bg-{% if metrics.selection_change >= 0 %}success{% else %}danger{% endif %}-lt">
-                    {{ metrics.selection_change }}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Interview Stage -->
-        <div class="col-sm-6 col-lg-3">
-          <div class="card card-sm">
-            <div class="card-body">
-              <div class="row align-items-center">
-                <div class="col-auto">
-                  <span class="bg-info text-white avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                      <path d="M4 5m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
-                      <path d="M16 3l0 4" />
-                      <path d="M8 3l0 4" />
-                      <path d="M4 11l16 0" />
-                      <path d="M8 15h2v2h-2z" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="col">
-                  <div class="font-weight-medium">Interview Stage</div>
-                  <div class="text-muted">{{ metrics.interview_candidates }} ({{ metrics.interview_rate }}%)</div>
-                </div>
-                <div class="col-auto">
-                  <span class="badge bg-{% if metrics.interview_change >= 0 %}success{% else %}danger{% endif %}-lt">
-                    {{ metrics.interview_change }}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Lead Generation -->
-        <div class="col-sm-6 col-lg-3">
-          <div class="card card-sm">
-            <div class="card-body">
-              <div class="row align-items-center">
-                <div class="col-auto">
-                  <span class="bg-warning text-white avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                      <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-                      <path d="M21 21l-6 -6" />
-                      <path d="M12 7v5l1.5 1.5" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="col">
-                  <div class="font-weight-medium">Leads Generated</div>
-                  <div class="text-muted">{{ metrics.lead_generation }}</div>
-                </div>
-                <div class="col-auto">
-                  <span class="badge bg-{% if metrics.lead_change >= 0 %}success{% else %}danger{% endif %}-lt">
-                    {{ metrics.lead_change }}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Main Content -->
-      <div class="row mt-4">
-        <!-- Performance Chart -->
-        <div class="col-lg-8">
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Performance Trend</h3>
-              <div class="card-actions">
-                <div class="dropdown">
-                  <a href="#" class="btn-action dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                      <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
-                      <path d="M12 8l0 4l2 2" />
-                    </svg>
-                  </a>
-                  <div class="dropdown-menu dropdown-menu-end">
-                    <a class="dropdown-item" href="#" data-period="week">Weekly View</a>
-                    <a class="dropdown-item" href="#" data-period="month">Monthly View</a>
-                    <a class="dropdown-item" href="#" data-period="year">Yearly View</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="card-body">
-              <div id="performance-trend-chart" style="height: 300px;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Status Distribution -->
-        <div class="col-lg-4">
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Status Distribution (Employee Source)</h3>
-            </div>
-            <div class="card-body">
-              <div id="status-distribution-chart" style="height: 300px;"></div>
-              <div class="mt-3">
-                <div class="row">
-                  {% for status in status_distribution %}
-                  <div class="col-6 mb-3">
-                    <div class="d-flex align-items-center">
-                      <span class="legend-indicator bg-{% if status.status == 'Selected' %}success{% elif status.status == 'Pending' %}warning{% else %}danger{% endif %}"></span>
-                      <div>
-                        <div class="fw-bold">{{ status.status }}</div>
-                        <div class="text-muted">{{ status.count }} ({{ status.percentage }}%)</div>
-                      </div>
-                    </div>
-                  </div>
-                  {% endfor %}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Call Connection Stats -->
-      <div class="row mt-4">
-        <div class="col-lg-6">
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Call Connection Analytics</h3>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-6">
-                  <div class="mb-4">
-                    <div class="d-flex align-items-center mb-2">
-                      <div class="me-3 text-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-phone-call" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                          <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                          <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2" />
-                          <path d="M15 7a2 2 0 0 1 2 2" />
-                          <path d="M15 3a6 6 0 0 1 6 6" />
-                        </svg>
-                      </div>
-                      <div>
-                        <div class="text-muted">Connected Calls</div>
-                        <div class="h3 m-0">{{ call_stats.connected }}</div>
-                      </div>
-                    </div>
-                    <div class="progress progress-sm">
-                      <div class="progress-bar bg-primary" style="width: {{ call_stats.connect_rate }}%"></div>
-                    </div>
-                    <div class="text-muted text-center mt-1">{{ call_stats.connect_rate }}% success rate</div>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="mb-4">
-                    <div class="d-flex align-items-center mb-2">
-                      <div class="me-3 text-danger">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-phone-off" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                          <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                          <path d="M3 21l18 -18" />
-                          <path d="M5.831 14.161a15.946 15.946 0 0 1 -2.831 -8.161a2 2 0 0 1 2 -2h4l2 5l-2.5 1.5c.108 .22 .223 .435 .345 .645m1.751 2.277c.843 .84 1.822 1.544 2.904 2.078l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a15.963 15.963 0 0 1 -10.344 -4.657" />
-                        </svg>
-                      </div>
-                      <div>
-                        <div class="text-muted">Failed Calls</div>
-                        <div class="h3 m-0">{{ call_stats.failed }}</div>
-                      </div>
-                    </div>
-                    <div class="progress progress-sm">
-                      <div class="progress-bar bg-danger" style="width: {{ call_stats.fail_rate }}%"></div>
-                    </div>
-                    <div class="text-muted text-center mt-1">{{ call_stats.fail_rate }}% failure rate</div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Call Breakdown Section -->
-              <div class="mt-4">
-                <h4 class="card-subtitle mb-3">Call Status Breakdown</h4>
-                <div class="table-responsive">
-                  <table class="table table-vcenter">
-                    <thead>
-                      <tr>
-                        <th>Status</th>
-                        <th>Count</th>
-                        <!-- <th>Percentage</th> -->
-                        <!-- <th>Change</th> -->
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for status in call_stats.breakdown %}
-                      <tr>
-                        <td>{{ status.status }}</td>
-                        <td>{{ status.current }}</td>
-                        <!-- <td>{{ status.percentage }}%</td> -->
-                        <!-- <td>
-                          <span class="badge badge-sm text-white  bg-{% if status.change >= 0 %}success{% else %}danger{% endif %}">
-                            {{ status.change }}%
-                          </span>
-                        </td> -->
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent Candidates -->
-        <div class="col-lg-6">
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Recent Candidates</h3>
-              <div class="card-actions">
-                <a href="{% url 'employee_candidate_list' %}" class="btn btn-primary btn-sm">
-                  View All
-                </a>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-vcenter table-hover table-striped">
-                  <thead>
-                    <tr>
-                      <th>Candidate</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                      <th class="w-1"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for candidate in recent_candidates %}
-                    <tr>
-                      <td>
-                        <div class="d-flex py-1 align-items-center">
-                          <div class="flex-fill">
-                            <div class="font-weight-medium">{{ candidate.candidate_name }}</div>
-                             {% if candidate.lead_source == 'EVMS' %}
-                            <div class="text-muted">{{ candidate.refer_code|default:"" }}-{{ candidate.unique_id|default:"-" }}</div>
-                            {% else %}
-                            <div class="text-muted">{{ candidate.unique_code|default:"-" }}</div>
-                            {% endif %}
-                          </div>
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row row-deck row-cards">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-primary text-white avatar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                                            <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                            <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">Total Candidates</div>
+                                    <div class="text-muted">{{ metrics.total_candidates }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <span class="badge bg-{% if metrics.total_change >= 0 %}success{% else %}danger{% endif %}-lt">
+                                        {{ metrics.total_change }}% vs last {{ period }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                      </td>
-                      <td>
-                        <span class="badge text-white bg-{% if candidate.selection_status == 'Selected' %}success{% elif candidate.selection_status == 'Pending' %}warning{% else %}danger{% endif %}">
-                          {{ candidate.selection_status }}
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-success text-white avatar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M7 12l5 5l10 -10" />
+                                            <path d="M2 12l5 5m5 -5l5 -5" />
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">Selected</div>
+                                    <div class="text-muted">{{ metrics.selected_candidates }} ({{ metrics.selection_rate }}%)</div>
+                                </div>
+                                <div class="col-auto">
+                                    <span class="badge bg-{% if metrics.selection_change >= 0 %}success{% else %}danger{% endif %}-lt">
+                                        {{ metrics.selection_change }}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-info text-white avatar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M4 5m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
+                                            <path d="M16 3l0 4" />
+                                            <path d="M8 3l0 4" />
+                                            <path d="M4 11l16 0" />
+                                            <path d="M8 15h2v2h-2z" />
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">Interview Stage</div>
+                                    <div class="text-muted">{{ metrics.interview_candidates }} ({{ metrics.interview_rate }}%)</div>
+                                </div>
+                                <div class="col-auto">
+                                    <span class="badge bg-{% if metrics.interview_change >= 0 %}success{% else %}danger{% endif %}-lt">
+                                        {{ metrics.interview_change }}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-lg-3">
+    <div class="card card-sm">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <span class="bg-purple text-white avatar">
                         </span>
-                      </td>
-                      <td class="text-muted">{{ candidate.register_time|date:"M d, Y" }}</td>
-                      {% if candidate.lead_source == 'EVMS' %}
-                      <td>
-                        <a href="{% url 'employee_evms_candidate_profile' candidate.id %}" class="btn btn-link">
-                          View
-                        </a>
-                      </td>
-                      {% else %}
-                      <td>
-                        <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-link">
-                          View
-                        </a>
-                      </td>
-                      {% endif %}
-                    </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="4" class="text-center py-4">
-                        <div class="empty">
-                          <div class="empty-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                              <path d="M9 10l.01 0" />
-                              <path d="M15 10l.01 0" />
-                              <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
-                            </svg>
-                          </div>
-                          <p class="empty-title">No candidates found</p>
-                          <p class="empty-subtitle text-muted">
-                            Try adjusting your search or filter
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
+                </div>
+                <div class="col">
+                    <div class="font-weight-medium">Calls Made</div>
+                    <div class="text-muted">{{ metrics.total_calls_made }}</div>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-{% if metrics.calls_made_change >= 0 %}success{% else %}danger{% endif %}-lt">
+                        {{ metrics.calls_made_change }}% vs last {{ period }}
+                    </span>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-
-      <div class="row mt-4">
-        <div class="col-lg-6">
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Today's Interviews</h3>
-            </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-vcenter table-hover table-striped">
-                  <thead>
-                    <tr>
-                      <th>Candidate</th>
-                      <th>Status</th>
-                      <th>Time</th>
-                      <th class="w-1"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for interview in interview_detail %}
-                    <tr class="interview-row" data-date="{{ interview.interview_date_time|date:'Y-m-d' }}" data-interview-id="{{ interview.id }}">
-                      <td>{{ interview.candidate.candidate_name }}</td>
-                      <td>{{ interview.status }}</td>
-                      <td class="interview-time" data-time="{{ interview.interview_date_time|date:'H:i' }}">{{ interview.interview_date_time|date:"M d, Y H:i" }}</td>
-                      <td>
-                        {% if interview.candidate.lead_source == 'EVMS' %}
-                          <a href="{% url 'employee_evms_candidate_profile' interview.candidate.id %}" class="btn btn-link">
-                            View
-                          </a>
-                        {% else %}
-                          <a href="{% url 'employee_candidate_profile' interview.candidate.id %}" class="btn btn-link">
-                            View
-                          </a>
-                        {% endif %}
-                      </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="7" class="text-center py-4">
-                        <div class="empty">
-                          <div class="empty-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                              <path d="M9 10l.01 0" />
-                              <path d="M15 10l.01 0" />
-                              <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
-                            </svg>
-                          </div>
-                          <p class="empty-title">No interviews scheduled for today</p>
-                          <p class="empty-subtitle text-muted">
-                            Check back later for updates
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      
-        <div class="col-lg-6">
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Today's Follow Ups</h3>
-            </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-vcenter table-hover table-striped">
-                  <thead>
-                    <tr>
-                      <th>Candidate</th>
-                      <th>Unique Code</th>
-                      <th>Mobile Number</th>
-                      <th>Time</th>
-                      <th class="w-1"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for follow_up in follow_up_candidates %}
-                    <tr class="followup-row" data-date="{{ follow_up.next_follow_up_date_time|date:'Y-m-d' }}" data-followup-id="{{ follow_up.id }}">
-                      <td>{{ follow_up.candidate_name }}</td>
-                      <td>
-                        {% if follow_up.lead_source == 'EVMS' %}
-                          {{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}
-                        {% else %}
-                          {{ follow_up.unique_code|default:"-" }}
-                        {% endif %}
-                      </td>
-                      <td>{{ follow_up.candidate_mobile_number|default:"-" }}</td>
-                      <td class="followup-time" data-time="{{ follow_up.next_follow_up_date_time|date:'H:i' }}">{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td>
-                      <td>
-                        {% if follow_up.lead_source == 'EVMS' %}
-                          <a href="{% url 'employee_evms_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
-                            View
-                          </a>
-                        {% else %}
-                          <a href="{% url 'employee_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
-                            View
-                          </a>
-                        {% endif %}
-                      </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="7" class="text-center py-4">
-                        <div class="empty">
-                          <div class="empty-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                              <path d="M9 10l.01 0" />
-                              <path d="M15 10l.01 0" />
-                              <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
-                            </svg>
-                          </div>
-                          <p class="empty-title">No follow-ups scheduled for today</p>
-                          <p class="empty-subtitle text-muted">
-                            Check back later for updates
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-
     </div>
-  </div>
 </div>
 
- 
+<div class="col-sm-6 col-lg-3 d-flex align-items-stretch">
+    <div class="card card-sm flex-fill">
+        <div class="card-body d-flex flex-column justify-content-center align-items-center">
+            <a href="{% url 'employee_calls_list' %}?period={{ period }}" class="btn btn-primary w-100">
+                Show Candidates
+            </a>
+        </div>
+    </div>
+</div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Candidate Registration Trend</h3>
+                            <div class="card-actions">
+                                <div class="dropdown">
+                                    <a href="#" class="btn-action dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+                                            <path d="M12 8l0 4l2 2" />
+                                        </svg>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-end">
+                                        <a class="dropdown-item" href="#" data-period="week">Weekly View</a>
+                                        <a class="dropdown-item" href="#" data-period="month">Monthly View</a>
+                                        <a class="dropdown-item" href="#" data-period="year">Yearly View</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="performance-trend-chart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Calls Made Trend</h3>
+                            <div class="card-actions">
+                                <div class="dropdown">
+                                    <a href="#" class="btn-action dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+                                            <path d="M12 8l0 4l2 2" />
+                                        </svg>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-end">
+                                        <a class="dropdown-item" href="#" data-period="week">Weekly View</a>
+                                        <a class="dropdown-item" href="#" data-period="month">Monthly View</a>
+                                        <a class="dropdown-item" href="#" data-period="year">Yearly View</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="call-trend-chart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 mt-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Status Distribution (Employee Source)</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="status-distribution-chart" style="height: 300px;"></div>
+                            <div class="mt-3">
+                                <div class="row">
+                                    {% for status in status_distribution %}
+                                    <div class="col-6 mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <span class="legend-indicator bg-{% if status.status == 'Selected' %}success{% elif status.status == 'Pending' %}warning{% else %}danger{% endif %}"></span>
+                                            <div>
+                                                <div class="fw-bold">{{ status.status }}</div>
+                                                <div class="text-muted">{{ status.count }} ({{ status.percentage }}%)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8 mt-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Call Connection Analytics</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="mb-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-3 text-primary">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-phone-call" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                    <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2" />
+                                                    <path d="M15 7a2 2 0 0 1 2 2" />
+                                                    <path d="M15 3a6 6 0 0 1 6 6" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="text-muted">Connected Calls</div>
+                                                <div class="h3 m-0">{{ call_stats.connected }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-primary" style="width: {{ call_stats.connect_rate }}%"></div>
+                                        </div>
+                                        <div class="text-muted text-center mt-1">{{ call_stats.connect_rate }}% success rate</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-3 text-danger">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-phone-off" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                    <path d="M3 21l18 -18" />
+                                                    <path d="M5.831 14.161a15.946 15.946 0 0 1 -2.831 -8.161a2 2 0 0 1 2 -2h4l2 5l-2.5 1.5c.108 .22 .223 .435 .345 .645m1.751 2.277c.843 .84 1.822 1.544 2.904 2.078l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a15.963 15.963 0 0 1 -10.344 -4.657" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="text-muted">Failed Calls</div>
+                                                <div class="h3 m-0">{{ call_stats.failed }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-danger" style="width: {{ call_stats.fail_rate }}%"></div>
+                                        </div>
+                                        <div class="text-muted text-center mt-1">{{ call_stats.fail_rate }}% failure rate</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h4 class="card-subtitle mb-3">Call Status Breakdown</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-vcenter">
+                                        <thead>
+                                            <tr>
+                                                <th>Status</th>
+                                                <th>Count</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for status in call_stats.breakdown %}
+                                            <tr>
+                                                <td>{{ status.status }}</td>
+                                                <td>{{ status.current }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Recent Candidates</h3>
+                            <div class="card-actions">
+                                <a href="{% url 'employee_candidate_list' %}" class="btn btn-primary btn-sm">
+                                    View All
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-vcenter table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Candidate</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th class="w-1"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for candidate in recent_candidates %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex py-1 align-items-center">
+                                                    <div class="flex-fill">
+                                                        <div class="font-weight-medium">{{ candidate.candidate_name }}</div>
+                                                        {% if candidate.lead_source == 'EVMS' %}
+                                                        <div class="text-muted">{{ candidate.refer_code|default:"" }}-{{ candidate.unique_id|default:"-" }}</div>
+                                                        {% else %}
+                                                        <div class="text-muted">{{ candidate.unique_code|default:"-" }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge text-white bg-{% if candidate.selection_status == 'Selected' %}success{% elif candidate.selection_status == 'Pending' %}warning{% else %}danger{% endif %}">
+                                                    {{ candidate.selection_status }}
+                                                </span>
+                                            </td>
+                                            <td class="text-muted">{{ candidate.register_time|date:"M d, Y" }}</td>
+                                            {% if candidate.lead_source == 'EVMS' %}
+                                            <td>
+                                                <a href="{% url 'employee_evms_candidate_profile' candidate.id %}" class="btn btn-link">
+                                                    View
+                                                </a>
+                                            </td>
+                                            {% else %}
+                                            <td>
+                                                <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-link">
+                                                    View
+                                                </a>
+                                            </td>
+                                            {% endif %}
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center py-4">
+                                                <div class="empty">
+                                                    <div class="empty-icon">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                                            <path d="M9 10l.01 0" />
+                                                            <path d="M15 10l.01 0" />
+                                                            <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
+                                                        </svg>
+                                                    </div>
+                                                    <p class="empty-title">No candidates found</p>
+                                                    <p class="empty-subtitle text-muted">
+                                                        Try adjusting your search or filter
+                                                    </p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Today's Interviews</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-vcenter table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Candidate</th>
+                                            <th>Status</th>
+                                            <th>Time</th>
+                                            <th class="w-1"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for interview in interview_detail %}
+                                        <tr class="interview-row" data-date="{{ interview.interview_date_time|date:'Y-m-d' }}" data-interview-id="{{ interview.id }}">
+                                            <td>{{ interview.candidate.candidate_name }}</td>
+                                            <td>{{ interview.status }}</td>
+                                            <td class="interview-time" data-time="{{ interview.interview_date_time|date:'H:i' }}">{{ interview.interview_date_time|date:"M d, Y H:i" }}</td>
+                                            <td>
+                                                {% if interview.candidate.lead_source == 'EVMS' %}
+                                                <a href="{% url 'employee_evms_candidate_profile' interview.candidate.id %}" class="btn btn-link">
+                                                    View
+                                                </a>
+                                                {% else %}
+                                                <a href="{% url 'employee_candidate_profile' interview.candidate.id %}" class="btn btn-link">
+                                                    View
+                                                </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4">
+                                                <div class="empty">
+                                                    <div class="empty-icon">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                                            <path d="M9 10l.01 0" />
+                                                            <path d="M15 10l.01 0" />
+                                                            <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
+                                                        </svg>
+                                                    </div>
+                                                    <p class="empty-title">No interviews scheduled for today</p>
+                                                    <p class="empty-subtitle text-muted">
+                                                        Check back later for updates
+                                                    </p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="col-lg-6 mt-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Today's Follow Ups</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-vcenter table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Candidate</th>
+                                            <th>Unique Code</th>
+                                            <th>Mobile Number</th>
+                                            <th>Time</th>
+                                            <th class="w-1"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for follow_up in follow_up_candidates %}
+                                        <tr class="followup-row" data-date="{{ follow_up.next_follow_up_date_time|date:'Y-m-d' }}" data-followup-id="{{ follow_up.id }}">
+                                            <td>{{ follow_up.candidate_name }}</td>
+                                            <td>
+                                                {% if follow_up.lead_source == 'EVMS' %}
+                                                {{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}
+                                                {% else %}
+                                                {{ follow_up.unique_code|default:"-" }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ follow_up.candidate_mobile_number|default:"-" }}</td>
+                                            <td class="followup-time" data-time="{{ follow_up.next_follow_up_date_time|date:'H:i' }}">{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td>
+                                            <td>
+                                                {% if follow_up.lead_source == 'EVMS' %}
+                                                <a href="{% url 'employee_evms_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
+                                                    View
+                                                </a>
+                                                {% else %}
+                                                <a href="{% url 'employee_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
+                                                    View
+                                                </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4">
+                                                <div class="empty">
+                                                    <div class="empty-icon">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                                            <path d="M9 10l.01 0" />
+                                                            <path d="M15 10l.01 0" />
+                                                            <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
+                                                        </svg>
+                                                    </div>
+                                                    <p class="empty-title">No follow-ups scheduled for today</p>
+                                                    <p class="empty-subtitle text-muted">
+                                                        Check back later for updates
+                                                    </p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <style>
-  .notification-container {
-    position: fixed;
-    /* bottom: 20px;
-    right: 20px; */
-    z-index: 9999;
-    display: flex;
-    flex-direction: column-reverse;
-    gap: 15px;
-    max-height: calc(100vh - 40px);
-    overflow-y: auto;
-  }
-  
-  .notification-card {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    width: 350px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    animation: slideIn 0.3s ease-out;
-    transform-origin: right bottom;
-  }
-  
-  @keyframes slideIn {
-    from { transform: translateX(100%) scale(0.9); opacity: 0; }
-    to { transform: translateX(0) scale(1); opacity: 1; }
-  }
-  
-  .notification-header {
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 8px 8px 0 0;
-    color: white;
-  }
-  
-  .followup-header {
-    background: #4a6bdf;
-  }
-  
-  .interview-header {
-    background: #ff9800;
-  }
-  
-  .notification-title {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-  }
-  
-  .notification-close {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-  }
-  
-  .notification-body {
-    padding: 16px;
-    color: #333;
-  }
-  
-  .notification-details {
-    margin-top: 12px;
-    background: #f8f9fa;
-    padding: 12px;
-    border-radius: 6px;
-  }
-  
-  .detail-label {
-    font-weight: 600;
-    color: #555;
-    display: inline-block;
-    width: 100px;
-  }
-  
-  .detail-value {
-    color: #222;
-  }
-  
-  .notification-footer {
-    display: flex;
-    justify-content: flex-end;
-    padding: 12px 16px;
-    border-top: 1px solid #eee;
-    gap: 8px;
-  }
-  
-  .notification-btn {
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    text-decoration: none;
-    border: none;
-    transition: all 0.2s;
-  }
-  
-  .notification-btn.primary {
-    background: #4a6bdf;
-    color: white;
-  }
-  
-  .notification-btn.warning {
-    background: #ff9800;
-    color: white;
-  }
-  
-  .notification-btn.secondary {
-    background: #f0f0f0;
-    color: #333;
-  }
-  
-  .notification-btn.danger {
-    background: #f44336;
-    color: white;
-  }
-  
-  .notification-container::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  .notification-container::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 3px;
-  }
-  
-  .notification-container::-webkit-scrollbar-track {
-    background: transparent;
-  }
+    .notification-container {
+      position: fixed;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 15px;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .notification-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      width: 350px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      animation: slideIn 0.3s ease-out;
+      transform-origin: right bottom;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%) scale(0.9); opacity: 0; }
+      to { transform: translateX(0) scale(1); opacity: 1; }
+    }
+    .notification-header {
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 8px 8px 0 0;
+      color: white;
+    }
+    .followup-header {
+      background: #4a6bdf;
+    }
+    .interview-header {
+      background: #ff9800;
+    }
+    .notification-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .notification-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+    .notification-body {
+      padding: 16px;
+      color: #333;
+    }
+    .notification-details {
+      margin-top: 12px;
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 6px;
+    }
+    .detail-label {
+      font-weight: 600;
+      color: #555;
+      display: inline-block;
+      width: 100px;
+    }
+    .detail-value {
+      color: #222;
+    }
+    .notification-footer {
+      display: flex;
+      justify-content: flex-end;
+      padding: 12px 16px;
+      border-top: 1px solid #eee;
+      gap: 8px;
+    }
+    .notification-btn {
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: all 0.2s;
+    }
+    .notification-btn.primary {
+      background: #4a6bdf;
+      color: white;
+    }
+    .notification-btn.warning {
+      background: #ff9800;
+      color: white;
+    }
+    .notification-btn.secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    .notification-btn.danger {
+      background: #f44336;
+      color: white;
+    }
+    .notification-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .notification-container::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 3px;
+    }
+    .notification-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
 </style>
 <div class="notification-container" id="notificationContainer"></div>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Notification system setup
-    const notificationContainer = document.getElementById('notificationContainer');
-    let activeNotifications = new Set();
-    let notificationQueue = [];
-    let isProcessingQueue = false;
-    
-    // Load snoozed notifications from localStorage
-    let snoozedNotifications = JSON.parse(localStorage.getItem('snoozedNotifications')) || {};
-    
-    // Clean up expired snoozes on load
-    const now = Date.now();
-    for (const id in snoozedNotifications) {
-      if (snoozedNotifications[id] < now) {
-        delete snoozedNotifications[id];
-      }
-    }
-    localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
-
-    // Audio elements
-    const followUpSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-    const interviewSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-    followUpSound.volume = 0.5;
-    interviewSound.volume = 0.5;
-
-    // ===== FOLLOW UP NOTIFICATIONS =====
-    const followUpRows = document.querySelectorAll('.followup-row');
-    let followUpAlarmIntervals = {};
-
-    // ===== INTERVIEW NOTIFICATIONS =====
-    const interviewRows = document.querySelectorAll('.interview-row');
-    let interviewAlarmIntervals = {};
-
-    // ===== COMMON NOTIFICATION FUNCTIONS =====
-    function isValidNotification(data) {
-      // Make sure required fields exist and have values
-      const requiredFields = ['id', 'candidateName', 'time'];
-      return requiredFields.every(field => 
-        data[field] !== undefined && 
-        data[field] !== null && 
-        data[field].toString().trim() !== ''
-      );
-    }
-
-    function createNotificationCard(type, data) {
-      if (!isValidNotification(data)) {
-        console.log('Invalid notification data:', data);
-        return null;
-      }
-      
-      const notificationId = 'notification-' + Date.now() + '-' + data.id;
-      const headerClass = type === 'followup' ? 'followup-header' : 'interview-header';
-      const btnClass = type === 'followup' ? 'primary' : 'warning';
-      
-      const card = document.createElement('div');
-      card.className = 'notification-card';
-      card.id = notificationId;
-      
-      if (type === 'followup') {
-        card.innerHTML = `
-          <div class="notification-header ${headerClass}">
-            <h5 class="notification-title">⏰ Follow Up Reminder</h5>
-            <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">×</button>
-          </div>
-          <div class="notification-body">
-            <p>It's time for your follow up with <strong>${data.candidateName}</strong></p>
-            <div class="notification-details">
-              <div><span class="detail-label">Unique Code:</span> <span class="detail-value">${data.uniqueCode || '-'}</span></div>
-              <div><span class="detail-label">Mobile:</span> <span class="detail-value">${data.mobile || '-'}</span></div>
-              <div><span class="detail-label">Follow Up Time:</span> <span class="detail-value">${data.time}</span></div>
-            </div>
-          </div>
-          <div class="notification-footer">
-            <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'followup')">Snooze (5 min)</button>
-            <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">Close</button>
-            <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'followup'); removeNotification('${notificationId}', '${data.id}', 'followup')">View Details</a>
-          </div>
-        `;
-      } else { // Interview
-        card.innerHTML = `
-          <div class="notification-header ${headerClass}">
-            <h5 class="notification-title">🎤 Interview Alert</h5>
-            <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">×</button>
-          </div>
-          <div class="notification-body">
-            <p>Interview with <strong>${data.candidateName}</strong> is scheduled in 15 minutes!</p>
-            <div class="notification-details">
-              <div><span class="detail-label">Time:</span> <span class="detail-value">${data.time}</span></div>
-              <div><span class="detail-label">Location:</span> <span class="detail-value">${data.location || 'Not specified'}</span></div>
-              ${data.position ? `<div><span class="detail-label">Position:</span> <span class="detail-value">${data.position}</span></div>` : ''}
-            </div>
-          </div>
-          <div class="notification-footer">
-            <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'interview')">Snooze (5 min)</button>
-            <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">Close</button>
-            <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'interview'); removeNotification('${notificationId}', '${data.id}', 'interview')">View Details</a>
-          </div>
-        `;
-      }
-      
-      return { card, notificationId, id: data.id, type };
-    }
-
-    function showNotification(type, data) {
-      // Check if this notification is currently snoozed
-      if (snoozedNotifications[data.id] && snoozedNotifications[data.id] > Date.now()) {
-        return;
-      }
-      
-      const notification = createNotificationCard(type, data);
-      if (!notification) return;
-      
-      const { card, notificationId, id } = notification;
-      notificationContainer.prepend(card);
-      activeNotifications.add(notificationId);
-      
-      // Play appropriate sound
-      const sound = type === 'followup' ? followUpSound : interviewSound;
-      sound.currentTime = 0;
-      sound.play().catch(error => console.log('Error playing sound:', error));
-      
-      // Auto-remove after timeout
-      const timeout = type === 'followup' ? 60000 : 30000;
-      setTimeout(() => {
-        if (activeNotifications.has(notificationId)) {
-          removeNotification(notificationId, id, type);
+    document.addEventListener('DOMContentLoaded', function() {
+        // Notification system setup
+        const notificationContainer = document.getElementById('notificationContainer');
+        let activeNotifications = new Set();
+        let notificationQueue = [];
+        let isProcessingQueue = false;
+        
+        // Load snoozed notifications from localStorage
+        let snoozedNotifications = JSON.parse(localStorage.getItem('snoozedNotifications')) || {};
+        
+        // Clean up expired snoozes on load
+        const now = Date.now();
+        for (const id in snoozedNotifications) {
+            if (snoozedNotifications[id] < now) {
+                delete snoozedNotifications[id];
+            }
         }
-      }, timeout);
-    }
-
-    function processQueue() {
-      if (notificationQueue.length === 0 || isProcessingQueue) return;
-      
-      isProcessingQueue = true;
-      const { type, data } = notificationQueue.shift();
-      showNotification(type, data);
-      
-      setTimeout(() => {
-        isProcessingQueue = false;
-        if (notificationQueue.length > 0) {
-          processQueue();
-        }
-      }, 1000);
-    }
-
-    // ===== GLOBAL FUNCTIONS =====
-    window.removeNotification = function(notificationId, id, type) {
-      const notification = document.getElementById(notificationId);
-      if (notification) {
-        notification.style.animation = 'slideIn 0.3s ease-out reverse';
-        setTimeout(() => {
-          notification.remove();
-          activeNotifications.delete(notificationId);
-        }, 250);
-      }
-      
-      if (type === 'interview') {
-        stopNotificationSound('interview');
-      }
-    };
-
-    window.snoozeNotification = function(notificationId, id, type) {
-      // Stop the sound immediately
-      window.stopNotificationSound(type);
-      
-      // Remove the current notification
-      window.removeNotification(notificationId, id, type);
-      
-      // Set snooze time (5 minutes from now)
-      snoozedNotifications[id] = Date.now() + (5 * 60 * 1000);
-      localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
-      
-      // Clear the snooze after 5 minutes
-      setTimeout(() => {
-        delete snoozedNotifications[id];
         localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
-      }, 5 * 60 * 1000);
-    };
-
-    window.stopNotificationAlarm = function(id, type) {
-      if (type === 'followup' && followUpAlarmIntervals[id]) {
-        clearInterval(followUpAlarmIntervals[id]);
-        delete followUpAlarmIntervals[id];
-      } else if (type === 'interview' && interviewAlarmIntervals[id]) {
-        clearInterval(interviewAlarmIntervals[id]);
-        delete interviewAlarmIntervals[id];
-      }
-    };
-
-    window.stopNotificationSound = function(type) {
-      const sound = type === 'followup' ? followUpSound : interviewSound;
-      sound.pause();
-      sound.currentTime = 0;
-    };
-
-    // ===== COMBINED TIME CHECK =====
-    function checkAllNotifications() {
-      const now = new Date();
-      const currentDate = now.toISOString().split('T')[0];
-      const currentTime = now.getHours() * 60 + now.getMinutes();
-
-      // Check follow-ups (within 30 minutes)
-      followUpRows.forEach(row => {
-        const followUpDate = row.dataset.date;
-        const followUpTime = row.querySelector('.followup-time').getAttribute('data-time');
-        const [hours, minutes] = followUpTime.split(':').map(Number);
-        const followUpDateTime = hours * 60 + minutes;
-        const followUpId = row.dataset.followupId;
-
-        if (followUpDate === currentDate) {
-          const timeUntilFollowUp = followUpDateTime - currentTime;
-          
-          if (timeUntilFollowUp > 0 && timeUntilFollowUp <= 30) {
-            if (!followUpAlarmIntervals[followUpId] && !(snoozedNotifications[followUpId] && snoozedNotifications[followUpId] > Date.now())) {
-              const data = {
-                id: followUpId,
-                candidateName: row.cells[0].textContent,
-                uniqueCode: row.cells[1].textContent.trim(),
-                mobile: row.cells[2].textContent,
-                time: row.querySelector('.followup-time').textContent,
-                viewLink: row.querySelector('a')?.href
-              };
-              
-              if (isValidNotification(data)) {
-                notificationQueue.push({ type: 'followup', data });
-                followUpAlarmIntervals[followUpId] = setInterval(() => {
-                  notificationQueue.push({ type: 'followup', data });
-                }, 5 * 60 * 1000);
-              }
-            }
-          }
+    
+        // Audio elements
+        const followUpSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        const interviewSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        followUpSound.volume = 0.5;
+        interviewSound.volume = 0.5;
+    
+        // ===== FOLLOW UP NOTIFICATIONS =====
+        const followUpRows = document.querySelectorAll('.followup-row');
+        let followUpAlarmIntervals = {};
+    
+        // ===== INTERVIEW NOTIFICATIONS =====
+        const interviewRows = document.querySelectorAll('.interview-row');
+        let interviewAlarmIntervals = {};
+    
+        // ===== COMMON NOTIFICATION FUNCTIONS =====
+        function isValidNotification(data) {
+            // Make sure required fields exist and have values
+            const requiredFields = ['id', 'candidateName', 'time'];
+            return requiredFields.every(field => 
+                data[field] !== undefined && 
+                data[field] !== null && 
+                data[field].toString().trim() !== ''
+            );
         }
-      });
-
-      // Check interviews (within 15 minutes)
-      interviewRows.forEach(row => {
-        const interviewDate = row.dataset.date;
-        const interviewTimeStr = row.querySelector('.interview-time').getAttribute('data-time');
-        const [hours, minutes] = interviewTimeStr.split(':').map(Number);
-        const interviewTime = hours * 60 + minutes;
-        const timeUntilInterview = interviewTime - currentTime;
-        const interviewId = row.dataset.interviewId;
-
-        if (interviewDate === currentDate) {
-          if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
-            if (!interviewAlarmIntervals[interviewId] && !(snoozedNotifications[interviewId] && snoozedNotifications[interviewId] > Date.now())) {
-              const data = {
-                id: interviewId,
-                candidateName: row.cells[0].textContent,
-                time: row.querySelector('.interview-time').textContent,
-                location: row.cells[4]?.textContent || 'Not specified',
-                position: row.cells[3]?.textContent,
-                viewLink: row.querySelector('a')?.href
-              };
-              
-              if (isValidNotification(data)) {
-                notificationQueue.push({ type: 'interview', data });
-                interviewAlarmIntervals[interviewId] = setInterval(() => {
-                  notificationQueue.push({ type: 'interview', data });
-                }, 5 * 60 * 1000);
-              }
+    
+        function createNotificationCard(type, data) {
+            if (!isValidNotification(data)) {
+                console.log('Invalid notification data:', data);
+                return null;
             }
-          }
+            
+            const notificationId = 'notification-' + Date.now() + '-' + data.id;
+            const headerClass = type === 'followup' ? 'followup-header' : 'interview-header';
+            const btnClass = type === 'followup' ? 'primary' : 'warning';
+            
+            const card = document.createElement('div');
+            card.className = 'notification-card';
+            card.id = notificationId;
+            
+            if (type === 'followup') {
+                card.innerHTML = `
+                    <div class="notification-header ${headerClass}">
+                        <h5 class="notification-title">⏰ Follow Up Reminder</h5>
+                        <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">×</button>
+                    </div>
+                    <div class="notification-body">
+                        <p>It's time for your follow up with <strong>${data.candidateName}</strong></p>
+                        <div class="notification-details">
+                            <div><span class="detail-label">Unique Code:</span> <span class="detail-value">${data.uniqueCode || '-'}</span></div>
+                            <div><span class="detail-label">Mobile:</span> <span class="detail-value">${data.mobile || '-'}</span></div>
+                            <div><span class="detail-label">Follow Up Time:</span> <span class="detail-value">${data.time}</span></div>
+                        </div>
+                    </div>
+                    <div class="notification-footer">
+                        <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'followup')">Snooze (5 min)</button>
+                        <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">Close</button>
+                        <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'followup'); removeNotification('${notificationId}', '${data.id}', 'followup')">View Details</a>
+                    </div>
+                `;
+            } else { // Interview
+                card.innerHTML = `
+                    <div class="notification-header ${headerClass}">
+                        <h5 class="notification-title">🎤 Interview Alert</h5>
+                        <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">×</button>
+                    </div>
+                    <div class="notification-body">
+                        <p>Interview with <strong>${data.candidateName}</strong> is scheduled in 15 minutes!</p>
+                        <div class="notification-details">
+                            <div><span class="detail-label">Time:</span> <span class="detail-value">${data.time}</span></div>
+                            <div><span class="detail-label">Location:</span> <span class="detail-value">${data.location || 'Not specified'}</span></div>
+                            ${data.position ? `<div><span class="detail-label">Position:</span> <span class="detail-value">${data.position}</span></div>` : ''}
+                        </div>
+                    </div>
+                    <div class="notification-footer">
+                        <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'interview')">Snooze (5 min)</button>
+                        <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">Close</button>
+                        <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'interview'); removeNotification('${notificationId}', '${data.id}', 'interview')">View Details</a>
+                    </div>
+                `;
+            }
+            
+            return { card, notificationId, id: data.id, type };
         }
-      });
-
-      // Process any queued notifications
-      processQueue();
-    }
-
-    // ===== INITIALIZE CHECKS =====
-    setInterval(checkAllNotifications, 60 * 1000);
-    checkAllNotifications();
-  });
+    
+        function showNotification(type, data) {
+            // Check if this notification is currently snoozed
+            if (snoozedNotifications[data.id] && snoozedNotifications[data.id] > Date.now()) {
+                return;
+            }
+            
+            const notification = createNotificationCard(type, data);
+            if (!notification) return;
+            
+            const { card, notificationId, id } = notification;
+            notificationContainer.prepend(card);
+            activeNotifications.add(notificationId);
+            
+            // Play appropriate sound
+            const sound = type === 'followup' ? followUpSound : interviewSound;
+            sound.currentTime = 0;
+            sound.play().catch(error => console.log('Error playing sound:', error));
+            
+            // Auto-remove after timeout
+            const timeout = type === 'followup' ? 60000 : 30000;
+            setTimeout(() => {
+                if (activeNotifications.has(notificationId)) {
+                    removeNotification(notificationId, id, type);
+                }
+            }, timeout);
+        }
+    
+        function processQueue() {
+            if (notificationQueue.length === 0 || isProcessingQueue) return;
+            
+            isProcessingQueue = true;
+            const { type, data } = notificationQueue.shift();
+            showNotification(type, data);
+            
+            setTimeout(() => {
+                isProcessingQueue = false;
+                if (notificationQueue.length > 0) {
+                    processQueue();
+                }
+            }, 1000);
+        }
+    
+        // ===== GLOBAL FUNCTIONS =====
+        window.removeNotification = function(notificationId, id, type) {
+            const notification = document.getElementById(notificationId);
+            if (notification) {
+                notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => {
+                    notification.remove();
+                    activeNotifications.delete(notificationId);
+                }, 250);
+            }
+            
+            if (type === 'interview') {
+                stopNotificationSound('interview');
+            }
+        };
+    
+        window.snoozeNotification = function(notificationId, id, type) {
+            // Stop the sound immediately
+            window.stopNotificationSound(type);
+            
+            // Remove the current notification
+            window.removeNotification(notificationId, id, type);
+            
+            // Set snooze time (5 minutes from now)
+            snoozedNotifications[id] = Date.now() + (5 * 60 * 1000);
+            localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
+            
+            // Clear the snooze after 5 minutes
+            setTimeout(() => {
+                delete snoozedNotifications[id];
+                localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
+            }, 5 * 60 * 1000);
+        };
+    
+        window.stopNotificationAlarm = function(id, type) {
+            if (type === 'followup' && followUpAlarmIntervals[id]) {
+                clearInterval(followUpAlarmIntervals[id]);
+                delete followUpAlarmIntervals[id];
+            } else if (type === 'interview' && interviewAlarmIntervals[id]) {
+                clearInterval(interviewAlarmIntervals[id]);
+                delete interviewAlarmIntervals[id];
+            }
+        };
+    
+        window.stopNotificationSound = function(type) {
+            const sound = type === 'followup' ? followUpSound : interviewSound;
+            sound.pause();
+            sound.currentTime = 0;
+        };
+    
+        // ===== COMBINED TIME CHECK =====
+        function checkAllNotifications() {
+            const now = new Date();
+            const currentDate = now.toISOString().split('T')[0];
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+    
+            // Check follow-ups (within 30 minutes)
+            followUpRows.forEach(row => {
+                const followUpDate = row.dataset.date;
+                const followUpTime = row.querySelector('.followup-time').getAttribute('data-time');
+                const [hours, minutes] = followUpTime.split(':').map(Number);
+                const followUpDateTime = hours * 60 + minutes;
+                const followUpId = row.dataset.followupId;
+    
+                if (followUpDate === currentDate) {
+                    const timeUntilFollowUp = followUpDateTime - currentTime;
+                    
+                    if (timeUntilFollowUp > 0 && timeUntilFollowUp <= 30) {
+                        if (!followUpAlarmIntervals[followUpId] && !(snoozedNotifications[followUpId] && snoozedNotifications[followUpId] > Date.now())) {
+                            const data = {
+                                id: followUpId,
+                                candidateName: row.cells[0].textContent,
+                                uniqueCode: row.cells[1].textContent.trim(),
+                                mobile: row.cells[2].textContent,
+                                time: row.querySelector('.followup-time').textContent,
+                                viewLink: row.querySelector('a')?.href
+                            };
+                            
+                            if (isValidNotification(data)) {
+                                notificationQueue.push({ type: 'followup', data });
+                                followUpAlarmIntervals[followUpId] = setInterval(() => {
+                                    notificationQueue.push({ type: 'followup', data });
+                                }, 5 * 60 * 1000);
+                            }
+                        }
+                    }
+                }
+            });
+    
+            // Check interviews (within 15 minutes)
+            interviewRows.forEach(row => {
+                const interviewDate = row.dataset.date;
+                const interviewTimeStr = row.querySelector('.interview-time').getAttribute('data-time');
+                const [hours, minutes] = interviewTimeStr.split(':').map(Number);
+                const interviewTime = hours * 60 + minutes;
+                const timeUntilInterview = interviewTime - currentTime;
+                const interviewId = row.dataset.interviewId;
+    
+                if (interviewDate === currentDate) {
+                    if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
+                        if (!interviewAlarmIntervals[interviewId] && !(snoozedNotifications[interviewId] && snoozedNotifications[interviewId] > Date.now())) {
+                            const data = {
+                                id: interviewId,
+                                candidateName: row.cells[0].textContent,
+                                time: row.querySelector('.interview-time').textContent,
+                                location: row.cells[4]?.textContent || 'Not specified',
+                                position: row.cells[3]?.textContent,
+                                viewLink: row.querySelector('a')?.href
+                            };
+                            
+                            if (isValidNotification(data)) {
+                                notificationQueue.push({ type: 'interview', data });
+                                interviewAlarmIntervals[interviewId] = setInterval(() => {
+                                    notificationQueue.push({ type: 'interview', data });
+                                }, 5 * 60 * 1000);
+                            }
+                        }
+                    }
+                }
+            });
+    
+            // Process any queued notifications
+            processQueue();
+        }
+    
+        // ===== INITIALIZE CHECKS =====
+        setInterval(checkAllNotifications, 60 * 1000);
+        checkAllNotifications();
+    });
 </script>
 
-<!-- Charting Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Performance Trend Chart
-  var trendOptions = {
-    series: [{
-      name: 'Candidates',
-      data: {{ trend_data|safe }}
-    }],
-    chart: {
-      height: 300,
-      type: 'area',
-      zoom: { enabled: false },
-      toolbar: { show: false }
-    },
-    dataLabels: { enabled: false },
-    stroke: { curve: 'smooth', width: 2 },
-    colors: ['#206bc4'],
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.7,
-        opacityTo: 0.3,
-        stops: [0, 90, 100]
-      }
-    },
-    grid: { borderColor: '#f1f1f1' },
-    markers: { size: 4 },
-    xaxis: {
-      categories: {{ trend_labels|safe }},
-      axisBorder: { show: false },
-      axisTicks: { show: false }
-    },
-    yaxis: {
-      min: 0,
-      tickAmount: 4,
-      labels: { formatter: function(val) { return val.toFixed(0); } }
-    },
-    tooltip: {
-      y: { formatter: function(val) { return val + " candidates"; } }
-    }
-  };
-  var trendChart = new ApexCharts(document.querySelector("#performance-trend-chart"), trendOptions);
-  trendChart.render();
-
-  // Status Distribution Chart
-  var statusOptions = {
-    series: {{ status_series|safe }},
-    chart: {
-      height: 200,
-      type: 'donut',
-    },
-    labels: {{ status_labels|safe }},
-    colors: ['#2fb344', '#ffbe0b', '#f03e3e'],
-    legend: { show: false },
-    plotOptions: {
-      pie: {
-        donut: {
-          labels: {
-            show: true,
-            total: {
-              show: true,
-              label: 'Total',
-              formatter: function(w) {
-                return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
-              }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Performance Trend Chart
+        var trendOptions = {
+            series: [{
+                name: 'Candidates',
+                data: {{ trend_data|safe }}
+            }],
+            chart: {
+                height: 300,
+                type: 'area',
+                zoom: { enabled: false },
+                toolbar: { show: false }
+            },
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 2 },
+            colors: ['#206bc4'],
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.7,
+                    opacityTo: 0.3,
+                    stops: [0, 90, 100]
+                }
+            },
+            grid: { borderColor: '#f1f1f1' },
+            markers: { size: 4 },
+            xaxis: {
+                categories: {{ trend_labels|safe }},
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                min: 0,
+                tickAmount: 4,
+                labels: { formatter: function(val) { return val.toFixed(0); } }
+            },
+            tooltip: {
+                y: { formatter: function(val) { return val + " candidates"; } }
             }
-          }
+        };
+        var trendChart = new ApexCharts(document.querySelector("#performance-trend-chart"), trendOptions);
+        trendChart.render();
+    
+        // NEW CHART: Calls Made Trend
+        var callTrendOptions = {
+            series: [{
+                name: 'Calls Made',
+                data: {{ call_trend_data|safe }}
+            }],
+            chart: {
+                height: 300,
+                type: 'area',
+                zoom: { enabled: false },
+                toolbar: { show: false }
+            },
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 2 },
+            colors: ['#6956c3'],
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.7,
+                    opacityTo: 0.3,
+                    stops: [0, 90, 100]
+                }
+            },
+            grid: { borderColor: '#f1f1f1' },
+            markers: { size: 4 },
+            xaxis: {
+                categories: {{ trend_labels|safe }},
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                min: 0,
+                tickAmount: 4,
+                labels: { formatter: function(val) { return val.toFixed(0); } }
+            },
+            tooltip: {
+                y: { formatter: function(val) { return val + " calls"; } }
+            }
+        };
+        var callTrendChart = new ApexCharts(document.querySelector("#call-trend-chart"), callTrendOptions);
+        callTrendChart.render();
+    
+        // Status Distribution Chart
+        var statusOptions = {
+            series: {{ status_series|safe }},
+            chart: {
+                height: 200,
+                type: 'donut',
+            },
+            labels: {{ status_labels|safe }},
+            colors: ['#2fb344', '#ffbe0b', '#f03e3e'],
+            legend: { show: false },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Total',
+                                formatter: function(w) {
+                                    return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: { enabled: false }
+        };
+        var statusChart = new ApexCharts(document.querySelector("#status-distribution-chart"), statusOptions);
+        statusChart.render();
+    
+        // Period filter handling
+        document.querySelectorAll('.period-btn, .dropdown-item[data-period]').forEach(el => {
+            el.addEventListener('click', function(e) {
+                e.preventDefault();
+                const period = this.getAttribute('data-period');
+                window.location.search = `?period=${period}`;
+            });
+        });
+    
+        // Interview alert handling
+        function parseCustomDateTime(dateStr, timeStr) {
+            const fullDateStr = dateStr + ' ' + timeStr;
+            return new Date(fullDateStr);
         }
-      }
-    },
-    dataLabels: { enabled: false }
-  };
-  var statusChart = new ApexCharts(document.querySelector("#status-distribution-chart"), statusOptions);
-  statusChart.render();
-
-  // Period filter handling
-  document.querySelectorAll('.period-btn, .dropdown-item[data-period]').forEach(el => {
-    el.addEventListener('click', function(e) {
-      e.preventDefault();
-      const period = this.getAttribute('data-period');
-      window.location.search = `?period=${period}`;
+    
+        function checkAlarms() {
+            const now = new Date();
+            document.querySelectorAll('.interview-row').forEach(row => {
+                const dateStr = row.dataset.date;
+                const timeStr = row.dataset.time;
+    
+                const eventTime = parseCustomDateTime(dateStr, timeStr);
+    
+                if (!eventTime || isNaN(eventTime.getTime())) return;
+    
+                const diff = eventTime - now;
+                if (diff < 1000 && diff > -1000 && !row.classList.contains("alarmed")) {
+                    const candidateName = row.querySelector('td').textContent;
+                    document.getElementById("alarmModalBody").innerText =
+                        "Interview scheduled for " + candidateName + " is happening now!";
+    
+                    const modal = new bootstrap.Modal(document.getElementById("alarmModal"));
+                    modal.show();
+    
+                    row.classList.add("table-danger", "alarmed");
+                }
+            });
+        }
+    
+        setInterval(checkAlarms, 1000);
     });
-  });
-
-  // Interview alert handling
-  function parseCustomDateTime(dateStr, timeStr) {
-    const fullDateStr = dateStr + ' ' + timeStr;
-    return new Date(fullDateStr);
-  }
-
-  function checkAlarms() {
-    const now = new Date();
-    document.querySelectorAll('.interview-row').forEach(row => {
-      const dateStr = row.dataset.date;
-      const timeStr = row.dataset.time;
-
-      const eventTime = parseCustomDateTime(dateStr, timeStr);
-
-      if (!eventTime || isNaN(eventTime.getTime())) return;
-
-      const diff = eventTime - now;
-      if (diff < 1000 && diff > -1000 && !row.classList.contains("alarmed")) {
-        const candidateName = row.querySelector('td').textContent;
-        document.getElementById("alarmModalBody").innerText =
-          "Interview scheduled for " + candidateName + " is happening now!";
-
-        const modal = new bootstrap.Modal(document.getElementById("alarmModal"));
-        modal.show();
-
-        row.classList.add("table-danger", "alarmed");
-      }
-    });
-  }
-
-  setInterval(checkAlarms, 1000);
-});
 </script>
 
 <style>
-.table-danger {
-  background-color: #f8d7da !important;
-}
+    .table-danger {
+        background-color: #f8d7da !important;
+    }
 </style>
 {% endblock %}

@@ -37,6 +37,15 @@ from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.urls import reverse
+from django.shortcuts import render, redirect
+from django.utils import timezone
+from datetime import datetime, timedelta
+from itertools import chain
+# from your_app.models import Employee, Candidate_registration, Candidate, Candidate_Interview, EVMS_Candidate_Interview, CandidateActivity # Import the new model
+from django.db.models.functions import TruncHour, TruncDay, TruncWeek, TruncMonth
+import logging
+from django.db.models import Count, F
+from datetime import datetime, timedelta, date
 
 
 def employee_login(request):
@@ -881,7 +890,7 @@ def employee_candidate_registration(request):
         expected_salary_type = request.POST.get('expected_salary_type')
         
         # Save to database
-        Candidate_registration.objects.create(
+        candidate = Candidate_registration.objects.create(
             employee_name=logged_in_employee,
             candidate_name=candidate_name,
             candidate_mobile_number=candidate_mobile_number,
@@ -919,7 +928,16 @@ def employee_candidate_registration(request):
             current_salary_type=current_salary_type,
             expected_salary_type=expected_salary_type
         )
-        
+
+        # Create a CandidateActivity record
+        CandidateActivity.objects.create(
+            candidate=candidate,
+            employee=logged_in_employee,
+            action='created',
+            # changes=changes,
+            remark="Created via unified form"
+        )
+
         return JsonResponse({'status': 'success', 'redirect_url': reverse('employee_candidate_list')})
     else:
         # suggested_unique_code = get_next_unique_code()
@@ -1131,88 +1149,7 @@ def employee_candidate_profile(request, id):
             # Handle general candidate profile updates
             if 'submit_all' in request.POST:
                 original_candidate = Candidate_registration.objects.get(id=id)
-                changes = {}
-
-                fields_to_track = [
-                    # Personal Information
-                    'candidate_name', 'candidate_mobile_number', 'candidate_email_address',
-                    'gender', 'lead_source',
-                    # Candidate Details
-                    'candidate_alternate_mobile_number', 'preferred_location', 'origin_location',
-                    'qualification', 'diploma', 'sector', 'department', 'experience_year',
-                    'experience_month', 'current_company', 'current_working_status',
-                    'current_salary', 'expected_salary', 'submit_by',
-                    # Calling Remark
-                    'call_connection', 'calling_remark', 'lead_generate',
-                    'send_for_interview', 'next_follow_up_date_time',
-                    # Selection Record
-                    'selection_status', 'company_name', 'offered_salary',
-                    'selection_date', 'candidate_joining_date', 'emta_commission',
-                    'payout_date', 'selection_remark', # Added selection_remark here as it was in admin view
-                    'other_lead_source', 'other_qualification', 'other_working_status',
-                    'other_call_connection', 'other_lead_generate',
-                    'other_interview_status', 'other_selection_status',
-                    'other_origin_location', 'other_preferred_location',
-                    'other_qualification', 'other_sector', 'other_department'
-                ]
-                
-                # Check for changes in all fields (excluding files for now, handled separately)
-                for field_name in fields_to_track:
-                    new_value_from_post = request.POST.get(field_name)
-                    old_value_from_db = getattr(original_candidate, field_name)
-                    
-                    # Convert date/datetime objects to string for comparison and JSON serialization
-                    if isinstance(old_value_from_db, (dt.date, dt.datetime)):
-                        old_value_from_db = str(old_value_from_db)
-                    
-                    # For date/datetime fields from POST, ensure they are also strings or None
-                    if new_value_from_post and field_name in ['selection_date', 'candidate_joining_date', 'payout_date', 'next_follow_up_date_time']:
-                        new_value_from_post = str(new_value_from_post) if new_value_from_post else None
-                    
-                    # Compare string representations
-                    if str(old_value_from_db) != str(new_value_from_post):
-                        changes[field_name] = {'old': old_value_from_db, 'new': new_value_from_post}
-
-
-                # Handle file uploads for candidate_photo and candidate_resume
-                # Store file paths/names (strings) for JSON serialization
-                # For candidate_photo
-                if 'candidate_photo' in request.FILES:
-                    current_photo_name = original_candidate.candidate_photo.name if original_candidate.candidate_photo else None
-                    new_photo_name = request.FILES['candidate_photo'].name
-                    if current_photo_name != new_photo_name:
-                        changes['candidate_photo'] = {
-                            'old': current_photo_name,
-                            'new': new_photo_name
-                        }
-                    candidate.candidate_photo = request.FILES['candidate_photo'] # Update the model field
-                elif request.POST.get('candidate_photo-clear') == 'on': # Assuming a clear checkbox input
-                    if original_candidate.candidate_photo:
-                        changes['candidate_photo'] = {
-                            'old': original_candidate.candidate_photo.name,
-                            'new': None
-                        }
-                    candidate.candidate_photo = None # Clear the photo
-
-                # For candidate_resume
-                if 'candidate_resume' in request.FILES:
-                    current_resume_name = original_candidate.candidate_resume.name if original_candidate.candidate_resume else None
-                    new_resume_name = request.FILES['candidate_resume'].name
-                    if current_resume_name != new_resume_name:
-                        changes['candidate_resume'] = {
-                            'old': current_resume_name,
-                            'new': new_resume_name
-                        }
-                    candidate.candidate_resume = request.FILES['candidate_resume'] # Update the model field
-                elif request.POST.get('candidate_resume-clear') == 'on': # Assuming a clear checkbox input
-                    if original_candidate.candidate_resume:
-                        changes['candidate_resume'] = {
-                            'old': original_candidate.candidate_resume.name,
-                            'new': None
-                        }
-                    candidate.candidate_resume = None # Clear the resume
-
-
+               
                 # Get list inputs and convert to string
                 preferred_location_list = request.POST.getlist('preferred_location')
                 sector_list = request.POST.getlist('sector')
@@ -1278,19 +1215,12 @@ def employee_candidate_profile(request, id):
                 candidate.other_sector = request.POST.get('other_sector')
                 candidate.other_department = request.POST.get('other_department')
 
+                # Pass the logged_in_employee to the save method
+                # The save method's logic will now handle logging the activity
                 candidate.updated_by = logged_in_employee
-                candidate.save() # Save changes to the candidate
+                candidate.save(user=logged_in_employee)
 
-                # Create activity log if there were changes
-                if changes:
-                    CandidateActivity.objects.create(
-                        candidate=candidate,
-                        employee=logged_in_employee,
-                        action='updated',
-                        changes=changes,
-                        remark="Updated via unified form"
-                    )
-
+                
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({
                         'success': True,
@@ -3043,13 +2973,13 @@ def employee_performance_dashboard(request):
 
     period = request.GET.get('period', 'today')
     logged_in_employee = Employee.objects.get(user=request.user)
-    today = datetime.now().date()
-
+    today = timezone.now().date()
+    
+    # --- Existing code for interviews and follow-ups ---
     today_follow_up = timezone.now().date()
-    date_range_start = today_follow_up - timedelta(days=2)  # 25th if today_follow_up is 27th
-    date_range_end = today_follow_up + timedelta(days=3)    # 30th if today is 27th
+    date_range_start = today_follow_up - timedelta(days=2)
+    date_range_end = today_follow_up + timedelta(days=3)
 
-    # Get candidates from both databases
     interview_detail_reg = Candidate_Interview.objects.filter(
         candidate__employee_name=logged_in_employee,
         interview_date_time__date=today,
@@ -3062,14 +2992,9 @@ def employee_performance_dashboard(request):
         status__in=['scheduled', 'rescheduled']
     ).order_by('interview_date_time')
     
-    # Combine both querysets
-        # Combine both querysets and sort by register_time (descending)
     interview_detail = list(chain(interview_detail_reg, interview_detail_can))
     interview_detail.sort(key=lambda x: x.interview_date_time if x.interview_date_time else datetime.min.date(), reverse=False)
     
-    
-    
-    # Get candidates from both databases
     follow_up_candidates_reg = Candidate_registration.objects.filter(
         employee_name=logged_in_employee,
         next_follow_up_date_time__isnull=False,
@@ -3084,24 +3009,26 @@ def employee_performance_dashboard(request):
         next_follow_up_date_time__lte=date_range_end
     ).order_by('next_follow_up_date_time')
     
-    # Combine both querysets
-        # Combine both querysets and sort by register_time (descending)
     follow_up_candidates = list(chain(follow_up_candidates_reg, follow_up_candidates_can))
     follow_up_candidates.sort(key=lambda x: x.next_follow_up_date_time if x.next_follow_up_date_time else datetime.min.date(), reverse=False)
-    
-
 
     # Define date ranges
     if period == 'today':
         start_date = end_date = today
         previous_start = previous_end = today - timedelta(days=1)
         trend_interval = 'hourly'
+        trend_label_format = '%H:00'
+        trend_range = range(24)
+        trend_labels = [f"{hour}:00" for hour in trend_range]
     elif period == 'week':
         start_date = today - timedelta(days=today.weekday())
         end_date = start_date + timedelta(days=6)
         previous_start = start_date - timedelta(weeks=1)
         previous_end = start_date - timedelta(days=1)
         trend_interval = 'daily'
+        trend_label_format = '%a %d'
+        trend_range = [(start_date + timedelta(days=i)) for i in range((end_date - start_date).days + 1)]
+        trend_labels = [day.strftime(trend_label_format) for day in trend_range]
     elif period == 'month':
         start_date = today.replace(day=1)
         if start_date.month < 12:
@@ -3111,12 +3038,16 @@ def employee_performance_dashboard(request):
         previous_start = (start_date - timedelta(days=1)).replace(day=1)
         previous_end = start_date - timedelta(days=1)
         trend_interval = 'weekly'
+        trend_range = [(start_date + timedelta(weeks=i)) for i in range(5) if (start_date + timedelta(weeks=i)).month == start_date.month]
+        trend_labels = [f"Week {i+1}" for i, _ in enumerate(trend_range)]
     elif period == 'year':
         start_date = today.replace(month=1, day=1)
         end_date = start_date.replace(year=start_date.year + 1) - timedelta(days=1)
         previous_start = start_date.replace(year=start_date.year - 1)
         previous_end = start_date - timedelta(days=1)
         trend_interval = 'monthly'
+        trend_range = [start_date.replace(month=m, day=1) for m in range(1, 13)]
+        trend_labels = [date.strftime('%b') for date in trend_range]
 
     # Get individual querysets
     current_qs_reg = Candidate_registration.objects.filter(
@@ -3139,44 +3070,91 @@ def employee_performance_dashboard(request):
     )
     previous_qs = list(chain(previous_qs_reg, previous_qs_can))
 
-    # Trend data
-    trend_data = []
-    trend_labels = []
+    # --- New functionality: Employee Calls Count ---
+    # Query CandidateActivity for the current period
+    current_calls_qs = CandidateActivity.objects.filter(
+        employee=logged_in_employee,
+        timestamp__date__range=[start_date, end_date],
+        action__in=['call_made', 'call_update', 'created']
+    )
+    
+    # Query CandidateActivity for the previous period
+    previous_calls_qs = CandidateActivity.objects.filter(
+        employee=logged_in_employee,
+        timestamp__date__range=[previous_start, previous_end],
+        action__in=['call_made', 'call_update', 'created']
+    )
 
+    # Aggregate call data for the trend chart
+    call_trend_data = []
+    
     if trend_interval == 'hourly':
-        for hour in range(24):
-            trend_labels.append(f"{hour}:00")
-            trend_data.append(sum(1 for c in current_qs if c.register_time.hour == hour))
+        calls_by_hour = current_calls_qs.annotate(
+            hour=TruncHour('timestamp')
+        ).values('hour').annotate(count=Count('id')).order_by('hour')
+        
+        calls_map = {item['hour'].hour: item['count'] for item in calls_by_hour}
+        call_trend_data = [calls_map.get(hour, 0) for hour in trend_range]
+
     elif trend_interval == 'daily':
-        for i in range((end_date - start_date).days + 1):
-            day = start_date + timedelta(days=i)
-            trend_labels.append(day.strftime('%a %d'))
-            trend_data.append(sum(1 for c in current_qs if c.register_time.date() == day))
+        calls_by_day = current_calls_qs.annotate(
+            day=TruncDay('timestamp')
+        ).values('day').annotate(count=Count('id')).order_by('day')
+        
+        calls_map = {item['day'].date(): item['count'] for item in calls_by_day}
+        call_trend_data = [calls_map.get(day, 0) for day in trend_range]
+    
     elif trend_interval == 'weekly':
-        for i in range(5):
+        calls_by_week = current_calls_qs.annotate(
+            week=TruncWeek('timestamp')
+        ).values('week').annotate(count=Count('id')).order_by('week')
+        
+        call_trend_data = []
+        for i in range(len(trend_range)):
             week_start = start_date + timedelta(weeks=i)
             week_end = week_start + timedelta(days=6)
-            if week_start.month != start_date.month:
+            if week_start.month != start_date.month and i > 0:
                 break
-            trend_labels.append(f"Week {i+1}")
+            
+            calls_in_week = current_calls_qs.filter(
+                timestamp__date__range=[week_start, week_end]
+            ).count()
+            call_trend_data.append(calls_in_week)
+
+    elif trend_interval == 'monthly':
+        calls_by_month = current_calls_qs.annotate(
+            month=TruncMonth('timestamp')
+        ).values('month').annotate(count=Count('id')).order_by('month')
+        
+        calls_map = {item['month'].date(): item['count'] for item in calls_by_month}
+        call_trend_data = [calls_map.get(month, 0) for month in trend_range]
+    
+    
+    # Existing trend data for candidate registrations
+    trend_data = []
+    if trend_interval == 'hourly':
+        for hour in trend_range:
+            trend_data.append(sum(1 for c in current_qs if c.register_time.hour == hour))
+    elif trend_interval == 'daily':
+        for day in trend_range:
+            trend_data.append(sum(1 for c in current_qs if c.register_time.date() == day))
+    elif trend_interval == 'weekly':
+        for i in range(len(trend_range)):
+            week_start = start_date + timedelta(weeks=i)
+            week_end = week_start + timedelta(days=6)
             trend_data.append(sum(1 for c in current_qs if week_start <= c.register_time.date() <= week_end))
     elif trend_interval == 'monthly':
-        for month in range(1, 13):
-            try:
-                month_start = start_date.replace(month=month, day=1)
-            except ValueError:
-                continue
-            if month == 12:
-                month_end = month_start.replace(year=month_start.year + 1, month=1) - timedelta(days=1)
+        for month_date in trend_range:
+            # Fixed month_end calculation
+            if month_date.month == 12:
+                month_end = month_date.replace(year=month_date.year + 1, month=1) - timedelta(days=1)
             else:
-                month_end = month_start.replace(month=month + 1) - timedelta(days=1)
-            if month_start > today:
-                break
-            if month_end > today:
-                month_end = today
-            trend_labels.append(month_start.strftime('%b'))
-            trend_data.append(sum(1 for c in current_qs if month_start <= c.register_time.date() <= month_end))
+                month_end = month_date.replace(month=month_date.month + 1, day=1) - timedelta(days=1)
 
+            # Corrected line: removed .date() from month_date and month_end
+            trend_data.append(sum(1 for c in current_qs if month_date <= c.register_time.date() <= month_end))
+    
+    
     # Metrics
     total_current = len(current_qs)
     total_previous = len(previous_qs)
@@ -3195,7 +3173,7 @@ def employee_performance_dashboard(request):
         Candidate.objects.filter(employee_name=logged_in_employee, register_time__date=today)
     ))
 
-    # Call stats
+    # Existing Call stats based on call_connection field
     total_connected = sum(1 for c in current_qs if getattr(c, 'call_connection', '') == 'Connected')
     total_failed = sum(1 for c in current_qs if getattr(c, 'call_connection', '') not in ('Connected', None, ''))
     total_calls = sum(1 for c in current_qs if getattr(c, 'call_connection', '') != '')
@@ -3206,6 +3184,18 @@ def employee_performance_dashboard(request):
         'connect_rate': calculate_percentage(total_connected, total_calls),
         'fail_rate': calculate_percentage(total_failed, total_calls),
         'breakdown': get_call_breakdown(current_qs, previous_qs)
+    }
+
+    # --- New functionality: Calls Made metrics ---
+    total_calls_made_current = current_calls_qs.count()
+    total_calls_made_previous = previous_calls_qs.count()
+    
+    calls_made_change = calculate_change(total_calls_made_current, total_calls_made_previous)
+    
+    # New chart data for calls
+    call_chart_data = {
+        'trend_data': call_trend_data,
+        'trend_labels': trend_labels,
     }
 
     status_counter = {}
@@ -3242,6 +3232,9 @@ def employee_performance_dashboard(request):
             'lead_generation': lead_current,
             'lead_change': calculate_change(lead_current, lead_previous),
             'today_candidates': len(today_candidates),
+            # --- New metrics added here ---
+            'total_calls_made': total_calls_made_current,
+            'calls_made_change': calls_made_change,
         },
         'status_distribution': status_distribution,
         'call_stats': call_stats,
@@ -3251,12 +3244,75 @@ def employee_performance_dashboard(request):
         'trend_labels': chart_data['trend_labels'],
         'status_series': chart_data['status_series'],
         'status_labels': chart_data['status_labels'],
+        # --- New chart data added here ---
+        'call_trend_data': call_chart_data['trend_data'],
         'period': period,
         'today': today,
         'interview_detail': interview_detail,
         'follow_up_candidates': follow_up_candidates,
     })
 
+
+# In your views.py file
+# ... (all your existing imports) ...
+from django.db.models import Prefetch, OuterRef, Subquery, Max
+
+# ... (all your existing helper functions and other views) ...
+
+def employee_calls_list(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    period = request.GET.get('period', 'today')
+    logged_in_employee = Employee.objects.get(user=request.user)
+    today = timezone.now().date()
+
+    # Define date ranges based on the period filter
+    if period == 'today':
+        start_date = end_date = today
+    elif period == 'week':
+        start_date = today - timedelta(days=today.weekday())
+        end_date = start_date + timedelta(days=6)
+    elif period == 'month':
+        start_date = today.replace(day=1)
+        if start_date.month < 12:
+            end_date = start_date.replace(month=start_date.month + 1) - timedelta(days=1)
+        else:
+            end_date = start_date.replace(year=start_date.year + 1, month=1) - timedelta(days=1)
+    elif period == 'year':
+        start_date = today.replace(month=1, day=1)
+        end_date = start_date.replace(year=start_date.year + 1) - timedelta(days=1)
+    else:
+        start_date = end_date = today
+
+    # Find all activities related to calls within the period
+    call_activities = CandidateActivity.objects.filter(
+        employee=logged_in_employee,
+        timestamp__date__range=[start_date, end_date],
+        action__in=['call_made', 'call_update', 'created']
+    )
+
+    # Get a unique list of candidate IDs from the activities
+    candidate_ids = call_activities.values_list('candidate_id', flat=True).distinct()
+
+    # Fetch the unique candidates. This time, we will also annotate each candidate
+    # with the timestamp of their last call activity.
+    last_call_subquery = CandidateActivity.objects.filter(
+        candidate_id=OuterRef('pk'),
+        employee=logged_in_employee,
+        action__in=['call_made', 'call_update']
+    ).order_by('-timestamp').values('timestamp')[:1]
+
+    candidates = Candidate_registration.objects.filter(id__in=candidate_ids).annotate(
+        last_call_timestamp=Subquery(last_call_subquery)
+    ).order_by('-last_call_timestamp')
+
+    return render(request, 'employee/employee-calls-list.html', {
+        'candidates': candidates,
+        'period': period,
+        'start_date': start_date,
+        'end_date': end_date
+    })
 
 # def calculate_percentage(part, whole):
 #     return round((part / whole) * 100, 1) if whole > 0 else 0

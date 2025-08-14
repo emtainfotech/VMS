@@ -72,6 +72,8 @@ urlpatterns = [
     path('evms/chat/<int:pk>/delete/', employee_evms_delete_chat, name='employee_evms_delete_chat'),
     path('employee-assignment/', employee_assign_candidate, name='employee_assign_candidate'),
     path('check-mobile-number/', check_mobile_number_duplicate, name='check_mobile_number_duplicate'),
+    path('calls-list/', employee_calls_list, name='employee_calls_list'), 
+    
 
     path('admin/', admin.site.urls),
 ]

@@ -247,3 +247,5 @@ class TicketAdmin(admin.ModelAdmin):
     list_display = ('ticket_number', 'ticket_name', 'ticket_status', 'ticket_priority', 'ticket_created_date')
     search_fields = ('ticket_number', 'ticket_name')
     list_filter = ('ticket_status', 'ticket_priority', 'ticket_created_date')
+
+admin.site.register(CandidateActivity)
