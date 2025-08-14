@@ -404,7 +404,10 @@ def crm_dashboard(request):
         return render(request, 'crm/crm-dashboard.html', context)
     else:
         return render(request, 'crm/404.html', status=404)
-    
+
+
+
+
 @login_required
 def employee_candidates_list(request, employee_name, filter_type):
     """

@@ -80,11 +80,12 @@
                         <table class="table table-vcenter table-hover table-striped">
                             <thead>
                                 <tr>
+                                    <th>Connection Status</th>
                                     <th>Candidate Name</th>
                                     <th>Contact</th>
                                     <th>Unique ID</th>
                                     <th>Lead Source</th>
-                                    <th>Selection Status</th>
+                                    <th>Lead Status</th>
                                     <th>Register Time</th>
                                     <th class="w-1"></th>
                                 </tr>
@@ -92,6 +93,7 @@
                             <tbody>
                                 {% for candidate in candidates %}
                                 <tr>
+                                    <td>{{ candidate.call_connection }}</td>
                                     <td>{{ candidate.candidate_name }}</td>
                                     <td>{{ candidate.candidate_mobile_number|default:"-" }}</td>
                                     <td>{{ candidate.unique_code|default:"-" }}</td>
@@ -103,13 +105,14 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if candidate.selection_status == 'Selected' %}
-                                            <span class="badge bg-success text-white">{{ candidate.selection_status|default:"-" }}</span>
+                                        {{ candidate.lead_generate|default:"-" }}
+                                        <!-- {% if candidate.selection_status == 'Selected' %}
+                                            <span class="badge bg-success text-white"></span>
                                         {% elif candidate.selection_status == 'Pending' %}
                                             <span class="badge bg-warning text-white">{{ candidate.selection_status|default:"-" }}</span>
                                         {% else %}
                                             <span class="badge bg-danger text-white">{{ candidate.selection_status|default:"-" }}</span>
-                                        {% endif %}
+                                        {% endif %} -->
                                     </td>
                                     <td>{{ candidate.register_time|date:"M d, Y H:i" }}</td>
                                     <td>
