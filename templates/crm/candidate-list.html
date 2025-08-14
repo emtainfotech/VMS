@@ -299,7 +299,7 @@
                                     {{ candidate.employee_name|default:"Unassigned" }}
                                 </td>
                                 <td class="text-muted" title="{{ candidate.register_time|date:'DATETIME_FORMAT' }}">
-                                    {{ candidate.register_time|date:"M d, Y" }}
+                                    {{ candidate.register_time|date:"M d, Y H:i" }}
                                 </td>
                                 <td class="text-center actions-cell">
                                     <div class="btn-list d-flex justify-content-center align-items-center flex-nowrap">
