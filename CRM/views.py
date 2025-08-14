@@ -468,8 +468,8 @@ def employee_candidates_list(request, employee_name, filter_type):
             candidates_can = candidates_can.filter(lead_generate__in=['Hot', 'Converted'])
             filter_title = "Lead Generation"
         elif filter_type == 'calls':
-            candidates_reg = candidates_reg.filter(Q(call_connection='Yes') | Q(call_connection='Connected'))
-            candidates_can = candidates_can.filter(Q(call_connection='Yes') | Q(call_connection='Connected'))
+            candidates_reg = candidates_reg.all()
+            candidates_can = candidates_can.filter(Q(call_connection='Yes') | Q(call_connection='Connected') | Q(call_connection='Not Connected'))
             filter_title = "Call Connections"
         elif filter_type == 'performance':
             filter_title = "Performance"
