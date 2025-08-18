@@ -24,6 +24,7 @@
                     N/A
                     {% endif %}
                 </td>
+                <td>{{ candidate.register_time|date:"M d, Y H:i" }}</td>
                 <td>
                     <a href="{% url 'admin_candidate_profile' candidate.id %}" class="btn btn-sm btn-outline-primary">View Profile</a>
                 </td>
