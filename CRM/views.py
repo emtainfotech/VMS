@@ -4853,7 +4853,7 @@ def employee_calls_list(request):
     # Corrected base filter for 'call_made' actions only
     base_activity_filter = Q(
         candidateactivity__timestamp__date__range=[start_date, end_date],
-        candidateactivity__action='call_made'
+        candidateactivity__action__in=['call_made','created']
     )
 
     # Corrected employee statistics query
@@ -4872,7 +4872,7 @@ def employee_calls_list(request):
     # Data for the main "All Employees" chart
     all_calls_queryset = CandidateActivity.objects.filter(
         timestamp__date__range=[start_date, end_date],
-        action='call_made'
+        action__in=['call_made', 'created']
     )
     main_chart_labels, main_chart_data = _get_chart_data(all_calls_queryset, start_date, end_date)
 
@@ -4904,7 +4904,7 @@ def get_employee_candidates(request):
         employee_calls_queryset = CandidateActivity.objects.filter(
             employee=employee,
             timestamp__date__range=[start_date, end_date],
-            action='call_made'
+            action__in=['call_made', 'created']
         )
 
         # Get candidate list for the partial view
