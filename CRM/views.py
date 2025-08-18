@@ -4743,7 +4743,9 @@ from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMon
 # from django.http import JsonResponse
 # from django.template.loader import render_to_string
 
-# HELPER FUNCTION FOR DYNAMIC CHART DATA
+
+
+# HELPER FUNCTION FOR DYNAMIC CHART DATA (No changes needed here)
 def _get_chart_data(queryset, start_date, end_date):
     """
     Analyzes a queryset within a date range and returns chart labels and data
@@ -4850,31 +4852,36 @@ def employee_calls_list(request):
         start_date = end_date = today
         period = 'today'
 
-    # Corrected base filter for 'call_made' actions only
+    # UPDATED: Base filter now includes 'call_made' and 'created' actions
     base_activity_filter = Q(
         candidateactivity__timestamp__date__range=[start_date, end_date],
-        candidateactivity__action__in=['call_made','created']
+        candidateactivity__action__in=['call_made', 'created']
     )
 
-    # Corrected employee statistics query
+    # NEW: Define the complex filter for what counts as a "Connected" activity
+    connected_filter = Q(
+        # Rule 1: For 'call_made', check the JSON log
+        Q(candidateactivity__action='call_made', candidateactivity__changes__call_connection__new__iexact='Connected') |
+        # Rule 2: For 'created', check the candidate's field directly
+        Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected')
+    )
+
+    # UPDATED: Employee statistics query using the new filters
     employee_stats = Employee.objects.annotate(
         total_calls=Count('candidateactivity', filter=base_activity_filter),
         last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
-        connected_calls=Count('candidateactivity', filter=base_activity_filter & Q(
-            candidateactivity__changes__call_connection__new__iexact='Connected'
-        )),
-        # Robust not-connected count
-        not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~Q(
-            candidateactivity__changes__call_connection__new__iexact='Connected'
-        ))
+        # Count connections using the new complex filter
+        connected_calls=Count('candidateactivity', filter=base_activity_filter & connected_filter),
+        # Count non-connections by negating the complex filter
+        not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~connected_filter)
     ).filter(total_calls__gt=0).order_by('-total_calls')
 
-    # Data for the main "All Employees" chart
-    all_calls_queryset = CandidateActivity.objects.filter(
+    # UPDATED: Data for the main "All Employees" chart now includes both actions
+    all_activities_queryset = CandidateActivity.objects.filter(
         timestamp__date__range=[start_date, end_date],
         action__in=['call_made', 'created']
     )
-    main_chart_labels, main_chart_data = _get_chart_data(all_calls_queryset, start_date, end_date)
+    main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date)
 
     context = {
         'employee_stats': employee_stats,
@@ -4900,15 +4907,15 @@ def get_employee_candidates(request):
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
         employee = get_object_or_404(Employee, pk=employee_id)
 
-        # Corrected base query for this specific employee
-        employee_calls_queryset = CandidateActivity.objects.filter(
+        # UPDATED: Base query for this employee, including both actions
+        employee_activities_queryset = CandidateActivity.objects.filter(
             employee=employee,
             timestamp__date__range=[start_date, end_date],
             action__in=['call_made', 'created']
         )
 
         # Get candidate list for the partial view
-        candidate_ids = employee_calls_queryset.values_list('candidate_id', flat=True).distinct()
+        candidate_ids = employee_activities_queryset.values_list('candidate_id', flat=True).distinct()
         candidates = Candidate_registration.objects.filter(pk__in=candidate_ids).order_by('-updated_at')
         
         html_content = render_to_string(
@@ -4917,7 +4924,7 @@ def get_employee_candidates(request):
         )
         
         # Get chart data using the helper function
-        chart_labels, chart_data = _get_chart_data(employee_calls_queryset, start_date, end_date)
+        chart_labels, chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date)
 
         return JsonResponse({
             'html': html_content,
