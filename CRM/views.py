@@ -4775,7 +4775,7 @@ def employee_calls_list(request):
     # --- Table Data Query (same as before) ---
     activities_in_period = Q(
         candidateactivity__timestamp__date__range=[start_date, end_date],
-        candidateactivity__action='call_made'
+        candidateactivity__action__in=['call_made', 'call_update', 'created']
     )
     employee_stats = Employee.objects.annotate(
         total_calls=Count('candidateactivity', filter=activities_in_period),
@@ -4791,7 +4791,7 @@ def employee_calls_list(request):
     # --- NEW: Data for "All Employees" Chart ---
     all_calls_by_date = CandidateActivity.objects.filter(
         timestamp__date__range=[start_date, end_date],
-        action='call_made'
+        action__in=['call_made', 'call_update', 'created']
     ).annotate(
         date=TruncDate('timestamp')
     ).values('date').annotate(
@@ -4830,7 +4830,7 @@ def get_employee_candidates(request):
         called_candidate_ids = CandidateActivity.objects.filter(
             employee=employee,
             timestamp__date__range=[start_date, end_date],
-            action='call_made'
+            action__in=['call_made', 'call_update', 'created']
         ).values_list('candidate_id', flat=True).distinct()
         candidates = Candidate_registration.objects.filter(pk__in=called_candidate_ids).order_by('-updated_at')
         
@@ -4843,7 +4843,7 @@ def get_employee_candidates(request):
         employee_calls_by_date = CandidateActivity.objects.filter(
             employee=employee,
             timestamp__date__range=[start_date, end_date],
-            action='call_made'
+            action__in=['call_made', 'call_update', 'created']
         ).annotate(
             date=TruncDate('timestamp')
         ).values('date').annotate(
