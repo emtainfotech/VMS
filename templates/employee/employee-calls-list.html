@@ -71,15 +71,15 @@
                     <div class="card">
                         <div class="card-header"><h3 class="card-title">Call Status Breakdown</h3></div>
                         <div class="card-body">
-                            <canvas id="callStatusPieChart" height="250"></canvas>
+                            <div id="callStatusPieChart"></div>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-8">
                     <div class="card">
-                        <div class="card-header"><h3 class="card-title">Call Volume Over Time</h3></div>
+                        <div class="card-header"><h3 class="card-title">Call Volume Trend</h3></div>
                         <div class="card-body">
-                            <canvas id="callVolumeBarChart" height="250"></canvas>
+                            <div id="callVolumeChart"></div>
                         </div>
                     </div>
                 </div>
@@ -91,18 +91,16 @@
                     <table class="table card-table table-vcenter text-nowrap datatable">
                         <thead>
                             <tr>
-                                <th>Calling Status</th>
                                 <th>Candidate Name</th>
                                 <th>Mobile Number</th>
-                                <th>Last Called</th>
-                                <th>Call Status</th>
+                                <th>Last Called On</th>
+                                <th>Current Call Status</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for candidate in candidates %}
                             <tr>
-                                <td>{{ candidate.call_connection }}</td>
                                 <td>{{ candidate.candidate_name }}</td>
                                 <td>{{ candidate.candidate_mobile_number }}</td>
                                 <td>{{ candidate.last_call_timestamp|date:"M d, Y H:i" }}</td>
@@ -110,7 +108,7 @@
                                     {% if candidate.call_connection == 'Connected' %}
                                         <span class="badge bg-success me-1"></span> Connected
                                     {% else %}
-                                        <span class="badge bg-danger me-1"></span> Not Connected
+                                        <span class="badge bg-danger me-1"></span> {{ candidate.call_connection|default:'Not Connected' }}
                                     {% endif %}
                                 </td>
                                 <td class="text-end">
@@ -130,72 +128,79 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // --- 1. Render Pie Chart for Call Status ---
-    const pieCtx = document.getElementById('callStatusPieChart').getContext('2d');
-    const callStatusPieChart = new Chart(pieCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Connected', 'Not Connected'],
-            datasets: [{
-                label: 'Call Status',
-                data: [{{ connected_calls }}, {{ not_connected_calls }}],
-                backgroundColor: [
-                    'rgba(40, 167, 69, 0.7)',  // Green for Connected
-                    'rgba(220, 53, 69, 0.7)'   // Red for Not Connected
-                ],
-                borderColor: [
-                    'rgba(40, 167, 69, 1)',
-                    'rgba(220, 53, 69, 1)'
-                ],
-                borderWidth: 1
-            }]
+    // --- Render Pie Chart with ApexCharts ---
+    var pieOptions = {
+        chart: {
+            type: 'donut',
+            height: 300
         },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                }
-            }
+        series: [{{ connected_calls }}, {{ not_connected_calls }}],
+        labels: ['Connected', 'Not Connected'],
+        colors: ['#28a745', '#dc3545'], // Green for Connected, Red for Not Connected
+        legend: {
+            position: 'bottom'
         }
-    });
+    };
 
-    // --- 2. Render Bar Chart for Call Volume ---
-    const barCtx = document.getElementById('callVolumeBarChart').getContext('2d');
-    const callVolumeBarChart = new Chart(barCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ bar_chart_labels|safe }},
-            datasets: [{
-                label: 'Calls Made',
-                data: {{ bar_chart_data|safe }},
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        // Ensure y-axis only shows whole numbers for call counts
-                        precision: 0
-                    }
-                }
+    var pieChart = new ApexCharts(document.querySelector("#callStatusPieChart"), pieOptions);
+    pieChart.render();
+
+    // --- Render Area Chart with ApexCharts ---
+    var areaOptions = {
+        chart: {
+            type: 'area', // Area chart gives a nice modern feel
+            height: 300,
+            zoom: {
+                enabled: false // Disable zooming for a cleaner look
             },
-            plugins: {
-                legend: {
-                    display: false // Hide legend as it's self-explanatory
+            toolbar: {
+                show: false // Hide the download/zoom menu
+            }
+        },
+        series: [{
+            name: 'Calls Made',
+            data: {{ chart_data|safe }}
+        }],
+        labels: {{ chart_labels|safe }},
+        xaxis: {
+            type: 'category'
+        },
+        yaxis: {
+            min: 0,
+            tickAmount: 5, // Controls how many lines on the y-axis
+            labels: {
+                formatter: function (val) {
+                    return val.toFixed(0); // Ensure whole numbers
                 }
             }
+        },
+        dataLabels: {
+            enabled: false // Hide the numbers on the data points
+        },
+        stroke: {
+            curve: 'smooth', // Creates the smooth, curved line
+            width: 2
+        },
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.7,
+                opacityTo: 0.2,
+                stops: [0, 90, 100]
+            }
+        },
+        tooltip: {
+            theme: 'dark'
         }
-    });
+    };
+
+    var areaChart = new ApexCharts(document.querySelector("#callVolumeChart"), areaOptions);
+    areaChart.render();
 });
 </script>
 {% endblock %}

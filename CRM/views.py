@@ -4738,9 +4738,88 @@ def admin_assign_candidate(request) :
 # from datetime import timedelta, datetime
 # from django.db.models import Count, Max, Q
 from django.db.models.functions import TruncDate
+from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMonth
 # from .models import Employee, Candidate_registration, CandidateActivity
 # from django.http import JsonResponse
 # from django.template.loader import render_to_string
+
+# HELPER FUNCTION FOR DYNAMIC CHART DATA
+def _get_chart_data(queryset, start_date, end_date):
+    """
+    Analyzes a queryset within a date range and returns chart labels and data
+    with the appropriate time granularity (hourly, daily, weekly, or monthly).
+    Ensures the timeline is always complete, even with zero data.
+    """
+    chart_labels = []
+    chart_data = []
+    time_delta = end_date - start_date
+
+    if time_delta.days <= 1:
+        # TODAY/CUSTOM DAY: Group by Hour
+        calls_by_hour = queryset.annotate(
+            hour=TruncHour('timestamp')
+        ).values('hour').annotate(count=Count('id')).order_by('hour')
+        
+        hourly_counts = {i: 0 for i in range(24)}
+        for group in calls_by_hour:
+            hourly_counts[group['hour'].hour] = group['count']
+        
+        chart_labels = [f"{hour}:00" for hour in hourly_counts.keys()]
+        chart_data = list(hourly_counts.values())
+
+    elif time_delta.days <= 14:
+        # WEEK/CUSTOM <14 DAYS: Group by Day
+        calls_by_date = queryset.annotate(
+            date=TruncDate('timestamp')
+        ).values('date').annotate(count=Count('id')).order_by('date')
+        
+        days_in_range = (end_date - start_date).days + 1
+        daily_counts = {start_date + timedelta(days=i): 0 for i in range(days_in_range)}
+        for group in calls_by_date:
+            daily_counts[group['date']] = group['count']
+        
+        chart_labels = [day.strftime('%a, %b %d') for day in daily_counts.keys()]
+        chart_data = list(daily_counts.values())
+
+    elif time_delta.days <= 92:
+        # MONTH/CUSTOM <3 MONTHS: Group by Week
+        calls_by_week = queryset.annotate(
+            week=TruncWeek('timestamp')
+        ).values('week').annotate(count=Count('id')).order_by('week')
+        
+        weekly_counts = {}
+        current_date = start_date - timedelta(days=start_date.weekday())
+        while current_date <= end_date:
+            weekly_counts[current_date] = 0
+            current_date += timedelta(weeks=1)
+            
+        for group in calls_by_week:
+            if group['week'] in weekly_counts:
+                weekly_counts[group['week']] = group['count']
+        
+        chart_labels = [week_start.strftime('Week of %b %d') for week_start in weekly_counts.keys()]
+        chart_data = list(weekly_counts.values())
+
+    else:
+        # YEAR/CUSTOM >3 MONTHS: Group by Month
+        calls_by_month = queryset.annotate(
+            month=TruncMonth('timestamp')
+        ).values('month').annotate(count=Count('id')).order_by('month')
+        
+        monthly_counts = {}
+        for i in range(1, 13):
+            month_date = date(start_date.year, i, 1)
+            if start_date <= month_date <= end_date:
+                 monthly_counts[i] = 0
+        
+        for group in calls_by_month:
+            monthly_counts[group['month'].month] = group['count']
+        
+        chart_labels = [calendar.month_name[i] for i in monthly_counts.keys()]
+        chart_data = list(monthly_counts.values())
+        
+    return chart_labels, chart_data
+
 
 def employee_calls_list(request):
     period = request.GET.get('period', 'today')
@@ -4749,7 +4828,6 @@ def employee_calls_list(request):
     
     today = timezone.now().date()
 
-    # --- Date Filtering Logic (same as before) ---
     if start_date_str and end_date_str:
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -4768,39 +4846,35 @@ def employee_calls_list(request):
     elif period == 'year':
         start_date = today.replace(month=1, day=1)
         end_date = today.replace(month=12, day=31)
-    else: # Default to 'today'
+    else:
         start_date = end_date = today
         period = 'today'
 
-    # --- Table Data Query (same as before) ---
-    activities_in_period = Q(
+    # Corrected base filter for 'call_made' actions only
+    base_activity_filter = Q(
         candidateactivity__timestamp__date__range=[start_date, end_date],
-        candidateactivity__action__in=['call_made', 'call_update', 'created']
+        candidateactivity__action='call_made'
     )
+
+    # Corrected employee statistics query
     employee_stats = Employee.objects.annotate(
-        total_calls=Count('candidateactivity', filter=activities_in_period),
-        last_call_made=Max('candidateactivity__timestamp', filter=activities_in_period),
-        connected_calls=Count('candidateactivity', filter=activities_in_period & Q(
+        total_calls=Count('candidateactivity', filter=base_activity_filter),
+        last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
+        connected_calls=Count('candidateactivity', filter=base_activity_filter & Q(
             candidateactivity__changes__call_connection__new__iexact='Connected'
         )),
-        not_connected_calls=Count('candidateactivity', filter=activities_in_period & Q(
-            candidateactivity__changes__call_connection__new__iexact='Not Connected'
+        # Robust not-connected count
+        not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~Q(
+            candidateactivity__changes__call_connection__new__iexact='Connected'
         ))
     ).filter(total_calls__gt=0).order_by('-total_calls')
 
-    # --- NEW: Data for "All Employees" Chart ---
-    all_calls_by_date = CandidateActivity.objects.filter(
+    # Data for the main "All Employees" chart
+    all_calls_queryset = CandidateActivity.objects.filter(
         timestamp__date__range=[start_date, end_date],
-        action__in=['call_made', 'call_update', 'created']
-    ).annotate(
-        date=TruncDate('timestamp')
-    ).values('date').annotate(
-        count=Count('id')
-    ).order_by('date')
-
-    # Format data for Chart.js
-    main_chart_labels = [c['date'].strftime('%b %d') for c in all_calls_by_date]
-    main_chart_data = [c['count'] for c in all_calls_by_date]
+        action='call_made'
+    )
+    main_chart_labels, main_chart_data = _get_chart_data(all_calls_queryset, start_date, end_date)
 
     context = {
         'employee_stats': employee_stats,
@@ -4826,34 +4900,25 @@ def get_employee_candidates(request):
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
         employee = get_object_or_404(Employee, pk=employee_id)
 
-        # --- Get Candidate List for Table (same as before) ---
-        called_candidate_ids = CandidateActivity.objects.filter(
+        # Corrected base query for this specific employee
+        employee_calls_queryset = CandidateActivity.objects.filter(
             employee=employee,
             timestamp__date__range=[start_date, end_date],
-            action__in=['call_made', 'call_update', 'created']
-        ).values_list('candidate_id', flat=True).distinct()
-        candidates = Candidate_registration.objects.filter(pk__in=called_candidate_ids).order_by('-updated_at')
+            action='call_made'
+        )
+
+        # Get candidate list for the partial view
+        candidate_ids = employee_calls_queryset.values_list('candidate_id', flat=True).distinct()
+        candidates = Candidate_registration.objects.filter(pk__in=candidate_ids).order_by('-updated_at')
         
         html_content = render_to_string(
             'crm/partials/candidate_list_partial.html',
             {'candidates': candidates, 'employee': employee}
         )
         
-        # --- NEW: Get Chart Data for this specific employee ---
-        employee_calls_by_date = CandidateActivity.objects.filter(
-            employee=employee,
-            timestamp__date__range=[start_date, end_date],
-            action__in=['call_made', 'call_update', 'created']
-        ).annotate(
-            date=TruncDate('timestamp')
-        ).values('date').annotate(
-            count=Count('id')
-        ).order_by('date')
-        
-        chart_labels = [c['date'].strftime('%b %d') for c in employee_calls_by_date]
-        chart_data = [c['count'] for c in employee_calls_by_date]
+        # Get chart data using the helper function
+        chart_labels, chart_data = _get_chart_data(employee_calls_queryset, start_date, end_date)
 
-        # Return everything in a single JSON response
         return JsonResponse({
             'html': html_content,
             'chart_data': {

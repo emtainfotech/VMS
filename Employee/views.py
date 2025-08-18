@@ -3272,6 +3272,15 @@ from django.db.models import Count, Q, OuterRef, Subquery
 from django.db.models.functions import TruncDate
 # from .models import Employee, Candidate_registration, CandidateActivity  # Ensure all models are imported
 
+# from django.shortcuts import render, redirect
+# from django.utils import timezone
+# from datetime import timedelta
+# from django.db.models import Count, Q, OuterRef, Subquery
+# from django.db.models.functions import TruncDate
+# from .models import Employee, Candidate_registration, CandidateActivity
+
+
+
 def employee_calls_list(request):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -3279,8 +3288,7 @@ def employee_calls_list(request):
     try:
         logged_in_employee = Employee.objects.get(user=request.user)
     except Employee.DoesNotExist:
-        # Handle case where the user is not linked to an Employee profile
-        return redirect('login') # Or show an error page
+        return redirect('login')
 
     period = request.GET.get('period', 'today')
     today = timezone.now().date()
@@ -3300,39 +3308,93 @@ def employee_calls_list(request):
         start_date = end_date = today
         period = 'today'
 
-    # --- 2. Base Queryset for Calls in Period ---
+    # --- 2. Base Queryset for ONLY 'call_made' actions ---
     calls_in_period = CandidateActivity.objects.filter(
         employee=logged_in_employee,
         timestamp__date__range=[start_date, end_date],
-        action='call_made'
+        action__in=['call_made', 'created']
     )
 
-    # --- 3. Calculate Aggregate Counts for Stat Cards & Pie Chart ---
+    # --- 3. Calculate Aggregate Counts (for stat cards) ---
     call_stats = calls_in_period.aggregate(
         total_calls=Count('id'),
-        connected_calls=Count('id', filter=Q(candidate__call_connection__iexact='Connected')),
-        not_connected_calls=Count('id', filter=~Q(candidate__call_connection__iexact='Connected'))
+        connected_calls=Count('id', filter=Q(changes__call_connection__new__iexact='Connected')),
+        not_connected_calls=Count('id', filter=~Q(changes__call_connection__new__iexact='Connected'))
     )
 
-    # --- 4. Prepare Data for Bar Chart (Calls Over Time) ---
-    calls_by_date = calls_in_period.annotate(
-        date=TruncDate('timestamp')
-    ).values('date').annotate(
-        count=Count('id')
-    ).order_by('date')
+    # --- 4. DYNAMIC CHART DATA AGGREGATION WITH COMPLETE TIMELINES ---
+    chart_labels = []
+    chart_data = []
 
-    bar_chart_labels = [c['date'].strftime('%b %d') for c in calls_by_date]
-    bar_chart_data = [c['count'] for c in calls_by_date]
+    if period == 'year':
+        # Show all 12 months
+        calls_by_month = calls_in_period.annotate(
+            month=TruncMonth('timestamp')
+        ).values('month').annotate(count=Count('id')).order_by('month')
+        
+        # Create a dictionary for all 12 months, initialized to 0
+        monthly_counts = {i: 0 for i in range(1, 13)}
+        for group in calls_by_month:
+            monthly_counts[group['month'].month] = group['count']
+            
+        chart_labels = [calendar.month_name[i] for i in range(1, 13)]
+        chart_data = list(monthly_counts.values())
 
-    # --- 5. Get List of Called Candidates (Original Logic) ---
+    elif period == 'month':
+        # Show all weeks in the month
+        calls_by_week = calls_in_period.annotate(
+            week=TruncWeek('timestamp')
+        ).values('week').annotate(count=Count('id')).order_by('week')
+        
+        # Create a dictionary for every week in the month, initialized to 0
+        weekly_counts = {}
+        # Find the start of the first week of the month
+        current_date = start_date - timedelta(days=start_date.weekday())
+        while current_date <= end_date:
+            weekly_counts[current_date] = 0
+            current_date += timedelta(weeks=1)
+        
+        for group in calls_by_week:
+            if group['week'] in weekly_counts:
+                weekly_counts[group['week']] = group['count']
+        
+        chart_labels = [week_start.strftime('Week of %b %d') for week_start in weekly_counts.keys()]
+        chart_data = list(weekly_counts.values())
+
+    elif period == 'week':
+        # Show all 7 days of the week
+        calls_by_date = calls_in_period.annotate(
+            date=TruncDate('timestamp')
+        ).values('date').annotate(count=Count('id')).order_by('date')
+
+        # Create a dictionary for all 7 days, initialized to 0
+        daily_counts = {start_date + timedelta(days=i): 0 for i in range(7)}
+        for group in calls_by_date:
+            daily_counts[group['date']] = group['count']
+            
+        chart_labels = [day.strftime('%a, %b %d') for day in daily_counts.keys()]
+        chart_data = list(daily_counts.values())
+
+    elif period == 'today':
+        # Show all 24 hours of the day
+        calls_by_hour = calls_in_period.annotate(
+            hour=TruncHour('timestamp')
+        ).values('hour').annotate(count=Count('id')).order_by('hour')
+        
+        hourly_counts = {i: 0 for i in range(24)}
+        for group in calls_by_hour:
+            hourly_counts[group['hour'].hour] = group['count']
+        
+        chart_labels = [f"{hour}:00" for hour in hourly_counts.keys()]
+        chart_data = list(hourly_counts.values())
+
+    # --- 5. Get List of Called Candidates ---
     candidate_ids = calls_in_period.values_list('candidate_id', flat=True).distinct()
-    
     last_call_subquery = CandidateActivity.objects.filter(
         candidate_id=OuterRef('pk'),
         employee=logged_in_employee,
-        action='call_made'
+        action__in=['call_made', 'created']
     ).order_by('-timestamp').values('timestamp')[:1]
-
     candidates = Candidate_registration.objects.filter(id__in=candidate_ids).annotate(
         last_call_timestamp=Subquery(last_call_subquery)
     ).order_by('-last_call_timestamp')
@@ -3346,11 +3408,15 @@ def employee_calls_list(request):
         'total_calls': call_stats.get('total_calls', 0),
         'connected_calls': call_stats.get('connected_calls', 0),
         'not_connected_calls': call_stats.get('not_connected_calls', 0),
-        'bar_chart_labels': bar_chart_labels,
-        'bar_chart_data': bar_chart_data,
+        'chart_labels': chart_labels,
+        'chart_data': chart_data,
     }
     
     return render(request, 'employee/employee-calls-list.html', context)
+
+
+
+
 # def calculate_percentage(part, whole):
 #     return round((part / whole) * 100, 1) if whole > 0 else 0
 

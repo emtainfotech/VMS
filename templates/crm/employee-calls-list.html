@@ -20,11 +20,11 @@
             <div class="card">
                 <div class="card-header"><h3 class="card-title">Filter Report</h3></div>
                 <div class="card-body">
-                    <form method="get" action="{% url 'employee_calls_list' %}">
+                    <form method="get" action="{% url 'admin_calls_list' %}">
                         <div class="row g-3 align-items-end">
                             <div class="col-md-3">
                                 <label class="form-label">Period</label>
-                                <select name="period" class="form-select" onchange="this.form.submit()">
+                                <select name="period" class="form-select">
                                     <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
                                     <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
                                     <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
@@ -49,13 +49,14 @@
             </div>
 
             <div class="card mt-4">
-                <div class="card-header"><h3 class="card-title">All Employees: Call Volume Over Time</h3></div>
+                <div class="card-header"><h3 class="card-title">All Employees: Call Volume Trend</h3></div>
                 <div class="card-body">
-                    <canvas id="mainChart" height="100"></canvas>
+                    <div id="mainChart"></div>
                 </div>
             </div>
 
             <div class="card mt-4">
+                <div class="card-header"><h3 class="card-title">Employee Breakdown</h3></div>
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter text-nowrap">
                         <thead>
@@ -80,8 +81,9 @@
                                 <td colspan="5" class="p-0">
                                     <div class="details-container p-3">
                                         <div class="card mb-3">
+                                             <div class="card-header"><h3 class="card-title" id="chart-title-for-{{ stat.id }}">Call Volume Trend</h3></div>
                                             <div class="card-body">
-                                                <canvas id="chart-for-{{ stat.id }}" height="120"></canvas>
+                                                <div id="chart-for-{{ stat.id }}"></div>
                                             </div>
                                         </div>
                                         <div class="candidate-list-container"></div>
@@ -99,48 +101,58 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const chartInstances = {}; // To store and manage chart objects
+
+    // --- ApexCharts Base Options ---
+    function getBaseChartOptions(labels, seriesData, chartTitle) {
+        return {
+            chart: {
+                type: 'area', height: 300,
+                zoom: { enabled: false },
+                toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } }
+            },
+            series: [{ name: chartTitle, data: seriesData }],
+            labels: labels,
+            xaxis: { type: 'category', labels: { rotate: -20, rotateAlways: false, hideOverlappingLabels: true, trim: true } },
+            yaxis: { min: 0, tickAmount: 5, labels: { formatter: (val) => val.toFixed(0) } },
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 2 },
+            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
+            tooltip: { theme: 'dark' }
+        };
+    }
+
     // --- 1. Render Main "All Employees" Chart ---
-    const mainCtx = document.getElementById('mainChart').getContext('2d');
-    const mainChart = new Chart(mainCtx, {
-        type: 'line',
-        data: {
-            labels: {{ main_chart_labels|safe }},
-            datasets: [{
-                label: 'Total Calls per Day',
-                data: {{ main_chart_data|safe }},
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.1
-            }]
-        },
-        options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-    });
+    const mainChartOptions = getBaseChartOptions(
+        {{ main_chart_labels|safe }},
+        {{ main_chart_data|safe }},
+        'Total Calls'
+    );
+    const mainChart = new ApexCharts(document.querySelector("#mainChart"), mainChartOptions);
+    mainChart.render();
 
     // --- 2. Handle Clickable Employee Rows for Details ---
-    const employeeRows = document.querySelectorAll('.employee-row');
-    const chartInstances = {}; // To keep track of individual employee charts
-
-    employeeRows.forEach(row => {
+    document.querySelectorAll('.employee-row').forEach(row => {
         row.addEventListener('click', async function () {
             const employeeId = this.dataset.employeeId;
             const employeeName = this.dataset.employeeName;
             const detailsRow = document.getElementById(`details-for-${employeeId}`);
             const candidateContainer = detailsRow.querySelector('.candidate-list-container');
-            const chartCanvas = detailsRow.querySelector(`#chart-for-${employeeId}`);
+            const chartContainer = detailsRow.querySelector(`#chart-for-${employeeId}`);
+            const chartTitle = detailsRow.querySelector(`#chart-title-for-${employeeId}`);
 
             const isVisible = detailsRow.style.display === 'table-row';
             detailsRow.style.display = isVisible ? 'none' : 'table-row';
             this.classList.toggle('active', !isVisible);
 
-            // Fetch data only if the row is being opened and is empty
+            // Fetch data only if opening the row and it's empty
             if (!isVisible && candidateContainer.innerHTML.trim() === '') {
                 candidateContainer.innerHTML = '<div class="text-center p-4">Loading details...</div>';
+                chartTitle.innerText = `Call Volume Trend for ${employeeName}`;
 
                 const startDate = "{{ start_date|date:'Y-m-d' }}";
                 const endDate = "{{ end_date|date:'Y-m-d' }}";
@@ -151,34 +163,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                     
                     const result = await response.json();
-
-                    // Inject the candidate list HTML
                     candidateContainer.innerHTML = result.html;
 
-                    // Destroy old chart instance if it exists, to prevent bugs
                     if (chartInstances[employeeId]) {
                         chartInstances[employeeId].destroy();
                     }
 
-                    // Render the new employee-specific chart
-                    const employeeCtx = chartCanvas.getContext('2d');
-                    chartInstances[employeeId] = new Chart(employeeCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: result.chart_data.labels,
-                            datasets: [{
-                                label: `Calls by ${employeeName}`,
-                                data: result.chart_data.data,
-                                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                                borderColor: 'rgba(54, 162, 235, 1)',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            plugins: { legend: { display: false } },
-                            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-                        }
-                    });
+                    const employeeChartOptions = getBaseChartOptions(
+                        result.chart_data.labels,
+                        result.chart_data.data,
+                        'Calls'
+                    );
+                    
+                    chartInstances[employeeId] = new ApexCharts(chartContainer, employeeChartOptions);
+                    chartInstances[employeeId].render();
 
                 } catch (error) {
                     console.error('Failed to fetch employee details:', error);
@@ -189,5 +187,4 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-
 {% endblock %}
