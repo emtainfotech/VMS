@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'EVMS',
     'Employee',
     'CRM',
-    
 ]
 
 MIDDLEWARE = [
@@ -75,6 +74,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'VMS.wsgi.application'
+
 
 
 # Database

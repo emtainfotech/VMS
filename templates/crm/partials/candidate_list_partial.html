@@ -1,0 +1,37 @@
+<div class="bg-light border rounded p-3">
+    <h5>Candidates Called by {{ employee.user.get_full_name|default:employee.user.username }}</h5>
+    {% if candidates %}
+    <table class="table table-sm table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Candidate Name</th>
+                <th>Mobile Number</th>
+                <th>Call Connection</th>
+                <th>Lead Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for candidate in candidates %}
+            <tr>
+                <td>{{ candidate.candidate_name }}</td>
+                <td>{{ candidate.candidate_mobile_number }}</td>
+                <td>{{ candidate.call_connection|default:'N/A' }}</td>
+                <td>
+                    {% if candidate.lead_generate %}
+                    <span class="badge bg-secondary text-secondary-fg">{{ candidate.lead_generate }}</span>
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'admin_candidate_profile' candidate.id %}" class="btn btn-sm btn-outline-primary">View Profile</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted mt-3">No candidates were called by this employee in the selected period.</p>
+    {% endif %}
+</div>

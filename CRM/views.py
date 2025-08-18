@@ -468,7 +468,7 @@ def employee_candidates_list(request, employee_name, filter_type):
             candidates_can = candidates_can.filter(lead_generate__in=['Hot', 'Converted'])
             filter_title = "Lead Generation"
         elif filter_type == 'calls':
-            candidates_reg = candidates_reg.all()
+            candidates_reg = candidates_reg.all
             candidates_can = candidates_can.filter(Q(call_connection='Yes') | Q(call_connection='Connected') | Q(call_connection='Not Connected'))
             filter_title = "Call Connections"
         elif filter_type == 'performance':
@@ -4608,6 +4608,7 @@ def admin_evms_delete_interview(request, interview_id):
 
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Subquery, OuterRef
 
 def admin_invoice_list(request):
     candidates_reg = Candidate_registration.objects.filter(selection_status='Selected')
@@ -4717,3 +4718,149 @@ def admin_assign_candidate(request) :
     candidates.sort(key=lambda x: x.selection_date or date.min, reverse=True)
 
     return render(request, 'crm/candidate-assignment.html', { 'candidates' : candidates })
+
+
+
+# crm/views.py
+
+# from django.shortcuts import render, get_object_or_404
+# from django.utils import timezone
+# from datetime import timedelta, datetime
+# from django.db.models import Count, Max, Q
+# from .models import Employee, Candidate_registration, CandidateActivity # Make sure to import your Employee model
+# from django.http import HttpResponse
+# from django.template.loader import render_to_string
+
+# crm/views.py
+
+# from django.shortcuts import render, get_object_or_404
+# from django.utils import timezone
+# from datetime import timedelta, datetime
+# from django.db.models import Count, Max, Q
+from django.db.models.functions import TruncDate
+# from .models import Employee, Candidate_registration, CandidateActivity
+# from django.http import JsonResponse
+# from django.template.loader import render_to_string
+
+def employee_calls_list(request):
+    period = request.GET.get('period', 'today')
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+    
+    today = timezone.now().date()
+
+    # --- Date Filtering Logic (same as before) ---
+    if start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            period = 'custom'
+        except (ValueError, TypeError):
+            start_date = end_date = today
+            period = 'today'
+    elif period == 'week':
+        start_date = today - timedelta(days=today.weekday())
+        end_date = start_date + timedelta(days=6)
+    elif period == 'month':
+        start_date = today.replace(day=1)
+        next_month = start_date.replace(day=28) + timedelta(days=4)
+        end_date = next_month - timedelta(days=next_month.day)
+    elif period == 'year':
+        start_date = today.replace(month=1, day=1)
+        end_date = today.replace(month=12, day=31)
+    else: # Default to 'today'
+        start_date = end_date = today
+        period = 'today'
+
+    # --- Table Data Query (same as before) ---
+    activities_in_period = Q(
+        candidateactivity__timestamp__date__range=[start_date, end_date],
+        candidateactivity__action='call_made'
+    )
+    employee_stats = Employee.objects.annotate(
+        total_calls=Count('candidateactivity', filter=activities_in_period),
+        last_call_made=Max('candidateactivity__timestamp', filter=activities_in_period),
+        connected_calls=Count('candidateactivity', filter=activities_in_period & Q(
+            candidateactivity__changes__call_connection__new__iexact='Connected'
+        )),
+        not_connected_calls=Count('candidateactivity', filter=activities_in_period & Q(
+            candidateactivity__changes__call_connection__new__iexact='Not Connected'
+        ))
+    ).filter(total_calls__gt=0).order_by('-total_calls')
+
+    # --- NEW: Data for "All Employees" Chart ---
+    all_calls_by_date = CandidateActivity.objects.filter(
+        timestamp__date__range=[start_date, end_date],
+        action='call_made'
+    ).annotate(
+        date=TruncDate('timestamp')
+    ).values('date').annotate(
+        count=Count('id')
+    ).order_by('date')
+
+    # Format data for Chart.js
+    main_chart_labels = [c['date'].strftime('%b %d') for c in all_calls_by_date]
+    main_chart_data = [c['count'] for c in all_calls_by_date]
+
+    context = {
+        'employee_stats': employee_stats,
+        'period': period,
+        'start_date': start_date,
+        'end_date': end_date,
+        'main_chart_labels': main_chart_labels,
+        'main_chart_data': main_chart_data,
+    }
+    return render(request, 'crm/employee-calls-list.html', context)
+
+
+def get_employee_candidates(request):
+    employee_id = request.GET.get('employee_id')
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+
+    if not all([employee_id, start_date_str, end_date_str]):
+        return JsonResponse({"error": "Missing parameters."}, status=400)
+        
+    try:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        employee = get_object_or_404(Employee, pk=employee_id)
+
+        # --- Get Candidate List for Table (same as before) ---
+        called_candidate_ids = CandidateActivity.objects.filter(
+            employee=employee,
+            timestamp__date__range=[start_date, end_date],
+            action='call_made'
+        ).values_list('candidate_id', flat=True).distinct()
+        candidates = Candidate_registration.objects.filter(pk__in=called_candidate_ids).order_by('-updated_at')
+        
+        html_content = render_to_string(
+            'crm/partials/candidate_list_partial.html',
+            {'candidates': candidates, 'employee': employee}
+        )
+        
+        # --- NEW: Get Chart Data for this specific employee ---
+        employee_calls_by_date = CandidateActivity.objects.filter(
+            employee=employee,
+            timestamp__date__range=[start_date, end_date],
+            action='call_made'
+        ).annotate(
+            date=TruncDate('timestamp')
+        ).values('date').annotate(
+            count=Count('id')
+        ).order_by('date')
+        
+        chart_labels = [c['date'].strftime('%b %d') for c in employee_calls_by_date]
+        chart_data = [c['count'] for c in employee_calls_by_date]
+
+        # Return everything in a single JSON response
+        return JsonResponse({
+            'html': html_content,
+            'chart_data': {
+                'labels': chart_labels,
+                'data': chart_data,
+            }
+        })
+
+    except (ValueError, Employee.DoesNotExist):
+        return JsonResponse({"error": "Invalid request."}, status=400)

@@ -60,6 +60,8 @@ urlpatterns = [
     path('admin-invoice-bulk-generate/<int:company_id>/', generate_bulk_candidate_invoice, name='generate_bulk_candidate_invoice'),
     path('candidate-assignment/', admin_assign_candidate, name='admin_assign_candidate'),
     path('crm-dashboard/employee/<str:employee_name>/<str:filter_type>/', employee_candidates_list, name='employee_candidates_list'),
+    path('admin-employee-calls/', employee_calls_list, name='admin_calls_list'),
+    path('ajax/get-employee-candidates/', get_employee_candidates, name='get_employee_candidates'),
 
 
     path('admin/', admin.site.urls),

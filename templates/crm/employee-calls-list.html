@@ -1,0 +1,193 @@
+{% extends 'crm/base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">Employee Call Report</h2>
+                    <div class="text-muted mt-1">
+                        Showing call data from <strong>{{ start_date|date:"M d, Y" }}</strong> to <strong>{{ end_date|date:"M d, Y" }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Filter Report</h3></div>
+                <div class="card-body">
+                    <form method="get" action="{% url 'employee_calls_list' %}">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label">Period</label>
+                                <select name="period" class="form-select" onchange="this.form.submit()">
+                                    <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
+                                    <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
+                                    <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
+                                    <option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option>
+                                    <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">End Date</label>
+                                <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header"><h3 class="card-title">All Employees: Call Volume Over Time</h3></div>
+                <div class="card-body">
+                    <canvas id="mainChart" height="100"></canvas>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="table-responsive">
+                    <table class="table card-table table-vcenter text-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Employee Name</th>
+                                <th>Total Calls</th>
+                                <th>Connected</th>
+                                <th>Not Connected</th>
+                                <th>Last Call Made</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in employee_stats %}
+                            <tr class="employee-row" data-employee-id="{{ stat.id }}" data-employee-name="{{ stat.user.get_full_name|default:stat.user.username }}" style="cursor: pointer;">
+                                <td>{{ stat.user.get_full_name|default:stat.user.username }}</td>
+                                <td><span class="badge bg-blue text-blue-fg">{{ stat.total_calls }}</span></td>
+                                <td><span class="badge bg-green text-green-fg">{{ stat.connected_calls }}</span></td>
+                                <td><span class="badge bg-red text-red-fg">{{ stat.not_connected_calls }}</span></td>
+                                <td>{% if stat.last_call_made %}{{ stat.last_call_made|date:"M d, Y H:i" }}{% else %}N/A{% endif %}</td>
+                            </tr>
+                            <tr class="candidate-details-row" id="details-for-{{ stat.id }}" style="display: none;">
+                                <td colspan="5" class="p-0">
+                                    <div class="details-container p-3">
+                                        <div class="card mb-3">
+                                            <div class="card-body">
+                                                <canvas id="chart-for-{{ stat.id }}" height="120"></canvas>
+                                            </div>
+                                        </div>
+                                        <div class="candidate-list-container"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center">No call data found for the selected period.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // --- 1. Render Main "All Employees" Chart ---
+    const mainCtx = document.getElementById('mainChart').getContext('2d');
+    const mainChart = new Chart(mainCtx, {
+        type: 'line',
+        data: {
+            labels: {{ main_chart_labels|safe }},
+            datasets: [{
+                label: 'Total Calls per Day',
+                data: {{ main_chart_data|safe }},
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.1
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+    // --- 2. Handle Clickable Employee Rows for Details ---
+    const employeeRows = document.querySelectorAll('.employee-row');
+    const chartInstances = {}; // To keep track of individual employee charts
+
+    employeeRows.forEach(row => {
+        row.addEventListener('click', async function () {
+            const employeeId = this.dataset.employeeId;
+            const employeeName = this.dataset.employeeName;
+            const detailsRow = document.getElementById(`details-for-${employeeId}`);
+            const candidateContainer = detailsRow.querySelector('.candidate-list-container');
+            const chartCanvas = detailsRow.querySelector(`#chart-for-${employeeId}`);
+
+            const isVisible = detailsRow.style.display === 'table-row';
+            detailsRow.style.display = isVisible ? 'none' : 'table-row';
+            this.classList.toggle('active', !isVisible);
+
+            // Fetch data only if the row is being opened and is empty
+            if (!isVisible && candidateContainer.innerHTML.trim() === '') {
+                candidateContainer.innerHTML = '<div class="text-center p-4">Loading details...</div>';
+
+                const startDate = "{{ start_date|date:'Y-m-d' }}";
+                const endDate = "{{ end_date|date:'Y-m-d' }}";
+                const url = `{% url 'get_employee_candidates' %}?employee_id=${employeeId}&start_date=${startDate}&end_date=${endDate}`;
+                
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    
+                    const result = await response.json();
+
+                    // Inject the candidate list HTML
+                    candidateContainer.innerHTML = result.html;
+
+                    // Destroy old chart instance if it exists, to prevent bugs
+                    if (chartInstances[employeeId]) {
+                        chartInstances[employeeId].destroy();
+                    }
+
+                    // Render the new employee-specific chart
+                    const employeeCtx = chartCanvas.getContext('2d');
+                    chartInstances[employeeId] = new Chart(employeeCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: result.chart_data.labels,
+                            datasets: [{
+                                label: `Calls by ${employeeName}`,
+                                data: result.chart_data.data,
+                                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('Failed to fetch employee details:', error);
+                    candidateContainer.innerHTML = '<div class="text-center p-4 text-danger">Failed to load data.</div>';
+                }
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

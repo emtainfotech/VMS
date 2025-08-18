@@ -3263,61 +3263,94 @@ from django.db.models import Prefetch, OuterRef, Subquery, Max
 
 # ... (all your existing helper functions and other views) ...
 
+# crm/views.py
+
+from django.shortcuts import render, redirect
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Count, Q, OuterRef, Subquery
+from django.db.models.functions import TruncDate
+# from .models import Employee, Candidate_registration, CandidateActivity  # Ensure all models are imported
+
 def employee_calls_list(request):
     if not request.user.is_authenticated:
         return redirect('login')
 
+    try:
+        logged_in_employee = Employee.objects.get(user=request.user)
+    except Employee.DoesNotExist:
+        # Handle case where the user is not linked to an Employee profile
+        return redirect('login') # Or show an error page
+
     period = request.GET.get('period', 'today')
-    logged_in_employee = Employee.objects.get(user=request.user)
     today = timezone.now().date()
 
-    # Define date ranges based on the period filter
-    if period == 'today':
-        start_date = end_date = today
-    elif period == 'week':
+    # --- 1. Date Filtering Logic ---
+    if period == 'week':
         start_date = today - timedelta(days=today.weekday())
         end_date = start_date + timedelta(days=6)
     elif period == 'month':
         start_date = today.replace(day=1)
-        if start_date.month < 12:
-            end_date = start_date.replace(month=start_date.month + 1) - timedelta(days=1)
-        else:
-            end_date = start_date.replace(year=start_date.year + 1, month=1) - timedelta(days=1)
+        next_month = start_date.replace(day=28) + timedelta(days=4)
+        end_date = next_month - timedelta(days=next_month.day)
     elif period == 'year':
         start_date = today.replace(month=1, day=1)
-        end_date = start_date.replace(year=start_date.year + 1) - timedelta(days=1)
-    else:
+        end_date = today.replace(month=12, day=31)
+    else:  # Default to 'today'
         start_date = end_date = today
+        period = 'today'
 
-    # Find all activities related to calls within the period
-    call_activities = CandidateActivity.objects.filter(
+    # --- 2. Base Queryset for Calls in Period ---
+    calls_in_period = CandidateActivity.objects.filter(
         employee=logged_in_employee,
         timestamp__date__range=[start_date, end_date],
-        action__in=['call_made', 'call_update', 'created']
+        action='call_made'
     )
 
-    # Get a unique list of candidate IDs from the activities
-    candidate_ids = call_activities.values_list('candidate_id', flat=True).distinct()
+    # --- 3. Calculate Aggregate Counts for Stat Cards & Pie Chart ---
+    call_stats = calls_in_period.aggregate(
+        total_calls=Count('id'),
+        connected_calls=Count('id', filter=Q(candidate__call_connection__iexact='Connected')),
+        not_connected_calls=Count('id', filter=~Q(candidate__call_connection__iexact='Connected'))
+    )
 
-    # Fetch the unique candidates. This time, we will also annotate each candidate
-    # with the timestamp of their last call activity.
+    # --- 4. Prepare Data for Bar Chart (Calls Over Time) ---
+    calls_by_date = calls_in_period.annotate(
+        date=TruncDate('timestamp')
+    ).values('date').annotate(
+        count=Count('id')
+    ).order_by('date')
+
+    bar_chart_labels = [c['date'].strftime('%b %d') for c in calls_by_date]
+    bar_chart_data = [c['count'] for c in calls_by_date]
+
+    # --- 5. Get List of Called Candidates (Original Logic) ---
+    candidate_ids = calls_in_period.values_list('candidate_id', flat=True).distinct()
+    
     last_call_subquery = CandidateActivity.objects.filter(
         candidate_id=OuterRef('pk'),
         employee=logged_in_employee,
-        action__in=['call_made', 'call_update']
+        action='call_made'
     ).order_by('-timestamp').values('timestamp')[:1]
 
     candidates = Candidate_registration.objects.filter(id__in=candidate_ids).annotate(
         last_call_timestamp=Subquery(last_call_subquery)
     ).order_by('-last_call_timestamp')
 
-    return render(request, 'employee/employee-calls-list.html', {
+    # --- 6. Prepare Context for Template ---
+    context = {
         'candidates': candidates,
         'period': period,
         'start_date': start_date,
-        'end_date': end_date
-    })
-
+        'end_date': end_date,
+        'total_calls': call_stats.get('total_calls', 0),
+        'connected_calls': call_stats.get('connected_calls', 0),
+        'not_connected_calls': call_stats.get('not_connected_calls', 0),
+        'bar_chart_labels': bar_chart_labels,
+        'bar_chart_data': bar_chart_data,
+    }
+    
+    return render(request, 'employee/employee-calls-list.html', context)
 # def calculate_percentage(part, whole):
 #     return round((part / whole) * 100, 1) if whole > 0 else 0
 
