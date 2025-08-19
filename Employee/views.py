@@ -3288,6 +3288,7 @@ from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMon
 import calendar
 # from .models import Employee, CandidateActivity, Candidate_registration
 
+
 def employee_calls_list(request):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -3300,7 +3301,7 @@ def employee_calls_list(request):
     period = request.GET.get('period', 'today')
     today = timezone.now().date()
 
-    # --- 1. Date Filtering Logic (This part is correct) ---
+    # --- 1. Date Filtering Logic ---
     if period == 'week':
         start_date = today - timedelta(days=today.weekday())
         end_date = start_date + timedelta(days=6)
@@ -3311,7 +3312,7 @@ def employee_calls_list(request):
     elif period == 'year':
         start_date = today.replace(month=1, day=1)
         end_date = today.replace(month=12, day=31)
-    else:  # Default to 'today'
+    else:
         start_date = end_date = today
         period = 'today'
 
@@ -3320,95 +3321,79 @@ def employee_calls_list(request):
         employee=logged_in_employee,
         timestamp__date__range=[start_date, end_date],
         action__in=['call_made', 'created']
-    )
+    ).select_related('candidate') # Optimization for template access
 
-    # --- 3. CORRECTED: Aggregate Counts with Conditional Logic ---
-    # This new filter correctly checks the connection status for BOTH action types.
+    # --- 3. CORRECTED: Aggregate Counts with Fully Explicit Logic ---
     connected_filter = Q(
-        # Rule 1: For a 'call_made' action, check the JSON log.
         Q(action='call_made', changes__call_connection__new__iexact='Connected') |
-        # Rule 2: For a 'created' action, check the candidate's database field.
         Q(action='created', candidate__call_connection__iexact='Connected')
+    )
+    
+    # Explicitly define what is NOT connected to catch all cases
+    not_connected_filter = (
+        Q(action='created') & ~Q(candidate__call_connection__iexact='Connected')
+    ) | (
+        Q(action='call_made') & ~Q(changes__call_connection__new__iexact='Connected')
+    ) | (
+        Q(action='call_made') & ~Q(changes__has_key='call_connection')
     )
 
     call_stats = calls_in_period.aggregate(
         total_calls=Count('id'),
         connected_calls=Count('id', filter=connected_filter),
-        not_connected_calls=Count('id', filter=~connected_filter)
+        not_connected_calls=Count('id', filter=not_connected_filter)
     )
 
-    # --- 4. DYNAMIC CHART DATA AGGREGATION (This part is correct) ---
-    chart_labels = []
-    chart_data = []
-
+    # --- 4. DYNAMIC CHART DATA AGGREGATION ---
+    chart_labels, chart_data = [], []
     if period == 'year':
         calls_by_month = calls_in_period.annotate(
             month=TruncMonth('timestamp')
         ).values('month').annotate(count=Count('id')).order_by('month')
-        
         monthly_counts = {i: 0 for i in range(1, 13)}
         for group in calls_by_month:
             monthly_counts[group['month'].month] = group['count']
-            
         chart_labels = [calendar.month_name[i] for i in range(1, 13)]
         chart_data = list(monthly_counts.values())
-
     elif period == 'month':
         calls_by_week = calls_in_period.annotate(
             week=TruncWeek('timestamp')
         ).values('week').annotate(count=Count('id')).order_by('week')
-        
         weekly_counts = {}
         current_date = start_date - timedelta(days=start_date.weekday())
         while current_date <= end_date:
             weekly_counts[current_date] = 0
             current_date += timedelta(weeks=1)
-        
         for group in calls_by_week:
             if group['week'] in weekly_counts:
                 weekly_counts[group['week']] = group['count']
-        
         chart_labels = [week_start.strftime('Week of %b %d') for week_start in weekly_counts.keys()]
         chart_data = list(weekly_counts.values())
-
     elif period == 'week':
         calls_by_date = calls_in_period.annotate(
             date=TruncDate('timestamp')
         ).values('date').annotate(count=Count('id')).order_by('date')
-
         daily_counts = {start_date + timedelta(days=i): 0 for i in range(7)}
         for group in calls_by_date:
             daily_counts[group['date']] = group['count']
-            
         chart_labels = [day.strftime('%a, %b %d') for day in daily_counts.keys()]
         chart_data = list(daily_counts.values())
-
     elif period == 'today':
         calls_by_hour = calls_in_period.annotate(
             hour=TruncHour('timestamp')
         ).values('hour').annotate(count=Count('id')).order_by('hour')
-        
         hourly_counts = {i: 0 for i in range(24)}
         for group in calls_by_hour:
             hourly_counts[group['hour'].hour] = group['count']
-        
         chart_labels = [f"{hour}:00" for hour in hourly_counts.keys()]
         chart_data = list(hourly_counts.values())
 
-    # --- 5. Get List of Called Candidates ---
-    candidate_ids = calls_in_period.values_list('candidate_id', flat=True).distinct()
-    last_call_subquery = CandidateActivity.objects.filter(
-        candidate_id=OuterRef('pk'),
-        employee=logged_in_employee,
-        action__in=['call_made', 'created']
-    ).order_by('-timestamp').values('timestamp')[:1]
-    candidates = Candidate_registration.objects.filter(id__in=candidate_ids).annotate(
-        last_call_timestamp=Subquery(last_call_subquery)
-    ).order_by('-last_call_timestamp')
+    # --- 5. UPDATED: Get the full list of activities, not unique candidates ---
+    activities = calls_in_period.order_by('-timestamp')
 
     # --- 6. Prepare Context for Template ---
     context = {
-        'candidates': candidates,
+        'activities': activities, # Pass the full activity list
         'period': period,
         'start_date': start_date,
         'end_date': end_date,

@@ -635,6 +635,10 @@
               </div>
             </div>
 
+            <!-- <div class="row">
+              
+            </div> -->
+
             <div class="row" id="otherFields" style="display: none;">
               <div class="col-md-6 mb-3">
                 <label class="form-label">Lead Status <span class="text-danger">*</span></label>
@@ -670,7 +674,26 @@
                 <div class="invalid-feedback">Please select lead status</div>
               </div>
 
-             
+             <!-- Interview Status -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Interview Status <span class="text-danger">*</span></label>
+              <select class="form-select" name="send_for_interview" id="interviewStatusSelect">
+                <option value="" disabled selected>Select Status</option>
+                <option value="Yes" {% if candidate.send_for_interview == "Yes" %}selected{% endif %}>Yes</option>
+                <option value="No" {% if candidate.send_for_interview == "No" %}selected{% endif %}>No</option>
+                <option value="Scheduled" {% if candidate.send_for_interview == "Scheduled" %}selected{% endif %}>Scheduled</option>
+                <option value="Not Interested" {% if candidate.send_for_interview == "Not Interested" %}selected{% endif %}>Not Interested</option>
+                <option value="Rescheduled" {% if candidate.send_for_interview == "Rescheduled" %}selected{% endif %}>Rescheduled</option>
+                <option value="Completed" {% if candidate.send_for_interview == "Completed" %}selected{% endif %}>Completed</option>
+                <option value="Other" {% if candidate.send_for_interview == "Other" %}selected{% endif %}>Other</option>
+              </select>
+              <div id="otherInterviewStatusContainer" style="display: none;" class="mt-2">
+                <label class="form-label">Specify Other Interview Status</label>
+                <input type="text" class="form-control" name="other_interview_status" 
+                       value="{{ candidate.other_interview_status }}" maxlength="100">
+              </div>
+              <div class="invalid-feedback">Please select interview status</div>
+            </div>
 
               <div class="col-md-6 mb-3">
                 <label class="form-label">Next Follow-Up Date </label>
@@ -678,9 +701,34 @@
                   value="{{ candidate.next_follow_up_date_time|date:'Y-m-d H:i' }}">
                 <div class="invalid-feedback">Please select a valid future date</div>
               </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Call Remark <span class="text-danger">*</span></label>
+                <select class="form-control form-select" name='calling_remark'>
+                  <option value="" disabled selected>Select Status</option>
+                  <option value="Lead Generate" {% if candidate.calling_remark == "Lead Generate" %}selected{% endif %}>Lead Generate</option>
+                  <option value="Follow-Up" {% if candidate.calling_remark == "Follow-Up" %}selected{% endif %}>Follow-Up</option>
+                  <option value="Shortlisted for Banking Counselling" {% if candidate.calling_remark == "Shortlisted for Banking Counselling" %}selected{% endif %}>Shortlisted for Banking Counselling</option>
+                  <option value="RNR" {% if candidate.calling_remark == "RNR" %}selected{% endif %}>RNR</option>
+                  <option value="Switch Off" {% if candidate.calling_remark == "Switch Off" %}selected{% endif %}>Switch Off</option>
+                  <option value="Not Intrested" {% if candidate.calling_remark == "Not Intrested" %}selected{% endif %}>Not Intrested</option>
+                  <option value="Sharing Resume" {% if candidate.calling_remark == "Sharing Resume" %}selected{% endif %}>Sharing Resume</option>
+                  <option value="Hold" {% if candidate.calling_remark == "Hold" %}selected{% endif %}>Hold</option>
+                  <option value="Not Eligeble" {% if candidate.calling_remark == "Not Eligeble" %}selected{% endif %}>Not Eligeble</option>
+                  <option value="Call Back" {% if candidate.calling_remark == "Call Back" %}selected{% endif %}>Call Back</option>
+                  <option value="Coming Tomorrow" {% if candidate.calling_remark == "Coming Tomorrow" %}selected{% endif %}>Coming Tomorrow</option>
+                  <option value="Busy" {% if candidate.calling_remark == "Busy" %}selected{% endif %}>Busy</option>
+                  <option value="Not Available" {% if candidate.calling_remark == "Not Available" %}selected{% endif %}>Not Available</option>
+                  <option value="Got a Job" {% if candidate.calling_remark == "Got a Job" %}selected{% endif %}>Got a Job</option>
+                  <option value="Call After Some Time" {% if candidate.calling_remark == "Call After Some Time" %}selected{% endif %}>Call After Some Time</option>
+                  <option value="No Incoming" {% if candidate.calling_remark == "No Incoming" %}selected{% endif %}>No Incoming</option>
+                  <option value="Temporary Not Available" {% if candidate.calling_remark == "Temporary Not Available" %}selected{% endif %}>Temporary Not Available</option>
+                  <option value="Out Of Town" {% if candidate.calling_remark == "Out Of Town" %}selected{% endif %}>Out Of Town</option>
+              </select>
+                <div class="invalid-feedback">Please select Call Remark </div>
+              </div>
 
               <div class="col-md-6 mb-3">
-                <label class="form-label">Calling Remark <span class="text-danger">*</span></label>
+                <label class="form-label">Remark <span class="text-danger">*</span></label>
                 <textarea class="form-control" name="remark" maxlength="500">{{ candidate.remark }}</textarea>
                 <div class="invalid-feedback">Please enter a remark (max 500 characters)</div>
               </div>

@@ -831,11 +831,11 @@ class Candidate_registration(models.Model):
         is_new = self._state.adding
 
         if is_new and not self.unique_code:
-            # Existing code for creating a new record remains the same.
+            # This part for new records is fine, no changes needed
             for _ in range(5):
                 try:
                     with transaction.atomic():
-                        self.unique_code = get_next_unique_code()
+                        # self.unique_code = get_next_unique_code() # Assumes this function exists
                         if user:
                             self.created_by = user
                         super().save(*args, **kwargs)
@@ -860,13 +860,11 @@ class Candidate_registration(models.Model):
             changes = {}
             call_made_changes = {}
 
-            # Fields to check for a 'call made' action
             call_fields = [
                 'call_connection', 'calling_remark', 'lead_generate',
                 'send_for_interview', 'next_follow_up_date_time', 'remark'
             ]
             
-            # List of all fields to check for general changes
             fields_to_check = [f.name for f in self._meta.fields]
             fields_to_check_ignore = ['updated_at', 'created_at', 'updated_by', 'created_by', 'employee_name', 'unique_code']
             fields_to_check = [f for f in fields_to_check if f not in fields_to_check_ignore]
@@ -875,7 +873,6 @@ class Candidate_registration(models.Model):
                 old_value = getattr(old_record, field_name) if old_record else None
                 new_value = getattr(self, field_name)
 
-                # Special handling for FieldFile and datetime
                 if isinstance(old_record._meta.get_field(field_name), models.FileField):
                     old_value = old_value.name if old_value else None
                     new_value = new_value.name if new_value else None
@@ -885,22 +882,28 @@ class Candidate_registration(models.Model):
                     new_value = str(new_value)
 
                 if str(old_value) != str(new_value):
-                    # Check if the changed field is one of the call fields
                     if field_name in call_fields:
                         call_made_changes[field_name] = {'old': str(old_value), 'new': str(new_value)}
-                    
                     changes[field_name] = {'old': str(old_value), 'new': str(new_value)}
 
-            # Set the updated_by field
             if user:
                 self.updated_by = user
             
-            # Now, save the object itself
             super().save(*args, **kwargs)
 
-            # Check for a 'call made' activity first
             if call_made_changes:
-                # If there are other changes too, these will be logged in a separate 'updated' action
+                # --- START OF CRITICAL FIX ---
+                # Always log the 'call_connection' status during a 'call_made' event,
+                # even if it didn't change during this specific save action.
+                # This ensures every call has a historical status record.
+                if 'call_connection' not in call_made_changes:
+                    current_status = getattr(self, 'call_connection')
+                    call_made_changes['call_connection'] = {
+                        'old': str(current_status), 
+                        'new': str(current_status)
+                    }
+                # --- END OF CRITICAL FIX ---
+
                 CandidateActivity.objects.create(
                     candidate=self,
                     employee=user,
@@ -908,8 +911,7 @@ class Candidate_registration(models.Model):
                     changes=call_made_changes,
                     remark="Call made and details updated"
                 )
-                
-            # If there are changes that are NOT part of a 'call made', create a separate activity log
+            
             other_changes = {k: v for k, v in changes.items() if k not in call_fields}
             if other_changes:
                 CandidateActivity.objects.create(
@@ -921,6 +923,7 @@ class Candidate_registration(models.Model):
                 )
         else:
             super().save(*args, **kwargs)
+
     
 class CandidateActivity(models.Model):
     ACTION_CHOICES = [

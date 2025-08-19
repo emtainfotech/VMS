@@ -1,4 +1,4 @@
-{% extends 'employee/performance-base.html' %} 
+{% extends 'employee/base.html' %} 
 
 {% block content %}
 <div class="page-wrapper">
@@ -86,33 +86,47 @@
             </div>
 
             <div class="card">
-                <div class="card-header"><h3 class="card-title">Candidates Called in this Period</h3></div>
+                <div class="card-header"><h3 class="card-title">All Calls in this Period</h3></div>
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter text-nowrap datatable">
                         <thead>
                             <tr>
                                 <th>Candidate Name</th>
                                 <th>Mobile Number</th>
-                                <th>Last Called On</th>
-                                <th>Current Call Status</th>
+                                <th>Call Time</th>
+                                <th>Historical Call Status</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for candidate in candidates %}
+                            {% for activity in activities %}
                             <tr>
-                                <td>{{ candidate.candidate_name }}</td>
-                                <td>{{ candidate.candidate_mobile_number }}</td>
-                                <td>{{ candidate.last_call_timestamp|date:"M d, Y H:i" }}</td>
+                                <td>{{ activity.candidate.candidate_name }}</td>
+                                <td>{{ activity.candidate.candidate_mobile_number }}</td>
+                                <td>{{ activity.timestamp|date:"M d, Y H:i" }}</td>
                                 <td>
-                                    {% if candidate.call_connection == 'Connected' %}
-                                        <span class="badge bg-success me-1"></span> Connected
-                                    {% else %}
-                                        <span class="badge bg-danger me-1"></span> {{ candidate.call_connection|default:'Not Connected' }}
-                                    {% endif %}
+                                    {% comment %}
+                                        For 'call_made' actions, prioritize the historical status from the JSON log.
+                                        For 'created' actions or older logs, fall back to the candidate's field.
+                                    {% endcomment %}
+                                    {% with logged_status=activity.changes.call_connection.new %}
+                                        {% if activity.action == 'call_made' and logged_status is not None %}
+                                            {% if logged_status == 'Connected' %}
+                                                <span class="badge bg-success me-1"></span> Connected
+                                            {% else %}
+                                                <span class="badge bg-danger me-1"></span> {{ logged_status }}
+                                            {% endif %}
+                                        {% else %}
+                                            {% if activity.candidate.call_connection == 'Connected' %}
+                                                <span class="badge bg-success me-1"></span> Connected
+                                            {% else %}
+                                                <span class="badge bg-danger me-1"></span> {{ activity.candidate.call_connection|default:'Not Connected' }}
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endwith %}
                                 </td>
                                 <td class="text-end">
-                                    <a href="{% url 'employee_candidate_profile' candidate.id %}" class="btn btn-sm btn-outline-primary">View Profile</a>
+                                    <a href="{% url 'employee_candidate_profile' activity.candidate.id %}" class="btn btn-sm btn-outline-primary">View Profile</a>
                                 </td>
                             </tr>
                             {% empty %}
@@ -132,73 +146,29 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // --- Render Pie Chart with ApexCharts ---
+    // --- Render Pie Chart ---
     var pieOptions = {
-        chart: {
-            type: 'donut',
-            height: 300
-        },
+        chart: { type: 'donut', height: 300 },
         series: [{{ connected_calls }}, {{ not_connected_calls }}],
         labels: ['Connected', 'Not Connected'],
-        colors: ['#28a745', '#dc3545'], // Green for Connected, Red for Not Connected
-        legend: {
-            position: 'bottom'
-        }
+        colors: ['#28a745', '#dc3545'],
+        legend: { position: 'bottom' }
     };
-
     var pieChart = new ApexCharts(document.querySelector("#callStatusPieChart"), pieOptions);
     pieChart.render();
 
-    // --- Render Area Chart with ApexCharts ---
+    // --- Render Area Chart ---
     var areaOptions = {
-        chart: {
-            type: 'area', // Area chart gives a nice modern feel
-            height: 300,
-            zoom: {
-                enabled: false // Disable zooming for a cleaner look
-            },
-            toolbar: {
-                show: false // Hide the download/zoom menu
-            }
-        },
-        series: [{
-            name: 'Calls Made',
-            data: {{ chart_data|safe }}
-        }],
+        chart: { type: 'area', height: 300, zoom: { enabled: false }, toolbar: { show: false } },
+        series: [{ name: 'Calls Made', data: {{ chart_data|safe }} }],
         labels: {{ chart_labels|safe }},
-        xaxis: {
-            type: 'category'
-        },
-        yaxis: {
-            min: 0,
-            tickAmount: 5, // Controls how many lines on the y-axis
-            labels: {
-                formatter: function (val) {
-                    return val.toFixed(0); // Ensure whole numbers
-                }
-            }
-        },
-        dataLabels: {
-            enabled: false // Hide the numbers on the data points
-        },
-        stroke: {
-            curve: 'smooth', // Creates the smooth, curved line
-            width: 2
-        },
-        fill: {
-            type: 'gradient',
-            gradient: {
-                shadeIntensity: 1,
-                opacityFrom: 0.7,
-                opacityTo: 0.2,
-                stops: [0, 90, 100]
-            }
-        },
-        tooltip: {
-            theme: 'dark'
-        }
+        xaxis: { type: 'category' },
+        yaxis: { min: 0, tickAmount: 4, labels: { formatter: (val) => val.toFixed(0) } },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 2 },
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
+        tooltip: { theme: 'dark' }
     };
-
     var areaChart = new ApexCharts(document.querySelector("#callVolumeChart"), areaOptions);
     areaChart.render();
 });

@@ -723,10 +723,36 @@
                                         Please select a valid future date
                                     </div>
                                 </div>
+                                <div class="col-md-6 mb-3">
+                <label class="form-label">Call Remark <span class="text-danger">*</span></label>
+                <select class="form-control form-select" name='calling_remark'>
+                  <option value="" disabled selected>Select Status</option>
+                  <option value="Lead Generate" {% if candidate.calling_remark == "Lead Generate" %}selected{% endif %}>Lead Generate</option>
+                  <option value="Follow-Up" {% if candidate.calling_remark == "Follow-Up" %}selected{% endif %}>Follow-Up</option>
+                  <option value="Shortlisted for Banking Counselling" {% if candidate.calling_remark == "Shortlisted for Banking Counselling" %}selected{% endif %}>Shortlisted for Banking Counselling</option>
+                  <option value="RNR" {% if candidate.calling_remark == "RNR" %}selected{% endif %}>RNR</option>
+                  <option value="Switch Off" {% if candidate.calling_remark == "Switch Off" %}selected{% endif %}>Switch Off</option>
+                  <option value="Not Intrested" {% if candidate.calling_remark == "Not Intrested" %}selected{% endif %}>Not Intrested</option>
+                  <option value="Sharing Resume" {% if candidate.calling_remark == "Sharing Resume" %}selected{% endif %}>Sharing Resume</option>
+                  <option value="Hold" {% if candidate.calling_remark == "Hold" %}selected{% endif %}>Hold</option>
+                  <option value="Not Eligeble" {% if candidate.calling_remark == "Not Eligeble" %}selected{% endif %}>Not Eligeble</option>
+                  <option value="Call Back" {% if candidate.calling_remark == "Call Back" %}selected{% endif %}>Call Back</option>
+                  <option value="Coming Tomorrow" {% if candidate.calling_remark == "Coming Tomorrow" %}selected{% endif %}>Coming Tomorrow</option>
+                  <option value="Busy" {% if candidate.calling_remark == "Busy" %}selected{% endif %}>Busy</option>
+                  <option value="Not Available" {% if candidate.calling_remark == "Not Available" %}selected{% endif %}>Not Available</option>
+                  <option value="Got a Job" {% if candidate.calling_remark == "Got a Job" %}selected{% endif %}>Got a Job</option>
+                  <option value="Call After Some Time" {% if candidate.calling_remark == "Call After Some Time" %}selected{% endif %}>Call After Some Time</option>
+                  <option value="No Incoming" {% if candidate.calling_remark == "No Incoming" %}selected{% endif %}>No Incoming</option>
+                  <option value="Temporary Not Available" {% if candidate.calling_remark == "Temporary Not Available" %}selected{% endif %}>Temporary Not Available</option>
+                  <option value="Out Of Town" {% if candidate.calling_remark == "Out Of Town" %}selected{% endif %}>Out Of Town</option>
+              </select>
+                <div class="invalid-feedback">Please select Call Remark </div>
+              </div>
+
 
                                 <div class="col-md-12 mb-3">
-                                    <label class="form-label">Calling Remark <span class="text-danger">*</span></label>
-                                    <textarea class="form-control" name="calling_remark" rows="3" maxlength="500">{{ candidate.calling_remark }}</textarea>
+                                    <label class="form-label">Remark <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" name="remark" rows="3" maxlength="500">{{ candidate.remark }}</textarea>
                                     <div class="invalid-feedback">
                                         Please enter calling remarks (max 500 characters)
                                     </div>
