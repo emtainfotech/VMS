@@ -71,7 +71,7 @@
                         <tbody>
                             {% for stat in employee_stats %}
                             <tr class="employee-row" data-employee-id="{{ stat.id }}" data-employee-name="{{ stat.user.get_full_name|default:stat.user.username }}" style="cursor: pointer;">
-                                <td>{{ stat.user.get_full_name|default:stat.user.username }} ({{ stat.employee_id }})</td>
+                                <td>{{ stat.first_name }} {{ stat.last_name }} ({{ stat.employee_id }})</td>
                                 <td><span class="badge bg-blue text-blue-fg">{{ stat.total_calls }}</span></td>
                                 <td><span class="badge bg-green text-green-fg">{{ stat.connected_calls }}</span></td>
                                 <td><span class="badge bg-red text-red-fg">{{ stat.not_connected_calls }}</span></td>
