@@ -1,38 +1,57 @@
 <div class="bg-light border rounded p-3">
-    <h5>Candidates Called by {{ employee.user.get_full_name|default:employee.user.username }}</h5>
-    {% if candidates %}
+    <h5>All Activities by {{ employee.user.get_full_name|default:employee.user.username }}</h5>
+    {% if activities %}
     <table class="table table-sm table-striped mt-3">
         <thead>
             <tr>
                 <th>Candidate Name</th>
-                <th>Mobile Number</th>
-                <th>Call Connection</th>
-                <th>Lead Status</th>
+                <th>Activity Type</th>
+                <th>Activity Time</th>
+                <th>Historical Call Status</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
-            {% for candidate in candidates %}
+            {% for activity in activities %}
             <tr>
-                <td>{{ candidate.candidate_name }}</td>
-                <td>{{ candidate.candidate_mobile_number }}</td>
-                <td>{{ candidate.call_connection|default:'N/A' }}</td>
+                <td>{{ activity.candidate.candidate_name }}</td>
                 <td>
-                    {% if candidate.lead_generate %}
-                    <span class="badge bg-secondary text-secondary-fg">{{ candidate.lead_generate }}</span>
+                    {% if activity.action == 'call_made' %}
+                        <span class="badge bg-blue-lt">Call Made</span>
+                    {% elif activity.action == 'created' %}
+                        <span class="badge bg-green-lt">Created</span>
                     {% else %}
-                    N/A
+                         <span class="badge bg-secondary-lt">{{ activity.action }}</span>
                     {% endif %}
                 </td>
-                <td>{{ candidate.register_time|date:"M d, Y H:i" }}</td>
+                <td>{{ activity.timestamp|date:"M d, Y H:i" }}</td>
                 <td>
-                    <a href="{% url 'admin_candidate_profile' candidate.id %}" class="btn btn-sm btn-outline-primary">View Profile</a>
+                    {% with logged_status=activity.changes.call_connection.new %}
+                        {% if activity.action == 'call_made' and logged_status is not None %}
+                            {% if logged_status == 'Connected' %}
+                                <span class="badge bg-success me-1"></span> Connected
+                            {% else %}
+                                <span class="badge bg-danger me-1"></span> {{ logged_status }}
+                            {% endif %}
+                        {% else %}
+                             {% if activity.candidate.call_connection == 'Connected' %}
+                                <span class="badge bg-success me-1"></span> Connected
+                            {% elif activity.candidate.call_connection %}
+                                <span class="badge bg-danger me-1"></span> {{ activity.candidate.call_connection }}
+                            {% else %}
+                                <span class="badge bg-secondary me-1"></span> N/A
+                            {% endif %}
+                        {% endif %}
+                    {% endwith %}
+                </td>
+                <td>
+                    <a href="{% url 'admin_candidate_profile' activity.candidate.id %}" class="btn btn-sm btn-outline-primary">View Profile</a>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
     {% else %}
-    <p class="text-muted mt-3">No candidates were called by this employee in the selected period.</p>
+    <p class="text-muted mt-3">No activities found for this employee in the selected period.</p>
     {% endif %}
 </div>

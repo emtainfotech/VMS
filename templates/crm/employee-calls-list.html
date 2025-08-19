@@ -62,16 +62,16 @@
                         <thead>
                             <tr>
                                 <th>Employee Name</th>
-                                <th>Total Calls</th>
+                                <th>Total Activities</th>
                                 <th>Connected</th>
                                 <th>Not Connected</th>
-                                <th>Last Call Made</th>
+                                <th>Last Activity</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for stat in employee_stats %}
                             <tr class="employee-row" data-employee-id="{{ stat.id }}" data-employee-name="{{ stat.user.get_full_name|default:stat.user.username }}" style="cursor: pointer;">
-                                <td>{{ stat.first_name }} {{ stat.last_name }} ({{ stat.employee_id }})</td>
+                                <td>{{ stat.user.get_full_name|default:stat.user.username }} ({{ stat.employee_id }})</td>
                                 <td><span class="badge bg-blue text-blue-fg">{{ stat.total_calls }}</span></td>
                                 <td><span class="badge bg-green text-green-fg">{{ stat.connected_calls }}</span></td>
                                 <td><span class="badge bg-red text-red-fg">{{ stat.not_connected_calls }}</span></td>
@@ -105,16 +105,11 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const chartInstances = {}; // To store and manage chart objects
+    const chartInstances = {};
 
-    // --- ApexCharts Base Options ---
     function getBaseChartOptions(labels, seriesData, chartTitle) {
         return {
-            chart: {
-                type: 'area', height: 300,
-                zoom: { enabled: false },
-                toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } }
-            },
+            chart: { type: 'area', height: 300, zoom: { enabled: false }, toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } } },
             series: [{ name: chartTitle, data: seriesData }],
             labels: labels,
             xaxis: { type: 'category', labels: { rotate: -20, rotateAlways: false, hideOverlappingLabels: true, trim: true } },
@@ -126,16 +121,10 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    // --- 1. Render Main "All Employees" Chart ---
-    const mainChartOptions = getBaseChartOptions(
-        {{ main_chart_labels|safe }},
-        {{ main_chart_data|safe }},
-        'Total Calls'
-    );
+    const mainChartOptions = getBaseChartOptions({{ main_chart_labels|safe }}, {{ main_chart_data|safe }}, 'Total Activities');
     const mainChart = new ApexCharts(document.querySelector("#mainChart"), mainChartOptions);
     mainChart.render();
 
-    // --- 2. Handle Clickable Employee Rows for Details ---
     document.querySelectorAll('.employee-row').forEach(row => {
         row.addEventListener('click', async function () {
             const employeeId = this.dataset.employeeId;
@@ -144,15 +133,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const candidateContainer = detailsRow.querySelector('.candidate-list-container');
             const chartContainer = detailsRow.querySelector(`#chart-for-${employeeId}`);
             const chartTitle = detailsRow.querySelector(`#chart-title-for-${employeeId}`);
-
             const isVisible = detailsRow.style.display === 'table-row';
+
             detailsRow.style.display = isVisible ? 'none' : 'table-row';
             this.classList.toggle('active', !isVisible);
 
-            // Fetch data only if opening the row and it's empty
             if (!isVisible && candidateContainer.innerHTML.trim() === '') {
                 candidateContainer.innerHTML = '<div class="text-center p-4">Loading details...</div>';
-                chartTitle.innerText = `Call Volume Trend for ${employeeName}`;
+                chartTitle.innerText = `Activity Trend for ${employeeName}`;
 
                 const startDate = "{{ start_date|date:'Y-m-d' }}";
                 const endDate = "{{ end_date|date:'Y-m-d' }}";
@@ -168,13 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (chartInstances[employeeId]) {
                         chartInstances[employeeId].destroy();
                     }
-
-                    const employeeChartOptions = getBaseChartOptions(
-                        result.chart_data.labels,
-                        result.chart_data.data,
-                        'Calls'
-                    );
-                    
+                    const employeeChartOptions = getBaseChartOptions(result.chart_data.labels, result.chart_data.data, 'Activities');
                     chartInstances[employeeId] = new ApexCharts(chartContainer, employeeChartOptions);
                     chartInstances[employeeId].render();
 
