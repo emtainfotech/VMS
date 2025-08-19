@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .chat-scroll::-webkit-scrollbar { width: 4px; }
+        .chat-scroll::-webkit-scrollbar-track { background: transparent; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+        .message-animation { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message-options { opacity: 0; transition: opacity 0.2s ease; }
+        .message-container:hover .message-options { opacity: 1; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen">
+    <div class="flex h-screen max-w-7xl mx-auto bg-white shadow-2xl rounded-lg overflow-hidden">
+        <div class="w-96 bg-gray-50 border-r border-gray-200 flex flex-col">
+            <div class="p-4 bg-white border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="relative"><img class="w-12 h-12 rounded-full object-cover" src="{{ current_employee.employee_photo.url|default:'/static/images/default_avatar.png' }}" alt="Your Avatar"><span class="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-400 border-2 border-white"></span></div>
+                    <div><h2 class="font-semibold text-gray-900">{{ current_employee.first_name }} {{ current_employee.last_name }}</h2><p class="text-sm text-gray-500">{{ current_employee.designation }}</p></div>
+                </div>
+            </div>
+
+            <div class="p-4 flex items-center space-x-2">
+                <div class="relative flex-grow"><input type="text" id="conversation-search" placeholder="Search conversations..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"><svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
+                <button id="create-group-btn" class="p-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button>
+            </div>
+
+            <div id="conversation-list" class="flex-1 overflow-y-auto chat-scroll">
+                {% for conv in conversations %}
+                <div class="chat-item p-3 m-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors" data-group-id="{{ conv.id }}">
+                    <div class="flex items-center space-x-3">
+                         <div class="relative">
+                            <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center"><span class="text-gray-600 font-semibold">{% if conv.is_private %}{% for member in conv.members.all %}{% if member != current_employee %}{{ member.first_name|slice:":1" }}{{ member.last_name|slice:":1" }}{% endif %}{% endfor %}{% else %}{{ conv.name|slice:":2" }}{% endif %}</span></div>
+                            {% if conv.is_private %}{% for member in conv.members.all %}{% if member != current_employee %}<span class="online-indicator absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-gray-400 border-2 border-white" data-employee-id="{{ member.id }}"></span>{% endif %}{% endfor %}{% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-center"><h3 class="font-medium text-gray-900 truncate">{% if conv.is_private %}{% for member in conv.members.all %}{% if member != current_employee %}{{ member.first_name }} {{ member.last_name }}{% endif %}{% endfor %}{% else %}{{ conv.name }}{% endif %}</h3>{% if conv.last_message_time %}<span class="text-xs text-gray-500">{{ conv.last_message_time|timesince }} ago</span>{% endif %}</div>
+                            <p class="text-sm text-gray-600 truncate">Click to see messages</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="main-chat-area" class="flex-1 flex-col hidden">
+            <div class="p-4 bg-white border-b border-gray-200"><div class="flex items-center justify-between"><div class="flex items-center space-x-3"><div id="chat-header-avatar" class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center"><span class="text-white font-semibold text-sm"></span></div><div><h2 id="chat-header-name" class="font-semibold text-gray-900"></h2><p id="chat-header-status" class="text-sm text-gray-400"></p></div></div></div></div>
+            <div id="message-list" class="flex-1 overflow-y-auto chat-scroll p-6 space-y-4"></div>
+            <div id="reply-bar" class="p-4 bg-gray-100 border-t border-gray-200 hidden"><div class="flex items-center justify-between"><div class="text-sm"><p class="font-semibold">Replying to <span id="reply-name"></span></p><p class="text-gray-600 truncate" id="reply-content"></p></div><button id="cancel-reply" class="text-gray-500">&times;</button></div></div>
+            <div class="p-4 bg-white border-t border-gray-200">
+                <input type="file" id="file-input" class="hidden">
+                <div class="flex items-center space-x-4">
+                    <button id="attach-file-btn" class="p-2 text-gray-500 hover:text-indigo-600 rounded-full"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg></button>
+                    <div class="flex-1 relative"><input type="text" id="message-input" placeholder="Type a message..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                    <button id="send-button" class="p-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></button>
+                </div>
+            </div>
+        </div>
+        <div id="chat-welcome-screen" class="flex-1 flex flex-col items-center justify-center text-center p-4"><h2 class="text-2xl font-semibold text-gray-700">Welcome, {{ current_employee.first_name }}!</h2><p class="text-gray-500 mt-2">Select a conversation from the left panel to start chatting.</p></div>
+    </div>
+
+    <div id="create-group-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"> <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4"><h3 class="text-lg font-semibold mb-4">Create New Group</h3><div class="space-y-4"><input type="text" id="group-name-input" placeholder="Group Name" class="w-full px-4 py-2 bg-gray-50 border rounded-lg"><div class="max-h-60 overflow-y-auto border rounded-lg p-2"><p class="font-medium mb-2">Select Members:</p>{% for emp in all_employees %}<label class="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-md cursor-pointer"><input type="checkbox" name="group_members" value="{{ emp.id }}" class="rounded"><span>{{ emp.first_name }} {{ emp.last_name }}</span></label>{% endfor %}</div></div><div class="flex justify-end space-x-2 mt-6"><button id="cancel-group-creation" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button><button id="confirm-group-creation" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600">Create</button></div></div></div>
+    <div id="forward-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"> <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4"><h3 class="text-lg font-semibold mb-4">Forward Message To...</h3><div id="forward-list" class="max-h-60 overflow-y-auto border rounded-lg p-2"></div><div class="flex justify-end space-x-2 mt-6"><button id="cancel-forward" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button></div></div></div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentEmployeeId = {{ current_employee.id }};
+        let activeGroupId = null;
+        let replyToId = null;
+        let forwardMessageId = null;
+
+        const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/');
+
+        const mainChatArea = document.getElementById('main-chat-area');
+        const welcomeScreen = document.getElementById('chat-welcome-screen');
+        const messageList = document.getElementById('message-list');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const conversationList = document.getElementById('conversation-list');
+        const replyBar = document.getElementById('reply-bar');
+
+        // WebSocket Handlers
+        chatSocket.onopen = () => console.log("WebSocket connected.");
+        chatSocket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            switch (data.type) {
+                case 'new_message':
+                    showNotification(`New message from ${data.message.sender.name}`, data.message.content);
+                    if (data.message.group_id === activeGroupId) {
+                        appendMessage(data.message);
+                        chatSocket.send(JSON.stringify({ type: 'mark_as_read', message_id: data.message.id, group_id: activeGroupId }));
+                    }
+                    break;
+                case 'message.read':
+                    if (data.group_id === activeGroupId) {
+                        document.querySelectorAll(`.message-seen-status[data-message-id='${data.message_id}']`).forEach(icon => icon.classList.remove('hidden'));
+                    }
+                    break;
+                case 'employee.status.update':
+                    updateOnlineIndicator(data.employee_id, data.is_online);
+                    break;
+            }
+        };
+
+        // Event Listeners
+        conversationList.addEventListener('click', (e) => {
+            const chatItem = e.target.closest('.chat-item');
+            if (chatItem) {
+                activeGroupId = parseInt(chatItem.dataset.groupId);
+                loadChat(activeGroupId);
+                document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('bg-indigo-50', 'border-l-4', 'border-indigo-500'));
+                chatItem.classList.add('bg-indigo-50', 'border-l-4', 'border-indigo-500');
+            }
+        });
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => e.key === 'Enter' && sendMessage());
+        document.getElementById('attach-file-btn').addEventListener('click', () => document.getElementById('file-input').click());
+        document.getElementById('file-input').addEventListener('change', (e) => handleAttachment(e.target.files[0]));
+        document.getElementById('cancel-reply').addEventListener('click', cancelReply);
+
+        // Right-click context menu for reply/forward
+        messageList.addEventListener('contextmenu', e => {
+            const msgContainer = e.target.closest('.message-container');
+            if (msgContainer) {
+                e.preventDefault();
+                forwardMessageId = msgContainer.dataset.messageId;
+                replyToId = msgContainer.dataset.messageId; // Set both for simplicity
+                // In a real app, you'd show a custom menu here. For now, we'll just prep the IDs.
+                alert('Right-clicked! Reply and Forward options would show here.');
+                showForwardModal();
+            }
+        });
+
+        // Core Functions
+        function loadChat(groupId) {
+            fetch(`/chat/details/${groupId}/`)
+                .then(res => res.json())
+                .then(data => {
+                    welcomeScreen.style.display = 'none';
+                    mainChatArea.style.display = 'flex';
+                    document.getElementById('chat-header-name').textContent = data.chat_name;
+                    document.getElementById('chat-header-status').textContent = data.chat_status;
+                    messageList.innerHTML = '';
+                    data.messages.forEach(msg => appendMessage(msg));
+                    messageList.scrollTop = messageList.scrollHeight;
+                });
+        }
+
+        function sendMessage() {
+            const content = messageInput.value.trim();
+            if ((content || replyToId) && activeGroupId) {
+                chatSocket.send(JSON.stringify({
+                    type: 'chat_message', group_id: activeGroupId,
+                    message: content, reply_to_id: replyToId
+                }));
+                messageInput.value = '';
+                cancelReply();
+            }
+        }
+
+        function handleAttachment(file) {
+            if (!file || !activeGroupId) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            fetch(`/chat/upload_attachment/${activeGroupId}/`, { method: 'POST', body: formData, headers: {'X-CSRFToken': '{{ csrf_token }}'} })
+                .then(res => res.json())
+                .then(data => { if (data.status !== 'success') alert('Upload failed.'); });
+        }
+
+        function appendMessage(msg) {
+            const isSender = msg.sender.id === currentEmployeeId;
+            const msgEl = document.createElement('div');
+            msgEl.className = `message-container flex items-start space-x-3 group ${isSender ? 'justify-end' : ''}`;
+            msgEl.dataset.messageId = msg.id;
+            
+            let attachmentHTML = msg.attachments.map(att => `<div class="mt-2"><a href="/chat/download_attachment/${att.id}/" class="text-blue-300 hover:underline flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg><span>${att.name}</span></a></div>`).join('');
+            let replyHTML = msg.reply_to ? `<div class="bg-black bg-opacity-20 p-2 rounded-t-lg border-l-2 border-blue-300 mb-1"><p class="font-bold text-xs">${msg.reply_to.sender}</p><p class="text-sm truncate">${msg.reply_to.content}</p></div>` : '';
+            let forwardHTML = msg.forwarded_from ? `<p class="text-xs italic opacity-75 mb-1">Forwarded from ${msg.forwarded_from.name}</p>` : '';
+            let seenIcon = isSender ? `<svg class="message-seen-status w-4 h-4 text-blue-400 ${msg.read_count > 1 ? '' : 'hidden'}" data-message-id="${msg.id}" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>` : '';
+
+            msgEl.innerHTML = `
+                ${!isSender ? `<img class="w-8 h-8 rounded-full object-cover" src="${msg.sender.avatar_url}" alt="Avatar">` : ''}
+                <div class="flex-1 ${isSender ? 'flex justify-end' : ''}">
+                    <div class="${isSender ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white' : 'bg-gray-100'} rounded-2xl ${isSender ? 'rounded-tr-md' : 'rounded-tl-md'} px-4 py-3 max-w-sm relative">
+                        ${forwardHTML}${replyHTML}<p>${msg.content}</p>${attachmentHTML}
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1 flex items-center ${isSender ? 'justify-end' : ''} space-x-1"><span>${msg.timestamp}</span>${seenIcon}</div>
+                </div>`;
+            messageList.appendChild(msgEl);
+            messageList.scrollTop = messageList.scrollHeight;
+        }
+
+        // Reply, Forward, and Notification helpers
+        function setReply(messageId) {
+            replyToId = messageId;
+            const msgNode = document.querySelector(`.message-container[data-message-id='${messageId}'] p`);
+            if (msgNode) {
+                replyBar.classList.remove('hidden');
+                document.getElementById('reply-content').textContent = msgNode.textContent;
+            }
+        }
+        function cancelReply() { replyToId = null; replyBar.classList.add('hidden'); }
+        function showForwardModal() {
+            const forwardList = document.getElementById('forward-list');
+            forwardList.innerHTML = '';
+            document.querySelectorAll('.chat-item').forEach(item => {
+                const button = document.createElement('button');
+                button.className = 'block w-full text-left p-2 hover:bg-gray-100 rounded-md';
+                button.textContent = item.dataset.groupName;
+                button.onclick = () => {
+                    chatSocket.send(JSON.stringify({
+                        type: 'forward_message',
+                        original_message_id: forwardMessageId,
+                        target_group_ids: [parseInt(item.dataset.groupId)]
+                    }));
+                    document.getElementById('forward-modal').classList.add('hidden');
+                };
+                forwardList.appendChild(button);
+            });
+            document.getElementById('forward-modal').classList.remove('hidden');
+        }
+        function showNotification(title, body) { if (Notification.permission === 'granted' && document.hidden) { new Notification(title, { body }); } }
+        if (Notification.permission !== 'granted') { Notification.requestPermission(); }
+        
+        // Group Creation, Online Status helpers...
+        const groupModal = document.getElementById('create-group-modal');
+        document.getElementById('create-group-btn').addEventListener('click', () => groupModal.classList.remove('hidden'));
+        document.getElementById('cancel-group-creation').addEventListener('click', () => groupModal.classList.add('hidden'));
+        document.getElementById('confirm-group-creation').addEventListener('click', () => {
+            const groupName = document.getElementById('group-name-input').value;
+            const selectedMembers = Array.from(document.querySelectorAll('input[name="group_members"]:checked')).map(cb => cb.value);
+            if (groupName && selectedMembers.length > 0) {
+                fetch('/chat/create_group/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' }, body: JSON.stringify({ name: groupName, members: selectedMembers })})
+                .then(res => res.json()).then(data => { if (data.status === 'success') groupModal.classList.add('hidden'); else alert('Error: ' + data.error);});
+            }
+        });
+        function updateOnlineIndicator(employeeId, isOnline) {
+            document.querySelectorAll(`.online-indicator[data-employee-id='${employeeId}']`).forEach(indicator => {
+                indicator.classList.toggle('bg-green-400', isOnline);
+                indicator.classList.toggle('bg-gray-400', !isOnline);
+            });
+        }
+    });
+    </script>
+</body>
+</html>

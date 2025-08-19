@@ -800,17 +800,53 @@
               </div>
             </div>
             <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Job Profile Type</label>
-                <select name="job_profile_type" class="form-select" required>
-                  <option value="">Select Job Profile Type</option>
-                  <option value="Voice Process">Voice Process</option>
-                  <option value="Non-Voice Process">Non-Voice Process</option>
-                  <option value="Blended Process">Blended Process</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-            </div>
+  <div class="mb-3">
+    <label class="form-label">Job Profile Type</label>
+    <select name="job_profile_type" id="jobProfileType" class="form-select" required onchange="toggleOtherJobProfile()">
+      <option value="">Select Job Profile Type</option>
+      <option value="Voice Process">Voice Process</option>
+      <option value="Non-Voice Process">Non-Voice Process</option>
+      <option value="Blended Process">Blended Process</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
+</div>
+
+<!-- This div will appear only when "Other" is selected -->
+<div class="col-md-6" id="otherJobProfileContainer" style="display: none;">
+  <div class="mb-3">
+    <label class="form-label">Specify Other Job Profile Type</label>
+    <input type="text" class="form-control" name="other_job_profile" id="otherJobProfile">
+  </div>
+</div>
+
+<script>
+  function toggleOtherJobProfile() {
+    const jobProfileType = document.getElementById('jobProfileType');
+    const otherContainer = document.getElementById('otherJobProfileContainer');
+    const otherInput = document.getElementById('otherJobProfile');
+    
+    if (jobProfileType.value === 'Other') {
+      otherContainer.style.display = 'block';
+      otherInput.setAttribute('required', 'required');
+    } else {
+      otherContainer.style.display = 'none';
+      otherInput.removeAttribute('required');
+      otherInput.value = ''; // Clear the value when hiding
+    }
+  }
+
+  // Initialize on page load in case "Other" was previously selected
+  document.addEventListener('DOMContentLoaded', function() {
+    toggleOtherJobProfile();
+    
+    // If you need to preserve values during form submission errors:
+    const jobProfileType = document.getElementById('jobProfileType');
+    if (jobProfileType.value === 'Other') {
+      document.getElementById('otherJobProfileContainer').style.display = 'block';
+    }
+  });
+</script>
             <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Process Name</label>
@@ -909,28 +945,82 @@
             });
             </script>
 
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Sector</label>
-                <select name="sector_type" class="form-select" required>
-                  <option value="">Select Sector</option>
-                  {% for sector in job_sectors %}
-                  <option value="{{ sector }}">{{ sector }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Department</label>
-                <select name="department_name" class="form-select" required>
-                  <option value="">Select Department</option>
-                  {% for dept in departments %}
-                  <option value="{{ dept }}">{{ dept }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
+            <!-- Sector Field -->
+<div class="col-md-6">
+  <div class="mb-3">
+    <label class="form-label">Sector</label>
+    <select name="sector_type" id="sectorType" class="form-select" required onchange="toggleOtherField('sectorType', 'otherSectorContainer')">
+      <option value="">Select Sector</option>
+      {% for sector in job_sectors %}
+        <option value="{{ sector }}">{{ sector }}</option>
+      {% endfor %}
+      <option value="Other">Other</option>
+    </select>
+  </div>
+</div>
+
+<!-- Other Sector Field (hidden by default) -->
+<div class="col-md-6" id="otherSectorContainer" style="display: none;">
+  <div class="mb-3">
+    <label class="form-label">Specify Other Sector</label>
+    <input type="text" class="form-control" name="other_sector" id="otherSector">
+  </div>
+</div>
+
+<!-- Department Field -->
+<div class="col-md-6">
+  <div class="mb-3">
+    <label class="form-label">Department</label>
+    <select name="department_name" id="departmentName" class="form-select" required onchange="toggleOtherField('departmentName', 'otherDepartmentContainer')">
+      <option value="">Select Department</option>
+      {% for dept in departments %}
+        <option value="{{ dept }}">{{ dept }}</option>
+      {% endfor %}
+      <option value="Other">Other</option>
+    </select>
+  </div>
+</div>
+
+<!-- Other Department Field (hidden by default) -->
+<div class="col-md-6" id="otherDepartmentContainer" style="display: none;">
+  <div class="mb-3">
+    <label class="form-label">Specify Other Department</label>
+    <input type="text" class="form-control" name="other_department" id="otherDepartment">
+  </div>
+</div>
+
+<script>
+  // Generic function to handle both fields
+  function toggleOtherField(selectId, containerId) {
+    const selectElement = document.getElementById(selectId);
+    const container = document.getElementById(containerId);
+    const inputId = containerId.replace('Container', '');
+    const inputElement = document.getElementById(inputId);
+    
+    if (selectElement.value === 'Other') {
+      container.style.display = 'block';
+      inputElement.setAttribute('required', 'required');
+    } else {
+      container.style.display = 'none';
+      inputElement.removeAttribute('required');
+      inputElement.value = ''; // Clear the value when hiding
+    }
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    toggleOtherField('sectorType', 'otherSectorContainer');
+    toggleOtherField('departmentName', 'otherDepartmentContainer');
+    
+    // If you need to preserve values during form submission errors:
+    if (document.getElementById('sectorType').value === 'Other') {
+      document.getElementById('otherSectorContainer').style.display = 'block';
+    }
+    if (document.getElementById('departmentName').value === 'Other') {
+      document.getElementById('otherDepartmentContainer').style.display = 'block';
+    }
+  });
+</script>
             <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Payroll</label>
@@ -993,19 +1083,63 @@
               </div>
             </div>
             <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Experience Type</label>
-                <select name="experience_type" class="form-select" required>
-                  <option value="">Select Experience Type</option>
-                  <option value="In-house">In-house</option>
-                  <option value="BPO">BPO</option>
-                  <option value="Domestic">Domestic</option>
-                  <option value="International">International</option>
-                  <option value="Blended">Blended</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-            </div>
+  <div class="mb-3">
+    <label class="form-label">Experience Type</label>
+    <select name="experience_type" id="experienceType" class="form-select" required onchange="toggleOtherField('experienceType', 'otherExperienceContainer', 'otherExperienceType')">
+      <option value="">Select Experience Type</option>
+      <option value="In-house">In-house</option>
+      <option value="BPO">BPO</option>
+      <option value="Domestic">Domestic</option>
+      <option value="International">International</option>
+      <option value="Blended">Blended</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
+</div>
+
+<!-- Other Experience Type Field -->
+<div class="col-md-6" id="otherExperienceContainer" style="display: none;">
+  <div class="mb-3">
+    <label class="form-label">Specify Other Experience Type</label>
+    <input type="text" class="form-control" name="other_experience_type" id="otherExperienceType">
+  </div>
+</div>
+
+<script>
+  function toggleOtherField(selectId, containerId, inputId) {
+    const selectElement = document.getElementById(selectId);
+    const container = document.getElementById(containerId);
+    const inputElement = document.getElementById(inputId);
+    
+    if (selectElement.value === 'Other') {
+      container.style.display = 'block';
+      inputElement.setAttribute('required', 'required');
+    } else {
+      container.style.display = 'none';
+      inputElement.removeAttribute('required');
+      inputElement.value = '';
+    }
+  }
+
+  // Initialize on page load - handle pre-selected values
+  document.addEventListener('DOMContentLoaded', function() {
+    // If editing an existing vacancy with "Other" experience type
+    const experienceType = '{{ vacancy.experience_type|default:"" }}';
+    const otherExperience = '{{ vacancy.other_experience_type|default:"" }}';
+    
+    if (experienceType === 'Other') {
+      document.getElementById('experienceType').value = 'Other';
+      document.getElementById('otherExperienceContainer').style.display = 'block';
+      document.getElementById('otherExperienceType').value = otherExperience;
+      document.getElementById('otherExperienceType').setAttribute('required', 'required');
+    } else if (experienceType) {
+      document.getElementById('experienceType').value = experienceType;
+    }
+    
+    // Initialize the field state
+    document.getElementById('experienceType').dispatchEvent(new Event('change'));
+  });
+</script>
             
             <div class="col-md-4">
               <div class="mb-3">
@@ -1786,15 +1920,41 @@
               <input type="text" class="form-control" name="job_position" value="{{ vacancy.job_position }}">
             </div>
             <div class="col-md-6 mb-3">
-              <label class="form-label">Job Profile Type</label>
-              <select name="job_profile_type" class="form-select" required>
-                <option value="">Select Job Profile Type</option>
-                <option value="Voice Process" {% if vacancy.job_profile_type == 'Voice Process' %}selected{% endif %}>Voice Process</option>
-                <option value="Non-Voice Process" {% if vacancy.job_profile_type == 'Non-Voice Process' %}selected{% endif %}>Non-Voice Process</option>
-                <option value="Blended Process" {% if vacancy.job_profile_type == 'Blended Process' %}selected{% endif %}>Blended Process</option>
-                <option value="Other" {% if vacancy.job_profile_type == 'Other' %}selected{% endif %}>Other</option>
-              </select>
-            </div>
+  <label class="form-label">Job Profile Type</label>
+  <select name="job_profile_type" id="jobProfileType" class="form-select" required onchange="toggleOtherJobProfile()">
+    <option value="">Select Job Profile Type</option>
+    <option value="Voice Process" {% if vacancy.job_profile_type == 'Voice Process' %}selected{% endif %}>Voice Process</option>
+    <option value="Non-Voice Process" {% if vacancy.job_profile_type == 'Non-Voice Process' %}selected{% endif %}>Non-Voice Process</option>
+    <option value="Blended Process" {% if vacancy.job_profile_type == 'Blended Process' %}selected{% endif %}>Blended Process</option>
+    <option value="Other" {% if vacancy.job_profile_type == 'Other' %}selected{% endif %}>Other</option>
+  </select>
+</div>
+
+<div class="col-md-6 mb-3" id="otherJobProfileContainer" style="display: none;">
+  <label class="form-label">Specify Other Job Profile</label>
+  <input type="text" class="form-control" name="other_job_profile" id="otherJobProfile" 
+         value="{% if vacancy.job_profile_type == 'Other' %}{{ vacancy.other_job_profile }}{% endif %}">
+</div>
+
+<script>
+  function toggleOtherJobProfile() {
+    const jobProfileType = document.getElementById('jobProfileType');
+    const otherContainer = document.getElementById('otherJobProfileContainer');
+    
+    if (jobProfileType.value === 'Other') {
+      otherContainer.style.display = 'block';
+      document.getElementById('otherJobProfile').setAttribute('required', 'required');
+    } else {
+      otherContainer.style.display = 'none';
+      document.getElementById('otherJobProfile').removeAttribute('required');
+    }
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    toggleOtherJobProfile(); // This will show/hide based on the current selection
+  });
+</script>
             <div class="col-md-6 mb-3">
               <label class="form-label">Job Description Attachment</label>
               <input type="file" class="form-control" name="job_description_attachment">
