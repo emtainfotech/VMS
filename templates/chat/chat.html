@@ -78,7 +78,7 @@
         let forwardMessageId = null;
 
         // --- FIX: Determine WebSocket protocol based on page protocol ---
-        const wsProtocol = window.location.protocol === 'https:' ? 'http://' : 'http://';
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
         const chatSocket = new WebSocket(wsProtocol + window.location.host + '/ws/chat/');
 
         const mainChatArea = document.getElementById('main-chat-area');
