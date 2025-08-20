@@ -1071,33 +1071,31 @@ def employee_candidate_registration(request):
 @require_POST
 def check_mobile_number_duplicate(request):
     """
-    Checks if a mobile number already exists in the database.
-    Returns a JSON response with a 'duplicate' status if a match is found.
+    Checks if a mobile number already exists and returns details for the modal.
     """
     try:
-        # Decode the JSON payload from the AJAX request
         data = json.loads(request.body)
         mobile_number = data.get('mobile_number')
     except (json.JSONDecodeError, KeyError):
         return JsonResponse({'error': 'Invalid request body'}, status=400)
 
-    # Perform the database lookup
     if mobile_number:
         try:
             duplicate_candidate = Candidate_registration.objects.get(
                 candidate_mobile_number=mobile_number
             )
-            # If a candidate is found, return a 409 Conflict status
+            # If a candidate is found, return all data needed for the modal
             return JsonResponse({
                 'status': 'duplicate',
                 'candidate_name': duplicate_candidate.candidate_name,
+                # ADD THIS LINE to provide the URL for the button
+                'candidate_profile_url': reverse('employee_candidate_profile', args=[duplicate_candidate.id])
             }, status=409)
         except Candidate_registration.DoesNotExist:
             # If no candidate is found, return a success status
             return JsonResponse({'status': 'unique'}, status=200)
 
     return JsonResponse({'error': 'Mobile number is required'}, status=400)
-
 # def get_next_unique_code():
 #     candidate = Candidate_registration.objects.filter(unique_code__regex=r'^EC\d{6}$').values_list('unique_code', flat=True)
 #     numbers = [int(re.search(r'\d{6}', unique_code).group()) for unique_code in candidate]

@@ -18,30 +18,28 @@
                                             <div class="card-body">
                                                 <div id="formErrors" class="alert alert-danger d-none"></div>
                                                 <div class="row row-cards">
-                                                    <div class="col-md-5">
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Candidate Name</label>
-                                                            <input type="text" class="form-control" name="candidate_name" 
-                                                                    placeholder="Candidate Name" 
-                                                                    pattern="[A-Za-z ]{3,}" 
-                                                                    title="Name should contain only letters and spaces (minimum 3 characters)" 
-                                                                    required>
-                                                            <div class="invalid-feedback">Please provide a valid name (letters only, min 3 characters).</div>
-                                                            <input type="hidden" class="form-control" name="submit_by" value="{{user.username}}" required>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div class="col-sm-6 col-md-4">
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Mobile Number</label>
-                                                            <input type="tel" class="form-control" name="candidate_mobile_number" 
-                                                                    placeholder="Mobile Number" 
-                                                                    pattern="[0-9]{10}" 
-                                                                    title="Please enter a valid 10-digit mobile number"
-                                                                    required>
-                                                            <div class="invalid-feedback">Please provide a valid 10-digit mobile number.</div>
-                                                        </div>
-                                                    </div>
+                                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Candidate Name</label>
+                                            <input type="text" class="form-control" name="candidate_name"
+                                                placeholder="Candidate Name"
+                                                pattern="[A-Za-z ]{3,}"
+                                                title="Name should contain only letters and spaces (minimum 3 characters)"
+                                                required>
+                                            <div class="invalid-feedback">Please provide a valid name.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Mobile Number</label>
+                                            <input type="tel" class="form-control" name="candidate_mobile_number"
+                                                placeholder="Mobile Number"
+                                                pattern="[0-9]{10}"
+                                                title="Please enter a valid 10-digit mobile number" required>
+                                            <div class="invalid-feedback">Please provide a valid 10-digit mobile number.</div>
+                                        </div>
+                                    </div>
                                                     
                                                     <div class="col-sm-4 col-md-3">
                                                         <div class="mb-3">
@@ -902,7 +900,120 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 
-    
+    <div class="modal modal-blur fade" id="duplicateModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-warning"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-warning icon-lg" width="24" height="24"
+                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M10.25 17.25h-5.25a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v3"></path>
+                    <path d="M7 9h6"></path>
+                    <path d="M10 3m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v1a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z"></path>
+                    <path d="M19.001 19m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path>
+                    <path d="M19.001 16.5v2.5h2.5"></path>
+                </svg>
+                <h3>Duplicate Found</h3>
+                <div class="text-secondary" id="duplicateMessage">The mobile number <strong
+                        id="duplicateMobileNumber"></strong> is already registered to <strong
+                        id="duplicateCandidateName"></strong>.</div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <a href="#" class="btn w-100" data-bs-dismiss="modal">Skip</a>
+                        </div>
+                        <div class="col">
+                            <a href="#" class="btn btn-warning w-100" id="reviewProfileLink">Review Profile</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/dist/js/tabler.min.js?1692870487" defer></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // --- SETUP: Get references to key elements ---
+    const form = document.getElementById("candidateForm");
+    const mobileNumberInput = document.querySelector('[name="candidate_mobile_number"]');
+    const duplicateModal = new bootstrap.Modal(document.getElementById('duplicateModal'));
+
+    // --- UTILITY: Debounce function to prevent API calls on every keystroke ---
+    function debounce(func, delay) {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    // --- REAL-TIME CHECK THAT TRIGGERS THE MODAL ---
+    const checkMobileAndShowModal = debounce(function () {
+        const mobileNumber = mobileNumberInput.value;
+
+        // Only check if it's a valid 10-digit number
+        if (/^\d{10}$/.test(mobileNumber)) {
+            fetch(`/employee/check-mobile-number/`, { // Uses the updated view
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ 'mobile_number': mobileNumber })
+            })
+            .then(response => {
+                if (response.status === 409) { // 409 Conflict means duplicate found
+                    return response.json();
+                }
+                return null; // Not a duplicate, do nothing
+            })
+            .then(data => {
+                if (data && data.status === 'duplicate') {
+                    // --- THIS IS THE NEW LOGIC ---
+                    // Populate the modal with data from the server
+                    document.getElementById('duplicateMobileNumber').textContent = mobileNumber;
+                    document.getElementById('duplicateCandidateName').textContent = data.candidate_name;
+                    document.getElementById('reviewProfileLink').href = data.candidate_profile_url;
+                    
+                    // Show the modal
+                    duplicateModal.show();
+                }
+            })
+            .catch(error => console.error('Real-time check error:', error));
+        }
+    }, 800); // Increased debounce to 800ms to feel less disruptive
+
+    // Attach the event listener to the mobile input field
+    mobileNumberInput.addEventListener('input', checkMobileAndShowModal);
+
+
+    // Optional: Keep the form submitting normally if no duplicate is found
+    form.addEventListener("submit", function (event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+            form.classList.add('was-validated');
+        }
+        // If the form is valid, it will submit to the main registration view as usual.
+        // The duplicate check in that main view will act as a final safeguard.
+    });
+
+    // Initialize TomSelect and other UI elements if needed
+    if (window.TomSelect) {
+        new TomSelect('#select-prefered-location', {plugins: ['remove_button']});
+        new TomSelect('#select-sector', {plugins: ['remove_button']});
+        new TomSelect('#select-department', {plugins: ['remove_button']});
+    }
+});
+</script>
     <style>
         #formErrors {
         margin: 1rem;
