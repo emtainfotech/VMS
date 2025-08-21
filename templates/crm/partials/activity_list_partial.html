@@ -21,7 +21,7 @@
                 <tr>
                     <td>
                         {% if activity.employee and activity.employee.user %}
-                            {{ activity.employee.first_name|default:activity.employee.user.username }} {{ activity.employee.last_name|default:'' }} ({{ activity.employee.employee_id }})
+                            {{ activity.employee.user.get_full_name|default:activity.employee.user.username }}
                         {% else %}
                             <span class="text-muted fst-italic">Unknown Employee</span>
                         {% endif %}

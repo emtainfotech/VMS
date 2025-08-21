@@ -4830,12 +4830,14 @@ def employee_calls_list(request):
         start_date = end_date = today
         period = 'today'
 
-    base_activity_filter = Q(candidateactivity__timestamp__date__range=[start_date, end_date], candidateactivity__action__in=['call_made', 'created'])
+    base_activity_filter = Q(
+        candidateactivity__timestamp__date__range=[start_date, end_date],
+        candidateactivity__action__in=['call_made', 'created'],
+        candidateactivity__employee__isnull=False  # Ignore activities with no employee
+    )
     connected_filter = Q(Q(candidateactivity__action='call_made', candidateactivity__changes__call_connection__new__iexact='Connected') | Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected'))
     
     LEAD_STATUSES = ['Hot', 'Converted']
-    
-    # --- SYNTAX FIX APPLIED HERE ---
     lead_transition_filter_prefixed = (
         Q(candidateactivity__action='call_made', candidateactivity__changes__lead_generate__new__in=LEAD_STATUSES) &
         ~Q(candidateactivity__changes__lead_generate__old__in=LEAD_STATUSES)
@@ -4851,17 +4853,14 @@ def employee_calls_list(request):
         leads_generated=Count('candidateactivity', filter=base_activity_filter & lead_transition_filter_prefixed)
     ).filter(total_calls__gt=0).order_by('-total_calls')
 
-    all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created'])
+    all_activities_queryset = CandidateActivity.objects.filter(
+        timestamp__date__range=[start_date, end_date],
+        action__in=['call_made', 'created'],
+        employee__isnull=False  # Ignore activities with no employee
+    )
 
     total_connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
-    
-    # --- SYNTAX FIX APPLIED HERE ---
-    total_leads_transition_filter = (
-        Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) &
-        ~Q(changes__lead_generate__old__in=LEAD_STATUSES)
-    ) | Q(
-        action='created', candidate__lead_generate__in=LEAD_STATUSES
-    )
+    total_leads_transition_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
     
     total_stats = all_activities_queryset.aggregate(
         total_activities=Count('id'),
@@ -4885,6 +4884,42 @@ def employee_calls_list(request):
         'total_stats': total_stats,
     }
     return render(request, 'crm/employee-calls-list.html', context)
+
+
+def get_filtered_activity_list(request):
+    list_type = request.GET.get('list_type')
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+
+    try:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "Invalid date format."}, status=400)
+
+    activities = CandidateActivity.objects.filter(
+        timestamp__date__range=[start_date, end_date],
+        action__in=['call_made', 'created'],
+        employee__isnull=False  # Ignore activities with no employee
+    ).select_related('employee__user', 'candidate').order_by('-timestamp')
+
+    list_title = "All Activities"
+    if list_type == 'connected':
+        list_title = "Connected Activities"
+        connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
+        activities = activities.filter(connected_filter)
+    elif list_type == 'not_connected':
+        list_title = "Not Connected Activities"
+        connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
+        activities = activities.filter(~connected_filter)
+    elif list_type == 'leads':
+        list_title = "Lead Generating Activities"
+        LEAD_STATUSES = ['Hot', 'Converted']
+        leads_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
+        activities = activities.filter(leads_filter)
+
+    context = {'activities': activities, 'list_title': list_title}
+    return render(request, 'crm/partials/activity_list_partial.html', context)
 
 
 def get_employee_candidates(request):
@@ -4914,15 +4949,7 @@ def get_employee_candidates(request):
         activity_chart_labels, activity_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date)
         
         LEAD_STATUSES = ['Hot', 'Converted']
-
-        # --- SYNTAX FIX APPLIED HERE ---
-        leads_filter_q = (
-            Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) &
-            ~Q(changes__lead_generate__old__in=LEAD_STATUSES)
-        ) | Q(
-            action='created', candidate__lead_generate__in=LEAD_STATUSES
-        )
-        
+        leads_filter_q = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
         leads_chart_labels, leads_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date, filter_q=leads_filter_q)
 
         return JsonResponse({
@@ -4938,64 +4965,3 @@ def get_employee_candidates(request):
         })
     except (ValueError, Employee.DoesNotExist):
         return JsonResponse({"error": "Invalid request."}, status=400)
-    
-# NEW: Add this entire function to your views.py file
-def get_filtered_activity_list(request):
-    """
-    This view handles AJAX requests when a summary card is clicked.
-    It returns a rendered HTML table of the specific activities.
-    """
-    list_type = request.GET.get('list_type')
-    start_date_str = request.GET.get('start_date')
-    end_date_str = request.GET.get('end_date')
-
-    try:
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-    except (ValueError, TypeError):
-        return JsonResponse({"error": "Invalid date format."}, status=400)
-
-    # Base queryset for all activities in the period
-    activities = CandidateActivity.objects.filter(
-        timestamp__date__range=[start_date, end_date],
-        action__in=['call_made', 'created']
-    ).select_related('employee__user', 'candidate').order_by('-timestamp')
-
-    list_title = "All Activities"
-
-    # Apply the specific filter based on which card was clicked
-    if list_type == 'connected':
-        list_title = "Connected Activities"
-        connected_filter = Q(
-            Q(action='call_made', changes__call_connection__new__iexact='Connected') |
-            Q(action='created', candidate__call_connection__iexact='Connected')
-        )
-        activities = activities.filter(connected_filter)
-
-    elif list_type == 'not_connected':
-        list_title = "Not Connected Activities"
-        connected_filter = Q(
-            Q(action='call_made', changes__call_connection__new__iexact='Connected') |
-            Q(action='created', candidate__call_connection__iexact='Connected')
-        )
-        activities = activities.filter(~connected_filter)
-
-    elif list_type == 'leads':
-        list_title = "Lead Generating Activities"
-        LEAD_STATUSES = ['Hot', 'Converted']
-        leads_filter = (
-            Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) &
-            ~Q(changes__lead_generate__old__in=LEAD_STATUSES)
-        ) | Q(
-            action='created', candidate__lead_generate__in=LEAD_STATUSES
-        )
-        activities = activities.filter(leads_filter)
-
-    context = {
-        'activities': activities,
-        'list_title': list_title,
-    }
-    
-    # Render a partial template and return it as HTML
-    return render(request, 'crm/partials/activity_list_partial.html', context)
-
