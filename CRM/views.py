@@ -4738,11 +4738,12 @@ def admin_assign_candidate(request) :
 # from datetime import timedelta, datetime
 # from django.db.models import Count, Max, Q
 from django.db.models.functions import TruncDate
-from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMonth
+from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMonth, Coalesce
+# from django.db.models import , IntegerField
 # from .models import Employee, Candidate_registration, CandidateActivity
 # from django.http import JsonResponse
 # from django.template.loader import render_to_string
-
+# UPDATED: Helper function can now accept an extra filter
 
 # HELPER FUNCTION FOR DYNAMIC CHART DATA (No changes)
 def _get_chart_data(queryset, start_date, end_date):
@@ -4826,15 +4827,31 @@ def employee_calls_list(request):
         Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected')
     )
 
-    # UPDATED: Added 'leads_generated' to the employee annotation
+    # --- START OF NEW LOGIC for Leads Generated Per Employee ---
+    # This Subquery calculates the unique leads (once per candidate per day) for each employee.
+    leads_subquery = CandidateActivity.objects.filter(
+        employee_id=OuterRef('pk'),
+        timestamp__date__range=[start_date, end_date],
+        action__in=['call_made', 'created'],
+        changes__lead_generate__new__in=['Hot', 'Converted']
+    ).annotate(
+        date=TruncDate('timestamp')
+    ).values(
+        'candidate_id', 'date'
+    ).distinct().values(
+        'employee_id'
+    ).annotate(
+        count=Count('id')
+    ).values('count')
+    # --- END OF NEW LOGIC ---
+
     employee_stats = Employee.objects.annotate(
         total_calls=Count('candidateactivity', filter=base_activity_filter),
         last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
         connected_calls=Count('candidateactivity', filter=base_activity_filter & connected_filter),
         not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~connected_filter),
-        leads_generated=Count('candidateactivity', filter=base_activity_filter & Q(
-            candidateactivity__changes__lead_generate__new__in=['Hot', 'Converted']
-        ))
+        # Use the subquery for the accurate, unique-per-day count
+        leads_generated=Coalesce(Subquery(leads_subquery, output_field=IntegerField()), 0)
     ).filter(total_calls__gt=0).order_by('-total_calls')
 
     all_activities_queryset = CandidateActivity.objects.filter(
@@ -4842,11 +4859,30 @@ def employee_calls_list(request):
         action__in=['call_made', 'created']
     )
 
-    # NEW: Aggregate total stats for the summary cards at the top
-    total_stats = all_activities_queryset.aggregate(
-        total_activities=Count('id'),
-        total_leads_generated=Count('id', filter=Q(changes__lead_generate__new__in=['Hot', 'Converted']))
+    total_connected_filter = Q(
+        Q(action='call_made', changes__call_connection__new__iexact='Connected') |
+        Q(action='created', candidate__call_connection__iexact='Connected')
     )
+    
+    # Get the simple aggregate counts for the top-level cards
+    total_stats_agg = all_activities_queryset.aggregate(
+        total_activities=Count('id'),
+        total_connected=Count('id', filter=total_connected_filter),
+        total_not_connected=Count('id', filter=~total_connected_filter)
+    )
+
+    # --- NEW: Perform the unique-per-day count for the top-level card ---
+    total_leads_generated_count = all_activities_queryset.filter(
+        changes__lead_generate__new__in=['Hot', 'Converted']
+    ).annotate(
+        date=TruncDate('timestamp')
+    ).values('candidate_id', 'date').distinct().count()
+    
+    # Combine the stats into one dictionary for the template
+    total_stats = {
+        **total_stats_agg,
+        'total_leads_generated': total_leads_generated_count,
+    }
 
     main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date)
 
@@ -4857,13 +4893,13 @@ def employee_calls_list(request):
         'end_date': end_date,
         'main_chart_labels': main_chart_labels,
         'main_chart_data': main_chart_data,
-        'total_stats': total_stats, # Pass total stats to the template
+        'total_stats': total_stats,
     }
     return render(request, 'crm/employee-calls-list.html', context)
 
 
 def get_employee_candidates(request):
-    # This view does not need changes, it remains the same
+    # This view does not need changes
     employee_id = request.GET.get('employee_id')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
