@@ -18,92 +18,50 @@
     <div class="page-body">
         <div class="container-xl">
             <div class="card card-body mb-4">
-                <form method="get" action="{% url 'admin_calls_list' %}">
+                <form method="get" action="{% url 'employee_calls_list' %}">
                     <div class="row g-3 align-items-end">
-                        <div class="col-md-3">
-                            <label class="form-label">Period</label>
-                            <select name="period" class="form-select">
-                                <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
-                                <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
-                                <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
-                                <option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option>
-                                <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Start Date</label>
-                            <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">End Date</label>
-                            <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
-                        </div>
+                        <div class="col-md-3"><label class="form-label">Period</label><select name="period" class="form-select"><option value="today" {% if period == 'today' %}selected{% endif %}>Today</option><option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option><option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option><option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option><option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option></select></div>
+                        <div class="col-md-3"><label class="form-label">Start Date</label><input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}"></div>
+                        <div class="col-md-3"><label class="form-label">End Date</label><input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}"></div>
+                        <div class="col-md-3"><button type="submit" class="btn btn-primary w-100">Apply Filter</button></div>
                     </div>
                 </form>
             </div>
             
             <div class="row g-4 mb-4">
-                <div class="col-md-6 col-lg-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <div class="h1 mb-3">{{ total_stats.total_activities }}</div>
-                            <div class="text-muted">Total Activities</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <div class="h1 mb-3 text-success">{{ total_stats.total_connected }}</div>
-                            <div class="text-muted">Total Connected</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <div class="h1 mb-3 text-danger">{{ total_stats.total_not_connected }}</div>
-                            <div class="text-muted">Total Not Connected</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <div class="h1 mb-3 text-warning">{{ total_stats.total_leads_generated }}</div>
-                            <div class="text-muted">Total Leads Generated</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card mt-4">
-                <div class="card-header"><h3 class="card-title">All Employees: Activity Volume Trend</h3></div>
-                <div class="card-body">
-                    <div id="mainChart"></div>
-                </div>
+                <div class="col-md-6 col-lg-3"><div class="card"><div class="card-body text-center"><div class="h1 mb-3">{{ total_stats.total_activities }}</div><div class="text-muted">Total Activities</div></div></div></div>
+                <div class="col-md-6 col-lg-3"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-success">{{ total_stats.total_connected }}</div><div class="text-muted">Total Connected</div></div></div></div>
+                <div class="col-md-6 col-lg-3"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-danger">{{ total_stats.total_not_connected }}</div><div class="text-muted">Total Not Connected</div></div></div></div>
+                <div class="col-md-6 col-lg-3"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-warning">{{ total_stats.total_leads_generated }}</div><div class="text-muted">Total Leads Generated</div></div></div></div>
             </div>
 
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">All Employees: Activity Volume Trend</h3></div>
+                        <div class="card-body">
+                            <div id="mainActivityChart"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">All Employees: Lead Generation Trend</h3></div>
+                        <div class="card-body">
+                            <div id="mainLeadsChart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="card mt-4">
                 <div class="card-header"><h3 class="card-title">Employee Breakdown</h3></div>
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter text-nowrap">
-                        <thead>
-                            <tr>
-                                <th>Employee Name</th>
-                                <th>Total Activities</th>
-                                <th>Connected</th>
-                                <th>Not Connected</th>
-                                <th>Leads Generated</th>
-                                <th>Last Activity</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>Employee Name</th><th>Total Activities</th><th>Connected</th><th>Not Connected</th><th>Leads Generated</th><th>Last Activity</th></tr></thead>
                         <tbody>
                             {% for stat in employee_stats %}
                             <tr class="employee-row" data-employee-id="{{ stat.id }}" data-employee-name="{{ stat.user.get_full_name|default:stat.user.username }}" style="cursor: pointer;">
-                                <td>{{ stat.first_name }} {{ stat.last_name }} ({{ stat.employee_id }})</td>
+                                <td>{{ stat.user.get_full_name|default:stat.user.username }} ({{ stat.employee_id }})</td>
                                 <td><span class="badge bg-blue text-blue-fg">{{ stat.total_calls }}</span></td>
                                 <td><span class="badge bg-green text-green-fg">{{ stat.connected_calls }}</span></td>
                                 <td><span class="badge bg-red text-red-fg">{{ stat.not_connected_calls }}</span></td>
@@ -113,10 +71,18 @@
                             <tr class="candidate-details-row" id="details-for-{{ stat.id }}" style="display: none;">
                                 <td colspan="6" class="p-0">
                                     <div class="details-container p-3">
-                                        <div class="card mb-3">
-                                             <div class="card-header"><h3 class="card-title" id="chart-title-for-{{ stat.id }}">Activity Trend</h3></div>
-                                            <div class="card-body">
-                                                <div id="chart-for-{{ stat.id }}"></div>
+                                        <div class="row g-4 mb-3">
+                                            <div class="col-lg-6">
+                                                <div class="card">
+                                                    <div class="card-header"><h3 class="card-title" id="activity-chart-title-for-{{ stat.id }}">Activity Trend</h3></div>
+                                                    <div class="card-body"><div id="activity-chart-for-{{ stat.id }}"></div></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="card">
+                                                    <div class="card-header"><h3 class="card-title" id="leads-chart-title-for-{{ stat.id }}">Lead Gen Trend</h3></div>
+                                                    <div class="card-body"><div id="leads-chart-for-{{ stat.id }}"></div></div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="candidate-list-container"></div>
@@ -136,60 +102,93 @@
 
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
-    // Javascript for charts and expandable rows remains the same
-    document.addEventListener('DOMContentLoaded', function () {
-        const chartInstances = {};
-        function getBaseChartOptions(labels, seriesData, chartTitle) {
-            return {
-                chart: { type: 'area', height: 300, zoom: { enabled: false }, toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } } },
-                series: [{ name: chartTitle, data: seriesData }],
-                labels: labels,
-                xaxis: { type: 'category', labels: { rotate: -20, rotateAlways: false, hideOverlappingLabels: true, trim: true } },
-                yaxis: { min: 0, tickAmount: 5, labels: { formatter: (val) => val.toFixed(0) } },
-                dataLabels: { enabled: false },
-                stroke: { curve: 'smooth', width: 2 },
-                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
-                tooltip: { theme: 'dark' }
-            };
-        }
-        const mainChartOptions = getBaseChartOptions({{ main_chart_labels|safe }}, {{ main_chart_data|safe }}, 'Total Activities');
-        const mainChart = new ApexCharts(document.querySelector("#mainChart"), mainChartOptions);
-        mainChart.render();
-        document.querySelectorAll('.employee-row').forEach(row => {
-            row.addEventListener('click', async function () {
-                const employeeId = this.dataset.employeeId;
-                const employeeName = this.dataset.employeeName;
-                const detailsRow = document.getElementById(`details-for-${employeeId}`);
-                const candidateContainer = detailsRow.querySelector('.candidate-list-container');
-                const chartContainer = detailsRow.querySelector(`#chart-for-${employeeId}`);
-                const chartTitle = detailsRow.querySelector(`#chart-title-for-${employeeId}`);
-                const isVisible = detailsRow.style.display === 'table-row';
-                detailsRow.style.display = isVisible ? 'none' : 'table-row';
-                this.classList.toggle('active', !isVisible);
-                if (!isVisible && candidateContainer.innerHTML.trim() === '') {
-                    candidateContainer.innerHTML = '<div class="text-center p-4">Loading details...</div>';
-                    chartTitle.innerText = `Activity Trend for ${employeeName}`;
-                    const startDate = "{{ start_date|date:'Y-m-d' }}";
-                    const endDate = "{{ end_date|date:'Y-m-d' }}";
-                    const url = `{% url 'get_employee_candidates' %}?employee_id=${employeeId}&start_date=${startDate}&end_date=${endDate}`;
-                    try {
-                        const response = await fetch(url);
-                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                        const result = await response.json();
-                        candidateContainer.innerHTML = result.html;
-                        if (chartInstances[employeeId]) {
-                            chartInstances[employeeId].destroy();
-                        }
-                        const employeeChartOptions = getBaseChartOptions(result.chart_data.labels, result.chart_data.data, 'Activities');
-                        chartInstances[employeeId] = new ApexCharts(chartContainer, employeeChartOptions);
-                        chartInstances[employeeId].render();
-                    } catch (error) {
-                        console.error('Failed to fetch employee details:', error);
-                        candidateContainer.innerHTML = '<div class="text-center p-4 text-danger">Failed to load data.</div>';
+document.addEventListener('DOMContentLoaded', function () {
+    const chartInstances = {};
+
+    function getBaseChartOptions(labels, seriesData, chartTitle, colors) {
+        return {
+            chart: { type: 'area', height: 300, zoom: { enabled: false }, toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } } },
+            colors: colors,
+            series: [{ name: chartTitle, data: seriesData }],
+            labels: labels,
+            xaxis: { type: 'category', labels: { rotate: -20, rotateAlways: false, hideOverlappingLabels: true, trim: true } },
+            yaxis: { min: 0, tickAmount: 5, labels: { formatter: (val) => val.toFixed(0) } },
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 2 },
+            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
+            tooltip: { theme: 'dark' }
+        };
+    }
+
+    // --- Render Main Charts ---
+    const mainActivityChartOptions = getBaseChartOptions({{ main_chart_labels|safe }}, {{ main_chart_data|safe }}, 'Total Activities', ['#206bc4']);
+    const mainActivityChart = new ApexCharts(document.querySelector("#mainActivityChart"), mainActivityChartOptions);
+    mainActivityChart.render();
+
+    const mainLeadsChartOptions = getBaseChartOptions({{ leads_chart_labels|safe }}, {{ leads_chart_data|safe }}, 'Leads Generated', ['#f59f00']);
+    const mainLeadsChart = new ApexCharts(document.querySelector("#mainLeadsChart"), mainLeadsChartOptions);
+    mainLeadsChart.render();
+
+    // --- Handle Clickable Employee Rows ---
+    document.querySelectorAll('.employee-row').forEach(row => {
+        row.addEventListener('click', async function () {
+            const employeeId = this.dataset.employeeId;
+            const employeeName = this.dataset.employeeName;
+            const detailsRow = document.getElementById(`details-for-${employeeId}`);
+            const candidateContainer = detailsRow.querySelector('.candidate-list-container');
+            
+            // Get containers for both charts
+            const activityChartContainer = detailsRow.querySelector(`#activity-chart-for-${employeeId}`);
+            const leadsChartContainer = detailsRow.querySelector(`#leads-chart-for-${employeeId}`);
+            const activityChartTitle = detailsRow.querySelector(`#activity-chart-title-for-${employeeId}`);
+            const leadsChartTitle = detailsRow.querySelector(`#leads-chart-title-for-${employeeId}`);
+            
+            const isVisible = detailsRow.style.display === 'table-row';
+            detailsRow.style.display = isVisible ? 'none' : 'table-row';
+            this.classList.toggle('active', !isVisible);
+
+            if (!isVisible && candidateContainer.innerHTML.trim() === '') {
+                candidateContainer.innerHTML = '<div class="text-center p-4">Loading details...</div>';
+                activityChartTitle.innerText = `Activity Trend for ${employeeName}`;
+                leadsChartTitle.innerText = `Lead Gen Trend for ${employeeName}`;
+
+                const startDate = "{{ start_date|date:'Y-m-d' }}";
+                const endDate = "{{ end_date|date:'Y-m-d' }}";
+                const url = `{% url 'get_employee_candidates' %}?employee_id=${employeeId}&start_date=${startDate}&end_date=${endDate}`;
+                
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    
+                    const result = await response.json();
+                    candidateContainer.innerHTML = result.html;
+
+                    // Destroy old instances if they exist
+                    if (chartInstances[employeeId]) {
+                        chartInstances[employeeId].activity.destroy();
+                        chartInstances[employeeId].leads.destroy();
                     }
+
+                    // Render employee's activity chart
+                    const empActivityOptions = getBaseChartOptions(result.activity_chart_data.labels, result.activity_chart_data.data, 'Activities', ['#206bc4']);
+                    const empActivityChart = new ApexCharts(activityChartContainer, empActivityOptions);
+                    empActivityChart.render();
+
+                    // Render employee's leads chart
+                    const empLeadsOptions = getBaseChartOptions(result.leads_chart_data.labels, result.leads_chart_data.data, 'Leads', ['#f59f00']);
+                    const empLeadsChart = new ApexCharts(leadsChartContainer, empLeadsOptions);
+                    empLeadsChart.render();
+                    
+                    // Store both new instances
+                    chartInstances[employeeId] = { activity: empActivityChart, leads: empLeadsChart };
+
+                } catch (error) {
+                    console.error('Failed to fetch employee details:', error);
+                    candidateContainer.innerHTML = '<div class="text-center p-4 text-danger">Failed to load data.</div>';
                 }
-            });
+            }
         });
     });
+});
 </script>
 {% endblock %}
