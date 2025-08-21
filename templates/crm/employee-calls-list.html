@@ -18,7 +18,7 @@
     <div class="page-body">
         <div class="container-xl">
             <div class="card card-body mb-4">
-                <form method="get" action="{% url 'employee_calls_list' %}">
+                <form method="get" action="{% url 'admin_calls_list' %}">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-3"><label class="form-label">Period</label><select name="period" class="form-select"><option value="today" {% if period == 'today' %}selected{% endif %}>Today</option><option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option><option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option><option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option><option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option></select></div>
                         <div class="col-md-3"><label class="form-label">Start Date</label><input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}"></div>
