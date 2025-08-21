@@ -14,6 +14,7 @@
                     <th>Activity Time</th>
                     <th>Historical Call Status</th>
                     <th>Historical Lead Status</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -57,6 +58,9 @@
                                 {{ activity.candidate.lead_generate|default:'-' }}
                             {% endif %}
                         {% endwith %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'employee_candidate_profile' activity.candidate.id %}" class="btn btn-sm btn-outline-primary">View Profile</a>
                     </td>
                 </tr>
                 {% empty %}
