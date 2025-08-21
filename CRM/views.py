@@ -4753,8 +4753,7 @@ import calendar
 from django.db.models import Count, Max, Q, Subquery, OuterRef, IntegerField
 from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMonth, Coalesce
 # from .models import Employee, CandidateActivity, Candidate_registration
-
-# HELPER FUNCTION FOR DYNAMIC CHART DATA
+# HELPER FUNCTION FOR DYNAMIC CHART DATA (No changes)
 def _get_chart_data(queryset, start_date, end_date, filter_q=None):
     if filter_q:
         queryset = queryset.filter(filter_q)
@@ -4832,20 +4831,10 @@ def employee_calls_list(request):
     base_activity_filter = Q(candidateactivity__timestamp__date__range=[start_date, end_date], candidateactivity__action__in=['call_made', 'created'])
     connected_filter = Q(Q(candidateactivity__action='call_made', candidateactivity__changes__call_connection__new__iexact='Connected') | Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected'))
     
-    # --- START OF NEW LOGIC for Leads Generated ---
     LEAD_STATUSES = ['Hot', 'Converted']
-    
-    # This filter identifies the exact moment of transition from a NON-LEAD to a LEAD state.
-    lead_transition_filter = (
-        Q(
-            candidateactivity__action='call_made',
-            candidateactivity__changes__lead_generate__new__in=LEAD_STATUSES
-        ) & ~Q(candidateactivity__changes__lead_generate__old__in=LEAD_STATUSES)
-        |
-        Q(
-            candidateactivity__action='created',
-            candidateactivity__candidate__lead_generate__in=LEAD_STATUSES
-        )
+    lead_transition_filter_prefixed = Q(
+        Q(candidateactivity__action='call_made', candidateactivity__changes__lead_generate__new__in=LEAD_STATUSES, ~Q(candidateactivity__changes__lead_generate__old__in=LEAD_STATUSES)) |
+        Q(candidateactivity__action='created', candidateactivity__candidate__lead_generate__in=LEAD_STATUSES)
     )
 
     employee_stats = Employee.objects.annotate(
@@ -4853,32 +4842,32 @@ def employee_calls_list(request):
         last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
         connected_calls=Count('candidateactivity', filter=base_activity_filter & connected_filter),
         not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~connected_filter),
-        # Use the new, more accurate filter for counting leads
-        leads_generated=Count('candidateactivity', filter=base_activity_filter & lead_transition_filter)
+        leads_generated=Count('candidateactivity', filter=base_activity_filter & lead_transition_filter_prefixed)
     ).filter(total_calls__gt=0).order_by('-total_calls')
 
     all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created'])
 
     total_connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
     
-    # Define the lead transition filter without prefixes for the main aggregation
+    # --- START OF FIX ---
+    # Define the accurate lead transition filter for the main aggregation
     total_leads_transition_filter = Q(
-        Q(~Q(changes__lead_generate__old__in=LEAD_STATUSES), action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) |
+        Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES, ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) |
         Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
     )
     
+    # Calculate all stats for the top cards
     total_stats = all_activities_queryset.aggregate(
         total_activities=Count('id'),
         total_connected=Count('id', filter=total_connected_filter),
         total_not_connected=Count('id', filter=~total_connected_filter),
-        # Use the accurate filter for the main summary card
+        # This now uses the accurate filter instead of the simple one
         total_leads_generated=Count('id', filter=total_leads_transition_filter)
     )
+    # --- END OF FIX ---
 
     main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date)
-    # Update the leads chart to use the accurate transition filter
     leads_chart_labels, leads_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date, filter_q=total_leads_transition_filter)
-    # --- END OF NEW LOGIC ---
 
     context = {
         'employee_stats': employee_stats,
@@ -4892,7 +4881,6 @@ def employee_calls_list(request):
         'total_stats': total_stats,
     }
     return render(request, 'crm/employee-calls-list.html', context)
-
 
 def get_employee_candidates(request):
     employee_id = request.GET.get('employee_id')
@@ -4920,10 +4908,9 @@ def get_employee_candidates(request):
         
         activity_chart_labels, activity_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date)
         
-        # Use the accurate lead transition filter for the employee's detail chart
         LEAD_STATUSES = ['Hot', 'Converted']
         leads_filter_q = Q(
-            Q(~Q(changes__lead_generate__old__in=LEAD_STATUSES), action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) |
+            Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES, ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) |
             Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
         )
         leads_chart_labels, leads_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date, filter_q=leads_filter_q)
