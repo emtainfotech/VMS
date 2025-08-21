@@ -358,7 +358,7 @@
         </div>
 
         <div class="row mt-4">
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-12 mb-4">
                 <div class="card h-100">
                     <div class="card-header ">
                         <div class="d-flex justify-content-between align-items-center">
@@ -417,7 +417,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-12 mb-4">
                 <div class="card h-100">
                     <div class="card-header ">
                         <div class="d-flex justify-content-between align-items-center">
@@ -496,7 +496,7 @@
         </div>
 
         <div class="row">
-            <div class="col-lg-6 mb-4">
+            <!-- <div class="col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-header ">
                         <div class="d-flex justify-content-between align-items-center">
@@ -541,9 +541,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-12 mb-4">
                 <div class="card h-100">
                     <div class="card-header ">
                         <div class="d-flex justify-content-between align-items-center">
@@ -606,7 +606,7 @@
         </div>
 
         <div class="row mt-4">
-            <div class="col-lg-6">
+            <div class="col-lg-12 mb-4">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Today's Interviews</h3>
@@ -618,6 +618,7 @@
                                     <tr>
                                         <th>Candidate</th>
                                         <th>Status</th>
+                                        <th>Employee</th>
                                         <th>Time</th>
                                         <th class="w-1"></th>
                                     </tr>
@@ -628,6 +629,7 @@
                                         data-url="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}">
                                         <td>{{ interview.candidate.candidate_name }}</td>
                                         <td>{{ interview.status }}</td>
+                                        <td>{{ interview.candidate.employee_name }}</td>
                                         <td class="interview-time" data-time="{{ interview.interview_date_time|date:'H:i' }}">{{ interview.interview_date_time|date:"M d, Y H:i" }}</td>
                                         <td>
                                             <a href="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}" class="btn btn-link">
@@ -663,7 +665,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-6">
+            <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Today's Follow Ups</h3>
@@ -676,6 +678,7 @@
                                         <th>Candidate</th>
                                         <th>Unique Code</th>
                                         <th>Mobile Number</th>
+                                        <th>Employee</th>
                                         <th>Time</th>
                                         <th class="w-1"></th>
                                     </tr>
@@ -685,6 +688,7 @@
                                     <tr class="followup-row clickable-row" data-date="{{ follow_up.next_follow_up_date_time|date:'Y-m-d' }}" data-followup-id="{{ follow_up.id }}"
                                         data-url="{% if follow_up.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' follow_up.id %}{% else %}{% url 'admin_candidate_profile' follow_up.id %}{% endif %}">
                                         <td>{{ follow_up.candidate_name }}</td>
+                                        
                                         <td>
                                             {% if follow_up.lead_source == 'EVMS' %}
                                                 {{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}
@@ -693,6 +697,7 @@
                                             {% endif %}
                                         </td>
                                         <td>{{ follow_up.candidate_mobile_number|default:"-" }}</td>
+                                        <td>{{ follow_up.employee_name }}</td>
                                         <td class="followup-time" data-time="{{ follow_up.next_follow_up_date_time|date:'H:i' }}">{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td>
                                         <td>
                                             {% if follow_up.lead_source == 'EVMS' %}
