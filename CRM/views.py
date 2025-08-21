@@ -4755,7 +4755,7 @@ from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMon
 # from .models import Employee, CandidateActivity, Candidate_registration
 # HELPER FUNCTION FOR DYNAMIC CHART DATA (No changes)
 
-# HELPER FUNCTION FOR DYNAMIC CHART DATA (No changes)
+# HELPER FUNCTION FOR DYNAMIC CHART DATA
 def _get_chart_data(queryset, start_date, end_date, filter_q=None):
     if filter_q:
         queryset = queryset.filter(filter_q)
@@ -4835,15 +4835,13 @@ def employee_calls_list(request):
     
     LEAD_STATUSES = ['Hot', 'Converted']
     
-    # --- SYNTAX FIX START ---
-    # Correctly combine keyword arguments with a negated Q object using '&'
+    # --- SYNTAX FIX APPLIED HERE ---
     lead_transition_filter_prefixed = (
         Q(candidateactivity__action='call_made', candidateactivity__changes__lead_generate__new__in=LEAD_STATUSES) &
         ~Q(candidateactivity__changes__lead_generate__old__in=LEAD_STATUSES)
     ) | Q(
         candidateactivity__action='created', candidateactivity__candidate__lead_generate__in=LEAD_STATUSES
     )
-    # --- SYNTAX FIX END ---
 
     employee_stats = Employee.objects.annotate(
         total_calls=Count('candidateactivity', filter=base_activity_filter),
@@ -4857,15 +4855,13 @@ def employee_calls_list(request):
 
     total_connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
     
-    # --- SYNTAX FIX START ---
-    # Correctly combine keyword arguments with a negated Q object using '&'
+    # --- SYNTAX FIX APPLIED HERE ---
     total_leads_transition_filter = (
         Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) &
         ~Q(changes__lead_generate__old__in=LEAD_STATUSES)
     ) | Q(
         action='created', candidate__lead_generate__in=LEAD_STATUSES
     )
-    # --- SYNTAX FIX END ---
     
     total_stats = all_activities_queryset.aggregate(
         total_activities=Count('id'),
@@ -4918,15 +4914,14 @@ def get_employee_candidates(request):
         activity_chart_labels, activity_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date)
         
         LEAD_STATUSES = ['Hot', 'Converted']
-        # --- SYNTAX FIX START ---
-        # Correctly combine keyword arguments with a negated Q object using '&'
+
+        # --- SYNTAX FIX APPLIED HERE ---
         leads_filter_q = (
             Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) &
             ~Q(changes__lead_generate__old__in=LEAD_STATUSES)
         ) | Q(
             action='created', candidate__lead_generate__in=LEAD_STATUSES
         )
-        # --- SYNTAX FIX END ---
         
         leads_chart_labels, leads_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date, filter_q=leads_filter_q)
 
