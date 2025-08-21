@@ -1,6 +1,17 @@
 {% extends 'crm/base.html' %}
 
 {% block content %}
+<style>
+    /* Style for the clickable cards to give user feedback on hover */
+    .clickable-card .card:hover {
+        border-color: #206bc4;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+        cursor: pointer;
+        transform: translateY(-2px);
+        transition: all .2s ease-in-out;
+    }
+</style>
+
 <div class="page-wrapper">
     <div class="page-header d-print-none">
         <div class="container-xl">
@@ -29,11 +40,21 @@
             </div>
             
             <div class="row g-4 mb-4">
-                <div class="col-md-6 col-lg-3"><div class="card"><div class="card-body text-center"><div class="h1 mb-3">{{ total_stats.total_activities }}</div><div class="text-muted">Total Activities</div></div></div></div>
-                <div class="col-md-6 col-lg-3"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-success">{{ total_stats.total_connected }}</div><div class="text-muted">Total Connected</div></div></div></div>
-                <div class="col-md-6 col-lg-3"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-danger">{{ total_stats.total_not_connected }}</div><div class="text-muted">Total Not Connected</div></div></div></div>
-                <div class="col-md-6 col-lg-3"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-warning">{{ total_stats.total_leads_generated }}</div><div class="text-muted">Total Leads Generated</div></div></div></div>
+                <div class="col-md-6 col-lg-3 clickable-card" data-filter-type="total">
+                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3">{{ total_stats.total_activities }}</div><div class="text-muted">Total Activities</div></div></div>
+                </div>
+                <div class="col-md-6 col-lg-3 clickable-card" data-filter-type="connected">
+                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-success">{{ total_stats.total_connected }}</div><div class="text-muted">Total Connected</div></div></div>
+                </div>
+                <div class="col-md-6 col-lg-3 clickable-card" data-filter-type="not_connected">
+                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-danger">{{ total_stats.total_not_connected }}</div><div class="text-muted">Total Not Connected</div></div></div>
+                </div>
+                <div class="col-md-6 col-lg-3 clickable-card" data-filter-type="leads">
+                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-warning">{{ total_stats.total_leads_generated }}</div><div class="text-muted">Total Leads Generated</div></div></div>
+                </div>
             </div>
+
+            <div id="activity-details-container" class="mb-4"></div>
 
             <div class="row g-4">
                 <div class="col-lg-6">
@@ -53,6 +74,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="card mt-4">
                 <div class="card-header"><h3 class="card-title">Employee Breakdown</h3></div>
                 <div class="table-responsive">
@@ -90,7 +112,7 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="6" class="text-center">No call data found for the selected period.</td></tr>
+                            <tr><td colspan="6" class="text-center">No activity data found for the selected period.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -101,6 +123,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const chartInstances = {};
@@ -120,16 +143,45 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    // --- Render Main Charts ---
-    const mainActivityChartOptions = getBaseChartOptions({{ main_chart_labels|safe }}, {{ main_chart_data|safe }}, 'Total Activities', ['#206bc4']);
-    const mainActivityChart = new ApexCharts(document.querySelector("#mainActivityChart"), mainActivityChartOptions);
+    // --- 1. Render Main Charts ---
+    const mainActivityChart = new ApexCharts(document.querySelector("#mainActivityChart"), getBaseChartOptions({{ main_chart_labels|safe }}, {{ main_chart_data|safe }}, 'Total Activities', ['#206bc4']));
     mainActivityChart.render();
 
-    const mainLeadsChartOptions = getBaseChartOptions({{ leads_chart_labels|safe }}, {{ leads_chart_data|safe }}, 'Leads Generated', ['#f59f00']);
-    const mainLeadsChart = new ApexCharts(document.querySelector("#mainLeadsChart"), mainLeadsChartOptions);
+    const mainLeadsChart = new ApexCharts(document.querySelector("#mainLeadsChart"), getBaseChartOptions({{ leads_chart_labels|safe }}, {{ leads_chart_data|safe }}, 'Leads Generated', ['#f59f00']));
     mainLeadsChart.render();
 
-    // --- Handle Clickable Employee Rows ---
+    // --- 2. Handle Clickable Summary Cards ---
+    const detailsContainer = document.getElementById('activity-details-container');
+    
+    document.querySelectorAll('.clickable-card').forEach(card => {
+        card.addEventListener('click', async function() {
+            const filterType = this.dataset.filterType;
+            detailsContainer.innerHTML = '<div class="card card-body text-center">Loading details...</div>';
+
+            const startDate = "{{ start_date|date:'Y-m-d' }}";
+            const endDate = "{{ end_date|date:'Y-m-d' }}";
+            const url = `{% url 'get_filtered_activity_list' %}?list_type=${filterType}&start_date=${startDate}&end_date=${endDate}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                const html = await response.text();
+                detailsContainer.innerHTML = html;
+            } catch (error) {
+                console.error('Failed to fetch details:', error);
+                detailsContainer.innerHTML = '<div class="card card-body text-center text-danger">Failed to load details.</div>';
+            }
+        });
+    });
+
+    // Use event delegation to handle close button on dynamically loaded content
+    document.addEventListener('click', function(event) {
+        if (event.target && event.target.id === 'close-details-table') {
+            detailsContainer.innerHTML = ''; // Clear the container
+        }
+    });
+
+    // --- 3. Handle Clickable Employee Rows ---
     document.querySelectorAll('.employee-row').forEach(row => {
         row.addEventListener('click', async function () {
             const employeeId = this.dataset.employeeId;
@@ -137,7 +189,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const detailsRow = document.getElementById(`details-for-${employeeId}`);
             const candidateContainer = detailsRow.querySelector('.candidate-list-container');
             
-            // Get containers for both charts
             const activityChartContainer = detailsRow.querySelector(`#activity-chart-for-${employeeId}`);
             const leadsChartContainer = detailsRow.querySelector(`#leads-chart-for-${employeeId}`);
             const activityChartTitle = detailsRow.querySelector(`#activity-chart-title-for-${employeeId}`);
@@ -163,23 +214,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     const result = await response.json();
                     candidateContainer.innerHTML = result.html;
 
-                    // Destroy old instances if they exist
                     if (chartInstances[employeeId]) {
                         chartInstances[employeeId].activity.destroy();
                         chartInstances[employeeId].leads.destroy();
                     }
 
-                    // Render employee's activity chart
-                    const empActivityOptions = getBaseChartOptions(result.activity_chart_data.labels, result.activity_chart_data.data, 'Activities', ['#206bc4']);
-                    const empActivityChart = new ApexCharts(activityChartContainer, empActivityOptions);
+                    const empActivityChart = new ApexCharts(activityChartContainer, getBaseChartOptions(result.activity_chart_data.labels, result.activity_chart_data.data, 'Activities', ['#206bc4']));
                     empActivityChart.render();
 
-                    // Render employee's leads chart
-                    const empLeadsOptions = getBaseChartOptions(result.leads_chart_data.labels, result.leads_chart_data.data, 'Leads', ['#f59f00']);
-                    const empLeadsChart = new ApexCharts(leadsChartContainer, empLeadsOptions);
+                    const empLeadsChart = new ApexCharts(leadsChartContainer, getBaseChartOptions(result.leads_chart_data.labels, result.leads_chart_data.data, 'Leads', ['#f59f00']));
                     empLeadsChart.render();
                     
-                    // Store both new instances
                     chartInstances[employeeId] = { activity: empActivityChart, leads: empLeadsChart };
 
                 } catch (error) {

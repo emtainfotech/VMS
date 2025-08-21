@@ -1,0 +1,64 @@
+<div class="card mt-4">
+    <div class="card-header">
+        <h3 class="card-title">{{ list_title }}</h3>
+        <div class="ms-auto">
+            <button class="btn btn-sm btn-close" id="close-details-table" aria-label="Close"></button>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table card-table table-vcenter text-nowrap">
+            <thead>
+                <tr>
+                    <th>Employee Name</th>
+                    <th>Candidate Name</th>
+                    <th>Activity Type</th>
+                    <th>Activity Time</th>
+                    <th>Historical Call Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities %}
+                <tr>
+                    <td>
+                        {% if activity.employee and activity.employee.user %}
+                            {{ activity.employee.first_name|default:activity.employee.user.username }} {{ activity.employee.last_name|default:'' }} ({{ activity.employee.employee_id }})
+                        {% else %}
+                            <span class="text-muted fst-italic">Unknown Employee</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ activity.candidate.candidate_name }}</td>
+                    <td>
+                        {% if activity.action == 'call_made' %}
+                            <span class="badge bg-blue-lt">Call Made</span>
+                        {% elif activity.action == 'created' %}
+                            <span class="badge bg-green-lt">Created</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ activity.timestamp|date:"M d, Y H:i" }}</td>
+                    <td>
+                        {% with logged_status=activity.changes.call_connection.new %}
+                            {% if activity.action == 'call_made' and logged_status is not None %}
+                                {% if logged_status == 'Connected' %}
+                                    <span class="badge bg-success me-1"></span> Connected
+                                {% else %}
+                                    <span class="badge bg-danger me-1"></span> {{ logged_status }}
+                                {% endif %}
+                            {% else %}
+                                {% if activity.candidate.call_connection == 'Connected' %}
+                                    <span class="badge bg-success me-1"></span> Connected
+                                {% else %}
+                                    <span class="badge bg-danger me-1"></span> {{ activity.candidate.call_connection|default:'N/A' }}
+                                {% endif %}
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No activities found matching this criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

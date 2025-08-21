@@ -62,6 +62,7 @@ urlpatterns = [
     path('crm-dashboard/employee/<str:employee_name>/<str:filter_type>/', employee_candidates_list, name='employee_candidates_list'),
     path('admin-employee-calls/', employee_calls_list, name='admin_calls_list'),
     path('ajax/get-employee-candidates/', get_employee_candidates, name='get_employee_candidates'),
+    path('ajax/get-filtered-activity-list/',get_filtered_activity_list, name='get_filtered_activity_list'),
 
 
     path('admin/', admin.site.urls),
