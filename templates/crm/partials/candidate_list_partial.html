@@ -1,5 +1,5 @@
-<div class="bg-light border rounded p-3">
-    <h5>All Activities by {{ employee.user.get_full_name|default:employee.user.username }}</h5>
+<div class="border rounded p-3">
+    <h5>All Activities by {{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})</h5>
     {% if activities %}
     <table class="table table-sm table-striped mt-3">
         <thead>

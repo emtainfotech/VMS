@@ -73,6 +73,9 @@ urlpatterns = [
     path('employee-assignment/', employee_assign_candidate, name='employee_assign_candidate'),
     path('check-mobile-number/', check_mobile_number_duplicate, name='check_mobile_number_duplicate'),
     path('calls-list/', employee_calls_list, name='employee_calls_list'), 
+     # NEW: Add this path for fetching the filtered activity lists for the employee's cards
+    path('ajax/get-employee-filtered-activity-list/', get_employee_filtered_activity_list, name='get_employee_filtered_activity_list'), # NEW: Add this path for fetching the filtered activity lists for the employee's cards
+    
     
 
     path('admin/', admin.site.urls),

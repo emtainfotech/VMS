@@ -1,14 +1,25 @@
 {% extends 'employee/base.html' %} 
 
 {% block content %}
+<style>
+    /* Style for the clickable cards to give user feedback on hover */
+    .clickable-card .card:hover {
+        border-color: #206bc4;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+        cursor: pointer;
+        transform: translateY(-2px);
+        transition: all .2s ease-in-out;
+    }
+</style>
+
 <div class="page-wrapper">
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
-                    <h2 class="page-title">My Call Performance</h2>
+                    <h2 class="page-title">My Performance Report</h2>
                     <div class="text-muted mt-1">
-                        Showing your call data from <strong>{{ start_date|date:"M d, Y" }}</strong> to <strong>{{ end_date|date:"M d, Y" }}</strong>
+                        Showing your activity from <strong>{{ start_date|date:"M d, Y" }}</strong> to <strong>{{ end_date|date:"M d, Y" }}</strong>
                     </div>
                 </div>
                 <div class="col-auto ms-auto d-print-none">
@@ -26,7 +37,7 @@
                 <form method="get" class="row g-3 align-items-end">
                     <div class="col-md-9">
                         <label class="form-label">Select Period</label>
-                        <select name="period" class="form-select">
+                        <select name="period" class="form-select" onchange="this.form.submit()">
                             <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
                             <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
                             <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
@@ -34,45 +45,27 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                        <button type="submit" class="btn btn-primary w-100 d-none d-md-block">Apply Filter</button>
                     </div>
                 </form>
             </div>
 
             <div class="row g-4 mb-4">
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <div class="h1 mb-3">{{ total_calls }}</div>
-                            <div class="text-muted">Total Activities</div>
-                        </div>
-                    </div>
+                <div class="col-md-6 col-lg-3 clickable-card" data-filter-type="total">
+                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3">{{ total_calls }}</div><div class="text-muted">Total Activities</div></div></div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <div class="h1 mb-3 text-success">{{ connected_calls }}</div>
-                            <div class="text-muted">Connected Calls</div>
-                        </div>
-                    </div>
+                <div class="col-md-6 col-lg-3 clickable-card" data-filter-type="connected">
+                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-success">{{ connected_calls }}</div><div class="text-muted">Connected Calls</div></div></div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <div class="h1 mb-3 text-danger">{{ not_connected_calls }}</div>
-                            <div class="text-muted">Not Connected Calls</div>
-                        </div>
-                    </div>
+                <div class="col-md-6 col-lg-3 clickable-card" data-filter-type="not_connected">
+                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-danger">{{ not_connected_calls }}</div><div class="text-muted">Not Connected Calls</div></div></div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <div class="h1 mb-3 text-warning">{{ leads_generated }}</div>
-                            <div class="text-muted">Leads Generated</div>
-                        </div>
-                    </div>
+                <div class="col-md-6 col-lg-3 clickable-card" data-filter-type="leads">
+                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-warning">{{ leads_generated }}</div><div class="text-muted">Leads Generated</div></div></div>
                 </div>
             </div>
+
+            <div id="activity-details-container" class="mb-4"></div>
 
             <div class="row g-4 mb-4">
                 <div class="col-lg-4">
@@ -84,10 +77,22 @@
                     </div>
                 </div>
                 <div class="col-lg-8">
-                    <div class="card">
-                        <div class="card-header"><h3 class="card-title">Activity Volume Trend</h3></div>
-                        <div class="card-body">
-                            <div id="callVolumeChart"></div>
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header"><h3 class="card-title">Activity Volume Trend</h3></div>
+                                <div class="card-body">
+                                    <div id="activityVolumeChart"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header"><h3 class="card-title">Lead Generation Trend</h3></div>
+                                <div class="card-body">
+                                    <div id="leadGenerationChart"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -141,14 +146,12 @@
                                 <td>
                                     {% with lead_status=activity.changes.lead_generate.new %}
                                         {% if activity.action == 'call_made' and lead_status is not None %}
-                                            {# Show the status from the historical log #}
                                             {% if lead_status == 'Hot' or lead_status == 'Converted' %}
                                                 <span class="badge bg-warning-lt">{{ lead_status }}</span>
                                             {% else %}
                                                 {{ lead_status|default:'-' }}
                                             {% endif %}
                                         {% else %}
-                                            {# For 'created' events, show the candidate's current status #}
                                             {{ activity.candidate.lead_generate|default:'-' }}
                                         {% endif %}
                                     {% endwith %}
@@ -174,9 +177,25 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // --- Render Pie Chart ---
+    
+    function getBaseChartOptions(labels, seriesData, chartTitle, colors) {
+        return {
+            chart: { type: 'area', height: 175, zoom: { enabled: false }, toolbar: { show: false } },
+            colors: colors,
+            series: [{ name: chartTitle, data: seriesData }],
+            labels: labels,
+            xaxis: { type: 'category', labels: { style: { fontSize: '10px' } }, tooltip: { enabled: false } },
+            yaxis: { min: 0, tickAmount: 3, labels: { formatter: (val) => val.toFixed(0) } },
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 2 },
+            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
+            tooltip: { theme: 'dark' }
+        };
+    }
+
+    // --- 1. Render Pie Chart ---
     var pieOptions = {
-        chart: { type: 'donut', height: 300 },
+        chart: { type: 'donut', height: 400 },
         series: [{{ connected_calls }}, {{ not_connected_calls }}],
         labels: ['Connected', 'Not Connected'],
         colors: ['#28a745', '#dc3545'],
@@ -185,20 +204,51 @@ document.addEventListener('DOMContentLoaded', function () {
     var pieChart = new ApexCharts(document.querySelector("#callStatusPieChart"), pieOptions);
     pieChart.render();
 
-    // --- Render Area Chart ---
-    var areaOptions = {
-        chart: { type: 'area', height: 300, zoom: { enabled: false }, toolbar: { show: false } },
-        series: [{ name: 'Activities', data: {{ chart_data|safe }} }],
-        labels: {{ chart_labels|safe }},
-        xaxis: { type: 'category' },
-        yaxis: { min: 0, tickAmount: 4, labels: { formatter: (val) => val.toFixed(0) } },
-        dataLabels: { enabled: false },
-        stroke: { curve: 'smooth', width: 2 },
-        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
-        tooltip: { theme: 'dark' }
-    };
-    var areaChart = new ApexCharts(document.querySelector("#callVolumeChart"), areaOptions);
-    areaChart.render();
+    // --- 2. Render Trend Charts ---
+    const activityChart = new ApexCharts(
+        document.querySelector("#activityVolumeChart"), 
+        getBaseChartOptions({{ activity_chart_labels|safe }}, {{ activity_chart_data|safe }}, 'Activities', ['#206bc4'])
+    );
+    activityChart.render();
+
+    const leadGenerationChart = new ApexCharts(
+        document.querySelector("#leadGenerationChart"), 
+        getBaseChartOptions({{ leads_chart_labels|safe }}, {{ leads_chart_data|safe }}, 'Leads Generated', ['#f59f00'])
+    );
+    leadGenerationChart.render();
+
+    // --- 3. Handle Clickable Summary Cards ---
+    const detailsContainer = document.getElementById('activity-details-container');
+    
+    document.querySelectorAll('.clickable-card').forEach(card => {
+        card.addEventListener('click', async function() {
+            const filterType = this.dataset.filterType;
+            
+            detailsContainer.innerHTML = '<div class="card card-body text-center">Loading details...</div>';
+
+            const startDate = "{{ start_date|date:'Y-m-d' }}";
+            const endDate = "{{ end_date|date:'Y-m-d' }}";
+            const url = `{% url 'get_employee_filtered_activity_list' %}?list_type=${filterType}&start_date=${startDate}&end_date=${endDate}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                const html = await response.text();
+                detailsContainer.innerHTML = html;
+                window.scrollTo({ top: detailsContainer.offsetTop - 80, behavior: 'smooth' });
+            } catch (error) {
+                console.error('Failed to fetch details:', error);
+                detailsContainer.innerHTML = '<div class="card card-body text-center text-danger">Failed to load details.</div>';
+            }
+        });
+    });
+
+    // Event listener for the close button on the dynamically loaded table
+    document.addEventListener('click', function(event) {
+        if (event.target && event.target.id === 'close-details-table') {
+            detailsContainer.innerHTML = '';
+        }
+    });
 });
 </script>
 {% endblock %}

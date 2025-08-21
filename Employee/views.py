@@ -3287,6 +3287,50 @@ import calendar
 # from .models import Employee, CandidateActivity, Candidate_registration
 
 
+# Helper function is used for both charts
+def _get_chart_data(queryset, period, start_date, end_date, filter_q=None):
+    if filter_q:
+        queryset = queryset.filter(filter_q)
+
+    chart_labels = []
+    chart_data = []
+    if period == 'year':
+        data_by_month = queryset.annotate(month=TruncMonth('timestamp')).values('month').annotate(count=Count('id')).order_by('month')
+        monthly_counts = {i: 0 for i in range(1, 13)}
+        for group in data_by_month:
+            monthly_counts[group['month'].month] = group['count']
+        chart_labels = [calendar.month_name[i] for i in range(1, 13)]
+        chart_data = list(monthly_counts.values())
+    elif period == 'month':
+        data_by_week = queryset.annotate(week=TruncWeek('timestamp')).values('week').annotate(count=Count('id')).order_by('week')
+        weekly_counts = {}
+        current_date = start_date - timedelta(days=start_date.weekday())
+        while current_date <= end_date:
+            weekly_counts[current_date] = 0
+            current_date += timedelta(weeks=1)
+        for group in data_by_week:
+            if group['week'] in weekly_counts:
+                weekly_counts[group['week']] = group['count']
+        chart_labels = [week_start.strftime('Week of %b %d') for week_start in weekly_counts.keys()]
+        chart_data = list(weekly_counts.values())
+    elif period == 'week':
+        data_by_date = queryset.annotate(date=TruncDate('timestamp')).values('date').annotate(count=Count('id')).order_by('date')
+        daily_counts = {start_date + timedelta(days=i): 0 for i in range(7)}
+        for group in data_by_date:
+            daily_counts[group['date']] = group['count']
+        chart_labels = [day.strftime('%a, %b %d') for day in daily_counts.keys()]
+        chart_data = list(daily_counts.values())
+    elif period == 'today':
+        data_by_hour = queryset.annotate(hour=TruncHour('timestamp')).values('hour').annotate(count=Count('id')).order_by('hour')
+        hourly_counts = {i: 0 for i in range(24)}
+        for group in data_by_hour:
+            hourly_counts[group['hour'].hour] = group['count']
+        chart_labels = [f"{hour}:00" for hour in hourly_counts.keys()]
+        chart_data = list(hourly_counts.values())
+
+    return chart_labels, chart_data
+
+
 def employee_calls_list(request):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -3299,7 +3343,6 @@ def employee_calls_list(request):
     period = request.GET.get('period', 'today')
     today = timezone.now().date()
 
-    # --- 1. Date Filtering Logic ---
     if period == 'week':
         start_date = today - timedelta(days=today.weekday())
         end_date = start_date + timedelta(days=6)
@@ -3310,82 +3353,44 @@ def employee_calls_list(request):
     elif period == 'year':
         start_date = today.replace(month=1, day=1)
         end_date = today.replace(month=12, day=31)
-    else:  # Default to 'today'
+    else:
         start_date = end_date = today
         period = 'today'
 
-    # --- 2. Base Queryset for 'call_made' and 'created' actions ---
     calls_in_period = CandidateActivity.objects.filter(
         employee=logged_in_employee,
         timestamp__date__range=[start_date, end_date],
         action__in=['call_made', 'created']
     ).select_related('candidate')
 
-    # --- 3. Aggregate Counts with Conditional Logic ---
     connected_filter = Q(
         Q(action='call_made', changes__call_connection__new__iexact='Connected') |
         Q(action='created', candidate__call_connection__iexact='Connected')
     )
     
-    # This aggregation is for the main stat cards, but not for leads generated
+    LEAD_STATUSES = ['Hot', 'Converted']
+    lead_transition_filter = (
+        Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) &
+        ~Q(changes__lead_generate__old__in=LEAD_STATUSES)
+    ) | Q(
+        action='created', candidate__lead_generate__in=LEAD_STATUSES
+    )
+    
     call_stats = calls_in_period.aggregate(
         total_calls=Count('id'),
         connected_calls=Count('id', filter=connected_filter),
-        not_connected_calls=Count('id', filter=~connected_filter)
+        not_connected_calls=Count('id', filter=~connected_filter),
+        leads_generated=Count('id', filter=lead_transition_filter)
     )
 
-    # --- START OF NEW LOGIC for Leads Generated ---
-    # This query finds all lead-generating activities...
-    leads_generated_activities = calls_in_period.filter(
-        changes__lead_generate__new__in=['Hot', 'Converted']
-    )
-    # ...then it finds the unique (candidate, day) pairs and counts them.
-    leads_generated_count = leads_generated_activities.annotate(
-        date=TruncDate('timestamp')
-    ).values('candidate_id', 'date').distinct().count()
-    # --- END OF NEW LOGIC ---
+    # Generate data for the main activity chart
+    activity_chart_labels, activity_chart_data = _get_chart_data(calls_in_period, period, start_date, end_date)
+    
+    # Generate data for the new lead generation chart
+    leads_chart_labels, leads_chart_data = _get_chart_data(calls_in_period, period, start_date, end_date, filter_q=lead_transition_filter)
 
-
-    # --- 4. DYNAMIC CHART DATA AGGREGATION ---
-    chart_labels, chart_data = [], []
-    if period == 'year':
-        calls_by_month = calls_in_period.annotate(month=TruncMonth('timestamp')).values('month').annotate(count=Count('id')).order_by('month')
-        monthly_counts = {i: 0 for i in range(1, 13)}
-        for group in calls_by_month:
-            monthly_counts[group['month'].month] = group['count']
-        chart_labels = [calendar.month_name[i] for i in range(1, 13)]
-        chart_data = list(monthly_counts.values())
-    elif period == 'month':
-        calls_by_week = calls_in_period.annotate(week=TruncWeek('timestamp')).values('week').annotate(count=Count('id')).order_by('week')
-        weekly_counts = {}
-        current_date = start_date - timedelta(days=start_date.weekday())
-        while current_date <= end_date:
-            weekly_counts[current_date] = 0
-            current_date += timedelta(weeks=1)
-        for group in calls_by_week:
-            if group['week'] in weekly_counts:
-                weekly_counts[group['week']] = group['count']
-        chart_labels = [week_start.strftime('Week of %b %d') for week_start in weekly_counts.keys()]
-        chart_data = list(weekly_counts.values())
-    elif period == 'week':
-        calls_by_date = calls_in_period.annotate(date=TruncDate('timestamp')).values('date').annotate(count=Count('id')).order_by('date')
-        daily_counts = {start_date + timedelta(days=i): 0 for i in range(7)}
-        for group in calls_by_date:
-            daily_counts[group['date']] = group['count']
-        chart_labels = [day.strftime('%a, %b %d') for day in daily_counts.keys()]
-        chart_data = list(daily_counts.values())
-    elif period == 'today':
-        calls_by_hour = calls_in_period.annotate(hour=TruncHour('timestamp')).values('hour').annotate(count=Count('id')).order_by('hour')
-        hourly_counts = {i: 0 for i in range(24)}
-        for group in calls_by_hour:
-            hourly_counts[group['hour'].hour] = group['count']
-        chart_labels = [f"{hour}:00" for hour in hourly_counts.keys()]
-        chart_data = list(hourly_counts.values())
-
-    # --- 5. Get the full list of activities for the table ---
     activities = calls_in_period.order_by('-timestamp')
 
-    # --- 6. Prepare Context for Template ---
     context = {
         'activities': activities,
         'period': period,
@@ -3394,14 +3399,67 @@ def employee_calls_list(request):
         'total_calls': call_stats.get('total_calls', 0),
         'connected_calls': call_stats.get('connected_calls', 0),
         'not_connected_calls': call_stats.get('not_connected_calls', 0),
-        'leads_generated': leads_generated_count, # Use the new accurate count
-        'chart_labels': chart_labels,
-        'chart_data': chart_data,
+        'leads_generated': call_stats.get('leads_generated', 0),
+        'activity_chart_labels': activity_chart_labels,
+        'activity_chart_data': activity_chart_data,
+        'leads_chart_labels': leads_chart_labels,
+        'leads_chart_data': leads_chart_data,
     }
     
     return render(request, 'employee/employee-calls-list.html', context)
 
 
+
+# NEW: Add this entire function to your views.py file
+@login_required
+def get_employee_filtered_activity_list(request):
+    """
+    This view handles AJAX requests when a summary card is clicked on the
+    individual employee dashboard. It returns a rendered HTML table of activities
+    filtered for the logged-in employee.
+    """
+    list_type = request.GET.get('list_type')
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+
+    try:
+        logged_in_employee = Employee.objects.get(user=request.user)
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    except (Employee.DoesNotExist, ValueError, TypeError):
+        return JsonResponse({"error": "Invalid request or date format."}, status=400)
+
+    # Base queryset for all activities for the logged-in employee in the period
+    activities = CandidateActivity.objects.filter(
+        employee=logged_in_employee,
+        timestamp__date__range=[start_date, end_date],
+        action__in=['call_made', 'created']
+    ).select_related('candidate').order_by('-timestamp')
+
+    list_title = "My All Activities"
+    LEAD_STATUSES = ['Hot', 'Converted']
+
+    # Apply the specific filter based on which card was clicked
+    if list_type == 'connected':
+        list_title = "My Connected Activities"
+        connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
+        activities = activities.filter(connected_filter)
+    elif list_type == 'not_connected':
+        list_title = "My Not Connected Activities"
+        connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
+        activities = activities.filter(~connected_filter)
+    elif list_type == 'leads':
+        list_title = "My Lead Generating Activities"
+        leads_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
+        activities = activities.filter(leads_filter)
+
+    context = {
+        'activities': activities,
+        'list_title': list_title,
+    }
+    
+    # Render a partial template and return it as HTML
+    return render(request, 'employee/partials/activity_list_partial.html', context)
 
 # def calculate_percentage(part, whole):
 #     return round((part / whole) * 100, 1) if whole > 0 else 0

@@ -9,25 +9,16 @@
         <table class="table card-table table-vcenter text-nowrap">
             <thead>
                 <tr>
-                    <th>Employee Name</th>
                     <th>Candidate Name</th>
                     <th>Activity Type</th>
                     <th>Activity Time</th>
                     <th>Historical Call Status</th>
                     <th>Historical Lead Status</th>
-                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for activity in activities %}
                 <tr>
-                    <td>
-                        {% if activity.employee and activity.employee.user %}
-                            {{ activity.employee.first_name }} {{ activity.employee.last_name }} ({{ activity.employee.user.username }})
-                        {% else %}
-                            <span class="text-muted fst-italic">Unknown Employee</span>
-                        {% endif %}
-                    </td>
                     <td>{{ activity.candidate.candidate_name }}</td>
                     <td>
                         {% if activity.action == 'call_made' %}
@@ -57,25 +48,20 @@
                     <td>
                         {% with lead_status=activity.changes.lead_generate.new %}
                             {% if activity.action == 'call_made' and lead_status is not None %}
-                                {# Show the status from the historical log #}
                                 {% if lead_status == 'Hot' or lead_status == 'Converted' %}
                                     <span class="badge bg-warning-lt">{{ lead_status }}</span>
                                 {% else %}
                                     {{ lead_status|default:'-' }}
                                 {% endif %}
                             {% else %}
-                                {# For 'created' events, show the candidate's current status #}
                                 {{ activity.candidate.lead_generate|default:'-' }}
                             {% endif %}
                         {% endwith %}
                     </td>
-                    <td class="text-end">
-                        <a href="{% url 'admin_candidate_profile' activity.candidate.id %}" class="btn btn-sm btn-outline-primary">View Profile</a>
-                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center">No activities found matching this criteria.</td>
+                    <td colspan="5" class="text-center">No activities found matching this criteria.</td>
                 </tr>
                 {% endfor %}
             </tbody>
