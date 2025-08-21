@@ -4744,17 +4744,26 @@ from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMon
 # from django.http import JsonResponse
 # from django.template.loader import render_to_string
 # UPDATED: Helper function can now accept an extra filter
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.utils import timezone
+from datetime import timedelta, datetime, date
+import calendar
+from django.db.models import Count, Max, Q, Subquery, OuterRef, IntegerField
+from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMonth, Coalesce
+# from .models import Employee, CandidateActivity, Candidate_registration
 
-# UPDATED: Helper function can now accept an extra filter
+# HELPER FUNCTION FOR DYNAMIC CHART DATA (No changes)
 def _get_chart_data(queryset, start_date, end_date, filter_q=None):
     if filter_q:
         queryset = queryset.filter(filter_q)
 
+    # The rest of this function remains the same...
     chart_labels = []
     chart_data = []
     time_delta = end_date - start_date
 
-    # The rest of the function's logic for time-based grouping remains the same
     if time_delta.days <= 1:
         calls_by_hour = queryset.annotate(hour=TruncHour('timestamp')).values('hour').annotate(count=Count('id')).order_by('hour')
         hourly_counts = {i: 0 for i in range(24)}
@@ -4799,7 +4808,6 @@ def employee_calls_list(request):
     
     today = timezone.now().date()
 
-    # Date filtering logic...
     if start_date_str and end_date_str:
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -4825,34 +4833,59 @@ def employee_calls_list(request):
     base_activity_filter = Q(candidateactivity__timestamp__date__range=[start_date, end_date], candidateactivity__action__in=['call_made', 'created'])
     connected_filter = Q(Q(candidateactivity__action='call_made', candidateactivity__changes__call_connection__new__iexact='Connected') | Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected'))
     
-    # Define the filter for what counts as a lead generation event
-    leads_generated_filter_q = Q(candidateactivity__changes__lead_generate__new__in=['Hot', 'Converted'])
+    # --- START OF UPDATED LOGIC for Leads Generated ---
+    # This filter now checks both 'call_made' and 'created' actions for lead status
+    leads_generated_filter = Q(
+        Q(candidateactivity__action='call_made', candidateactivity__changes__lead_generate__new__in=['Hot', 'Converted']) |
+        Q(candidateactivity__action='created', candidateactivity__candidate__lead_generate__in=['Hot', 'Converted'])
+    )
 
+    # Subquery to count leads once per candidate per day FOR EACH employee
+    leads_subquery = CandidateActivity.objects.filter(
+        employee_id=OuterRef('pk'),
+        timestamp__date__range=[start_date, end_date],
+        action__in=['call_made', 'created']
+    ).filter(
+        Q(action='call_made', changes__lead_generate__new__in=['Hot', 'Converted']) |
+        Q(action='created', candidate__lead_generate__in=['Hot', 'Converted'])
+    ).annotate(date=TruncDate('timestamp')).values('candidate_id', 'date').distinct().values('employee_id').annotate(count=Count('id')).values('count')
+    
     employee_stats = Employee.objects.annotate(
         total_calls=Count('candidateactivity', filter=base_activity_filter),
         last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
         connected_calls=Count('candidateactivity', filter=base_activity_filter & connected_filter),
         not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~connected_filter),
-        leads_generated=Count('candidateactivity', filter=base_activity_filter & leads_generated_filter_q)
+        # Use the new subquery for the accurate lead count
+        leads_generated=Coalesce(Subquery(leads_subquery, output_field=IntegerField()), 0)
     ).filter(total_calls__gt=0).order_by('-total_calls')
 
     all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created'])
 
     total_connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
-    total_leads_filter_q = Q(changes__lead_generate__new__in=['Hot', 'Converted'])
     
-    total_stats = all_activities_queryset.aggregate(
-        total_activities=Count('id'),
-        total_connected=Count('id', filter=total_connected_filter),
-        total_not_connected=Count('id', filter=~total_connected_filter),
-        total_leads_generated=Count('id', filter=total_leads_filter_q)
+    # This filter is for the main aggregation totals below
+    total_leads_filter = Q(
+        Q(action='call_made', changes__lead_generate__new__in=['Hot', 'Converted']) |
+        Q(action='created', candidate__lead_generate__in=['Hot', 'Converted'])
     )
 
-    # Generate chart data for Total Activities
-    main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date)
+    total_stats_agg = all_activities_queryset.aggregate(
+        total_activities=Count('id'),
+        total_connected=Count('id', filter=total_connected_filter),
+        total_not_connected=Count('id', filter=~total_connected_filter)
+    )
+
+    # Calculate total unique leads for the main summary card
+    total_leads_generated_count = all_activities_queryset.filter(
+        total_leads_filter
+    ).annotate(date=TruncDate('timestamp')).values('candidate_id', 'date').distinct().count()
     
-    # NEW: Generate chart data for Leads Generated
-    leads_chart_labels, leads_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date, filter_q=total_leads_filter_q)
+    total_stats = {**total_stats_agg, 'total_leads_generated': total_leads_generated_count}
+
+    # Generate chart data for Total Activities and Leads
+    main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date)
+    leads_chart_labels, leads_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date, filter_q=total_leads_filter)
+    # --- END OF UPDATED LOGIC ---
 
     context = {
         'employee_stats': employee_stats,
@@ -4867,8 +4900,8 @@ def employee_calls_list(request):
     }
     return render(request, 'crm/employee-calls-list.html', context)
 
-
 def get_employee_candidates(request):
+    # This view does not need changes, it remains the same
     employee_id = request.GET.get('employee_id')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
@@ -4892,11 +4925,9 @@ def get_employee_candidates(request):
             {'activities': employee_activities_queryset, 'employee': employee}
         )
         
-        # Get chart data for Total Activities
         activity_chart_labels, activity_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date)
         
-        # NEW: Get chart data for Leads Generated
-        leads_filter_q = Q(changes__lead_generate__new__in=['Hot', 'Converted'])
+        leads_filter_q = Q(Q(action='call_made', changes__lead_generate__new__in=['Hot', 'Converted']) | Q(action='created', candidate__lead_generate__in=['Hot', 'Converted']))
         leads_chart_labels, leads_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date, filter_q=leads_filter_q)
 
         return JsonResponse({
