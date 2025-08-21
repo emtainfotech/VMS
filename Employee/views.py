@@ -3327,20 +3327,27 @@ def employee_calls_list(request):
         Q(action='created', candidate__call_connection__iexact='Connected')
     )
     
+    # This aggregation is for the main stat cards, but not for leads generated
     call_stats = calls_in_period.aggregate(
         total_calls=Count('id'),
         connected_calls=Count('id', filter=connected_filter),
-        not_connected_calls=Count('id', filter=~connected_filter),
-        
-        # --- NEW: Count for Leads Generated ---
-        # This counts activities where the historical log shows a change
-        # to 'Hot' or 'Converted' on that specific day.
-        leads_generated=Count('id', filter=Q(changes__lead_generate__new__in=['Hot', 'Converted']))
+        not_connected_calls=Count('id', filter=~connected_filter)
     )
+
+    # --- START OF NEW LOGIC for Leads Generated ---
+    # This query finds all lead-generating activities...
+    leads_generated_activities = calls_in_period.filter(
+        changes__lead_generate__new__in=['Hot', 'Converted']
+    )
+    # ...then it finds the unique (candidate, day) pairs and counts them.
+    leads_generated_count = leads_generated_activities.annotate(
+        date=TruncDate('timestamp')
+    ).values('candidate_id', 'date').distinct().count()
+    # --- END OF NEW LOGIC ---
+
 
     # --- 4. DYNAMIC CHART DATA AGGREGATION ---
     chart_labels, chart_data = [], []
-    # (The chart generation logic remains the same as it correctly plots total activities)
     if period == 'year':
         calls_by_month = calls_in_period.annotate(month=TruncMonth('timestamp')).values('month').annotate(count=Count('id')).order_by('month')
         monthly_counts = {i: 0 for i in range(1, 13)}
@@ -3387,12 +3394,15 @@ def employee_calls_list(request):
         'total_calls': call_stats.get('total_calls', 0),
         'connected_calls': call_stats.get('connected_calls', 0),
         'not_connected_calls': call_stats.get('not_connected_calls', 0),
-        'leads_generated': call_stats.get('leads_generated', 0), # Add new count to context
+        'leads_generated': leads_generated_count, # Use the new accurate count
         'chart_labels': chart_labels,
         'chart_data': chart_data,
     }
     
     return render(request, 'employee/employee-calls-list.html', context)
+
+
+
 # def calculate_percentage(part, whole):
 #     return round((part / whole) * 100, 1) if whole > 0 else 0
 
