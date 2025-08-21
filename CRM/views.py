@@ -4833,7 +4833,11 @@ def employee_calls_list(request):
     
     LEAD_STATUSES = ['Hot', 'Converted']
     lead_transition_filter_prefixed = Q(
-        Q(candidateactivity__action='call_made', candidateactivity__changes__lead_generate__new__in=LEAD_STATUSES, ~Q(candidateactivity__changes__lead_generate__old__in=LEAD_STATUSES)) |
+        Q(
+            Q(candidateactivity__action='call_made') &
+            Q(candidateactivity__changes__lead_generate__new__in=LEAD_STATUSES) &
+            ~Q(candidateactivity__changes__lead_generate__old__in=LEAD_STATUSES)
+        ) |
         Q(candidateactivity__action='created', candidateactivity__candidate__lead_generate__in=LEAD_STATUSES)
     )
 
@@ -4852,7 +4856,7 @@ def employee_calls_list(request):
     # --- START OF FIX ---
     # Define the accurate lead transition filter for the main aggregation
     total_leads_transition_filter = Q(
-        Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES, ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) |
+        Q(Q(action='call_made') & Q(changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) |
         Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
     )
     
@@ -4910,7 +4914,7 @@ def get_employee_candidates(request):
         
         LEAD_STATUSES = ['Hot', 'Converted']
         leads_filter_q = Q(
-            Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES, ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) |
+            Q(action='call_made') & Q(changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES) |
             Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
         )
         leads_chart_labels, leads_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date, filter_q=leads_filter_q)
