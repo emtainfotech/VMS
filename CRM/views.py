@@ -4743,6 +4743,7 @@ from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMon
 # from django.http import JsonResponse
 # from django.template.loader import render_to_string
 
+
 # HELPER FUNCTION FOR DYNAMIC CHART DATA (No changes)
 def _get_chart_data(queryset, start_date, end_date):
     chart_labels = []
@@ -4825,6 +4826,7 @@ def employee_calls_list(request):
         Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected')
     )
 
+    # UPDATED: Added 'leads_generated' to the employee annotation
     employee_stats = Employee.objects.annotate(
         total_calls=Count('candidateactivity', filter=base_activity_filter),
         last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
@@ -4840,18 +4842,10 @@ def employee_calls_list(request):
         action__in=['call_made', 'created']
     )
 
-    # NEW: Define a prefix-less filter for the main aggregation
-    total_connected_filter = Q(
-        Q(action='call_made', changes__call_connection__new__iexact='Connected') |
-        Q(action='created', candidate__call_connection__iexact='Connected')
-    )
-
-    # UPDATED: Aggregate all total stats for the summary cards
+    # NEW: Aggregate total stats for the summary cards at the top
     total_stats = all_activities_queryset.aggregate(
         total_activities=Count('id'),
-        total_leads_generated=Count('id', filter=Q(changes__lead_generate__new__in=['Hot', 'Converted'])),
-        total_connected=Count('id', filter=total_connected_filter),
-        total_not_connected=Count('id', filter=~total_connected_filter)
+        total_leads_generated=Count('id', filter=Q(changes__lead_generate__new__in=['Hot', 'Converted']))
     )
 
     main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date)
@@ -4863,13 +4857,13 @@ def employee_calls_list(request):
         'end_date': end_date,
         'main_chart_labels': main_chart_labels,
         'main_chart_data': main_chart_data,
-        'total_stats': total_stats,
+        'total_stats': total_stats, # Pass total stats to the template
     }
     return render(request, 'crm/employee-calls-list.html', context)
 
 
 def get_employee_candidates(request):
-    # This view does not need changes
+    # This view does not need changes, it remains the same
     employee_id = request.GET.get('employee_id')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
