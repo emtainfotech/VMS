@@ -1,4 +1,4 @@
-<div class="bg-light border rounded p-3">
+<div class=" border rounded p-3">
     <h5>All Activities by {{ employee.user.get_full_name|default:employee.user.username }}</h5>
     {% if activities %}
     <table class="table table-sm table-striped mt-3">
@@ -8,6 +8,7 @@
                 <th>Activity Type</th>
                 <th>Activity Time</th>
                 <th>Historical Call Status</th>
+                <th>Historical Lead Status</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -41,6 +42,19 @@
                             {% else %}
                                 <span class="badge bg-secondary me-1"></span> N/A
                             {% endif %}
+                        {% endif %}
+                    {% endwith %}
+                </td>
+                <td>
+                    {% with lead_status=activity.changes.lead_generate.new %}
+                        {% if activity.action == 'call_made' and lead_status is not None %}
+                            {% if lead_status == 'Hot' or lead_status == 'Converted' %}
+                                <span class="badge bg-warning-lt">{{ lead_status }}</span>
+                            {% else %}
+                                {{ lead_status|default:'-' }}
+                            {% endif %}
+                        {% else %}
+                            {{ activity.candidate.lead_generate|default:'-' }}
                         {% endif %}
                     {% endwith %}
                 </td>

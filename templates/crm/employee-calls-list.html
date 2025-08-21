@@ -17,39 +17,70 @@
 
     <div class="page-body">
         <div class="container-xl">
-            <div class="card">
-                <div class="card-header"><h3 class="card-title">Filter Report</h3></div>
-                <div class="card-body">
-                    <form method="get" action="{% url 'admin_calls_list' %}">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-md-3">
-                                <label class="form-label">Period</label>
-                                <select name="period" class="form-select">
-                                    <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
-                                    <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
-                                    <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
-                                    <option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option>
-                                    <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Start Date</label>
-                                <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">End Date</label>
-                                <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
-                            </div>
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
-                            </div>
+            <div class="card card-body mb-4">
+                <form method="get" action="{% url 'admin_calls_list' %}">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Period</label>
+                            <select name="period" class="form-select">
+                                <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
+                                <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
+                                <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
+                                <option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option>
+                                <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option>
+                            </select>
                         </div>
-                    </form>
+                        <div class="col-md-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="row g-4 mb-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="h1 mb-3">{{ total_stats.total_activities }}</div>
+                            <div class="text-muted">Total Activities</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="h1 mb-3 text-success">{{ total_stats.total_connected }}</div>
+                            <div class="text-muted">Total Connected</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="h1 mb-3 text-danger">{{ total_stats.total_not_connected }}</div>
+                            <div class="text-muted">Total Not Connected</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="h1 mb-3 text-warning">{{ total_stats.total_leads_generated }}</div>
+                            <div class="text-muted">Total Leads Generated</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
             <div class="card mt-4">
-                <div class="card-header"><h3 class="card-title">All Employees: Call Volume Trend</h3></div>
+                <div class="card-header"><h3 class="card-title">All Employees: Activity Volume Trend</h3></div>
                 <div class="card-body">
                     <div id="mainChart"></div>
                 </div>
@@ -65,6 +96,7 @@
                                 <th>Total Activities</th>
                                 <th>Connected</th>
                                 <th>Not Connected</th>
+                                <th>Leads Generated</th>
                                 <th>Last Activity</th>
                             </tr>
                         </thead>
@@ -75,13 +107,14 @@
                                 <td><span class="badge bg-blue text-blue-fg">{{ stat.total_calls }}</span></td>
                                 <td><span class="badge bg-green text-green-fg">{{ stat.connected_calls }}</span></td>
                                 <td><span class="badge bg-red text-red-fg">{{ stat.not_connected_calls }}</span></td>
+                                <td><span class="badge bg-warning text-warning-fg">{{ stat.leads_generated }}</span></td>
                                 <td>{% if stat.last_call_made %}{{ stat.last_call_made|date:"M d, Y H:i" }}{% else %}N/A{% endif %}</td>
                             </tr>
                             <tr class="candidate-details-row" id="details-for-{{ stat.id }}" style="display: none;">
-                                <td colspan="5" class="p-0">
+                                <td colspan="6" class="p-0">
                                     <div class="details-container p-3">
                                         <div class="card mb-3">
-                                             <div class="card-header"><h3 class="card-title" id="chart-title-for-{{ stat.id }}">Call Volume Trend</h3></div>
+                                             <div class="card-header"><h3 class="card-title" id="chart-title-for-{{ stat.id }}">Activity Trend</h3></div>
                                             <div class="card-body">
                                                 <div id="chart-for-{{ stat.id }}"></div>
                                             </div>
@@ -91,7 +124,7 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="5" class="text-center">No call data found for the selected period.</td></tr>
+                            <tr><td colspan="6" class="text-center">No call data found for the selected period.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -102,71 +135,61 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const chartInstances = {};
-
-    function getBaseChartOptions(labels, seriesData, chartTitle) {
-        return {
-            chart: { type: 'area', height: 300, zoom: { enabled: false }, toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } } },
-            series: [{ name: chartTitle, data: seriesData }],
-            labels: labels,
-            xaxis: { type: 'category', labels: { rotate: -20, rotateAlways: false, hideOverlappingLabels: true, trim: true } },
-            yaxis: { min: 0, tickAmount: 5, labels: { formatter: (val) => val.toFixed(0) } },
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 2 },
-            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
-            tooltip: { theme: 'dark' }
-        };
-    }
-
-    const mainChartOptions = getBaseChartOptions({{ main_chart_labels|safe }}, {{ main_chart_data|safe }}, 'Total Activities');
-    const mainChart = new ApexCharts(document.querySelector("#mainChart"), mainChartOptions);
-    mainChart.render();
-
-    document.querySelectorAll('.employee-row').forEach(row => {
-        row.addEventListener('click', async function () {
-            const employeeId = this.dataset.employeeId;
-            const employeeName = this.dataset.employeeName;
-            const detailsRow = document.getElementById(`details-for-${employeeId}`);
-            const candidateContainer = detailsRow.querySelector('.candidate-list-container');
-            const chartContainer = detailsRow.querySelector(`#chart-for-${employeeId}`);
-            const chartTitle = detailsRow.querySelector(`#chart-title-for-${employeeId}`);
-            const isVisible = detailsRow.style.display === 'table-row';
-
-            detailsRow.style.display = isVisible ? 'none' : 'table-row';
-            this.classList.toggle('active', !isVisible);
-
-            if (!isVisible && candidateContainer.innerHTML.trim() === '') {
-                candidateContainer.innerHTML = '<div class="text-center p-4">Loading details...</div>';
-                chartTitle.innerText = `Activity Trend for ${employeeName}`;
-
-                const startDate = "{{ start_date|date:'Y-m-d' }}";
-                const endDate = "{{ end_date|date:'Y-m-d' }}";
-                const url = `{% url 'get_employee_candidates' %}?employee_id=${employeeId}&start_date=${startDate}&end_date=${endDate}`;
-                
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                    
-                    const result = await response.json();
-                    candidateContainer.innerHTML = result.html;
-
-                    if (chartInstances[employeeId]) {
-                        chartInstances[employeeId].destroy();
+    // Javascript for charts and expandable rows remains the same
+    document.addEventListener('DOMContentLoaded', function () {
+        const chartInstances = {};
+        function getBaseChartOptions(labels, seriesData, chartTitle) {
+            return {
+                chart: { type: 'area', height: 300, zoom: { enabled: false }, toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } } },
+                series: [{ name: chartTitle, data: seriesData }],
+                labels: labels,
+                xaxis: { type: 'category', labels: { rotate: -20, rotateAlways: false, hideOverlappingLabels: true, trim: true } },
+                yaxis: { min: 0, tickAmount: 5, labels: { formatter: (val) => val.toFixed(0) } },
+                dataLabels: { enabled: false },
+                stroke: { curve: 'smooth', width: 2 },
+                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
+                tooltip: { theme: 'dark' }
+            };
+        }
+        const mainChartOptions = getBaseChartOptions({{ main_chart_labels|safe }}, {{ main_chart_data|safe }}, 'Total Activities');
+        const mainChart = new ApexCharts(document.querySelector("#mainChart"), mainChartOptions);
+        mainChart.render();
+        document.querySelectorAll('.employee-row').forEach(row => {
+            row.addEventListener('click', async function () {
+                const employeeId = this.dataset.employeeId;
+                const employeeName = this.dataset.employeeName;
+                const detailsRow = document.getElementById(`details-for-${employeeId}`);
+                const candidateContainer = detailsRow.querySelector('.candidate-list-container');
+                const chartContainer = detailsRow.querySelector(`#chart-for-${employeeId}`);
+                const chartTitle = detailsRow.querySelector(`#chart-title-for-${employeeId}`);
+                const isVisible = detailsRow.style.display === 'table-row';
+                detailsRow.style.display = isVisible ? 'none' : 'table-row';
+                this.classList.toggle('active', !isVisible);
+                if (!isVisible && candidateContainer.innerHTML.trim() === '') {
+                    candidateContainer.innerHTML = '<div class="text-center p-4">Loading details...</div>';
+                    chartTitle.innerText = `Activity Trend for ${employeeName}`;
+                    const startDate = "{{ start_date|date:'Y-m-d' }}";
+                    const endDate = "{{ end_date|date:'Y-m-d' }}";
+                    const url = `{% url 'get_employee_candidates' %}?employee_id=${employeeId}&start_date=${startDate}&end_date=${endDate}`;
+                    try {
+                        const response = await fetch(url);
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                        const result = await response.json();
+                        candidateContainer.innerHTML = result.html;
+                        if (chartInstances[employeeId]) {
+                            chartInstances[employeeId].destroy();
+                        }
+                        const employeeChartOptions = getBaseChartOptions(result.chart_data.labels, result.chart_data.data, 'Activities');
+                        chartInstances[employeeId] = new ApexCharts(chartContainer, employeeChartOptions);
+                        chartInstances[employeeId].render();
+                    } catch (error) {
+                        console.error('Failed to fetch employee details:', error);
+                        candidateContainer.innerHTML = '<div class="text-center p-4 text-danger">Failed to load data.</div>';
                     }
-                    const employeeChartOptions = getBaseChartOptions(result.chart_data.labels, result.chart_data.data, 'Activities');
-                    chartInstances[employeeId] = new ApexCharts(chartContainer, employeeChartOptions);
-                    chartInstances[employeeId].render();
-
-                } catch (error) {
-                    console.error('Failed to fetch employee details:', error);
-                    candidateContainer.innerHTML = '<div class="text-center p-4 text-danger">Failed to load data.</div>';
                 }
-            }
+            });
         });
     });
-});
 </script>
 {% endblock %}

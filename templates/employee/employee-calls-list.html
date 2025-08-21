@@ -40,15 +40,15 @@
             </div>
 
             <div class="row g-4 mb-4">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card">
                         <div class="card-body text-center">
                             <div class="h1 mb-3">{{ total_calls }}</div>
-                            <div class="text-muted">Total Calls Made</div>
+                            <div class="text-muted">Total Activities</div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card">
                         <div class="card-body text-center">
                             <div class="h1 mb-3 text-success">{{ connected_calls }}</div>
@@ -56,11 +56,19 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card">
                         <div class="card-body text-center">
                             <div class="h1 mb-3 text-danger">{{ not_connected_calls }}</div>
                             <div class="text-muted">Not Connected Calls</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="h1 mb-3 text-warning">{{ leads_generated }}</div>
+                            <div class="text-muted">Leads Generated</div>
                         </div>
                     </div>
                 </div>
@@ -77,7 +85,7 @@
                 </div>
                 <div class="col-lg-8">
                     <div class="card">
-                        <div class="card-header"><h3 class="card-title">Call Volume Trend</h3></div>
+                        <div class="card-header"><h3 class="card-title">Activity Volume Trend</h3></div>
                         <div class="card-body">
                             <div id="callVolumeChart"></div>
                         </div>
@@ -86,15 +94,16 @@
             </div>
 
             <div class="card">
-                <div class="card-header"><h3 class="card-title">All Calls in this Period</h3></div>
+                <div class="card-header"><h3 class="card-title">All Activities in this Period</h3></div>
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter text-nowrap datatable">
                         <thead>
                             <tr>
                                 <th>Candidate Name</th>
-                                <th>Mobile Number</th>
-                                <th>Call Time</th>
+                                <th>Activity Type</th>
+                                <th>Activity Time</th>
                                 <th>Historical Call Status</th>
+                                <th>Historical Lead Status</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -102,13 +111,17 @@
                             {% for activity in activities %}
                             <tr>
                                 <td>{{ activity.candidate.candidate_name }}</td>
-                                <td>{{ activity.candidate.candidate_mobile_number }}</td>
+                                <td>
+                                    {% if activity.action == 'call_made' %}
+                                        <span class="badge bg-blue-lt">Call Made</span>
+                                    {% elif activity.action == 'created' %}
+                                        <span class="badge bg-green-lt">Created</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-lt">{{ activity.get_action_display }}</span>
+                                    {% endif %}
+                                </td>
                                 <td>{{ activity.timestamp|date:"M d, Y H:i" }}</td>
                                 <td>
-                                    {% comment %}
-                                        For 'call_made' actions, prioritize the historical status from the JSON log.
-                                        For 'created' actions or older logs, fall back to the candidate's field.
-                                    {% endcomment %}
                                     {% with logged_status=activity.changes.call_connection.new %}
                                         {% if activity.action == 'call_made' and logged_status is not None %}
                                             {% if logged_status == 'Connected' %}
@@ -125,13 +138,28 @@
                                         {% endif %}
                                     {% endwith %}
                                 </td>
+                                <td>
+                                    {% with lead_status=activity.changes.lead_generate.new %}
+                                        {% if activity.action == 'call_made' and lead_status is not None %}
+                                            {# Show the status from the historical log #}
+                                            {% if lead_status == 'Hot' or lead_status == 'Converted' %}
+                                                <span class="badge bg-warning-lt">{{ lead_status }}</span>
+                                            {% else %}
+                                                {{ lead_status|default:'-' }}
+                                            {% endif %}
+                                        {% else %}
+                                            {# For 'created' events, show the candidate's current status #}
+                                            {{ activity.candidate.lead_generate|default:'-' }}
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
                                 <td class="text-end">
                                     <a href="{% url 'employee_candidate_profile' activity.candidate.id %}" class="btn btn-sm btn-outline-primary">View Profile</a>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center">You have not made any calls in this period.</td>
+                                <td colspan="6" class="text-center">You have no activities in this period.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -160,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- Render Area Chart ---
     var areaOptions = {
         chart: { type: 'area', height: 300, zoom: { enabled: false }, toolbar: { show: false } },
-        series: [{ name: 'Calls Made', data: {{ chart_data|safe }} }],
+        series: [{ name: 'Activities', data: {{ chart_data|safe }} }],
         labels: {{ chart_labels|safe }},
         xaxis: { type: 'category' },
         yaxis: { min: 0, tickAmount: 4, labels: { formatter: (val) => val.toFixed(0) } },

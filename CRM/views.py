@@ -4743,16 +4743,13 @@ from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMon
 # from django.http import JsonResponse
 # from django.template.loader import render_to_string
 
-
-
-# HELPER FUNCTION FOR DYNAMIC CHART DATA
+# HELPER FUNCTION FOR DYNAMIC CHART DATA (No changes)
 def _get_chart_data(queryset, start_date, end_date):
     chart_labels = []
     chart_data = []
     time_delta = end_date - start_date
 
     if time_delta.days <= 1:
-        # TODAY/CUSTOM DAY: Group by Hour
         calls_by_hour = queryset.annotate(hour=TruncHour('timestamp')).values('hour').annotate(count=Count('id')).order_by('hour')
         hourly_counts = {i: 0 for i in range(24)}
         for group in calls_by_hour:
@@ -4760,7 +4757,6 @@ def _get_chart_data(queryset, start_date, end_date):
         chart_labels = [f"{hour}:00" for hour in hourly_counts.keys()]
         chart_data = list(hourly_counts.values())
     elif time_delta.days <= 14:
-        # WEEK/CUSTOM <14 DAYS: Group by Day
         calls_by_date = queryset.annotate(date=TruncDate('timestamp')).values('date').annotate(count=Count('id')).order_by('date')
         days_in_range = (end_date - start_date).days + 1
         daily_counts = {start_date + timedelta(days=i): 0 for i in range(days_in_range)}
@@ -4769,7 +4765,6 @@ def _get_chart_data(queryset, start_date, end_date):
         chart_labels = [day.strftime('%a, %b %d') for day in daily_counts.keys()]
         chart_data = list(daily_counts.values())
     elif time_delta.days <= 92:
-        # MONTH/CUSTOM <3 MONTHS: Group by Week
         calls_by_week = queryset.annotate(week=TruncWeek('timestamp')).values('week').annotate(count=Count('id')).order_by('week')
         weekly_counts = {}
         current_date = start_date - timedelta(days=start_date.weekday())
@@ -4782,7 +4777,6 @@ def _get_chart_data(queryset, start_date, end_date):
         chart_labels = [week_start.strftime('Week of %b %d') for week_start in weekly_counts.keys()]
         chart_data = list(weekly_counts.values())
     else:
-        # YEAR/CUSTOM >3 MONTHS: Group by Month
         calls_by_month = queryset.annotate(month=TruncMonth('timestamp')).values('month').annotate(count=Count('id')).order_by('month')
         monthly_counts = {i: 0 for i in range(1, 13)}
         for group in calls_by_month:
@@ -4835,13 +4829,31 @@ def employee_calls_list(request):
         total_calls=Count('candidateactivity', filter=base_activity_filter),
         last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
         connected_calls=Count('candidateactivity', filter=base_activity_filter & connected_filter),
-        not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~connected_filter)
+        not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~connected_filter),
+        leads_generated=Count('candidateactivity', filter=base_activity_filter & Q(
+            candidateactivity__changes__lead_generate__new__in=['Hot', 'Converted']
+        ))
     ).filter(total_calls__gt=0).order_by('-total_calls')
 
     all_activities_queryset = CandidateActivity.objects.filter(
         timestamp__date__range=[start_date, end_date],
         action__in=['call_made', 'created']
     )
+
+    # NEW: Define a prefix-less filter for the main aggregation
+    total_connected_filter = Q(
+        Q(action='call_made', changes__call_connection__new__iexact='Connected') |
+        Q(action='created', candidate__call_connection__iexact='Connected')
+    )
+
+    # UPDATED: Aggregate all total stats for the summary cards
+    total_stats = all_activities_queryset.aggregate(
+        total_activities=Count('id'),
+        total_leads_generated=Count('id', filter=Q(changes__lead_generate__new__in=['Hot', 'Converted'])),
+        total_connected=Count('id', filter=total_connected_filter),
+        total_not_connected=Count('id', filter=~total_connected_filter)
+    )
+
     main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date)
 
     context = {
@@ -4851,11 +4863,13 @@ def employee_calls_list(request):
         'end_date': end_date,
         'main_chart_labels': main_chart_labels,
         'main_chart_data': main_chart_data,
+        'total_stats': total_stats,
     }
     return render(request, 'crm/employee-calls-list.html', context)
 
 
 def get_employee_candidates(request):
+    # This view does not need changes
     employee_id = request.GET.get('employee_id')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
@@ -4874,7 +4888,6 @@ def get_employee_candidates(request):
             action__in=['call_made', 'created']
         ).select_related('candidate').order_by('-timestamp')
 
-        # UPDATED: Pass the full list of activities, not unique candidates
         html_content = render_to_string(
             'crm/partials/candidate_list_partial.html',
             {'activities': employee_activities_queryset, 'employee': employee}
@@ -4889,6 +4902,5 @@ def get_employee_candidates(request):
                 'data': chart_data,
             }
         })
-
     except (ValueError, Employee.DoesNotExist):
         return JsonResponse({"error": "Invalid request."}, status=400)
