@@ -810,7 +810,6 @@ class Candidate_registration(models.Model):
     invoice_amount = models.CharField(max_length=255, blank=True, null=True)
     invoice_remark = models.CharField(max_length=255, blank=True, null=True)
     invoice_attachment = models.FileField(upload_to='invoice_attachments/', null=True, blank=True)
-
     created_by = models.ForeignKey('Employee', related_name='candidate_registration_created',
                                    on_delete=models.SET_NULL, null=True, blank=True)
     updated_by = models.ForeignKey('Employee', related_name='candidate_registration_updated',
@@ -826,19 +825,27 @@ class Candidate_registration(models.Model):
     def __str__(self):
         return f"{self.candidate_name} ({self.unique_code})"
 
+    # --- UPDATED save() method ---
     def save(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         is_new = self._state.adding
 
+        # This block handles new candidate records
         if is_new and not self.unique_code:
-            # This part for new records is fine, no changes needed
-            for _ in range(5):
+            # The loop handles rare cases where two users try to save at the same time
+            for _ in range(5): 
                 try:
                     with transaction.atomic():
-                        # self.unique_code = get_next_unique_code() # Assumes this function exists
+                        # --- START OF FIX ---
+                        # This line automatically generates the next unique code
+                        self.unique_code = get_next_unique_code()
+                        # --- END OF FIX ---
+                        
                         if user:
                             self.created_by = user
-                        super().save(*args, **kwargs)
+                        super().save(*args, **kwargs) # Save the instance with the new code
+                        
+                        # Create the activity log after a successful save
                         CandidateActivity.objects.create(
                             candidate=self,
                             employee=user,
@@ -846,11 +853,15 @@ class Candidate_registration(models.Model):
                             changes={'initial': 'Record created'},
                             remark="Record created"
                         )
-                    return
+                    return # Exit the function and loop on success
                 except IntegrityError:
-                    self.unique_code = None
+                    # If the generated code already exists (race condition),
+                    # self.unique_code is reset and the loop tries again.
+                    self.unique_code = None 
+            # If the loop fails 5 times, raise an error.
             raise IntegrityError("Failed to generate a unique code after multiple attempts.")
 
+        # This block handles updates to existing records
         if not is_new:
             try:
                 old_record = Candidate_registration.objects.get(pk=self.pk)
@@ -892,17 +903,12 @@ class Candidate_registration(models.Model):
             super().save(*args, **kwargs)
 
             if call_made_changes:
-                # --- START OF CRITICAL FIX ---
-                # Always log the 'call_connection' status during a 'call_made' event,
-                # even if it didn't change during this specific save action.
-                # This ensures every call has a historical status record.
                 if 'call_connection' not in call_made_changes:
                     current_status = getattr(self, 'call_connection')
                     call_made_changes['call_connection'] = {
                         'old': str(current_status), 
                         'new': str(current_status)
                     }
-                # --- END OF CRITICAL FIX ---
 
                 CandidateActivity.objects.create(
                     candidate=self,
@@ -921,8 +927,38 @@ class Candidate_registration(models.Model):
                     changes=other_changes,
                     remark="Updated via unified form"
                 )
-        else:
-            super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
+
+        if call_made_changes:
+            # --- START OF CRITICAL FIX ---
+            # Always log the 'call_connection' status during a 'call_made' event,
+            # even if it didn't change during this specific save action.
+            # This ensures every call has a historical status record.
+            if 'call_connection' not in call_made_changes:
+                current_status = getattr(self, 'call_connection')
+                call_made_changes['call_connection'] = {
+                    'old': str(current_status), 
+                    'new': str(current_status)
+                }
+            # --- END OF CRITICAL FIX ---
+
+            CandidateActivity.objects.create(
+                candidate=self,
+                employee=user,
+                action='call_made',
+                changes=call_made_changes,
+                remark="Call made and details updated"
+            )
+        
+        other_changes = {k: v for k, v in changes.items() if k not in call_fields}
+        if other_changes:
+            CandidateActivity.objects.create(
+                candidate=self,
+                employee=user,
+                action='updated',
+                changes=other_changes,
+                remark="Updated via unified form"
+            )
 
     
 class CandidateActivity(models.Model):

@@ -4801,13 +4801,15 @@ def _get_chart_data(queryset, start_date, end_date, filter_q=None):
     return chart_labels, chart_data
 
 
+
+
 def employee_calls_list(request):
     period = request.GET.get('period', 'today')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
     
     today = timezone.now().date()
-
+    # Date filtering logic...
     if start_date_str and end_date_str:
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -4830,19 +4832,20 @@ def employee_calls_list(request):
         start_date = end_date = today
         period = 'today'
 
-    base_activity_filter = Q(
-        candidateactivity__timestamp__date__range=[start_date, end_date],
-        candidateactivity__action__in=['call_made', 'created'],
-        candidateactivity__employee__isnull=False  # Ignore activities with no employee
-    )
+    base_activity_filter = Q(candidateactivity__timestamp__date__range=[start_date, end_date], candidateactivity__action__in=['call_made', 'created'], candidateactivity__employee__isnull=False)
     connected_filter = Q(Q(candidateactivity__action='call_made', candidateactivity__changes__call_connection__new__iexact='Connected') | Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected'))
     
     LEAD_STATUSES = ['Hot', 'Converted']
-    lead_transition_filter_prefixed = (
-        Q(candidateactivity__action='call_made', candidateactivity__changes__lead_generate__new__in=LEAD_STATUSES) &
-        ~Q(candidateactivity__changes__lead_generate__old__in=LEAD_STATUSES)
-    ) | Q(
-        candidateactivity__action='created', candidateactivity__candidate__lead_generate__in=LEAD_STATUSES
+    lead_transition_filter_prefixed = (Q(candidateactivity__action='call_made', candidateactivity__changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(candidateactivity__changes__lead_generate__old__in=LEAD_STATUSES)) | Q(candidateactivity__action='created', candidateactivity__candidate__lead_generate__in=LEAD_STATUSES)
+
+    # --- START OF NEW LOGIC for Selections and Conversion % ---
+    # Filter for activities where a candidate was selected
+    selection_filter_prefixed = Q(candidateactivity__changes__selection_status__new__iexact='Selected') & ~Q(candidateactivity__changes__selection_status__old__iexact='Selected')
+    
+    # Filter for activities where a lead was upgraded from Hot to Converted
+    hot_to_converted_filter_prefixed = Q(
+        candidateactivity__changes__lead_generate__new__iexact='Converted',
+        candidateactivity__changes__lead_generate__old__iexact='Hot'
     )
 
     employee_stats = Employee.objects.annotate(
@@ -4850,24 +4853,58 @@ def employee_calls_list(request):
         last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
         connected_calls=Count('candidateactivity', filter=base_activity_filter & connected_filter),
         not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~connected_filter),
-        leads_generated=Count('candidateactivity', filter=base_activity_filter & lead_transition_filter_prefixed)
+        leads_generated=Count('candidateactivity', filter=base_activity_filter & lead_transition_filter_prefixed),
+        # Add new annotations for each employee
+        selections=Count('candidateactivity', filter=base_activity_filter & selection_filter_prefixed),
+        hot_leads=Count('candidateactivity', filter=base_activity_filter & Q(candidateactivity__changes__lead_generate__new__iexact='Hot')),
+        converted_leads=Count('candidateactivity', filter=base_activity_filter & hot_to_converted_filter_prefixed)
     ).filter(total_calls__gt=0).order_by('-total_calls')
+    
+    # Calculate conversion percentage for each employee in Python
+    for stat in employee_stats:
+        # To avoid division by zero, we check if there are any leads that became "Hot"
+        hot_leads_count = stat.hot_leads + stat.converted_leads
+        if hot_leads_count > 0:
+            stat.conversion_percentage = round((stat.converted_leads / hot_leads_count) * 100)
+        else:
+            stat.conversion_percentage = 0
 
-    all_activities_queryset = CandidateActivity.objects.filter(
-        timestamp__date__range=[start_date, end_date],
-        action__in=['call_made', 'created'],
-        employee__isnull=False  # Ignore activities with no employee
-    )
+    all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created'], employee__isnull=False)
 
     total_connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
     total_leads_transition_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
     
-    total_stats = all_activities_queryset.aggregate(
+    # Define filters for the new total stats
+    total_selection_filter = Q(changes__selection_status__new__iexact='Selected') & ~Q(changes__selection_status__old__iexact='Selected')
+    total_hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
+
+    total_stats_agg = all_activities_queryset.aggregate(
         total_activities=Count('id'),
         total_connected=Count('id', filter=total_connected_filter),
         total_not_connected=Count('id', filter=~total_connected_filter),
-        total_leads_generated=Count('id', filter=total_leads_transition_filter)
+        total_leads_generated=Count('id', filter=total_leads_transition_filter),
+        total_selections=Count('id', filter=total_selection_filter),
+        total_hot_leads=Count('id', filter=Q(changes__lead_generate__new__iexact='Hot')),
+        total_converted_from_hot=Count('id', filter=total_hot_to_converted_filter)
     )
+
+    total_hot_leads_count = total_stats_agg.get('total_hot_leads', 0) + total_stats_agg.get('total_converted_from_hot', 0)
+    if total_hot_leads_count > 0:
+        total_conversion_percentage = round((total_stats_agg['total_converted_from_hot'] / total_hot_leads_count) * 100)
+    else:
+        total_conversion_percentage = 0
+        
+    total_stats = {**total_stats_agg, 'total_conversion_percentage': total_conversion_percentage}
+    
+    # --- NEW: Logic for Interviews and Follow-ups ---
+    # Note: These queries are not filtered by employee, they are for the whole company
+    interview_detail_reg = Candidate_Interview.objects.filter(interview_date_time__date__range=[start_date, end_date], status__in=['scheduled', 'rescheduled']).order_by('interview_date_time')
+    interview_detail_can = EVMS_Candidate_Interview.objects.filter(interview_date_time__date__range=[start_date, end_date], status__in=['scheduled', 'rescheduled']).order_by('interview_date_time')
+    interview_detail = sorted(list(chain(interview_detail_reg, interview_detail_can)), key=lambda x: x.interview_date_time)
+    
+    follow_up_candidates_reg = Candidate_registration.objects.filter(next_follow_up_date_time__date__range=[start_date, end_date]).order_by('next_follow_up_date_time')
+    follow_up_candidates_can = Candidate.objects.filter(next_follow_up_date_time__date__range=[start_date, end_date]).order_by('next_follow_up_date_time')
+    follow_up_candidates = sorted(list(chain(follow_up_candidates_reg, follow_up_candidates_can)), key=lambda x: x.next_follow_up_date_time)
 
     main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date)
     leads_chart_labels, leads_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date, filter_q=total_leads_transition_filter)
@@ -4882,6 +4919,8 @@ def employee_calls_list(request):
         'leads_chart_labels': leads_chart_labels,
         'leads_chart_data': leads_chart_data,
         'total_stats': total_stats,
+        'interview_detail': interview_detail,
+        'follow_up_candidates': follow_up_candidates,
     }
     return render(request, 'crm/employee-calls-list.html', context)
 
