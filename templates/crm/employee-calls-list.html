@@ -100,55 +100,119 @@
             </div>
 
             <div class="row mt-4">
-                <div class="col-lg-6 mb-4">
-                    <div class="card">
-                        <div class="card-header"><h3 class="card-title">Interviews for this Period</h3></div>
-                        <div class="card-body card-body-scrollable" style="max-height: 400px;">
-                            <div class="table-responsive">
-                                <table class="table table-vcenter table-hover">
-                                    <thead><tr><th>Candidate</th><th>Status</th><th>Employee</th><th>Time</th><th class="w-1"></th></tr></thead>
-                                    <tbody>
-                                        {% for interview in interview_detail %}
-                                        <tr>
-                                            <td>{{ interview.candidate.candidate_name }}</td>
-                                            <td>{{ interview.status }}</td>
-                                            <td>{{ interview.candidate.employee_name }}</td>
-                                            <td>{{ interview.interview_date_time|date:"M d, Y H:i" }}</td>
-                                            <td><a href="#" class="btn btn-link">View</a></td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr><td colspan="5" class="text-center py-4">No interviews scheduled.</td></tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+            <div class="col-lg-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Today's Interviews</h3>
                     </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card">
-                        <div class="card-header"><h3 class="card-title">Follow Ups for this Period</h3></div>
-                        <div class="card-body card-body-scrollable" style="max-height: 400px;">
-                            <div class="table-responsive">
-                                <table class="table table-vcenter table-hover">
-                                    <thead><tr><th>Candidate</th><th>Mobile</th><th>Employee</th><th>Time</th><th class="w-1"></th></tr></thead>
-                                    <tbody>
-                                        {% for follow_up in follow_up_candidates %}
-                                        <tr>
-                                            <td>{{ follow_up.candidate_name }}</td>
-                                            <td>{{ follow_up.candidate_mobile_number|default:"-" }}</td>
-                                            <td>{{ follow_up.employee_name }}</td>
-                                            <td>{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td>
-                                            <td><a href="#" class="btn btn-link">View</a></td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter table-hover">
+                                <thead class="">
+                                    <tr>
+                                        <th>Candidate</th>
+                                        <th>Status</th>
+                                        <th>Employee</th>
+                                        <th>Time</th>
+                                        <th class="w-1"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for interview in interview_detail %}
+                                    <tr class="interview-row clickable-row" data-date="{{ interview.interview_date_time|date:'Y-m-d' }}" data-interview-id="{{ interview.id }}"
+                                        data-url="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}">
+                                        <td>{{ interview.candidate.candidate_name }}</td>
+                                        <td>{{ interview.status }}</td>
+                                        <td>{{ interview.candidate.employee_name }}</td>
+                                        <td class="interview-time" data-time="{{ interview.interview_date_time|date:'H:i' }}">{{ interview.interview_date_time|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            <a href="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}" class="btn btn-link">
+                                                View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <div class="empty">
+                                                <div class="empty-icon">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                                        <path d="M9 10l.01 0" />
+                                                        <path d="M15 10l.01 0" />
+                                                        <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
+                                                    </svg>
+                                                </div>
+                                                <p class="empty-title">No interviews scheduled for today</p>
+                                                <p class="empty-subtitle text-muted">
+                                                    Check back later for updates
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Today's Follow Ups</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter table-hover">
+                                <thead class="">
+                                    <tr>
+                                        <th>Candidate</th>
+                                        <th>Unique Code</th>
+                                        <th>Mobile Number</th>
+                                        <th>Employee</th>
+                                        <th>Time</th>
+                                        <th class="w-1"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for follow_up in follow_up_candidates %}
+                                    <tr class="followup-row clickable-row" data-date="{{ follow_up.next_follow_up_date_time|date:'Y-m-d' }}" data-followup-id="{{ follow_up.id }}"
+                                        data-url="{% if follow_up.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' follow_up.id %}{% else %}{% url 'admin_candidate_profile' follow_up.id %}{% endif %}">
+                                        <td>{{ follow_up.candidate_name }}</td>
+                                        
+                                        <td>
+                                            {% if follow_up.lead_source == 'EVMS' %}
+                                                {{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}
+                                            {% else %}
+                                                {{ follow_up.unique_code|default:"-" }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ follow_up.candidate_mobile_number|default:"-" }}</td>
+                                        <td>{{ follow_up.employee_name }}</td>
+                                        <td class="followup-time" data-time="{{ follow_up.next_follow_up_date_time|date:'H:i' }}">{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            {% if follow_up.lead_source == 'EVMS' %}
+                                                <a href="{% url 'evms_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
+                                                    View
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'admin_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
+                                                    View
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
     </div>
 </div>
@@ -265,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-{% endblock %}
+
 
  <style>
         .notification-container {
@@ -580,3 +644,5 @@ document.addEventListener('DOMContentLoaded', function () {
             checkAllNotifications();
         });
     </script>
+
+    {% endblock %}
