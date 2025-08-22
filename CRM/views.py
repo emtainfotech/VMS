@@ -4878,6 +4878,7 @@ def employee_calls_list(request):
     total_selection_filter = Q(changes__selection_status__new__iexact='Selected') & ~Q(changes__selection_status__old__iexact='Selected')
     total_hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
 
+    
     total_stats_agg = all_activities_queryset.aggregate(
         total_activities=Count('id'),
         total_connected=Count('id', filter=total_connected_filter),
