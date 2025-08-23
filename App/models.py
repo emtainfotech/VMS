@@ -825,7 +825,6 @@ class Candidate_registration(models.Model):
     def __str__(self):
         return f"{self.candidate_name} ({self.unique_code})"
 
-    # --- UPDATED save() method ---
     def save(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         is_new = self._state.adding
@@ -836,10 +835,8 @@ class Candidate_registration(models.Model):
             for _ in range(5): 
                 try:
                     with transaction.atomic():
-                        # --- START OF FIX ---
-                        # This line automatically generates the next unique code
+                        # Generate the next unique code
                         self.unique_code = get_next_unique_code()
-                        # --- END OF FIX ---
                         
                         if user:
                             self.created_by = user
@@ -902,6 +899,10 @@ class Candidate_registration(models.Model):
             
             super().save(*args, **kwargs)
 
+            # --- REMOVED DUPLICATE ACTIVITY CREATION CODE ---
+            # This section was causing the double submission
+            
+            # Always log the 'call_connection' status during a 'call_made' event
             if call_made_changes:
                 if 'call_connection' not in call_made_changes:
                     current_status = getattr(self, 'call_connection')
@@ -918,6 +919,7 @@ class Candidate_registration(models.Model):
                     remark="Call made and details updated"
                 )
             
+            # Log other non-call changes
             other_changes = {k: v for k, v in changes.items() if k not in call_fields}
             if other_changes:
                 CandidateActivity.objects.create(
@@ -927,38 +929,8 @@ class Candidate_registration(models.Model):
                     changes=other_changes,
                     remark="Updated via unified form"
                 )
-        super().save(*args, **kwargs)
-
-        if call_made_changes:
-            # --- START OF CRITICAL FIX ---
-            # Always log the 'call_connection' status during a 'call_made' event,
-            # even if it didn't change during this specific save action.
-            # This ensures every call has a historical status record.
-            if 'call_connection' not in call_made_changes:
-                current_status = getattr(self, 'call_connection')
-                call_made_changes['call_connection'] = {
-                    'old': str(current_status), 
-                    'new': str(current_status)
-                }
-            # --- END OF CRITICAL FIX ---
-
-            CandidateActivity.objects.create(
-                candidate=self,
-                employee=user,
-                action='call_made',
-                changes=call_made_changes,
-                remark="Call made and details updated"
-            )
-        
-        other_changes = {k: v for k, v in changes.items() if k not in call_fields}
-        if other_changes:
-            CandidateActivity.objects.create(
-                candidate=self,
-                employee=user,
-                action='updated',
-                changes=other_changes,
-                remark="Updated via unified form"
-            )
+        else:
+            super().save(*args, **kwargs)
 
     
 class CandidateActivity(models.Model):
