@@ -616,6 +616,105 @@
 </style>
     </div>
     
+    <div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header  border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-primary">Activity History</h5>
+                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#activityCollapse" aria-expanded="true" aria-controls="activityCollapse">
+                    <i class="bi bi-chevron-down"></i> <span class="d-none d-md-inline">Toggle View</span>
+                </button>
+            </div>
+            <div class="collapse show" id="activityCollapse">
+                <div class="card-body">
+                    <div class="timeline-modern">
+                        {% for activity in candidate.activities.all %}
+                        <div class="timeline-item-modern mb-4">
+                            <div class="timeline-icon-modern">
+                                {% if activity.employee %}
+                                    {% if activity.employee.employee_photo %}
+                                    <img src="{{ activity.employee.employee_photo.url }}" class="rounded-circle shadow-sm" width="40" height="40" alt="{{ activity.employee.first_name }} {{ activity.employee.last_name }}">
+                                    {% else %}
+                                    <div class="d-flex align-items-center justify-content-center bg-info text-white rounded-circle shadow-sm" style="width: 40px; height: 40px; font-size: 1rem;">
+                                        {{ activity.employee.first_name|first }}{{ activity.employee.last_name|first }}
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                <div class="d-flex align-items-center justify-content-center bg-secondary text-white rounded-circle shadow-sm" style="width: 40px; height: 40px; font-size: 1rem;">
+                                    <i class="bi bi-gear-fill"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="timeline-content-modern p-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <strong class="text-dark">
+                                            {% if activity.employee %}
+                                            {{ activity.employee.first_name }} {{ activity.employee.last_name }}
+                                            <small class="text-muted">({{ activity.employee.designation }})</small>
+                                            {% else %}
+                                            System
+                                            {% endif %}
+                                        </strong>
+                                    </div>
+                                    <div class="text-muted small">{{ activity.timestamp|date:"M d, Y H:i" }}</div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <span class="badge text-white rounded-pill bg-{% if activity.action == 'created' %}success{% elif activity.action == 'updated' %}info{% elif activity.action == 'deleted' %}danger{% else %}primary{% endif %}">
+                                        {{ activity.get_action_display }}
+                                    </span>
+                                </div>
+
+                                {% if activity.changes %}
+                                <div class="card p-2 mb-2  border">
+                                    <h6 class="small text-muted mb-1">Changes:</h6>
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tbody>
+                                            {% for field, values in activity.changes.items %}
+                                            <tr>
+                                                <td class="text-muted small py-0">{{ field|title }}</td>
+                                                <td class="py-0">
+                                                    {% if values.old %}
+                                                    <span class="text-danger text-decoration-line-through small me-2">{{ values.old }}</span>
+                                                    {% endif %}
+                                                    {% if values.new %}
+                                                    <span class="text-success small">{{ values.new }}</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% endif %}
+
+                                {% if activity.remark %}
+                                <div class="card p-2 bg-white border">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="bi bi-chat-square-text-fill me-2 text-primary"></i>
+                                        <h6 class="small text-muted mb-0">Remark:</h6>
+                                    </div>
+                                    <div class="small text-dark">{{ activity.remark }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-journal-check display-4 text-muted mb-3"></i>
+                            <div class="text-muted">No activity recorded yet.</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+    </div>
+    
 
 </div>
 

@@ -1555,6 +1555,7 @@ def employee_candidate_profile(request, id):
         context = {
             'logged_in_employee': logged_in_employee,
             'candidate': candidate,
+            'activities': candidate.activities.all().order_by('-timestamp'),
             'today': timezone.now().date(),
             'districts': districts,
             'job_sectors': job_sectors,
