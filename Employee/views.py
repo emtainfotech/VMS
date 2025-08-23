@@ -801,31 +801,127 @@ def employee_update_task_status(request,task_id) :
     else:
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
+from django.core.paginator import Paginator
 
+def slugify(text):
+    """Helper to create a URL-friendly slug from text."""
+    if not text:
+        return ''
+    return text.lower().replace(' ', '-')
+
+
+from datetime import datetime # CORRECTED IMPORT
+
+def slugify(text):
+    """Helper to create a URL-friendly slug from text."""
+    if not text:
+        return ''
+    # A more robust slugify that handles various cases
+    return "".join(c if c.isalnum() else '-' for c in text.lower().replace('&', '-and-')).strip('-')
+
+# 1. HELPER FUNCTION: Central place for fetching and filtering logic
+def get_filtered_candidates(request, employee):
+    """
+    Fetches candidates from both models, combines them, applies filters
+    from the request's GET parameters, and sorts the result.
+    """
+    reg_candidates = list(Candidate_registration.objects.filter(employee_name=employee))
+    cand_candidates = list(Candidate.objects.filter(employee_name=employee))
+    combined_candidates = reg_candidates + cand_candidates
+
+    # --- Apply Filters from GET parameters ---
+    search_term = request.GET.get('search', '').lower().strip()
+    date_from_str = request.GET.get('date_from')
+    date_to_str = request.GET.get('date_to')
+    statuses = request.GET.getlist('status[]')
+    connection_statuses = request.GET.getlist('connection_status[]')
+    lead_sources = request.GET.getlist('lead_source[]')
+
+    # CORRECTED: Use the imported datetime class directly
+    date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else None
+    date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else None
+
+    # --- In-Memory Filtering ---
+    if any([search_term, date_from, date_to, statuses, connection_statuses, lead_sources]):
+        filtered_list = []
+        for c in combined_candidates:
+            if date_from and c.register_time.date() < date_from:
+                continue
+            if date_to and c.register_time.date() > date_to:
+                continue
+            
+            if statuses and slugify(getattr(c, 'lead_generate', '')) not in statuses:
+                continue
+            if connection_statuses and slugify(getattr(c, 'call_connection', 'unknown')) not in connection_statuses:
+                continue
+            if lead_sources and slugify(getattr(c, 'lead_source', '')) not in lead_sources:
+                continue
+
+            if search_term:
+                search_data = (
+                    f"{c.candidate_name} "
+                    f"{c.candidate_mobile_number} "
+                    f"{getattr(c, 'unique_code', '')} "
+                    f"{getattr(c, 'calling_remark', '')} "
+                    f"{getattr(c, 'lead_source', '')}"
+                ).lower()
+                if search_term not in search_data:
+                    continue
+            
+            filtered_list.append(c)
+        final_candidates = filtered_list
+    else:
+        final_candidates = combined_candidates
+
+    final_candidates.sort(key=lambda x: x.register_time, reverse=True)
+    return final_candidates
+
+# 2. MAIN VIEW: Handles the initial page load
 @login_required
 def employee_candidate_list(request):
-    if request.user.is_authenticated:
-        logged_in_employee = Employee.objects.get(user=request.user)
-        
-        # Get candidates from both models
-        reg_candidates = Candidate_registration.objects.filter(
-            employee_name=logged_in_employee
-        ).order_by('-id')
-        
-        cand_candidates = Candidate.objects.filter(
-            employee_name=logged_in_employee
-        ).order_by('-id')
-        
-        # Combine both querysets
-        combined_candidates = list(reg_candidates) + list(cand_candidates)
-        
-        # Sort by register_time (descending)
-        combined_candidates.sort(key=lambda x: x.register_time, reverse=True)
-        
-        return render(request, 'employee/candidate-list.html', {'candidates': combined_candidates})
-    else:
-        # If the user is not an admin, show a 404 page
+    if not request.user.is_authenticated:
         return render(request, 'employee/404.html', status=404)
+    try:
+        logged_in_employee = Employee.objects.get(user=request.user)
+    except Employee.DoesNotExist:
+        return render(request, 'employee/404.html', status=404)
+
+    all_candidates = get_filtered_candidates(request, logged_in_employee)
+    paginator = Paginator(all_candidates, 50) 
+    page_obj = paginator.get_page(1)
+
+    context = {
+        'candidates': page_obj.object_list,
+        'page_obj': page_obj,
+    }
+    return render(request, 'employee/candidate-list.html', context)
+
+# 3. API VIEW: Handles AJAX requests for filtering and pagination
+@login_required
+def filter_candidates_api(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Authentication required'}, status=401)
+    try:
+        logged_in_employee = Employee.objects.get(user=request.user)
+    except Employee.DoesNotExist:
+        return JsonResponse({'error': 'Employee profile not found'}, status=404)
+
+    all_filtered_candidates = get_filtered_candidates(request, logged_in_employee)
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(all_filtered_candidates, 50)
+    page_obj = paginator.get_page(page_number)
+
+    rendered_rows_html = render_to_string(
+        'employee/partials/candidate_rows.html', 
+        {'candidates': page_obj.object_list, 'page_obj': page_obj}
+    )
+
+    return JsonResponse({
+        'rows_html': rendered_rows_html,
+        'has_next': page_obj.has_next(),
+        'total_count': paginator.count,
+    })
+
 
 @login_required
 def employee_candidate_registration(request):
