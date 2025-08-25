@@ -51,17 +51,15 @@
             </div>
 
             <div class="row g-4 mb-4">
-                <div class="col-md-6 col-lg-3 clickable-card" data-filter-type="total">
-                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3">{{ total_calls }}</div><div class="text-muted">Total Activities</div></div></div>
+                <div class="col-md-4 col-lg-2 clickable-card" data-filter-type="total"><div class="card"><div class="card-body text-center"><div class="h1 mb-3">{{ total_calls }}</div><div class="text-muted">Total Activities</div></div></div></div>
+                <div class="col-md-4 col-lg-2 clickable-card" data-filter-type="connected"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-success">{{ connected_calls }}</div><div class="text-muted">Connected</div></div></div></div>
+                <div class="col-md-4 col-lg-2 clickable-card" data-filter-type="not_connected"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-danger">{{ not_connected_calls }}</div><div class="text-muted">Not Connected</div></div></div></div>
+                <div class="col-md-4 col-lg-2 clickable-card" data-filter-type="leads"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-warning">{{ leads_generated }}</div><div class="text-muted">Leads Generated</div></div></div></div>
+                <div class="col-md-4 col-lg-2 clickable-card" data-filter-type="selected">
+                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-info">{{ selections }}</div><div class="text-muted">Selections</div></div></div>
                 </div>
-                <div class="col-md-6 col-lg-3 clickable-card" data-filter-type="connected">
-                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-success">{{ connected_calls }}</div><div class="text-muted">Connected Calls</div></div></div>
-                </div>
-                <div class="col-md-6 col-lg-3 clickable-card" data-filter-type="not_connected">
-                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-danger">{{ not_connected_calls }}</div><div class="text-muted">Not Connected Calls</div></div></div>
-                </div>
-                <div class="col-md-6 col-lg-3 clickable-card" data-filter-type="leads">
-                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-warning">{{ leads_generated }}</div><div class="text-muted">Leads Generated</div></div></div>
+                <div class="col-md-4 col-lg-2 clickable-card" data-filter-type="converted">
+                     <div class="card"><div class="card-body text-center"><div class="h1 mb-3" style="color: #6f42c1;">{{ conversion_percentage }}%</div><div class="text-muted">Hot to Converted</div></div></div>
                 </div>
             </div>
 

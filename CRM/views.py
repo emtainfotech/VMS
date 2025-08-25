@@ -1365,25 +1365,183 @@ def admin_candidate_bulk_upload(request):
     else:
         return render(request, 'crm/404.html', status=404)
     
-@login_required 
-def admin_candidate_list(request) :
-    if request.user.is_staff or request.user.is_superuser:
-        candidates_reg = Candidate_registration.objects.all().order_by('-id')
-        candidates_can = Candidate.objects.all().order_by('-id')
-        
-        # Add model type to each candidate for identification
-        for candidate in candidates_reg:
-            candidate.model_type = 'registration'
-        for candidate in candidates_can:
-            candidate.model_type = 'candidate'
-        
-        candidates = list(chain(candidates_reg, candidates_can))
-        candidates.sort(key=lambda x: x.register_time, reverse=True)
-        
-        return render (request,'crm/candidate-list.html',{'candidates':candidates})
-    else:
-        # If the user is not an admin, show a 404 page
+# crm/views.py
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+# from .models import Candidate_registration, Candidate
+from itertools import chain
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import JsonResponse
+from django.db.models import Q, Value
+from django.db.models.functions import Concat
+from django.urls import reverse
+from django.utils.text import slugify
+
+# Helper to get unique, sorted, non-empty values from multiple models for a given field
+def get_unique_filter_options(*querysets, field_name):
+    values = set()
+    for qs in querysets:
+        values.update(qs.values_list(field_name, flat=True).distinct())
+    # Filter out None or empty strings and sort
+    return sorted([v for v in values if v])
+
+@login_required
+def admin_candidate_list(request):
+    """
+    This view now renders the main page with only the FIRST page of candidates
+    and provides all unique filter options to the JavaScript.
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
+
+    # Base querysets for fetching filter options
+    candidates_reg_qs = Candidate_registration.objects.all()
+    candidates_can_qs = Candidate.objects.all()
+
+    # --- Fetch all possible filter options for the dropdowns ---
+    filter_options = {
+        'connection_statuses': get_unique_filter_options(candidates_reg_qs, candidates_can_qs, field_name='call_connection'),
+        'lead_sources': get_unique_filter_options(candidates_reg_qs, candidates_can_qs, field_name='lead_source'),
+        'employees': get_unique_filter_options(candidates_reg_qs, candidates_can_qs, field_name='employee_name'),
+        'lead_statuses': get_unique_filter_options(candidates_reg_qs, candidates_can_qs, field_name='lead_generate'),
+    }
+
+    # Fetch all candidates, sort them, and then paginate
+    all_candidates_list = sorted(
+        list(chain(candidates_reg_qs, candidates_can_qs)),
+        key=lambda x: x.register_time,
+        reverse=True
+    )
+    
+    paginator = Paginator(all_candidates_list, 50) # Show 50 candidates per page initially
+    total_candidates_count = paginator.count
+    
+    # Get the first page
+    candidates_page = paginator.page(1)
+
+    # Add model type to each candidate object for use in templates/JS
+    for candidate in candidates_page.object_list:
+        if isinstance(candidate, Candidate_registration):
+            candidate.model_type = 'registration'
+        else:
+            candidate.model_type = 'candidate'
+
+    context = {
+        'candidates': candidates_page.object_list,
+        'total_candidates_count': total_candidates_count,
+        'filter_options': filter_options,
+    }
+    return render(request, 'crm/candidate-list.html', context)
+
+
+@login_required
+def get_candidates_api(request):
+    """
+    This new API view handles AJAX requests for fetching, filtering, 
+    and paginating candidate data.
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    # Base querysets
+    candidates_reg_qs = Candidate_registration.objects.all()
+    candidates_can_qs = Candidate.objects.all()
+
+    # --- Apply Filters from GET parameters ---
+    search_term = request.GET.get('search', '').strip()
+    date_from = request.GET.get('dateFrom')
+    date_to = request.GET.get('dateTo')
+    connection_statuses = [s for s in request.GET.get('connectionStatus', '').split(',') if s]
+    lead_sources = [s for s in request.GET.get('leadSource', '').split(',') if s]
+    employees = [s for s in request.GET.get('employee', '').split(',') if s]
+    lead_statuses = [s for s in request.GET.get('status', '').split(',') if s]
+
+    # Combine filters for both models
+    q_filter = Q()
+    if search_term:
+        q_filter &= (
+            Q(candidate_name__icontains=search_term) |
+            Q(candidate_mobile_number__icontains=search_term) |
+            Q(unique_code__icontains=search_term) |
+            Q(current_working_status__icontains=search_term)
+        )
+    if date_from:
+        q_filter &= Q(register_time__date__gte=date_from)
+    if date_to:
+        q_filter &= Q(register_time__date__lte=date_to)
+    if connection_statuses:
+        q_filter &= Q(call_connection__in=connection_statuses)
+    if lead_sources:
+        q_filter &= Q(lead_source__in=lead_sources)
+    if employees:
+        q_filter &= Q(employee_name__in=employees)
+    if lead_statuses:
+        q_filter &= Q(lead_generate__in=lead_statuses)
+    
+    candidates_reg_qs = candidates_reg_qs.filter(q_filter)
+    candidates_can_qs = candidates_can_qs.filter(q_filter)
+
+    # Combine, sort, and paginate the filtered results
+    filtered_candidates_list = sorted(
+        list(chain(candidates_reg_qs, candidates_can_qs)),
+        key=lambda x: x.register_time,
+        reverse=True
+    )
+    
+    paginator = Paginator(filtered_candidates_list, 50)
+    page_number = request.GET.get('page', 1)
+    
+    try:
+        page_obj = paginator.page(page_number)
+    except (EmptyPage, PageNotAnInteger):
+        return JsonResponse({'candidates': [], 'has_next': False, 'total_count': 0})
+
+    # Serialize the data for the current page into JSON format
+    candidates_data = []
+    for candidate in page_obj.object_list:
+        model_type = 'registration' if isinstance(candidate, Candidate_registration) else 'candidate'
+        
+        profile_url = reverse('admin_candidate_profile', args=[candidate.id])
+        if candidate.lead_source == 'EVMS':
+            profile_url = reverse('evms_candidate_profile', args=[candidate.id])
+
+        candidates_data.append({
+            'id': candidate.id,
+            'model_type': model_type,
+            'call_connection': candidate.call_connection,
+            'photo_url': candidate.candidate_photo.url if candidate.candidate_photo else None,
+            'name': candidate.candidate_name,
+            'name_initial': candidate.candidate_name[0].upper() if candidate.candidate_name else '',
+            'unique_code': candidate.unique_code,
+            'refer_code': getattr(candidate, 'refer_code', ''),
+            'unique_id': getattr(candidate, 'unique_id', ''),
+            'mobile': candidate.candidate_mobile_number,
+            'email': candidate.candidate_email_address,
+            'lead_source': candidate.lead_source,
+            'other_lead_source': getattr(candidate, 'other_lead_source', ''),
+            'lead_status': candidate.lead_generate,
+            'other_lead_status': getattr(candidate, 'other_lead_generate', ''),
+            'experience_year': candidate.experience_year,
+            'experience_month': candidate.experience_month,
+            'employee_name': candidate.employee_name,
+            # AFTER (Correct)
+            'registered_time': candidate.register_time.strftime("%b %d, %Y %H:%M"),
+            'full_registered_time': candidate.register_time.isoformat(),
+            'resume_url': candidate.candidate_resume.url if candidate.candidate_resume else None,
+            'profile_url': profile_url,
+            # Data attributes for client-side use if needed, but primarily for consistency
+            'data_status': slugify(candidate.lead_generate or ''),
+            'data_connection_status': slugify(candidate.call_connection or 'unknown'),
+            'data_lead_source': slugify(candidate.lead_source or 'unknown'),
+            'data_employee_name': slugify(candidate.employee_name or 'unassigned'),
+        })
+        
+    return JsonResponse({
+        'candidates': candidates_data,
+        'has_next': page_obj.has_next(),
+        'total_count': paginator.count
+    })
 
 @login_required
 def delete_candidate(request, candidate_id, model_type=None):

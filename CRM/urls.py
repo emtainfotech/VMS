@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path
+
+from Employee import views
 from .views import *
 from django.conf import settings
 from django.conf.urls.static import static
@@ -63,7 +65,7 @@ urlpatterns = [
     path('admin-employee-calls/', employee_calls_list, name='admin_calls_list'),
     path('ajax/get-employee-candidates/', get_employee_candidates, name='get_employee_candidates'),
     path('ajax/get-filtered-activity-list/',get_filtered_activity_list, name='get_filtered_activity_list'),
-
+    path('api/get-candidates/', get_candidates_api, name='get_candidates_api'),
 
     path('admin/', admin.site.urls),
 ]
