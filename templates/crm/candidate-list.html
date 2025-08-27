@@ -42,60 +42,16 @@
                                 <input type="text" id="searchInput" class="form-control" placeholder="Search candidates..." aria-label="Search candidates">
                             </div>
                         </div>
-                        <div class="col-12 col-md-8 d-flex flex-wrap align-items-center justify-content-md-end g-2">
-                            <div class="me-md-2 mb-2 mb-md-0 d-flex flex-grow-1 flex-md-grow-0">
-                                <input type="date" id="dateFrom" class="form-control" title="From Date">
-                            </div>
-                            <div class="me-md-2 mb-2 mb-md-0 d-flex flex-grow-1 flex-md-grow-0">
-                                <input type="date" id="dateTo" class="form-control" title="To Date">
-                            </div>
-                            <div class="filter-dropdown-container me-md-2 mb-2 mb-md-0 d-flex align-items-center flex-grow-1 flex-md-grow-0">
-                                <label class="form-label mb-0 me-2 text-nowrap">Connection:</label>
-                                <div class="dropdown-toggle-button" data-target="connectionStatusFilterOptions">
-                                    <span id="connectionStatusSelectedCount">All</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
-                                </div>
-                                <div class="filter-options-pane" id="connectionStatusFilterOptions">
-                                    <div class="input-icon mb-2"><input type="text" class="form-control dropdown-search-input" placeholder="Search..." data-filter-target="connectionStatusCheckboxes"><span class="input-icon-addon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span></div>
-                                    <label class="form-check cursor-pointer"><input class="form-check-input select-all-checkbox" type="checkbox"><span class="form-check-label font-weight-bold">All</span></label>
-                                    <div id="connectionStatusCheckboxes"></div>
-                                </div>
-                            </div>
-                            <div class="filter-dropdown-container me-md-2 mb-2 mb-md-0 d-flex align-items-center flex-grow-1 flex-md-grow-0">
-                                <label class="form-label mb-0 me-2 text-nowrap">Lead Source:</label>
-                                <div class="dropdown-toggle-button" data-target="leadSourceFilterOptions">
-                                    <span id="leadSourceSelectedCount">All</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
-                                </div>
-                                <div class="filter-options-pane" id="leadSourceFilterOptions">
-                                     <div class="input-icon mb-2"><input type="text" class="form-control dropdown-search-input" placeholder="Search..." data-filter-target="leadSourceCheckboxes"><span class="input-icon-addon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span></div>
-                                    <label class="form-check cursor-pointer"><input class="form-check-input select-all-checkbox" type="checkbox"><span class="form-check-label font-weight-bold">All</span></label>
-                                    <div id="leadSourceCheckboxes"></div>
-                                </div>
-                            </div>
-                            <div class="filter-dropdown-container me-md-2 mb-2 mb-md-0 d-flex align-items-center flex-grow-1 flex-md-grow-0">
-                                <label class="form-label mb-0 me-2 text-nowrap">Employee:</label>
-                                <div class="dropdown-toggle-button" data-target="employeeFilterOptions">
-                                    <span id="employeeSelectedCount">All Employees</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
-                                </div>
-                                <div class="filter-options-pane" id="employeeFilterOptions">
-                                     <div class="input-icon mb-2"><input type="text" class="form-control dropdown-search-input" placeholder="Search..." data-filter-target="employeeCheckboxes"><span class="input-icon-addon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span></div>
-                                    <label class="form-check cursor-pointer"><input class="form-check-input select-all-checkbox" type="checkbox"><span class="form-check-label font-weight-bold">Select All</span></label>
-                                    <div id="employeeCheckboxes"></div>
-                                </div>
-                            </div>
-                            <div class="filter-dropdown-container d-flex align-items-center flex-grow-1 flex-md-grow-0">
-                                <label class="form-label mb-0 me-2 text-nowrap">Lead Status:</label>
-                                <div class="dropdown-toggle-button" data-target="statusFilterOptions">
-                                    <span id="statusSelectedCount">All Statuses</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
-                                </div>
-                                <div class="filter-options-pane" id="statusFilterOptions">
-                                     <div class="input-icon mb-2"><input type="text" class="form-control dropdown-search-input" placeholder="Search..." data-filter-target="statusCheckboxes"><span class="input-icon-addon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span></div>
-                                    <label class="form-check cursor-pointer"><input class="form-check-input select-all-checkbox" type="checkbox"><span class="form-check-label font-weight-bold">Select All</span></label>
-                                    <div id="statusCheckboxes"></div>
-                                </div>
+                        <div class="col-12 col-md-8 d-flex justify-content-md-end">
+                            <div class="btn-list">
+                                <button id="clearAllFiltersBtn" class="btn btn-light" style="display: none;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-filter-off" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 3l18 18"></path><path d="M8.5 8.5c.337 -1.33 .944 -2.528 1.772 -3.5h3.456a1 1 0 0 1 .8 1.6l-2.4 2.9a1 1 0 0 0 0 1l.594 .742m2.053 2.566l2.353 2.942a1 1 0 0 1 -.8 1.6h-12a1 1 0 0 1 -.8 -1.6l2.4 -2.9a1 1 0 0 0 0 -1l-2.4 -2.9a1 1 0 0 1 .8 -1.6h2.31"></path></svg>
+                                    Clear Filters
+                                </button>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.414 -4.414a2 2 0 0 1 -.586 -1.414v-2.172z" /></svg>
+                                    Filter
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -147,6 +103,68 @@
     </div>
 </div>
 
+<div class="modal" id="filterModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Filter Candidates</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-3">
+                        <label for="dateFrom" class="form-label">Date From</label>
+                        <input type="date" id="dateFrom" class="form-control" title="From Date">
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <label for="dateTo" class="form-label">Date To</label>
+                        <input type="date" id="dateTo" class="form-control" title="To Date">
+                    </div>
+                </div>
+                <hr>
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label">Connection Status</label>
+                        <div class="filter-options-pane-modal" id="connectionStatusFilterOptions">
+                           <div class="input-icon mb-2"><input type="text" class="form-control dropdown-search-input" placeholder="Search..." data-filter-target="connectionStatusCheckboxes"><span class="input-icon-addon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span></div>
+                           <label class="form-check cursor-pointer"><input class="form-check-input select-all-checkbox" type="checkbox"><span class="form-check-label font-weight-bold">Select All</span></label>
+                           <div id="connectionStatusCheckboxes"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label">Lead Source</label>
+                        <div class="filter-options-pane-modal" id="leadSourceFilterOptions">
+                            <div class="input-icon mb-2"><input type="text" class="form-control dropdown-search-input" placeholder="Search..." data-filter-target="leadSourceCheckboxes"><span class="input-icon-addon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span></div>
+                            <label class="form-check cursor-pointer"><input class="form-check-input select-all-checkbox" type="checkbox"><span class="form-check-label font-weight-bold">Select All</span></label>
+                            <div id="leadSourceCheckboxes"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label">Employee</label>
+                        <div class="filter-options-pane-modal" id="employeeFilterOptions">
+                            <div class="input-icon mb-2"><input type="text" class="form-control dropdown-search-input" placeholder="Search..." data-filter-target="employeeCheckboxes"><span class="input-icon-addon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span></div>
+                            <label class="form-check cursor-pointer"><input class="form-check-input select-all-checkbox" type="checkbox"><span class="form-check-label font-weight-bold">Select All</span></label>
+                            <div id="employeeCheckboxes"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label">Lead Status</label>
+                        <div class="filter-options-pane-modal" id="statusFilterOptions">
+                           <div class="input-icon mb-2"><input type="text" class="form-control dropdown-search-input" placeholder="Search..." data-filter-target="statusCheckboxes"><span class="input-icon-addon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span></div>
+                           <label class="form-check cursor-pointer"><input class="form-check-input select-all-checkbox" type="checkbox"><span class="form-check-label font-weight-bold">Select All</span></label>
+                           <div id="statusCheckboxes"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn me-auto" id="modalClearFiltersBtn">Clear Filters</button>
+                <button type="button" class="btn btn-primary" id="modalApplyFiltersBtn" data-bs-dismiss="modal">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{ filter_options|json_script:"filter-options-data" }}
 
 <script type="text/template" id="candidate-row-template">
@@ -192,28 +210,27 @@
     .status-other { background-color: rgba(102, 16, 242, 0.1); color: #6610f2; }
     .table-responsive.table-scrollable-body { position: relative; }
     #candidatesTable thead th { position: sticky; top: 0; background-color: var(--tblr-card-bg, white); z-index: 10; box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); }
-    .filter-dropdown-container { position: relative; width: 100%; flex-grow: 1; flex-basis: auto; }
-    @media (min-width: 768px) { .filter-dropdown-container { flex-grow: 0; max-width: 200px; } }
-    .dropdown-toggle-button { display: flex; align-items-center; justify-content: space-between; padding: 0.5rem 0.75rem; border: 1px solid var(--tblr-border-color); border-radius: var(--tblr-border-radius); background-color: var(--tblr-input-bg, white); color: var(--tblr-body-color); cursor: pointer; user-select: none; line-height: 1.5; transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out; }
-    .dropdown-toggle-button:hover { border-color: var(--tblr-border-color-hover); }
-    .dropdown-toggle-button:focus, .dropdown-toggle-button.active { border-color: var(--tblr-primary); box-shadow: var(--tblr-focus-ring-shadow); outline: 0; }
-    .dropdown-icon { margin-left: 0.5rem; transition: transform 0.2s; }
-    .dropdown-toggle-button.active .dropdown-icon { transform: rotate(180deg); }
-    .filter-options-pane { position: absolute; top: calc(100% + 5px); left: 0; z-index: 1000; background-color: var(--tblr-card-bg, white); border: 1px solid var(--tblr-border-color); border-radius: var(--tblr-border-radius); padding: 0.75rem; box-shadow: var(--tblr-box-shadow-lg); min-width: 220px; max-height: 250px; overflow-y: auto; display: none; box-sizing: border-box; }
-    .filter-options-pane.show { display: block; }
-    .filter-options-pane .form-check { margin-bottom: 0.5rem; }
     .cursor-pointer { cursor: pointer; }
+    /* New styles for filter pane inside the modal */
+    .filter-options-pane-modal {
+        position: relative;
+        display: block;
+        border: 1px solid var(--tblr-border-color);
+        border-radius: var(--tblr-border-radius);
+        padding: 0.75rem;
+        max-height: 250px;
+        overflow-y: auto;
+    }
+    .filter-options-pane-modal .form-check { margin-bottom: 0.5rem; }
 </style>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     // --- STATE & CONFIG ---
-    // MODIFIED: 'currentPage' now tracks the LAST successfully loaded page.
-    // It starts at 1 because the server has already loaded page 1.
     let currentPage = 1;
     let isLoading = false;
-    let currentFilters = {};
     let searchTimeout;
+    const FILTERS_STORAGE_KEY = 'adminCandidateFilters';
 
     // --- DOM ELEMENTS ---
     const tableBody = document.getElementById('candidates-tbody');
@@ -223,6 +240,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const rowTemplateEl = document.getElementById('candidate-row-template');
     const loadMoreContainer = document.getElementById('load-more-container');
     const loadMoreBtn = document.getElementById('load-more-btn');
+    const searchInput = document.getElementById('searchInput');
+    const dateFromInput = document.getElementById('dateFrom');
+    const dateToInput = document.getElementById('dateTo');
+    const modalApplyBtn = document.getElementById('modalApplyFiltersBtn');
+    const modalClearBtn = document.getElementById('modalClearFiltersBtn');
+    const clearAllFiltersBtn = document.getElementById('clearAllFiltersBtn');
 
     if (!rowTemplateEl) {
         console.error("Critical error: Candidate row template not found!");
@@ -231,56 +254,66 @@ document.addEventListener("DOMContentLoaded", function () {
     const rowTemplate = rowTemplateEl.innerHTML;
 
     const filterSets = {
-        connectionStatus: { container: document.getElementById('connectionStatusCheckboxes'), values: filterOptions.connection_statuses, countSpan: document.getElementById('connectionStatusSelectedCount'), allText: 'All' },
-        leadSource: { container: document.getElementById('leadSourceCheckboxes'), values: filterOptions.lead_sources, countSpan: document.getElementById('leadSourceSelectedCount'), allText: 'All' },
-        employee: { container: document.getElementById('employeeCheckboxes'), values: filterOptions.employees, countSpan: document.getElementById('employeeSelectedCount'), allText: 'All Employees' },
-        status: { container: document.getElementById('statusCheckboxes'), values: filterOptions.lead_statuses, countSpan: document.getElementById('statusSelectedCount'), allText: 'All Statuses' }
+        connectionStatus: { container: document.getElementById('connectionStatusCheckboxes'), values: filterOptions.connection_statuses },
+        leadSource: { container: document.getElementById('leadSourceCheckboxes'), values: filterOptions.lead_sources },
+        employee: { container: document.getElementById('employeeCheckboxes'), values: filterOptions.employees },
+        status: { container: document.getElementById('statusCheckboxes'), values: filterOptions.lead_statuses }
     };
 
-    // --- 1. UI INTERACTION LOGIC (Unchanged) ---
-    function setupDropdownInteractions() {
-        document.querySelectorAll('.dropdown-toggle-button').forEach(button => {
-            button.addEventListener('click', (event) => {
-                event.stopPropagation();
-                const targetId = button.getAttribute('data-target');
-                const targetPane = document.getElementById(targetId);
-                document.querySelectorAll('.filter-options-pane').forEach(pane => {
-                    if (pane !== targetPane) {
-                        pane.classList.remove('show');
-                        const otherButton = document.querySelector(`.dropdown-toggle-button[data-target="${pane.id}"]`);
-                        if (otherButton) otherButton.classList.remove('active');
-                    }
-                });
-                targetPane.classList.toggle('show');
-                button.classList.toggle('active');
-            });
-        });
-
-        document.addEventListener('click', (event) => {
-            document.querySelectorAll('.filter-options-pane.show').forEach(pane => {
-                if (!pane.parentElement.contains(event.target)) {
-                    pane.classList.remove('show');
-                    const button = document.querySelector(`.dropdown-toggle-button[data-target="${pane.id}"]`);
-                    if (button) button.classList.remove('active');
-                }
-            });
-        });
-
-        document.querySelectorAll('.dropdown-search-input').forEach(input => {
-            input.addEventListener('input', () => {
-                const searchTerm = input.value.toLowerCase();
-                const targetId = input.getAttribute('data-filter-target');
-                const container = document.getElementById(targetId);
-                container.querySelectorAll('.form-check').forEach(label => {
-                    const labelText = label.querySelector('.form-check-label').textContent.toLowerCase();
-                    label.style.display = labelText.includes(searchTerm) ? '' : 'none';
-                });
-            });
-        });
+    // --- PERSISTENCE & STATE MANAGEMENT ---
+    function saveFiltersToStorage() {
+        const filters = {
+            search: searchInput.value.trim(),
+            dateFrom: dateFromInput.value,
+            dateTo: dateToInput.value,
+        };
+        for (const key in filterSets) {
+            filters[key] = Array.from(filterSets[key].container.querySelectorAll('.filter-checkbox:checked')).map(cb => cb.value);
+        }
+        localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
+        updateClearAllButtonVisibility();
     }
 
-    // --- 2. DATA LOADING & RENDERING ---
+    function loadFiltersFromStorage() {
+        const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
+        searchInput.value = savedFilters.search || '';
+        dateFromInput.value = savedFilters.dateFrom || '';
+        dateToInput.value = savedFilters.dateTo || '';
+
+        for (const key in filterSets) {
+            const values = savedFilters[key] || [];
+            if (values.length > 0) {
+                filterSets[key].container.querySelectorAll('.filter-checkbox').forEach(cb => {
+                    cb.checked = values.includes(cb.value);
+                });
+            }
+        }
+        updateAllCountsAndCheckboxes();
+        updateClearAllButtonVisibility();
+    }
+    
+    function clearAllFilters() {
+        localStorage.removeItem(FILTERS_STORAGE_KEY);
+        searchInput.value = '';
+        dateFromInput.value = '';
+        dateToInput.value = '';
+        for (const key in filterSets) {
+            const pane = filterSets[key].container.closest('.filter-options-pane-modal');
+            pane.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        }
+        updateAllCountsAndCheckboxes();
+        applyFilters();
+    }
+
+    function updateClearAllButtonVisibility() {
+        const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
+        let isFilterApplied = Object.values(savedFilters).some(val => Array.isArray(val) ? val.length > 0 : val);
+        clearAllFiltersBtn.style.display = isFilterApplied ? 'inline-flex' : 'none';
+    }
+
+    // --- DATA LOADING & RENDERING ---
     function createCandidateRowHTML(candidate, index) {
+        // This function remains unchanged from your original code
         const connectionStatus = candidate.call_connection ? candidate.call_connection.toLowerCase() : '';
         let badgeClass = 'bg-secondary', iconClass = 'fa-question-circle';
         if (connectionStatus === 'yes' || connectionStatus === 'connected') { badgeClass = 'bg-success'; iconClass = 'fa-check-circle'; }
@@ -298,17 +331,24 @@ document.addEventListener("DOMContentLoaded", function () {
         loadingIndicator.style.display = 'block';
         noResultsMessage.style.display = 'none';
 
-        // MODIFIED: We always request the NEXT page after the one we've loaded.
         const pageToFetch = currentPage + 1;
+        const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
+        
+        const currentFilters = {};
+        if (savedFilters.search) currentFilters.search = savedFilters.search;
+        if (savedFilters.dateFrom) currentFilters.dateFrom = savedFilters.dateFrom;
+        if (savedFilters.dateTo) currentFilters.dateTo = savedFilters.dateTo;
+        for (const key in filterSets) {
+            if (savedFilters[key] && savedFilters[key].length > 0) {
+                 currentFilters[key] = savedFilters[key].join(',');
+            }
+        }
+        
         const params = new URLSearchParams({ page: pageToFetch, ...currentFilters });
-
+        
         return fetch(`/crm/api/get-candidates/?${params.toString()}`)
-            .then(response => {
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                return response.json();
-            })
+            .then(response => response.ok ? response.json() : Promise.reject(`HTTP error! status: ${response.status}`))
             .then(data => {
-                // This checks for the very first load of a filtered set.
                 if (pageToFetch === 1 && data.candidates.length === 0) {
                     noResultsMessage.style.display = 'block';
                 }
@@ -316,7 +356,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 const newRowsHTML = data.candidates.map(c => createCandidateRowHTML(c, ++currentCount)).join('');
                 tableBody.insertAdjacentHTML('beforeend', newRowsHTML);
                 
-                // MODIFIED: We successfully loaded a page, so we update our counter.
                 currentPage = pageToFetch;
 
                 if (data.has_next) {
@@ -340,42 +379,94 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    // --- 3. FILTERING LOGIC ---
+    // --- FILTERING LOGIC ---
     function applyFilters() {
-        const filters = {};
-        filters.search = document.getElementById('searchInput').value.trim();
-        filters.dateFrom = document.getElementById('dateFrom').value;
-        filters.dateTo = document.getElementById('dateTo').value;
-        for (const key in filterSets) {
-            const selected = Array.from(filterSets[key].container.querySelectorAll('.filter-checkbox:checked')).map(cb => cb.value);
-            if (selected.length > 0) filters[key] = selected.join(',');
-        }
-        
-        currentFilters = Object.fromEntries(Object.entries(filters).filter(([_, v]) => v));
+        saveFiltersToStorage();
         tableBody.innerHTML = '';
-        
-        // MODIFIED: Reset to 0, because we haven't loaded any pages for this new filter set yet.
-        currentPage = 0;
+        currentPage = 0; // Reset page count for the new filter set
         loadCandidates();
     }
 
     function setupFilterCheckboxes() {
-        for (const key in filterSets) { const config = filterSets[key]; config.values.forEach(value => { const label = document.createElement('label'); label.className = 'form-check cursor-pointer'; label.innerHTML = `<input class="form-check-input filter-checkbox" type="checkbox" value="${value}"><span class="form-check-label">${value}</span>`; config.container.appendChild(label); }); } document.querySelectorAll('.filter-checkbox').forEach(el => { el.addEventListener('change', () => { const parentPane = el.closest('.filter-options-pane'); const key = Object.keys(filterSets).find(k => filterSets[k].container.parentElement === parentPane); updateSelectedCount(key); applyFilters(); }); }); document.querySelectorAll('.select-all-checkbox').forEach(el => { el.addEventListener('change', (e) => { const pane = e.target.closest('.filter-options-pane'); pane.querySelectorAll('.filter-checkbox:not([style*="display: none"])').forEach(cb => cb.checked = e.target.checked); const key = Object.keys(filterSets).find(k => filterSets[k].container.parentElement === pane); updateSelectedCount(key); applyFilters(); }); });
-        function updateSelectedCount(key) { const config = filterSets[key]; const checkedCount = config.container.querySelectorAll('.filter-checkbox:checked').length; const totalCount = config.values.length; if (checkedCount === 0 || checkedCount === totalCount) { config.countSpan.textContent = config.allText; } else { config.countSpan.textContent = `${checkedCount} selected`; } }
+        for (const key in filterSets) {
+            const config = filterSets[key];
+            config.values.forEach(value => {
+                const label = document.createElement('label');
+                label.className = 'form-check cursor-pointer';
+                label.innerHTML = `<input class="form-check-input filter-checkbox" type="checkbox" value="${value}"><span class="form-check-label">${value}</span>`;
+                config.container.appendChild(label);
+            });
+        }
     }
     
-    // --- 4. INITIALIZATION ---
-    setupDropdownInteractions();
-    setupFilterCheckboxes();
+    function updateSelectAllCheckbox(pane) {
+        const checkboxes = pane.querySelectorAll('.filter-checkbox');
+        const checkedCount = pane.querySelectorAll('.filter-checkbox:checked').length;
+        const selectAll = pane.querySelector('.select-all-checkbox');
+        if (checkedCount === 0) {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+        } else if (checkedCount === checkboxes.length) {
+            selectAll.checked = true;
+            selectAll.indeterminate = false;
+        } else {
+            selectAll.checked = false;
+            selectAll.indeterminate = true;
+        }
+    }
     
-    loadMoreBtn.addEventListener('click', loadCandidates);
+    function updateAllCountsAndCheckboxes() {
+         document.querySelectorAll('.filter-options-pane-modal').forEach(pane => {
+             updateSelectAllCheckbox(pane);
+         });
+    }
 
-    document.getElementById('searchInput').addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(applyFilters, 300);
-    });
-    document.getElementById('dateFrom').addEventListener('change', applyFilters);
-    document.getElementById('dateTo').addEventListener('change', applyFilters);
+    // --- INITIALIZATION & EVENT LISTENERS ---
+    function initializeEventListeners() {
+        loadMoreBtn.addEventListener('click', loadCandidates);
+        modalApplyBtn.addEventListener('click', applyFilters);
+        clearAllFiltersBtn.addEventListener('click', clearAllFilters);
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(applyFilters, 500);
+        });
+
+        modalClearBtn.addEventListener('click', () => {
+            dateFromInput.value = '';
+            dateToInput.value = '';
+            document.querySelectorAll('.filter-options-pane-modal').forEach(pane => {
+                pane.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                updateSelectAllCheckbox(pane);
+            });
+        });
+
+        document.querySelectorAll('.dropdown-search-input').forEach(input => {
+            input.addEventListener('input', () => {
+                const searchTerm = input.value.toLowerCase();
+                const targetId = input.getAttribute('data-filter-target');
+                const container = document.getElementById(targetId);
+                container.querySelectorAll('.form-check').forEach(label => {
+                    const labelText = label.querySelector('.form-check-label').textContent.toLowerCase();
+                    label.style.display = labelText.includes(searchTerm) ? '' : 'none';
+                });
+            });
+        });
+
+        document.querySelectorAll('.select-all-checkbox').forEach(el => {
+            el.addEventListener('change', (e) => {
+                const pane = e.target.closest('.filter-options-pane-modal');
+                pane.querySelectorAll('.filter-checkbox:not([style*="display: none"])').forEach(cb => cb.checked = e.target.checked);
+            });
+        });
+        
+        document.querySelectorAll('.filter-checkbox').forEach(el => {
+            el.addEventListener('change', (e) => {
+                 const pane = e.target.closest('.filter-options-pane-modal');
+                 updateSelectAllCheckbox(pane);
+            });
+        });
+    }
 
     function checkInitialLoad() {
         const initialCount = tableBody.rows.length;
@@ -386,7 +477,26 @@ document.addEventListener("DOMContentLoaded", function () {
             loadMoreContainer.style.display = 'none';
         }
     }
-    checkInitialLoad();
+
+    setupFilterCheckboxes();
+    loadFiltersFromStorage();
+    initializeEventListeners();
+    
+    // Perform initial data load based on persisted filters
+    tableBody.innerHTML = ''; // Clear server-rendered rows
+    currentPage = 0; // Start fetching from page 1
+    loadCandidates().then(() => {
+        // After the initial async load, check if "load more" is needed.
+        const initialCount = tableBody.rows.length;
+        const totalCount = parseInt(document.getElementById('totalCount').textContent, 10);
+        if (initialCount > 0 && initialCount >= totalCount) {
+            loadMoreContainer.style.display = 'none';
+        } else if (initialCount === 0) {
+            // No results message is already handled by loadCandidates
+        } else {
+             loadMoreContainer.style.display = 'block';
+        }
+    });
 });
 
 function confirmDelete(candidateId, candidateName, modelType) {

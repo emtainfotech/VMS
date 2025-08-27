@@ -27,7 +27,7 @@
         <div class="container-xl">
             <div class="card">
                 <div class="card-header">
-                    <div class="row align-items-center g-2">
+                    <div class="row align-items-center g-2 w-100">
                         <div class="col-12 col-md-4">
                             <div class="input-group">
                                 <span class="input-group-text">
@@ -36,45 +36,16 @@
                                 <input type="text" id="searchInput" class="form-control" placeholder="Search candidates..." aria-label="Search candidates">
                             </div>
                         </div>
-                        <div class="col-12 col-md-8 d-flex flex-wrap align-items-center justify-content-md-end g-2">
-                            <div class="me-md-2 mb-2 mb-md-0 d-flex flex-grow-1 flex-md-grow-0">
-                                <input type="date" id="dateFrom" class="form-control" title="From Date">
-                            </div>
-                            <div class="me-md-2 mb-2 mb-md-0 d-flex flex-grow-1 flex-md-grow-0">
-                                <input type="date" id="dateTo" class="form-control" title="To Date">
-                            </div>
-                            <!-- Connection Status Filter -->
-                            <div class="filter-dropdown-container me-md-2 mb-2 mb-md-0 d-flex align-items-center flex-grow-1 flex-md-grow-0">
-                                <label class="form-label mb-0 me-2 text-nowrap">Connection:</label>
-                                <div class="dropdown-toggle-button" id="connectionStatusDropdownToggle">
-                                    <span id="connectionStatusSelectedCount">All Connections</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
-                                </div>
-                                <div class="filter-options-pane" id="connectionStatusFilterOptions">
-                                    <!-- Options will be populated by JS -->
-                                </div>
-                            </div>
-                            <!-- Lead Source Filter -->
-                            <div class="filter-dropdown-container me-md-2 mb-2 mb-md-0 d-flex align-items-center flex-grow-1 flex-md-grow-0">
-                                <label class="form-label mb-0 me-2 text-nowrap">Lead Source:</label>
-                                <div class="dropdown-toggle-button" id="leadSourceDropdownToggle">
-                                    <span id="leadSourceSelectedCount">All Sources</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
-                                </div>
-                                <div class="filter-options-pane" id="leadSourceFilterOptions">
-                                    <!-- Options will be populated by JS -->
-                                </div>
-                            </div>
-                            <!-- Lead Status Filter -->
-                            <div class="filter-dropdown-container d-flex align-items-center flex-grow-1 flex-md-grow-0">
-                                <label class="form-label mb-0 me-2 text-nowrap">Lead Status:</label>
-                                <div class="dropdown-toggle-button" id="statusDropdownToggle">
-                                    <span id="statusSelectedCount">All Statuses</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 4l4 -4" /></svg>
-                                </div>
-                                <div class="filter-options-pane" id="statusFilterOptions">
-                                    <!-- Options will be populated by JS -->
-                                </div>
+                        <div class="col-12 col-md-8 d-flex justify-content-md-end">
+                            <div class="btn-list">
+                                <button id="clearAllFiltersBtn" class="btn btn-light" style="display: none;">
+                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-filter-off" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 3l18 18"></path><path d="M8.5 8.5c.337 -1.33 .944 -2.528 1.772 -3.5h3.456a1 1 0 0 1 .8 1.6l-2.4 2.9a1 1 0 0 0 0 1l.594 .742m2.053 2.566l2.353 2.942a1 1 0 0 1 -.8 1.6h-12a1 1 0 0 1 -.8 -1.6l2.4 -2.9a1 1 0 0 0 0 -1l-2.4 -2.9a1 1 0 0 1 .8 -1.6h2.31"></path></svg>
+                                    Clear Filters
+                                </button>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.414 -4.414a2 2 0 0 1 -.586 -1.414v-2.172z" /></svg>
+                                    Filter
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -111,9 +82,55 @@
     </div>
 </div>
 
+<div class="modal" id="filterModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Filter Candidates</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="dateFrom" class="form-label">Date From</label>
+                        <input type="date" id="dateFrom" class="form-control" title="From Date">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="dateTo" class="form-label">Date To</label>
+                        <input type="date" id="dateTo" class="form-control" title="To Date">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Connection Status</label>
+                        <div class="filter-options-pane" id="connectionStatusFilterOptions" style="position: relative; display: block; border: 1px solid #ddd; border-radius: 4px; padding: .75rem; max-height: 250px; overflow-y: auto;">
+                            </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">Lead Source</label>
+                        <div class="filter-options-pane" id="leadSourceFilterOptions" style="position: relative; display: block; border: 1px solid #ddd; border-radius: 4px; padding: .75rem; max-height: 250px; overflow-y: auto;">
+                            </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">Lead Status</label>
+                        <div class="filter-options-pane" id="statusFilterOptions" style="position: relative; display: block; border: 1px solid #ddd; border-radius: 4px; padding: .75rem; max-height: 250px; overflow-y: auto;">
+                            </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn me-auto" id="modalClearFiltersBtn">Clear Filters</button>
+                <button type="button" class="btn btn-primary" id="modalApplyFiltersBtn" data-bs-dismiss="modal">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <style>
     /* All your existing styles remain unchanged here */
-    .status-badge{display:inline-block;padding:.25rem .5rem;border-radius:50rem;font-size:.75rem;font-weight:600;line-height:1;text-align:center;white-space:nowrap;vertical-align:baseline}.status-hot{background-color:rgba(253,126,20,.1);color:#fd7e14}.status-converted{background-color:rgba(32,201,151,.1);color:#20c997}.status-cold{background-color:rgba(250,82,82,.1);color:#fa5252}.status-not-interested{background-color:rgba(108,117,125,.1);color:#6c757d}.status-connect-later{background-color:rgba(0,123,255,.1);color:#007bff}.status-dnd{background-color:rgba(220,53,69,.1);color:#dc3545}.status-other{background-color:rgba(102,16,242,.1);color:#6610f2}.avatar-container{width:40px;height:40px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center}@media (max-width:768px){.card-header .row>div{width:100%}.card-header .input-group{margin-bottom:1rem}}.table-responsive.table-scrollable-body{position:relative}#candidatesTable thead th{position:sticky;top:0;background-color:var(--tblr-card-bg,white);z-index:10;box-shadow:0 2px 2px -1px rgba(0,0,0,.1)}.filter-dropdown-container{position:relative;width:100%;flex-grow:1;flex-basis:auto}@media (min-width:768px){.filter-dropdown-container{flex-grow:0;max-width:200px}}.dropdown-toggle-button{display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);background-color:var(--tblr-input-bg,white);color:var(--tblr-body-color);cursor:pointer;-webkit-user-select:none;user-select:none;line-height:1.5;transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out}.dropdown-toggle-button:hover{border-color:var(--tblr-border-color-hover)}.dropdown-toggle-button:focus,.dropdown-toggle-button.active{border-color:var(--tblr-primary);box-shadow:var(--tblr-focus-ring-shadow);outline:0}.dropdown-icon{margin-left:.5rem;transition:transform .2s;stroke-width:2;color:var(--tblr-icon-color)}.dropdown-toggle-button.active .dropdown-icon{transform:rotate(180deg)}.filter-options-pane{position:absolute;top:calc(100% + 5px);left:0;z-index:1000;background-color:var(--tblr-card-bg,white);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);padding:.75rem;box-shadow:var(--tblr-box-shadow-lg);min-width:220px;max-height:250px;overflow-y:auto;display:none;box-sizing:border-box}.filter-options-pane.show{display:block}.filter-options-pane .form-check{margin-bottom:.5rem;color:var(--tblr-body-color)}.filter-options-pane .form-check:last-child{margin-bottom:0}.filter-options-pane .form-check-label{margin-left:.5rem}.filter-options-pane .select-all-checkbox+.form-check-label{font-weight:700;color:var(--tblr-body-color)}.cursor-pointer{cursor:pointer}
+    .status-badge{display:inline-block;padding:.25rem .5rem;border-radius:50rem;font-size:.75rem;font-weight:600;line-height:1;text-align:center;white-space:nowrap;vertical-align:baseline}.status-hot{background-color:rgba(253,126,20,.1);color:#fd7e14}.status-converted{background-color:rgba(32,201,151,.1);color:#20c997}.status-cold{background-color:rgba(250,82,82,.1);color:#fa5252}.status-not-interested{background-color:rgba(108,117,125,.1);color:#6c757d}.status-connect-later{background-color:rgba(0,123,255,.1);color:#007bff}.status-dnd{background-color:rgba(220,53,69,.1);color:#dc3545}.status-other{background-color:rgba(102,16,242,.1);color:#6610f2}.avatar-container{width:40px;height:40px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center}@media (max-width:768px){.card-header .row>div{width:100%}.card-header .input-group{margin-bottom:1rem}}.table-responsive.table-scrollable-body{position:relative}#candidatesTable thead th{position:sticky;top:0;z-index:10;box-shadow:0 2px 2px -1px rgba(0,0,0,.1)}.filter-dropdown-container{position:relative;width:100%;flex-grow:1;flex-basis:auto}@media (min-width:768px){.filter-dropdown-container{flex-grow:0;max-width:200px}}.dropdown-toggle-button{display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);color:var(--tblr-body-color);cursor:pointer;-webkit-user-select:none;user-select:none;line-height:1.5;transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out}.dropdown-toggle-button:hover{border-color:var(--tblr-border-color-hover)}.dropdown-toggle-button:focus,.dropdown-toggle-button.active{border-color:var(--tblr-primary);box-shadow:var(--tblr-focus-ring-shadow);outline:0}.dropdown-icon{margin-left:.5rem;transition:transform .2s;stroke-width:2;color:var(--tblr-icon-color)}.dropdown-toggle-button.active .dropdown-icon{transform:rotate(180deg)}.filter-options-pane{box-sizing:border-box}.filter-options-pane .form-check{margin-bottom:.5rem;color:var(--tblr-body-color)}.filter-options-pane .form-check:last-child{margin-bottom:0}.filter-options-pane .form-check-label{margin-left:.5rem}.filter-options-pane .select-all-checkbox+.form-check-label{font-weight:700;color:var(--tblr-body-color)}.cursor-pointer{cursor:pointer}
 </style>
 
 <script>
@@ -122,7 +139,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let currentPage = 1;
     let hasNextPage = {{ page_obj.has_next|yesno:"true,false" }};
     let isLoading = false;
-    let filterTimeout;
+    let searchTimeout;
+    const FILTERS_STORAGE_KEY = 'candidateFilters';
 
     // --- DOM ELEMENTS ---
     const searchInput = document.getElementById('searchInput');
@@ -132,34 +150,109 @@ document.addEventListener("DOMContentLoaded", function () {
     const scrollContainer = document.querySelector('.table-scrollable-body');
     const loadingIndicator = document.getElementById('loading-indicator');
     const totalCandidatesDisplay = document.getElementById('total-candidates-display');
-
+    const modalApplyBtn = document.getElementById('modalApplyFiltersBtn');
+    const modalClearBtn = document.getElementById('modalClearFiltersBtn');
+    const clearAllFiltersBtn = document.getElementById('clearAllFiltersBtn');
+    
     // --- FILTER CONFIGURATION ---
     const filterConfigs = {
         connectionStatus: {
-            toggle: document.getElementById('connectionStatusDropdownToggle'),
             pane: document.getElementById('connectionStatusFilterOptions'),
-            countSpan: document.getElementById('connectionStatusSelectedCount'),
-            allText: 'All Connections',
-            paramName: 'connection_status[]',
+            paramName: 'connection_status',
             dataAttr: 'data-connection-status'
         },
         leadSource: {
-            toggle: document.getElementById('leadSourceDropdownToggle'),
             pane: document.getElementById('leadSourceFilterOptions'),
-            countSpan: document.getElementById('leadSourceSelectedCount'),
-            allText: 'All Sources',
-            paramName: 'lead_source[]',
+            paramName: 'lead_source',
             dataAttr: 'data-lead-source'
         },
         status: {
-            toggle: document.getElementById('statusDropdownToggle'),
             pane: document.getElementById('statusFilterOptions'),
-            countSpan: document.getElementById('statusSelectedCount'),
-            allText: 'All Statuses',
-            paramName: 'status[]',
+            paramName: 'status',
             dataAttr: 'data-status'
         }
     };
+
+    /**
+     * Saves the current state of all filters to localStorage.
+     */
+    function saveFiltersToStorage() {
+        const filters = {
+            search: searchInput.value.trim(),
+            date_from: dateFromInput.value,
+            date_to: dateToInput.value,
+        };
+        for (const key in filterConfigs) {
+            const config = filterConfigs[key];
+            filters[config.paramName] = Array.from(config.pane.querySelectorAll('.filter-checkbox:checked')).map(cb => cb.value);
+        }
+        localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
+        updateClearAllButtonVisibility();
+    }
+
+    /**
+     * Loads filter state from localStorage and applies it to the input fields.
+     */
+    function loadFiltersFromStorage() {
+        const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
+
+        searchInput.value = savedFilters.search || '';
+        dateFromInput.value = savedFilters.date_from || '';
+        dateToInput.value = savedFilters.date_to || '';
+
+        for (const key in filterConfigs) {
+            const config = filterConfigs[key];
+            const values = savedFilters[config.paramName] || [];
+            if (values.length > 0) {
+                config.pane.querySelectorAll('.filter-checkbox').forEach(cb => {
+                    cb.checked = values.includes(cb.value);
+                });
+            }
+            updateSelectAllCheckbox(key);
+        }
+        updateClearAllButtonVisibility();
+    }
+    
+    /**
+     * Clears all filters, removes them from storage, and refreshes the data.
+     */
+    function clearAllFilters() {
+        localStorage.removeItem(FILTERS_STORAGE_KEY);
+        
+        // Reset form fields
+        searchInput.value = '';
+        dateFromInput.value = '';
+        dateToInput.value = '';
+        for (const key in filterConfigs) {
+            filterConfigs[key].pane.querySelectorAll('.filter-checkbox, .select-all-checkbox').forEach(cb => cb.checked = false);
+            updateSelectAllCheckbox(key);
+        }
+
+        updateClearAllButtonVisibility();
+        fetchCandidates(1, false);
+    }
+    
+    /**
+     * Shows or hides the "Clear All Filters" button based on whether any filters are active.
+     */
+    function updateClearAllButtonVisibility() {
+        const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
+        let isFilterApplied = false;
+
+        if (savedFilters.search || savedFilters.date_from || savedFilters.date_to) {
+            isFilterApplied = true;
+        } else {
+            for (const key in filterConfigs) {
+                if (savedFilters[filterConfigs[key].paramName] && savedFilters[filterConfigs[key].paramName].length > 0) {
+                    isFilterApplied = true;
+                    break;
+                }
+            }
+        }
+        
+        clearAllFiltersBtn.style.display = isFilterApplied ? 'inline-flex' : 'none';
+    }
+
 
     /**
      * Fetches candidates from the API based on current filters and page.
@@ -167,19 +260,23 @@ document.addEventListener("DOMContentLoaded", function () {
     async function fetchCandidates(page = 1, append = false) {
         if (isLoading) return;
         isLoading = true;
-        loadingIndicator.style.display = 'block';
-
+        if (!append) {
+             loadingIndicator.style.display = 'block';
+        }
+       
+        const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
         const params = new URLSearchParams();
         params.append('page', page);
         
-        if (searchInput.value) params.append('search', searchInput.value.trim());
-        if (dateFromInput.value) params.append('date_from', dateFromInput.value);
-        if (dateToInput.value) params.append('date_to', dateToInput.value);
+        if (savedFilters.search) params.append('search', savedFilters.search);
+        if (savedFilters.date_from) params.append('date_from', savedFilters.date_from);
+        if (savedFilters.date_to) params.append('date_to', savedFilters.date_to);
 
         for (const key in filterConfigs) {
             const config = filterConfigs[key];
-            config.pane.querySelectorAll('.filter-checkbox:checked').forEach(cb => {
-                params.append(config.paramName, cb.value);
+            const values = savedFilters[config.paramName] || [];
+            values.forEach(value => {
+                 params.append(`${config.paramName}[]`, value);
             });
         }
 
@@ -209,16 +306,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    /**
-     * Debounces filter changes to avoid excessive API calls.
-     */
-    function handleFilterChange() {
-        clearTimeout(filterTimeout);
-        filterTimeout = setTimeout(() => {
-            fetchCandidates(1, false);
-        }, 500);
-    }
-    
     /**
      * Populates filter dropdowns with unique values from the initially loaded table rows.
      */
@@ -259,37 +346,75 @@ document.addEventListener("DOMContentLoaded", function () {
             config.pane.innerHTML = optionsHTML;
         }
     }
+    
+    function updateSelectAllCheckbox(key) {
+        const config = filterConfigs[key];
+        const checkboxes = config.pane.querySelectorAll('.filter-checkbox');
+        const checkedCount = config.pane.querySelectorAll('.filter-checkbox:checked').length;
+        const selectAll = config.pane.querySelector('.select-all-checkbox');
+        
+        if (checkedCount === 0) {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+        } else if (checkedCount === checkboxes.length) {
+            selectAll.checked = true;
+            selectAll.indeterminate = false;
+        } else {
+            selectAll.checked = false;
+            selectAll.indeterminate = true;
+        }
+    }
+
+    function reinitializeTooltips() {
+        const existingTooltips = bootstrap.Tooltip.getInstance(document.body);
+        if (existingTooltips) {
+             document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+                 const instance = bootstrap.Tooltip.getInstance(el);
+                 if(instance) instance.dispose();
+            });
+        }
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
 
     /**
      * Sets up all event listeners for the page.
      */
     function initializeEventListeners() {
-        [searchInput, dateFromInput, dateToInput].forEach(el => el.addEventListener('input', handleFilterChange));
-
-        document.addEventListener('click', (e) => {
-            for (const key in filterConfigs) {
-                const config = filterConfigs[key];
-                const isClickInside = config.toggle.contains(e.target) || config.pane.contains(e.target);
-                if (e.target === config.toggle) {
-                    config.pane.classList.toggle('show');
-                    config.toggle.classList.toggle('active');
-                } else if (!isClickInside) {
-                    config.pane.classList.remove('show');
-                    config.toggle.classList.remove('active');
-                }
-            }
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                saveFiltersToStorage();
+                fetchCandidates(1, false);
+            }, 500);
         });
 
+        modalApplyBtn.addEventListener('click', () => {
+            saveFiltersToStorage();
+            fetchCandidates(1, false);
+        });
+        
+        modalClearBtn.addEventListener('click', () => {
+             dateFromInput.value = '';
+             dateToInput.value = '';
+             for (const key in filterConfigs) {
+                filterConfigs[key].pane.querySelectorAll('.filter-checkbox, .select-all-checkbox').forEach(cb => cb.checked = false);
+                updateSelectAllCheckbox(key);
+             }
+        });
+        
+        clearAllFiltersBtn.addEventListener('click', clearAllFilters);
+        
         for (const key in filterConfigs) {
             const config = filterConfigs[key];
             config.pane.addEventListener('change', (e) => {
                 if (e.target.matches('.filter-checkbox, .select-all-checkbox')) {
-                    const checkboxes = config.pane.querySelectorAll('.filter-checkbox');
                     if (e.target.matches('.select-all-checkbox')) {
-                        checkboxes.forEach(cb => cb.checked = e.target.checked);
+                       config.pane.querySelectorAll('.filter-checkbox').forEach(cb => cb.checked = e.target.checked);
                     }
-                    updateSelectedCount(key);
-                    handleFilterChange();
+                    updateSelectAllCheckbox(key);
                 }
             });
             config.pane.addEventListener('input', (e) => {
@@ -303,64 +428,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
         }
-    }
-
-    function updateSelectedCount(key) {
-        const config = filterConfigs[key];
-        const checkedCount = config.pane.querySelectorAll('.filter-checkbox:checked').length;
-        const totalCount = config.pane.querySelectorAll('.filter-checkbox').length;
-        const selectAll = config.pane.querySelector('.select-all-checkbox');
         
-        if (checkedCount === 0) {
-            config.countSpan.textContent = config.allText;
-            selectAll.checked = false;
-            selectAll.indeterminate = false;
-        } else if (checkedCount === totalCount) {
-            config.countSpan.textContent = config.allText;
-            selectAll.checked = true;
-            selectAll.indeterminate = false;
-        } else {
-            config.countSpan.textContent = `${checkedCount} selected`;
-            selectAll.checked = false;
-            selectAll.indeterminate = true;
-        }
-    }
+        scrollContainer.addEventListener('scroll', () => {
+            const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+            if (scrollTop + clientHeight >= scrollHeight - 250 && hasNextPage && !isLoading) {
+                fetchCandidates(currentPage + 1, true);
+            }
+        });
 
-    function reinitializeTooltips() {
-        // Dispose of existing tooltips to prevent duplicates
-        const existingTooltips = bootstrap.Tooltip.getInstance(document.body);
-        if (existingTooltips) {
-             document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
-                const instance = bootstrap.Tooltip.getInstance(el);
-                if(instance) instance.dispose();
-            });
-        }
-        // Create new ones
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
+        tableBody.addEventListener('click', (e) => {
+            const row = e.target.closest('tr');
+            if (!row || e.target.closest('a, button, input, select, .actions-cell')) return;
+            const profileLink = row.querySelector('.profile-link');
+            if (profileLink) window.location.href = profileLink.href;
         });
     }
 
     // --- INITIALIZATION ---
     populateFilterOptions();
+    loadFiltersFromStorage();
     initializeEventListeners();
+    fetchCandidates(1, false); // Initial fetch based on loaded filters
     reinitializeTooltips();
-
-    scrollContainer.addEventListener('scroll', () => {
-        const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
-        if (scrollTop + clientHeight >= scrollHeight - 250 && hasNextPage && !isLoading) {
-            fetchCandidates(currentPage + 1, true);
-        }
-    });
-
-    tableBody.addEventListener('click', (e) => {
-        const row = e.target.closest('tr');
-        if (!row) return;
-        if (e.target.closest('a, button, input, select, .actions-cell')) return;
-        const profileLink = row.querySelector('.profile-link');
-        if (profileLink) window.location.href = profileLink.href;
-    });
 });
 </script>
 {% endblock content %}
