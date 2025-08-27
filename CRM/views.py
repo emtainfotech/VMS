@@ -53,7 +53,7 @@ def crm_admin_login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None and user.is_staff:
             login(request, user)
-            return redirect("crm_dashboard")  
+            return redirect("employee_calls_list")  
         else:
             messages.error(request, "Invalid credentials or insufficient permissions.")
     return render(request, "crm/admin-login.html")
@@ -4911,8 +4911,7 @@ import calendar
 from django.db.models import Count, Max, Q, Subquery, OuterRef, IntegerField
 from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMonth, Coalesce
 # from .models import Employee, CandidateActivity, Candidate_registration
-# HELPER FUNCTION FOR DYNAMIC CHART DATA (No changes)
-
+# HELPER FUNCTION FOR DYNAMIC CHART DATA
 # HELPER FUNCTION FOR DYNAMIC CHART DATA
 def _get_chart_data(queryset, start_date, end_date, filter_q=None):
     if filter_q:
@@ -4923,48 +4922,43 @@ def _get_chart_data(queryset, start_date, end_date, filter_q=None):
     time_delta = end_date - start_date
 
     if time_delta.days <= 1:
-        calls_by_hour = queryset.annotate(hour=TruncHour('timestamp')).values('hour').annotate(count=Count('id')).order_by('hour')
-        hourly_counts = {i: 0 for i in range(24)}
-        for group in calls_by_hour:
-            hourly_counts[group['hour'].hour] = group['count']
-        chart_labels = [f"{hour}:00" for hour in hourly_counts.keys()]
-        chart_data = list(hourly_counts.values())
+        data_by_time = queryset.annotate(hour=TruncHour('timestamp')).values('hour').annotate(count=Count('id')).order_by('hour')
+        time_counts = {i: 0 for i in range(24)}
+        for group in data_by_time: time_counts[group['hour'].hour] = group['count']
+        chart_labels = [f"{hour}:00" for hour in time_counts.keys()]
+        chart_data = list(time_counts.values())
     elif time_delta.days <= 14:
-        calls_by_date = queryset.annotate(date=TruncDate('timestamp')).values('date').annotate(count=Count('id')).order_by('date')
-        days_in_range = (end_date - start_date).days + 1
-        daily_counts = {start_date + timedelta(days=i): 0 for i in range(days_in_range)}
-        for group in calls_by_date:
-            daily_counts[group['date']] = group['count']
-        chart_labels = [day.strftime('%a, %b %d') for day in daily_counts.keys()]
-        chart_data = list(daily_counts.values())
+        data_by_time = queryset.annotate(date=TruncDate('timestamp')).values('date').annotate(count=Count('id')).order_by('date')
+        time_counts = {start_date + timedelta(days=i): 0 for i in range((end_date - start_date).days + 1)}
+        for group in data_by_time: time_counts[group['date']] = group['count']
+        chart_labels = [day.strftime('%a, %b %d') for day in time_counts.keys()]
+        chart_data = list(time_counts.values())
     elif time_delta.days <= 92:
-        calls_by_week = queryset.annotate(week=TruncWeek('timestamp')).values('week').annotate(count=Count('id')).order_by('week')
-        weekly_counts = {}
+        data_by_time = queryset.annotate(week=TruncWeek('timestamp')).values('week').annotate(count=Count('id')).order_by('week')
+        time_counts = {}
         current_date = start_date - timedelta(days=start_date.weekday())
         while current_date <= end_date:
-            weekly_counts[current_date] = 0
+            time_counts[current_date] = 0
             current_date += timedelta(weeks=1)
-        for group in calls_by_week:
-            if group['week'] in weekly_counts:
-                weekly_counts[group['week']] = group['count']
-        chart_labels = [week_start.strftime('Week of %b %d') for week_start in weekly_counts.keys()]
-        chart_data = list(weekly_counts.values())
+        for group in data_by_time:
+            if group['week'] in time_counts: time_counts[group['week']] = group['count']
+        chart_labels = [week_start.strftime('Week of %b %d') for week_start in time_counts.keys()]
+        chart_data = list(time_counts.values())
     else:
-        calls_by_month = queryset.annotate(month=TruncMonth('timestamp')).values('month').annotate(count=Count('id')).order_by('month')
-        monthly_counts = {i: 0 for i in range(1, 13)}
-        for group in calls_by_month:
-            monthly_counts[group['month'].month] = group['count']
+        data_by_time = queryset.annotate(month=TruncMonth('timestamp')).values('month').annotate(count=Count('id')).order_by('month')
+        time_counts = {i: 0 for i in range(1, 13)}
+        for group in data_by_time: time_counts[group['month'].month] = group['count']
         chart_labels = [calendar.month_name[i] for i in range(1, 13)]
-        chart_data = list(monthly_counts.values())
+        chart_data = list(time_counts.values())
     return chart_labels, chart_data
 
 
-
-
+@login_required
 def employee_calls_list(request):
     period = request.GET.get('period', 'today')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
+    selected_employee_ids = request.GET.getlist('employees')
     
     today = timezone.now().date()
     if start_date_str and end_date_str:
@@ -4989,25 +4983,37 @@ def employee_calls_list(request):
         start_date = end_date = today
         period = 'today'
 
-    # --- Primary Stats Calculation (Activity Based) ---
+    all_employees = Employee.objects.all()
+    employee_queryset = Employee.objects.all()
+    if selected_employee_ids:
+        employee_queryset = employee_queryset.filter(id__in=selected_employee_ids)
+
     base_activity_filter = Q(candidateactivity__timestamp__date__range=[start_date, end_date], candidateactivity__action__in=['call_made', 'created'], candidateactivity__employee__isnull=False)
     connected_filter = Q(Q(candidateactivity__action='call_made', candidateactivity__changes__call_connection__new__iexact='Connected') | Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected'))
     
     LEAD_STATUSES = ['Hot', 'Converted']
+    lead_transition_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
     lead_transition_filter_prefixed = (Q(candidateactivity__action='call_made', candidateactivity__changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(candidateactivity__changes__lead_generate__old__in=LEAD_STATUSES)) | Q(candidateactivity__action='created', candidateactivity__candidate__lead_generate__in=LEAD_STATUSES)
+    
+    leads_subquery = CandidateActivity.objects.filter(
+        employee_id=OuterRef('pk'),
+        timestamp__date__range=[start_date, end_date]
+    ).filter(lead_transition_filter).annotate(
+        date=TruncDate('timestamp')
+    ).values('candidate_id', 'date').distinct().values('employee_id').annotate(
+        count=Count('pk')
+    ).values('count')
 
-    employee_stats = Employee.objects.annotate(
+    employee_stats = employee_queryset.annotate(
         total_calls=Count('candidateactivity', filter=base_activity_filter),
         last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
         connected_calls=Count('candidateactivity', filter=base_activity_filter & connected_filter),
         not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~connected_filter),
-        leads_generated=Count('candidateactivity', filter=base_activity_filter & lead_transition_filter_prefixed),
+        leads_generated=Coalesce(Subquery(leads_subquery, output_field=IntegerField()), 0)
     ).filter(total_calls__gt=0).order_by('-total_calls')
     
-    # --- Secondary Stats Calculation (Selections & Conversion %) ---
     for stat in employee_stats:
         stat.selections = Candidate_registration.objects.filter(updated_by=stat, selection_status__iexact='Selected', selection_date__range=[start_date, end_date]).count()
-        
         employee_activities = CandidateActivity.objects.filter(employee=stat, timestamp__date__range=[start_date, end_date])
         hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
         hot_leads = employee_activities.filter(Q(changes__lead_generate__new__iexact='Hot')).count()
@@ -5018,19 +5024,24 @@ def employee_calls_list(request):
         else:
             stat.conversion_percentage = 0
 
-    # --- Overall Stats for Top Summary Cards ---
     all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created'], employee__isnull=False)
-    
+    selections_queryset = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date])
+
+    if selected_employee_ids:
+        all_activities_queryset = all_activities_queryset.filter(employee_id__in=selected_employee_ids)
+        selections_queryset = selections_queryset.filter(updated_by_id__in=selected_employee_ids)
+
     total_connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
     total_leads_transition_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
     total_hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
-    total_selections_count = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date]).count()
-
+    
+    total_selections_count = selections_queryset.count()
+    total_leads_generated_count = all_activities_queryset.filter(total_leads_transition_filter).annotate(date=TruncDate('timestamp')).values('candidate_id', 'date').distinct().count()
+    
     total_stats_agg = all_activities_queryset.aggregate(
         total_activities=Count('id'),
         total_connected=Count('id', filter=total_connected_filter),
         total_not_connected=Count('id', filter=~total_connected_filter),
-        total_leads_generated=Count('id', filter=total_leads_transition_filter),
         total_hot_leads=Count('id', filter=Q(changes__lead_generate__new__iexact='Hot')),
         total_converted_from_hot=Count('id', filter=total_hot_to_converted_filter)
     )
@@ -5041,21 +5052,34 @@ def employee_calls_list(request):
     else:
         total_conversion_percentage = 0
         
-    total_stats = {**total_stats_agg, 'total_selections': total_selections_count, 'total_conversion_percentage': total_conversion_percentage}
+    total_stats = {**total_stats_agg, 'total_leads_generated': total_leads_generated_count, 'total_selections': total_selections_count, 'total_conversion_percentage': total_conversion_percentage}
     
-    # --- START: Logic for Interviews and Follow-ups ---
-    # These queries now use the dashboard's date range
     interview_detail_reg = Candidate_Interview.objects.filter(interview_date_time__date__range=[start_date, end_date], status__in=['scheduled', 'rescheduled'])
     interview_detail_can = EVMS_Candidate_Interview.objects.filter(interview_date_time__date__range=[start_date, end_date], status__in=['scheduled', 'rescheduled'])
-    interview_detail = sorted(list(chain(interview_detail_reg, interview_detail_can)), key=lambda x: x.interview_date_time)
-    
     follow_up_candidates_reg = Candidate_registration.objects.filter(next_follow_up_date_time__date__range=[start_date, end_date])
     follow_up_candidates_can = Candidate.objects.filter(next_follow_up_date_time__date__range=[start_date, end_date])
-    follow_up_candidates = sorted(list(chain(follow_up_candidates_reg, follow_up_candidates_can)), key=lambda x: x.next_follow_up_date_time)
-    # --- END: Logic for Interviews and Follow-ups ---
 
+    if selected_employee_ids:
+        interview_detail_reg = interview_detail_reg.filter(candidate__employee_assigned_id__in=selected_employee_ids)
+        interview_detail_can = interview_detail_can.filter(candidate__employee_assigned_id__in=selected_employee_ids)
+        follow_up_candidates_reg = follow_up_candidates_reg.filter(employee_assigned_id__in=selected_employee_ids)
+        follow_up_candidates_can = follow_up_candidates_can.filter(employee_assigned_id__in=selected_employee_ids)
+
+    interview_detail = sorted(list(chain(interview_detail_reg, interview_detail_can)), key=lambda x: x.interview_date_time)
+    follow_up_candidates = sorted(list(chain(follow_up_candidates_reg, follow_up_candidates_can)), key=lambda x: x.next_follow_up_date_time)
+    lead_transition_activities = all_activities_queryset.filter(total_leads_transition_filter)
+    unique_leads_dict = {}
+    for activity in lead_transition_activities.order_by('timestamp'):
+        key = (activity.candidate_id, activity.timestamp.date())
+        unique_leads_dict[key] = activity
+        
+    unique_lead_activity_ids = [activity.id for activity in unique_leads_dict.values()]
+    unique_leads_queryset = CandidateActivity.objects.filter(id__in=unique_lead_activity_ids)
+    # --- END OF FIX ---
+    
     main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date)
-    leads_chart_labels, leads_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date, filter_q=total_leads_transition_filter)
+    # Use the new, clean queryset to generate the leads chart
+    leads_chart_labels, leads_chart_data = _get_chart_data(unique_leads_queryset, start_date, end_date)
 
     context = {
         'employee_stats': employee_stats,
@@ -5069,49 +5093,52 @@ def employee_calls_list(request):
         'total_stats': total_stats,
         'interview_detail': interview_detail,
         'follow_up_candidates': follow_up_candidates,
+        'all_employees': all_employees,
+        'selected_employee_ids': [int(eid) for eid in selected_employee_ids],
     }
     return render(request, 'crm/employee-calls-list.html', context)
 
-
+@login_required
 def get_filtered_activity_list(request):
     list_type = request.GET.get('list_type')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
+    selected_employee_ids = request.GET.getlist('employees')
 
     try:
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
     except (ValueError, TypeError):
         return JsonResponse({"error": "Invalid date format."}, status=400)
-
-    # --- START OF FIX ---
-    # The logic for 'selected' is now handled separately because it queries a different model.
+        
     if list_type == 'selected':
         list_title = "Selected Candidates"
-        
-        # This query correctly fetches Candidates based on their selection status and date
-        candidates = Candidate_registration.objects.filter(
-            selection_status__iexact='Selected',
-            selection_date__range=[start_date, end_date],
-            updated_by__isnull=False # Ensure the selecting employee exists
-        ).select_related('updated_by__user').order_by('-selection_date')
-
+        candidates = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date], updated_by__isnull=False).select_related('updated_by__user').order_by('-selection_date')
+        if selected_employee_ids:
+            candidates = candidates.filter(updated_by_id__in=selected_employee_ids)
         context = {'candidates': candidates, 'list_title': list_title}
-        # Render a NEW, dedicated partial template for this list
         return render(request, 'crm/partials/selected_candidate_list_partial.html', context)
-    # --- END OF FIX ---
 
-    # The logic for all other list types remains the same
-    activities = CandidateActivity.objects.filter(
-        timestamp__date__range=[start_date, end_date],
-        action__in=['call_made', 'created', 'updated'],
-        employee__isnull=False
-    ).select_related('employee__user', 'candidate').order_by('-timestamp')
+    activities = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created', 'updated'], employee__isnull=False).select_related('employee__user', 'candidate')
+
+    if selected_employee_ids:
+        activities = activities.filter(employee_id__in=selected_employee_ids)
 
     list_title = "All Activities"
     LEAD_STATUSES = ['Hot', 'Converted']
-
-    if list_type == 'connected':
+    
+    if list_type == 'leads':
+        list_title = "Lead Generating Activities"
+        leads_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
+        activities = activities.filter(leads_filter)
+        
+        unique_leads = {}
+        for activity in activities.order_by('timestamp'):
+            key = (activity.candidate_id, activity.timestamp.date())
+            unique_leads[key] = activity
+        activities = sorted(list(unique_leads.values()), key=lambda x: x.timestamp, reverse=True)
+    
+    elif list_type == 'connected':
         list_title = "Connected Activities"
         connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
         activities = activities.filter(connected_filter)
@@ -5119,21 +5146,19 @@ def get_filtered_activity_list(request):
         list_title = "Not Connected Activities"
         connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
         activities = activities.filter(~connected_filter)
-    elif list_type == 'leads':
-        list_title = "Lead Generating Activities"
-        leads_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
-        activities = activities.filter(leads_filter)
     elif list_type == 'converted':
         list_title = "Hot to Converted Activities"
         converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
         activities = activities.filter(converted_filter)
-
+    
+    else: # This covers 'total'
+        activities = activities.filter(action__in=['call_made', 'created']).order_by('-timestamp')
+    
     context = {'activities': activities, 'list_title': list_title}
     return render(request, 'crm/partials/activity_list_partial.html', context)
 
 
-
-
+@login_required
 def get_employee_candidates(request):
     employee_id = request.GET.get('employee_id')
     start_date_str = request.GET.get('start_date')
@@ -5162,7 +5187,16 @@ def get_employee_candidates(request):
         
         LEAD_STATUSES = ['Hot', 'Converted']
         leads_filter_q = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
-        leads_chart_labels, leads_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date, filter_q=leads_filter_q)
+        
+        employee_lead_transitions = employee_activities_queryset.filter(leads_filter_q)
+        unique_employee_leads_dict = {}
+        for activity in employee_lead_transitions.order_by('timestamp'):
+            key = (activity.candidate_id, activity.timestamp.date())
+            unique_employee_leads_dict[key] = activity
+        unique_employee_lead_ids = [act.id for act in unique_employee_leads_dict.values()]
+        unique_employee_leads_qs = CandidateActivity.objects.filter(id__in=unique_employee_lead_ids)
+        
+        leads_chart_labels, leads_chart_data = _get_chart_data(unique_employee_leads_qs, start_date, end_date)
 
         return JsonResponse({
             'html': html_content,
@@ -5177,3 +5211,4 @@ def get_employee_candidates(request):
         })
     except (ValueError, Employee.DoesNotExist):
         return JsonResponse({"error": "Invalid request."}, status=400)
+
