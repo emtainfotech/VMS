@@ -890,10 +890,12 @@ def employee_candidate_list(request):
     all_candidates = get_filtered_candidates(request, logged_in_employee)
     paginator = Paginator(all_candidates, 50) 
     page_obj = paginator.get_page(1)
+    
 
     context = {
         'candidates': page_obj.object_list,
         'page_obj': page_obj,
+        
     }
     return render(request, 'employee/candidate-list.html', context)
 
