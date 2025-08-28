@@ -301,192 +301,160 @@
           </div>
         </div>
       </header>
-      <header class="navbar-expand-md sticky-top ">
-        <div class="collapse navbar-collapse" id="navbar-menu">
-          <div class="navbar">
+      <header class="navbar-expand-md sticky-top">
+    <div class="collapse navbar-collapse" id="navbar-menu">
+        <div class="navbar">
             <div class="container-xl">
-              <ul class="navbar-nav">
-                <li class="nav-item {% if request.path == '/crm/admin-employee-calls/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'admin_calls_list' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <!-- Dashboard Icon -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
-                        <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
-                        <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
-                      </svg>
-                    </span>
-                    <span class="nav-link-title">Dashboard</span>
-                  </a>
-                </li>
-                
-                <li class="nav-item {% if request.path == '/crm/candidate-list/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'admin_candidate_list' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <!-- Candidates Icon -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/>
-                        <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/>
-                      </svg>
-                    </span>
-                    <span class="nav-link-title">Candidate's</span>
-                  </a>
-                </li>
-                
-                <li class="nav-item {% if request.path == '/crm/admin-vacancy-list/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'admin_vacancy_list' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <!-- Company Icon -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M3 21l18 0"/>
-                        <path d="M5 21v-14l8 -4v18"/>
-                        <path d="M19 21v-10l-6 -4"/>
-                        <path d="M9 9l0 .01"/>
-                        <path d="M9 12l0 .01"/>
-                        <path d="M9 15l0 .01"/>
-                        <path d="M9 18l0 .01"/>
-                      </svg>
-                    </span>
-                    <span class="nav-link-title">Vacancies</span>
-                  </a>
-                </li>
-      
-                <li class="nav-item {% if request.path == '/crm/selected-candidate-list/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'selected_candidate' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <!-- Selected Candidate Icon -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M9 12l2 2l4 -4"/>
-                        <path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"/>
-                      </svg>
-                    </span>
-                    <span class="nav-link-title">Selected Candidate</span>
-                  </a>
-                </li>
-      
-                <li class="nav-item {% if request.path == '/crm/follow-up-candidate/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'follow_up_candidate' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <!-- Follow Up Icon -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M20 12a8 8 0 1 0 -8 8"/>
-                        <path d="M12 12v4l3 3"/>
-                        <path d="M16 12h3"/>
-                      </svg>
-                    </span>
-                    <span class="nav-link-title">Follow Up</span>
-                  </a>
-                </li>
+                <ul class="navbar-nav" id="sortable-nav">
 
-                <li class="nav-item {% if request.path == '/crm/candidate-assignment/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'admin_assign_candidate' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <!-- Follow Up Icon -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M20 12a8 8 0 1 0 -8 8"/>
-                        <path d="M12 12v4l3 3"/>
-                        <path d="M16 12h3"/>
-                      </svg>
-                    </span>
-                    <span class="nav-link-title">Candidate Assignment</span>
-                  </a>
-                </li>
-      
-                <li class="nav-item {% if request.path == '/crm/leads/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'generated_leads' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <!-- Leads Icon -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"/>
-                        <path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z"/>
-                        <path d="M9 12l2 2l4 -4"/>
-                      </svg>
-                    </span>
-                    <span class="nav-link-title">Leads</span>
-                  </a>
-                </li>
+                    <li class="nav-item {% if request.path == '/crm/admin-employee-calls/' %}active{% endif %}" data-id="dashboard">
+                        <a class="nav-link" href="{% url 'admin_calls_list' %}">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M5 12l-2 0l9 -9l9 9l-2 0" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" /><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" /></svg>
+                            </span>
+                            <span class="nav-link-title">Dashboard</span>
+                        </a>
+                    </li>
 
-                <li class="nav-item {% if request.path == '/crm/admin-invoice-list/' %}active{% endif %}">
-                  <a class="nav-link" href="{% url 'admin_invoice_list' %}">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <!-- Leads Icon -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"/>
-                        <path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z"/>
-                        <path d="M9 12l2 2l4 -4"/>
-                      </svg>
-                    </span>
-                    <span class="nav-link-title">Invoice</span>
-                  </a>
-                </li>
-                
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
-                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                      <!-- EVMS Icon (Money/Finance related) -->
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/>
-                        <path d="M14 8h-2a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2v-4h-1"/>
-                      </svg>
-                    </span>
-                    <span class="nav-link-title">EVMS</span>
-                  </a>
-                  <div class="dropdown-menu">
-                    <div class="dropdown-menu-columns">
-                      <div class="dropdown-menu-column">
-                        <a class="dropdown-item" href="{% url 'admin_vendor_list' %}">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-item-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                            <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/>
-                            <path d="M6 21v-2a4 4 0 0 1 4 -4h3.5"/>
-                            <path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/>
-                            <path d="M20.2 20.2l1.8 1.8"/>
-                          </svg>
-                          Vendor's
+                    <li class="nav-item {% if request.path == '/crm/admin/tasks/' %}active{% endif %}" data-id="tasks">
+                        <a class="nav-link" href="{% url 'admin_task_dashboard' %}">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg>
+                            </span>
+                            <span class="nav-link-title">Task's</span>
                         </a>
-                        <a class="dropdown-item" href="{% url 'admin_evms_candidate_list' %}">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-item-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                            <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/>
-                            <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/>
-                          </svg>
-                          Candidate's
+                    </li>
+
+                    <li class="nav-item dropdown" data-id="candidates">
+                        <a class="nav-link dropdown-toggle" href="#navbar-candidates" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg>
+                            </span>
+                            <span class="nav-link-title">Candidate's</span>
                         </a>
-                        <a class="dropdown-item" href="{% url 'admin_evms_vendor_paylist' %}">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-item-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                            <path d="M17 8v-3a1 1 0 0 0 -1 -1h-10a2 2 0 0 0 0 4h12a1 1 0 0 1 1 1v3m0 4v3a1 1 0 0 1 -1 1h-12a2 2 0 0 1 -2 -2v-12"/>
-                            <path d="M20 12v4h-4a2 2 0 0 1 0 -4h4"/>
-                          </svg>
-                          Pay List
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item {% if request.path == '/crm/candidate-list/' %}active{% endif %}" href="{% url 'admin_candidate_list' %}">
+                                All Candidates
+                            </a>
+                             <a class="dropdown-item {% if request.path == '/crm/leads/' %}active{% endif %}" href="{% url 'generated_leads' %}">
+                                Leads
+                            </a>
+                            <a class="dropdown-item {% if request.path == '/crm/follow-up-candidate/' %}active{% endif %}" href="{% url 'follow_up_candidate' %}">
+                                Follow Up
+                            </a>
+                            <a class="dropdown-item {% if request.path == '/crm/selected-candidate-list/' %}active{% endif %}" href="{% url 'selected_candidate' %}">
+                                Selected
+                            </a>
+                        </div>
+                    </li>
+
+                    <li class="nav-item {% if request.path == '/crm/admin-vacancy-list/' %}active{% endif %}" data-id="vacancies">
+                        <a class="nav-link" href="{% url 'admin_vacancy_list' %}">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21l18 0"/><path d="M5 21v-14l8 -4v18"/><path d="M19 21v-10l-6 -4"/><path d="M9 9l0 .01"/><path d="M9 12l0 .01"/><path d="M9 15l0 .01"/><path d="M9 18l0 .01"/></svg>
+                            </span>
+                            <span class="nav-link-title">Vacancies</span>
                         </a>
-                        <a class="dropdown-item" href="{% url 'admin_evms_vendor_transaction_history' %}">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="icon dropdown-item-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                            <path d="M5 12l14 0"/>
-                            <path d="M13 18l6 -6"/>
-                            <path d="M13 6l6 6"/>
-                          </svg>
-                          Transaction History
-                        </a>       
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              </ul>
+                    </li>
+
+                    <li class="nav-item {% if request.path == '/crm/candidate-assignment/' %}active{% endif %}" data-id="assignment">
+                        <a class="nav-link" href="{% url 'admin_assign_candidate' %}">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20 12a8 8 0 1 0 -8 8"/><path d="M12 12v4l3 3"/><path d="M16 12h3"/></svg>
+                            </span>
+                            <span class="nav-link-title">Candidate Assignment</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item {% if request.path == '/crm/admin-invoice-list/' %}active{% endif %}" data-id="invoice">
+                        <a class="nav-link" href="{% url 'admin_invoice_list' %}">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"/><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z"/><path d="M9 12l2 2l4 -4"/></svg>
+                            </span>
+                            <span class="nav-link-title">Invoice</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item dropdown" data-id="evms">
+                        <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M14 8h-2a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2v-4h-1"/></svg>
+                            </span>
+                            <span class="nav-link-title">EVMS</span>
+                        </a>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-menu-columns">
+                                <div class="dropdown-menu-column">
+                                    <a class="dropdown-item" href="{% url 'admin_vendor_list' %}">
+                                        Vendor's
+                                    </a>
+                                    <a class="dropdown-item" href="{% url 'admin_evms_candidate_list' %}">
+                                        Candidate's
+                                    </a>
+                                    <a class="dropdown-item" href="{% url 'admin_evms_vendor_paylist' %}">
+                                        Pay List
+                                    </a>
+                                    <a class="dropdown-item" href="{% url 'admin_evms_vendor_transaction_history' %}">
+                                        Transaction History
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
             </div>
-          </div>
         </div>
-      </header>
+    </div>
+</header>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const navList = document.getElementById('sortable-nav');
+    const STORAGE_KEY = 'navbarLayoutOrder';
+
+    // Function to save the current order of nav items to localStorage
+    const saveOrder = () => {
+        const order = [];
+        const navItems = navList.querySelectorAll(':scope > li');
+        navItems.forEach(item => {
+            if (item.dataset.id) {
+                order.push(item.dataset.id);
+            }
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+        console.log('Navbar layout saved automatically.'); // Optional: for debugging
+    };
+
+    // Function to load and apply the saved order from localStorage
+    const loadOrder = () => {
+        const savedOrder = localStorage.getItem(STORAGE_KEY);
+        if (savedOrder) {
+            const order = JSON.parse(savedOrder);
+            order.forEach(id => {
+                const item = navList.querySelector(`li[data-id="${id}"]`);
+                if (item) {
+                    navList.appendChild(item);
+                }
+            });
+        }
+    };
+
+    // Initialize SortableJS on the nav list
+    new Sortable(navList, {
+        animation: 150,
+        handle: '.nav-link',
+        ghostClass: 'bg-primary-lt',
+        // THIS IS THE KEY CHANGE:
+        // The onEnd function is called automatically when a drag-and-drop operation is finished.
+        onEnd: saveOrder
+    });
+
+    // Load the saved order when the page loads
+    loadOrder();
+});
+</script>
     {% block content %}
     {% endblock %}
     <div>

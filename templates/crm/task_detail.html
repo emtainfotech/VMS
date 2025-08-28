@@ -1,0 +1,124 @@
+{% extends "crm/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="mb-0"><i class="bi bi-file-earmark-text-fill me-2"></i>Task: {{ task.title }}</h3>
+            <a href="{% url 'admin_task_dashboard' %}" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <!-- Left Column: Details & History -->
+                    <div class="col-md-7">
+                        <h4>Details</h4>
+                        <p>{{ task.description|linebreaks }}</p>
+                        
+                        <h4 class="mt-4">Attachments</h4>
+                        <ul class="list-group mb-4">
+                            {% for attachment in task.attachments.all %}
+                            <li class="list-group-item">
+                                <a href="{{ attachment.file.url }}" target="_blank"><i class="bi bi-paperclip"></i> {{ attachment }}</a>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item">No files attached.</li>
+                            {% endfor %}
+                        </ul>
+
+                        {% if task.candidate %}
+                        <h4 class="mt-4">Linked Candidate</h4>
+                        <div class="alert alert-info">
+                            <i class="bi bi-person-bounding-box me-2"></i>
+                            <strong>{{ task.candidate.candidate_name }}</strong>
+                            {# This assumes you have a URL named 'candidate_profile' that takes a candidate's pk #}
+                            <a href="{% url 'admin_candidate_profile' task.candidate.pk %}" class="btn btn-outline-primary btn-sm float-end">View Profile</a>
+                        </div>
+                        {% endif %}
+
+                        <h4 class="mt-4">Task History</h4>
+                        <ul class="list-group">
+                            {% for entry in history %}
+                            <li class="list-group-item">
+                                <div class="fw-bold">{{ entry.get_action_display }} by {{ entry.employee.first_name|default:'System' }} {{ entry.employee.last_name }}</div>
+                                <small class="text-muted">{{ entry.timestamp|date:"F j, Y, P" }}</small>
+                                <div>{{ entry.details }}</div>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item">No history for this task yet.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Right Column: Update & Re-assign Form -->
+                    <div class="col-md-5 border-start">
+                        <h4><i class="bi bi-pencil-square me-2"></i>Update Task</h4>
+                        
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="form-select">
+                                {% for value, display in status_choices %}
+                                <option value="{{ value }}" {% if task.status == value %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">Priority</label>
+                            <select name="priority" id="priority" class="form-select">
+                                {% for value, display in priority_choices %}
+                                <option value="{{ value }}" {% if task.priority == value %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="assignees" class="form-label">Manage Assignees</label>
+                            <select name="assigned_to" id="assignees" class="form-control select2" multiple>
+                                {% for employee in all_employees %}
+                                <option value="{{ employee.pk }}" 
+                                    {% if employee in task.assigned_to.all %}selected{% endif %}>
+                                    {{ employee.first_name }} {{ employee.last_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-circle-fill me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS for Select2 -->
+<style>
+    .select2-container--default .select2-selection--multiple {
+        background-color: transparent;
+        border: 1px solid #ced4da;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #6c757d;
+        border-color: #5c636a;
+        color: white;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: #e9ecef;
+    }
+</style>
+
+<!-- Add Select2 for better dropdowns -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({ placeholder: "Select employees", allowClear: true });
+    });
+</script>
+{% endblock %}

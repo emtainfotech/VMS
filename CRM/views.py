@@ -5177,3 +5177,145 @@ def get_employee_candidates(request):
         })
     except (ValueError, Employee.DoesNotExist):
         return JsonResponse({"error": "Invalid request."}, status=400)
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from CRM.models import *
+from django.utils import timezone
+
+@login_required
+def admin_task_dashboard(request):
+    """
+    Admin/Manager view:
+    - Displays a form to create new tasks.
+    - Lists all tasks in the system.
+    - Handles form submission without forms.py.
+    """
+    current_employee = get_object_or_404(Employee, user=request.user)
+
+    if request.method == 'POST':
+        # --- Manual Form Processing ---
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        priority = request.POST.get('priority')
+        due_date = request.POST.get('due_date') or None
+        candidate_id = request.POST.get('candidate')
+        assignee_ids = request.POST.getlist('assigned_to')
+
+        # Create the task object
+        new_task = Task.objects.create(
+            title=title,
+            description=description,
+            priority=priority,
+            due_date=due_date,
+            assigned_by=current_employee
+        )
+
+        # Link candidate if provided
+        if candidate_id:
+            new_task.candidate = get_object_or_404(Candidate_registration, pk=candidate_id)
+        
+        # Add assignees
+        if assignee_ids:
+            assignees = Employee.objects.filter(id__in=assignee_ids)
+            new_task.assigned_to.set(assignees)
+        
+        new_task.save()
+
+        # Handle file attachments
+        for f in request.FILES.getlist('attachments'):
+            TaskAttachment.objects.create(
+                task=new_task,
+                file=f,
+                uploaded_by=current_employee
+            )
+        
+        # Create history record for task creation
+        TaskHistory.objects.create(
+            task=new_task,
+            employee=current_employee,
+            action='CREATED',
+            details=f"Task was created and assigned to: {', '.join([f'{emp.first_name} {emp.last_name}' for emp in new_task.assigned_to.all()])}."
+        )
+            
+        return redirect('admin_task_dashboard')
+
+    # --- For GET request ---
+    all_tasks = Task.objects.all().prefetch_related('assigned_to', 'attachments')
+    all_employees = Employee.objects.all()
+    all_candidates = Candidate_registration.objects.all()
+    
+    context = {
+        'tasks': all_tasks,
+        'all_employees': all_employees,
+        'all_candidates': all_candidates,
+    }
+    return render(request, 'crm/admin_dashboard.html', context)
+
+
+@login_required
+def admin_task_detail_and_reassign(request, pk):
+    """
+    Employee/Admin view:
+    - Shows details of a specific task and its history.
+    - Allows re-assigning and updating the task status/priority.
+    """
+    task = get_object_or_404(Task, pk=pk)
+    current_employee = get_object_or_404(Employee, user=request.user)
+
+    if request.method == 'POST':
+        # --- Manual Update Processing ---
+        
+        # 1. Handle Re-assignment
+        new_assignee_ids = set(request.POST.getlist('assigned_to'))
+        current_assignee_ids = set(task.assigned_to.values_list('id', flat=True))
+        
+        if new_assignee_ids != current_assignee_ids:
+            new_assignees = Employee.objects.filter(id__in=new_assignee_ids)
+            task.assigned_to.set(new_assignees)
+            TaskHistory.objects.create(
+                task=task,
+                employee=current_employee,
+                action='REASSIGNED',
+                details=f"Assignees updated to: {', '.join([emp.first_name for emp in new_assignees])}."
+            )
+
+        # 2. Handle Status Change
+        new_status = request.POST.get('status')
+        if new_status and new_status != task.status:
+            old_status = task.get_status_display()
+            task.status = new_status
+            task.save()
+            TaskHistory.objects.create(
+                task=task,
+                employee=current_employee,
+                action='STATUS_CHANGED',
+                details=f"Status changed from '{old_status}' to '{task.get_status_display()}'."
+            )
+
+        # 3. Handle Priority Change
+        new_priority = request.POST.get('priority')
+        if new_priority and new_priority != task.priority:
+            old_priority = task.get_priority_display()
+            task.priority = new_priority
+            task.save()
+            TaskHistory.objects.create(
+                task=task,
+                employee=current_employee,
+                action='PRIORITY_CHANGED',
+                details=f"Priority changed from '{old_priority}' to '{task.get_priority_display()}'."
+            )
+
+        return redirect('admin_task_detail_and_reassign', pk=task.pk)
+
+    all_employees = Employee.objects.all()
+    task_history = TaskHistory.objects.filter(task=task)
+    context = {
+        'task': task,
+        'all_employees': all_employees,
+        'history': task_history,
+        'status_choices': Task.STATUS_CHOICES,
+        'priority_choices': Task.PRIORITY_CHOICES,
+    }
+    return render(request, 'crm/task_detail.html', context)

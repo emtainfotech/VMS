@@ -1,0 +1,119 @@
+{% extends "crm/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-kanban-fill me-2"></i>Admin Task Dashboard</h2>
+    <div class="row">
+        <!-- Create Task Form Column -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle-fill me-2"></i>Create New Task</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="assigned_to" class="form-label">Assign To</label>
+                            <select name="assigned_to" id="assigned_to" class="form-control select2" multiple required>
+                                {% for emp in all_employees %}
+                                <option value="{{ emp.pk }}">{{ emp.first_name }} {{ emp.last_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="priority" class="form-label">Priority</label>
+                                <select name="priority" id="priority" class="form-select">
+                                    <option value="LOW">Low</option>
+                                    <option value="MEDIUM" selected>Medium</option>
+                                    <option value="HIGH">High</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="due_date" class="form-label">Due Date</label>
+                                <input type="datetime-local" class="form-control" id="due_date" name="due_date">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="candidate" class="form-label">Link Candidate (Optional)</label>
+                            <select name="candidate" id="candidate" class="form-control select2">
+                                <option value="">None</option>
+                                {% for cand in all_candidates %}
+                                <option value="{{ cand.pk }}">{{ cand.candidate_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="attachments" class="form-label">Attachments</label>
+                            <input type="file" class="form-control" id="attachments" name="attachments" multiple>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-send-fill me-2"></i>Assign Task</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task List Column -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-list-task me-2"></i>All Tasks</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for task in tasks %}
+                        <a href="{% url 'admin_task_detail_and_reassign' task.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start p-3">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold fs-5">{{ task.title }}</div>
+                                <div class="text-muted small">Due: {{ task.due_date|date:"M d, Y, h:i A"|default:"N/A" }}</div>
+                                <div class="mt-2">
+                                    <small>Assigned to:</small>
+                                    {% for employee in task.assigned_to.all %}
+                                        <span class="badge bg-secondary text-light rounded-pill">{{ employee.first_name }}</span>
+                                    {% empty %}
+                                        <span class="badge bg-light text-dark rounded-pill">Unassigned</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="d-flex flex-column align-items-end">
+                                <span class="badge 
+                                    {% if task.priority == 'HIGH' %}bg-danger text-dark
+                                    {% elif task.priority == 'MEDIUM' %}bg-warning text-dark
+                                    {% else %}bg-success text-dark
+                                    {% endif %} rounded-pill mb-2">{{ task.get_priority_display }}</span>
+                                <span class="badge bg-info rounded-pill text-light">{{ task.get_status_display }}</span>
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="list-group-item text-center p-4">
+                            <p class="mb-0">No tasks found. Create one using the form on the left.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Select2 for better dropdowns (optional but recommended) -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({ placeholder: "Select options", allowClear: true });
+    });
+</script>
+{% endblock %}

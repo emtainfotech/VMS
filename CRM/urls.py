@@ -66,6 +66,8 @@ urlpatterns = [
     path('ajax/get-employee-candidates/', get_employee_candidates, name='get_employee_candidates'),
     path('ajax/get-filtered-activity-list/',get_filtered_activity_list, name='get_filtered_activity_list'),
     path('api/get-candidates/', get_candidates_api, name='get_candidates_api'),
+    path('admin/tasks/', admin_task_dashboard, name='admin_task_dashboard'),
+    path('tasks/<int:pk>/', admin_task_detail_and_reassign, name='admin_task_detail_and_reassign'),
 
     path('admin/', admin.site.urls),
 ]

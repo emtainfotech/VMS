@@ -46,6 +46,7 @@ from django.db.models.functions import TruncHour, TruncDay, TruncWeek, TruncMont
 import logging
 from django.db.models import Count, F
 from datetime import datetime, timedelta, date
+from CRM.models import *
 
 
 def employee_login(request):
@@ -3383,14 +3384,13 @@ from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMon
 import calendar
 # from .models import Employee, CandidateActivity, Candidate_registration
 
-
-# Helper function is used for both charts
-def _get_chart_data(queryset, period, start_date, end_date, filter_q=None):
-    if filter_q:
-        queryset = queryset.filter(filter_q)
-
+# ===================================================================================
+# == HELPER FUNCTION (Used by employee_calls_list)
+# ===================================================================================
+def _get_chart_data(queryset, period, start_date, end_date):
     chart_labels = []
     chart_data = []
+
     if period == 'year':
         data_by_month = queryset.annotate(month=TruncMonth('timestamp')).values('month').annotate(count=Count('id')).order_by('month')
         monthly_counts = {i: 0 for i in range(1, 13)}
@@ -3427,6 +3427,11 @@ def _get_chart_data(queryset, period, start_date, end_date, filter_q=None):
 
     return chart_labels, chart_data
 
+
+# ===================================================================================
+# == INDIVIDUAL EMPLOYEE DASHBOARD VIEW
+# ===================================================================================
+@login_required
 def employee_calls_list(request):
     try:
         logged_in_employee = Employee.objects.get(user=request.user)
@@ -3437,43 +3442,41 @@ def employee_calls_list(request):
     today = timezone.now().date()
 
     if period == 'week':
-        start_date = today - timedelta(days=today.weekday())
-        end_date = start_date + timedelta(days=6)
+        start_date, end_date = today - timedelta(days=today.weekday()), today + timedelta(days=6-today.weekday())
     elif period == 'month':
-        start_date = today.replace(day=1)
-        next_month = start_date.replace(day=28) + timedelta(days=4)
-        end_date = next_month - timedelta(days=next_month.day)
+        start_date, end_date = today.replace(day=1), (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)
     elif period == 'year':
-        start_date = today.replace(month=1, day=1)
-        end_date = today.replace(month=12, day=31)
-    else:  # Default to 'today'
+        start_date, end_date = today.replace(month=1, day=1), today.replace(month=12, day=31)
+    else:
         start_date = end_date = today
         period = 'today'
 
-    # Base queryset now includes 'updated' to catch all status changes
+    # Base queryset includes 'updated' to find all historical status changes
     calls_in_period = CandidateActivity.objects.filter(
         employee=logged_in_employee,
         timestamp__date__range=[start_date, end_date],
         action__in=['call_made', 'created', 'updated']
     ).select_related('candidate')
-
-    connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
     
+    connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
     LEAD_STATUSES = ['Hot', 'Converted']
     lead_transition_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
-    hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
-
-    # Aggregate activity-based stats
+    
+    # --- START OF FIX for Lead, Selection, and Conversion Counts ---
+    # Aggregate stats that can be calculated directly from the activity log
     call_stats = calls_in_period.aggregate(
         total_calls=Count('id', filter=Q(action__in=['call_made', 'created'])),
         connected_calls=Count('id', filter=connected_filter),
-        not_connected_calls=Count('id', filter=~connected_filter & Q(action__in=['call_made', 'created'])),
-        leads_generated=Count('id', filter=lead_transition_filter),
-        hot_leads=Count('id', filter=Q(changes__lead_generate__new__iexact='Hot')),
-        converted_leads=Count('id', filter=hot_to_converted_filter)
+        not_connected_calls=Count('id', filter=~connected_filter & Q(action__in=['call_made', 'created']))
     )
 
-    # --- START OF FIX for Selections and Conversion % ---
+    # Use the accurate query to count unique leads (once per candidate per day)
+    leads_generated_count = calls_in_period.filter(
+        lead_transition_filter
+    ).annotate(
+        date=TruncDate('timestamp')
+    ).values('candidate_id', 'date').distinct().count()
+    
     # Calculate selections with a separate, direct query for accuracy
     selections_count = Candidate_registration.objects.filter(
         updated_by=logged_in_employee,
@@ -3481,17 +3484,32 @@ def employee_calls_list(request):
         selection_date__range=[start_date, end_date]
     ).count()
 
-    # Calculate conversion percentage
-    hot_leads_count = call_stats.get('hot_leads', 0) + call_stats.get('converted_leads', 0)
-    if hot_leads_count > 0:
-        conversion_percentage = round((call_stats.get('converted_leads', 0) / hot_leads_count) * 100)
+    # Calculate conversion percentage accurately
+    hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
+    hot_leads_filter = (Q(action='call_made', changes__lead_generate__new__iexact='Hot') & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__iexact='Hot')
+    hot_lead_candidates = calls_in_period.filter(hot_leads_filter).values_list('candidate_id', flat=True).distinct()
+    converted_leads = calls_in_period.filter(hot_to_converted_filter, candidate_id__in=hot_lead_candidates).values_list('candidate_id', flat=True).distinct().count()
+    
+    if len(hot_lead_candidates) > 0:
+        conversion_percentage = round((converted_leads / len(hot_lead_candidates)) * 100)
     else:
         conversion_percentage = 0
     # --- END OF FIX ---
 
     # Generate chart data
-    activity_chart_labels, activity_chart_data = _get_chart_data(calls_in_period, period, start_date, end_date, filter_q=Q(action__in=['call_made', 'created']))
-    leads_chart_labels, leads_chart_data = _get_chart_data(calls_in_period, period, start_date, end_date, filter_q=lead_transition_filter)
+    activity_chart_queryset = calls_in_period.filter(action__in=['call_made', 'created'])
+    
+    # De-duplicate lead activities to create a clean queryset for the chart
+    lead_transition_activities = calls_in_period.filter(lead_transition_filter)
+    unique_leads_dict = {}
+    for activity in lead_transition_activities.order_by('timestamp'):
+        key = (activity.candidate_id, activity.timestamp.date())
+        unique_leads_dict[key] = activity
+    unique_lead_activity_ids = [activity.id for activity in unique_leads_dict.values()]
+    unique_leads_queryset = CandidateActivity.objects.filter(id__in=unique_lead_activity_ids)
+    
+    activity_chart_labels, activity_chart_data = _get_chart_data(activity_chart_queryset, period, start_date, end_date)
+    leads_chart_labels, leads_chart_data = _get_chart_data(unique_leads_queryset, period, start_date, end_date)
 
     # Get the activity list for the main table
     activities = calls_in_period.filter(action__in=['call_made', 'created']).order_by('-timestamp')
@@ -3504,8 +3522,8 @@ def employee_calls_list(request):
         'total_calls': call_stats.get('total_calls', 0),
         'connected_calls': call_stats.get('connected_calls', 0),
         'not_connected_calls': call_stats.get('not_connected_calls', 0),
-        'leads_generated': call_stats.get('leads_generated', 0),
-        'selections': selections_count, # Use the new accurate count
+        'leads_generated': leads_generated_count,
+        'selections': selections_count,
         'conversion_percentage': conversion_percentage,
         'activity_chart_labels': activity_chart_labels,
         'activity_chart_data': activity_chart_data,
@@ -3514,7 +3532,6 @@ def employee_calls_list(request):
     }
     
     return render(request, 'employee/employee-calls-list.html', context)
-
 
 
 @login_required
@@ -3528,27 +3545,15 @@ def get_employee_filtered_activity_list(request):
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
     except (Employee.DoesNotExist, ValueError, TypeError):
-        return JsonResponse({"error": "Invalid request."}, status=400)
+        return JsonResponse({"error": "Invalid request or date format."}, status=400)
 
-    # --- START OF CHANGES ---
-    # Handle 'selected' list type by querying the Candidate model directly
     if list_type == 'selected':
         list_title = "My Selected Candidates"
-        candidates = Candidate_registration.objects.filter(
-            updated_by=logged_in_employee,
-            selection_status__iexact='Selected',
-            selection_date__range=[start_date, end_date]
-        ).order_by('-selection_date')
+        candidates = Candidate_registration.objects.filter(updated_by=logged_in_employee, selection_status__iexact='Selected', selection_date__range=[start_date, end_date]).order_by('-selection_date')
         context = {'candidates': candidates, 'list_title': list_title}
         return render(request, 'employee/partials/selected_candidate_list_partial.html', context)
-    
-    # Base queryset now includes 'updated' to find all status changes
-    activities = CandidateActivity.objects.filter(
-        employee=logged_in_employee,
-        timestamp__date__range=[start_date, end_date],
-        action__in=['call_made', 'created', 'updated']
-    ).select_related('candidate').order_by('-timestamp')
-    # --- END OF CHANGES ---
+
+    activities = CandidateActivity.objects.filter(employee=logged_in_employee, timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created', 'updated']).select_related('candidate').order_by('-timestamp')
 
     list_title = "My All Activities"
     LEAD_STATUSES = ['Hot', 'Converted']
@@ -3564,18 +3569,31 @@ def get_employee_filtered_activity_list(request):
         list_title = "My Lead Generating Activities"
         leads_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
         activities = activities.filter(leads_filter)
+        
+        # De-duplicate the list to show only the last lead event per day
+        unique_leads = {}
+        for activity in activities.order_by('timestamp'):
+            key = (activity.candidate.id, activity.timestamp.date())
+            unique_leads[key] = activity
+        activities = sorted(list(unique_leads.values()), key=lambda x: x.timestamp, reverse=True)
+        
     elif list_type == 'converted':
         list_title = "My Hot to Converted Activities"
         converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
         activities = activities.filter(converted_filter)
     
-    # Filter back to only 'call_made' and 'created' if it's the total list
     if list_type == 'total':
         activities = activities.filter(action__in=['call_made', 'created'])
-
+    
     context = {'activities': activities, 'list_title': list_title}
     
     return render(request, 'employee/partials/activity_list_partial.html', context)
+
+
+
+
+
+
 # def calculate_percentage(part, whole):
 #     return round((part / whole) * 100, 1) if whole > 0 else 0
 
@@ -4893,3 +4911,86 @@ def employee_assign_candidate(request) :
     candidates.sort(key=lambda x: x.selection_date or date.min, reverse=True)
 
     return render(request, 'employee/candidate-assignment.html', { 'candidates' : candidates })
+
+
+
+@login_required
+def employee_task_dashboard(request):
+    """
+    Employee view:
+    - Lists tasks assigned specifically to the logged-in employee.
+    """
+    current_employee = get_object_or_404(Employee, user=request.user)
+    assigned_tasks = Task.objects.filter(assigned_to=current_employee).prefetch_related('assigned_to', 'attachments')
+    
+    context = {
+        'tasks': assigned_tasks,
+    }
+    return render(request, 'employee/employee_dashboard.html', context)
+
+
+@login_required
+def task_detail_and_reassign(request, pk):
+    """
+    Employee/Admin view:
+    - Shows details of a specific task and its history.
+    - Allows re-assigning and updating the task status/priority.
+    """
+    task = get_object_or_404(Task, pk=pk)
+    current_employee = get_object_or_404(Employee, user=request.user)
+
+    if request.method == 'POST':
+        # --- Manual Update Processing ---
+        
+        # 1. Handle Re-assignment
+        new_assignee_ids = set(request.POST.getlist('assigned_to'))
+        current_assignee_ids = set(task.assigned_to.values_list('id', flat=True))
+        
+        if new_assignee_ids != current_assignee_ids:
+            new_assignees = Employee.objects.filter(id__in=new_assignee_ids)
+            task.assigned_to.set(new_assignees)
+            TaskHistory.objects.create(
+                task=task,
+                employee=current_employee,
+                action='REASSIGNED',
+                details=f"Assignees updated to: {', '.join([emp.first_name for emp in new_assignees])}."
+            )
+
+        # 2. Handle Status Change
+        new_status = request.POST.get('status')
+        if new_status and new_status != task.status:
+            old_status = task.get_status_display()
+            task.status = new_status
+            task.save()
+            TaskHistory.objects.create(
+                task=task,
+                employee=current_employee,
+                action='STATUS_CHANGED',
+                details=f"Status changed from '{old_status}' to '{task.get_status_display()}'."
+            )
+
+        # 3. Handle Priority Change
+        new_priority = request.POST.get('priority')
+        if new_priority and new_priority != task.priority:
+            old_priority = task.get_priority_display()
+            task.priority = new_priority
+            task.save()
+            TaskHistory.objects.create(
+                task=task,
+                employee=current_employee,
+                action='PRIORITY_CHANGED',
+                details=f"Priority changed from '{old_priority}' to '{task.get_priority_display()}'."
+            )
+
+        return redirect('employee_task_detail', pk=task.pk)
+
+    all_employees = Employee.objects.all()
+    task_history = TaskHistory.objects.filter(task=task)
+    context = {
+        'task': task,
+        'all_employees': all_employees,
+        'history': task_history,
+        'status_choices': Task.STATUS_CHOICES,
+        'priority_choices': Task.PRIORITY_CHOICES,
+    }
+    return render(request, 'employee/task_detail.html', context)

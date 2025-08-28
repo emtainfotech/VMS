@@ -1,0 +1,43 @@
+{% extends "employee/performance-base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-person-workspace me-2"></i>My Assigned Tasks</h2>
+    
+    <div class="row">
+        {% for task in tasks %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="card-title">{{ task.title }}</h5>
+                        <span class="badge 
+                            {% if task.priority == 'HIGH' %}bg-danger text-dark
+                            {% elif task.priority == 'MEDIUM' %}bg-warning text-dark
+                            {% else %}bg-success text-dark
+                            {% endif %}">{{ task.get_priority_display }}</span>
+                    </div>
+                    <h6 class="card-subtitle mb-2 text-muted">Due: {{ task.due_date|date:"M d, Y"|default:"Not set" }}</h6>
+                    <p class="card-text">{{ task.description|truncatewords:20 }}</p>
+                    <div class="mb-3">
+                        <small class="text-muted">Assigned By: {{ task.assigned_by.first_name }} {{ task.assigned_by.last_name }}</small>
+                    </div>
+                    <a href="{% url 'employee_task_detail' task.pk %}" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-eye-fill me-2"></i>View Details & Re-assign
+                    </a>
+                </div>
+                <div class="card-footer text-white">
+                    <span class="badge bg-info text-white">{{ task.get_status_display }}</span>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-success text-center" role="alert">
+                🎉 You have no pending tasks!
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
