@@ -6,10 +6,12 @@ from .views import *
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
+from Employee.views import manage_ip_restriction
 
 urlpatterns = [
     path('',crm_admin_login,name = 'crm_admin_login'),
     path('login',crm_admin_login,name = 'crm_admin_login'),
+    path('ip-restriction/', manage_ip_restriction, name='manage_ip_restriction'),
     path('admin-logout/', crm_admin_logout, name='crm_admin_logout'),
     path('crm-dashboard/',crm_dashboard,name = 'crm_dashboard'),
     path('admin-candidate-registration/',admin_candidate_registration,name = 'admin_candidate_registration'),

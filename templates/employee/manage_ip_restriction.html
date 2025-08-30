@@ -1,86 +1,265 @@
+{% extends 'crm/base.html' %}
+{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage IP Restriction</title>
-    <!-- Basic styling for a clean interface -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #4f46e5; /* Indigo 600 */
+            --primary-hover-color: #4338ca; /* Indigo 700 */
+            --background-color: #f8fafc; /* Cool Gray 50 */
+            --card-background: #ffffff;
+            --text-color: #1e293b; /* Slate 800 */
+            --secondary-text-color: #475569; /* Slate 600 */
+            --border-color: #e2e8f0; /* Slate 200 */
+            --shadow-light: rgba(0, 0, 0, 0.05);
+            --shadow-medium: rgba(0, 0, 0, 0.1);
+            --focus-ring: 0 0 0 3px rgba(79, 70, 229, 0.2); /* Indigo with transparency */
+            --warning-color: #b91c1c; /* Red 700 */
+        }
+
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
             margin: 0;
             padding: 2rem;
-            background-color: #f8f9fa;
-            color: #333;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
+
         .container { 
-            max-width: 800px; 
-            margin: auto; 
-            background-color: #fff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 1200px; /* Slightly wider for better content display */
+            margin: 2rem auto; 
+            background-color: var(--card-background);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px var(--shadow-medium);
+            border: 1px solid var(--border-color);
         }
+
         h1 {
-            color: #0056b3;
+            color: var(--primary-color);
             text-align: center;
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
         }
+
+        .form-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .form-section:last-of-type {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        label { 
+            font-weight: 600; 
+            display: block;
+            margin-bottom: 0.75rem;
+            color: var(--secondary-text-color);
+        }
+
         .employee-list { 
-            border: 1px solid #dee2e6; 
+            border: 1px solid var(--border-color); 
+            background-color: #fdfdfd;
             padding: 1rem;
-            margin-bottom: 1.5rem; 
-            max-height: 350px; 
+            margin-bottom: 1rem; 
+            max-height: 400px; /* Taller list for more employees */
             overflow-y: auto; 
-            border-radius: 4px;
+            border-radius: 8px;
+            box-shadow: inset 0 1px 3px var(--shadow-light);
         }
+
         .employee-item { 
-            display: block; 
-            padding: 0.5rem;
+            display: flex;
+            flex-direction: column; /* Stack label and IP info */
+            align-items: flex-start; /* Align to the left */
+            padding: 0.65rem 0.5rem;
+            border-bottom: 1px solid #f1f5f9; /* Lighter separator */
+        }
+        .employee-item:last-child {
+            border-bottom: none;
+        }
+        .employee-item:hover {
+            background-color: #f8fafc;
             border-radius: 4px;
         }
-        .employee-item:nth-child(odd) {
-            background-color: #f8f9fa;
-        }
+
         .employee-item label {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            margin-bottom: 0; /* Remove bottom margin from label */
+            width: 100%;
+            cursor: pointer;
+            font-weight: 400; /* Lighter font weight for list items */
+            color: var(--text-color);
         }
-        .form-group { 
-            margin-bottom: 1.5rem; 
+        .employee-item input[type="checkbox"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--card-background);
+            display: inline-block;
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0; /* Prevent checkbox from shrinking */
+            transition: border-color 0.2s ease, background-color 0.2s ease;
         }
-        label { 
-            font-weight: bold; 
-            display: block;
-            margin-bottom: 0.5rem;
+        .employee-item input[type="checkbox"]:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
         }
+        .employee-item input[type="checkbox"]:checked::after {
+            content: '✓'; /* Checkmark for checked state */
+            color: white;
+            font-size: 14px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .employee-item input[type="checkbox"]:focus {
+            outline: none;
+            box-shadow: var(--focus-ring);
+        }
+
+        .allowed-ips-info {
+            font-size: 0.8rem;
+            color: #334155; /* Slate 700 */
+            background-color: #f1f5f9; /* Slate 100 */
+            padding: 6px 10px;
+            margin-top: 8px;
+            margin-left: 32px; /* Align with employee name, past the checkbox */
+            border-radius: 6px;
+            width: calc(100% - 42px); /* Adjust width to account for padding and margin */
+            word-break: break-all;
+        }
+
+        .allowed-ips-info strong {
+            font-weight: 600;
+        }
+
+        .allowed-ips-info.no-ips strong {
+            color: var(--warning-color);
+        }
+
+
+        .no-employees {
+            text-align: center;
+            color: var(--secondary-text-color);
+            padding: 1rem;
+            font-style: italic;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none; /* Prevent text selection */
+            margin-bottom: 1.5rem;
+        }
+        .toggle-switch input[type="checkbox"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 44px; /* Wider for switch */
+            height: 24px;
+            border-radius: 9999px; /* Pill shape */
+            background-color: var(--border-color);
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+        }
+        .toggle-switch input[type="checkbox"]::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            box-shadow: 0 1px 2px var(--shadow-medium);
+            transition: transform 0.2s ease;
+        }
+        .toggle-switch input[type="checkbox"]:checked {
+            background-color: var(--primary-color);
+        }
+        .toggle-switch input[type="checkbox"]:checked::before {
+            transform: translateX(20px);
+        }
+        .toggle-switch span {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .toggle-switch input[type="checkbox"]:focus {
+            outline: none;
+            box-shadow: var(--focus-ring);
+        }
+
+
         textarea, input[type="text"] { 
             width: 100%; 
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             box-sizing: border-box;
+            font-size: 1rem;
+            color: var(--text-color);
+            background-color: #fdfdfd;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+        textarea::placeholder, input[type="text"]::placeholder {
+            color: var(--secondary-text-color);
+        }
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: var(--focus-ring);
+        }
+
         button { 
             display: block;
             width: 100%;
-            padding: 0.75rem 1rem; 
-            background-color: #007bff; 
+            padding: 0.85rem 1.5rem; 
+            background-color: var(--primary-color); 
             color: white; 
             border: none; 
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer; 
-            font-size: 1rem;
-            font-weight: bold;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease, transform 0.1s ease;
         }
         button:hover {
-            background-color: #0056b3;
+            background-color: var(--primary-hover-color);
+            transform: translateY(-1px);
         }
-        .toggle-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: normal;
+        button:active {
+            transform: translateY(0);
+        }
+        button:focus {
+            outline: none;
+            box-shadow: var(--focus-ring);
         }
     </style>
 </head>
@@ -89,36 +268,59 @@
         <h1>Manage Employee IP Restriction</h1>
         <form method="post">
             {% csrf_token %}
-            <div class="form-group">
-                <label>Select Employees:</label>
+            <div class="form-section">
+                <label>Select Employees to Apply/Remove Restrictions:</label>
                 <div class="employee-list">
                     {% for employee in employees %}
                         <div class="employee-item">
                             <label>
-                                <input type="checkbox" name="employee_ids" value="{{ employee.id }}">
-                                {{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})
+                                <input type="checkbox" name="employee_ids" value="{{ employee.id }}" 
+                                    {% if employee.ip_restriction_enabled %}checked{% endif %}
+                                >
+                                {{ employee.first_name }} {{ employee.last_name }} 
+                                <span style="color: var(--secondary-text-color); font-size: 0.9em;">({{ employee.user.username }})</span>
+                                {% if employee.ip_restriction_enabled %}
+                                    <span style="margin-left: auto; font-size: 0.8em; color: var(--primary-color);"> (Restricted)</span>
+                                {% endif %}
                             </label>
+                            {% if employee.ip_restriction_enabled and employee.allowed_ips %}
+                                <div class="allowed-ips-info">
+                                    <strong>Accessible IPs:</strong> <span>{{ employee.allowed_ips }}</span>
+                                </div>
+                            {% elif employee.ip_restriction_enabled %}
+                                <div class="allowed-ips-info no-ips">
+                                    <strong>No IPs configured. Access is currently blocked.</strong>
+                                </div>
+                            {% endif %}
                         </div>
                     {% empty %}
-                        <p>No employees found.</p>
+                        <p class="no-employees">No employees found. Please add employees to manage restrictions.</p>
                     {% endfor %}
                 </div>
             </div>
 
-            <div class="form-group">
-                <label class="toggle-label">
-                    <input type="checkbox" name="ip_restriction_enabled" style="width: auto;">
-                    <strong>Enable IP Restriction for Selected Employees</strong>
+            <div class="form-section">
+                <label for="ip_restriction_toggle" class="toggle-switch">
+                    <input type="checkbox" id="ip_restriction_toggle" name="ip_restriction_enabled">
+                    <span><strong>Enable IP Restriction for Selected Employees</strong></span>
                 </label>
             </div>
 
-            <div class="form-group">
+            <div class="form-section">
                 <label for="allowed_ips">Allowed IP Addresses (comma-separated):</label>
-                <textarea id="allowed_ips" name="allowed_ips" rows="4" placeholder="e.g., 192.168.1.1, 127.0.0.1"></textarea>
+                <textarea id="allowed_ips" name="allowed_ips" rows="5" 
+                          placeholder="e.g., 192.168.1.1, 10.0.0.5, 172.16.0.100"
+                          title="Enter IP addresses separated by commas. These will be the only IPs allowed if restriction is enabled."
+                ></textarea>
+                <small style="color: var(--secondary-text-color); display: block; margin-top: 0.5rem;">
+                    If IP restriction is enabled, selected employees can only log in from these IPs.
+                </small>
             </div>
 
-            <button type="submit">Update Settings</button>
+            <button type="submit">Update Restriction Settings</button>
         </form>
     </div>
 </body>
 </html>
+
+{% endblock %}

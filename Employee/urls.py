@@ -8,7 +8,7 @@ from django.urls import path
 urlpatterns = [
     path('', employee_login, name='employee_login'),
     path('login/', employee_login, name='employee_login'),
-    path('admin/ip-restriction/', manage_ip_restriction, name='manage_ip_restriction'),
+    # path('admin/ip-restriction/', manage_ip_restriction, name='manage_ip_restriction'),
     path('logout/', employee_logout, name='employee_logout'),
     path('dashboard/', employee_dashboard, name='employee_dashboard'),
     path('employee-profile/<int:id>/', employee_profile_view, name='employee_profile_view'),
