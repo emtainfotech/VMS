@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage IP Restriction</title>
+    <!-- Basic styling for a clean interface -->
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            margin: 0;
+            padding: 2rem;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: auto; 
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+        }
+        .employee-list { 
+            border: 1px solid #dee2e6; 
+            padding: 1rem;
+            margin-bottom: 1.5rem; 
+            max-height: 350px; 
+            overflow-y: auto; 
+            border-radius: 4px;
+        }
+        .employee-item { 
+            display: block; 
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+        .employee-item:nth-child(odd) {
+            background-color: #f8f9fa;
+        }
+        .employee-item label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-group { 
+            margin-bottom: 1.5rem; 
+        }
+        label { 
+            font-weight: bold; 
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        textarea, input[type="text"] { 
+            width: 100%; 
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button { 
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 4px;
+            cursor: pointer; 
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Manage Employee IP Restriction</h1>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Select Employees:</label>
+                <div class="employee-list">
+                    {% for employee in employees %}
+                        <div class="employee-item">
+                            <label>
+                                <input type="checkbox" name="employee_ids" value="{{ employee.id }}">
+                                {{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})
+                            </label>
+                        </div>
+                    {% empty %}
+                        <p>No employees found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="toggle-label">
+                    <input type="checkbox" name="ip_restriction_enabled" style="width: auto;">
+                    <strong>Enable IP Restriction for Selected Employees</strong>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label for="allowed_ips">Allowed IP Addresses (comma-separated):</label>
+                <textarea id="allowed_ips" name="allowed_ips" rows="4" placeholder="e.g., 192.168.1.1, 127.0.0.1"></textarea>
+            </div>
+
+            <button type="submit">Update Settings</button>
+        </form>
+    </div>
+</body>
+</html>

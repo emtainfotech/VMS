@@ -17,12 +17,19 @@ from django.dispatch import receiver
 def get_current_user():
     return get_user_model().objects.get(username='admin').id  # Default fallback user
 
+from django.db import models
+from django.contrib.auth.models import User
+
 class Employee(models.Model):
+    """
+    Represents an employee, linked to a standard Django User.
+    Includes fields for IP-based login restrictions.
+    """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     contact_number = models.CharField(max_length=15)
-    email = models.EmailField(unique=True)  
+    email = models.EmailField(unique=True)
     employee_id = models.CharField(max_length=50, unique=True)
     password = models.CharField(max_length=255)
     designation = models.CharField(max_length=100, null=True)
@@ -30,12 +37,25 @@ class Employee(models.Model):
     joining_date = models.DateField()
     employee_photo = models.ImageField(upload_to='avatars/', null=True, blank=True)
     salary_ammount = models.CharField(max_length=100, null=True, blank=True)
+    
+    # Fields for tracking who created/updated the record
     created_by = models.ForeignKey(User, related_name='employee_created', on_delete=models.SET_NULL, null=True, blank=True)
     updated_by = models.ForeignKey(User, related_name='employee_updated', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # --- New fields for IP Restriction ---
+    ip_restriction_enabled = models.BooleanField(default=False, verbose_name="Enable IP Restriction")
+    allowed_ips = models.TextField(
+        blank=True,
+        help_text="Comma-separated list of allowed IP addresses (e.g., 192.168.1.1, 127.0.0.1)."
+    )
+    # ------------------------------------
 
     def save(self, *args, **kwargs):
+        """
+        Overrides the save method to automatically set created_by and updated_by fields.
+        """
         user = kwargs.pop('user', None)
         if user and not self.pk:
             self.created_by = user
@@ -45,7 +65,16 @@ class Employee(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.employee_id})"
-    
+
+# You would also have your EmployeeSession model here
+# For example:
+class EmployeeSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    login_time = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Session for {self.user.username} at {self.login_time}"
+
 class Employee_address(models.Model):
     employee = models.OneToOneField('Employee', on_delete=models.CASCADE, related_name='employee_address')
     permanent_address = models.CharField(max_length=100, null=True, blank=True)

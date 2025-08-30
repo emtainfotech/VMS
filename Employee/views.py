@@ -1,9 +1,9 @@
 from itertools import chain
-from django.shortcuts import render, redirect,get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import *
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.timezone import now
 from datetime import datetime, time ,date
 from django.utils.timezone import localtime
@@ -47,21 +47,96 @@ import logging
 from django.db.models import Count, F
 from datetime import datetime, timedelta, date
 from CRM.models import *
+from django.http import HttpResponseRedirect
 
+
+def get_client_ip(request):
+    """
+    Get the client's real IP address from the request.
+    Handles requests that are behind a proxy.
+    """
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 def employee_login(request):
+    """
+    Handles employee login. If the employee has IP restriction enabled,
+    it verifies their IP address before allowing login.
+    """
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
+        
         if user:
+            try:
+                employee = user.employee # Access the related Employee object
+                
+                # Check for IP restriction if it's enabled for this employee
+                if employee.ip_restriction_enabled:
+                    client_ip = get_client_ip(request)
+                    allowed_ips = [ip.strip() for ip in employee.allowed_ips.split(',') if ip.strip()]
+                    
+                    if client_ip not in allowed_ips:
+                        # If IP is not allowed, render a custom error page with a 404 status
+                        return render(request, 'employee/ip_restriction_error.html', status=404)
+
+            except Employee.DoesNotExist:
+                # This case handles if a User exists but has no associated Employee profile
+                return render(request, 'employee/login.html', {'error': 'No employee profile found for this user.'})
+
+            # If IP check passes or is not enabled, proceed with login
             login(request, user)
-            # Create a new session record
             EmployeeSession.objects.create(user=user)
-            return redirect('employee_dashboard')
+            return redirect('employee_dashboard') # Redirect to the employee dashboard
         else:
             return render(request, 'employee/login.html', {'error': 'Invalid credentials'})
+            
     return render(request, 'employee/login.html')
+
+def is_admin(user):
+    """
+    A simple check to see if a user has admin privileges.
+    Adjust this according to your app's permission rules.
+    """
+    return user.is_superuser or user.is_staff
+
+@login_required
+@user_passes_test(is_admin)
+def manage_ip_restriction(request):
+    """
+    A view for admins to enable/disable IP restriction and set
+    allowed IPs for multiple employees at once.
+    """
+    if request.method == 'POST':
+        employee_ids = request.POST.getlist('employee_ids')
+        ip_restriction_enabled = 'ip_restriction_enabled' in request.POST
+        allowed_ips = request.POST.get('allowed_ips', '')
+
+        employees_to_update = Employee.objects.filter(id__in=employee_ids)
+        
+        for employee in employees_to_update:
+            employee.ip_restriction_enabled = ip_restriction_enabled
+            if ip_restriction_enabled:
+                employee.allowed_ips = allowed_ips
+            else:
+                # It's good practice to clear the IPs if restriction is disabled
+                employee.allowed_ips = ''
+            employee.save()
+        
+        # Redirect back to the same page to see the changes
+        return HttpResponseRedirect(reverse('manage_ip_restriction'))
+
+    all_employees = Employee.objects.all().select_related('user').order_by('first_name')
+    context = {
+        'employees': all_employees
+    }
+    return render(request, 'employee/manage_ip_restriction.html', context)
+
 
 @login_required
 def employee_logout(request):

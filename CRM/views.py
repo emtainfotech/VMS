@@ -53,7 +53,7 @@ def crm_admin_login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None and user.is_staff:
             login(request, user)
-            return redirect("employee_calls_list")  
+            return redirect("admin_calls_list")  
         else:
             messages.error(request, "Invalid credentials or insufficient permissions.")
     return render(request, "crm/admin-login.html")
