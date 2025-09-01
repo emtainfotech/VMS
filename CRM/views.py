@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect,get_object_or_404
 from .models import *
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.timezone import now
 from datetime import datetime, time ,date
 from django.utils.timezone import localtime
@@ -1389,13 +1389,12 @@ def get_unique_filter_options(*querysets, field_name):
 @login_required
 def admin_candidate_list(request):
     """
-    This view now renders the main page with only the FIRST page of candidates
-    and provides all unique filter options to the JavaScript.
+    Renders the main candidate list page. It now includes a list of all employees
+    for the new bulk assignment modal.
     """
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
 
-    # Base querysets for fetching filter options
     candidates_reg_qs = Candidate_registration.objects.all()
     candidates_can_qs = Candidate.objects.all()
 
@@ -1407,48 +1406,46 @@ def admin_candidate_list(request):
         'lead_statuses': get_unique_filter_options(candidates_reg_qs, candidates_can_qs, field_name='lead_generate'),
     }
 
-    # Fetch all candidates, sort them, and then paginate
     all_candidates_list = sorted(
         list(chain(candidates_reg_qs, candidates_can_qs)),
         key=lambda x: x.register_time,
         reverse=True
     )
     
-    paginator = Paginator(all_candidates_list, 50) # Show 50 candidates per page initially
+    paginator = Paginator(all_candidates_list, 50)
     total_candidates_count = paginator.count
-    
-    # Get the first page
     candidates_page = paginator.page(1)
 
-    # Add model type to each candidate object for use in templates/JS
     for candidate in candidates_page.object_list:
         if isinstance(candidate, Candidate_registration):
             candidate.model_type = 'registration'
         else:
             candidate.model_type = 'candidate'
 
+    # --- NEW: Fetch all employees for the assignment modal ---
+    all_employees = Employee.objects.all().order_by('first_name', 'last_name')
+
     context = {
         'candidates': candidates_page.object_list,
         'total_candidates_count': total_candidates_count,
         'filter_options': filter_options,
+        'all_employees': all_employees, # Pass employees to the template
     }
     return render(request, 'crm/candidate-list.html', context)
-
 
 @login_required
 def get_candidates_api(request):
     """
-    This new API view handles AJAX requests for fetching, filtering, 
-    and paginating candidate data.
+    API view to handle AJAX requests for fetching, filtering, and paginating candidates.
+    (This view remains unchanged).
     """
     if not (request.user.is_staff or request.user.is_superuser):
         return JsonResponse({'error': 'Forbidden'}, status=403)
 
-    # Base querysets
+    # --- Your existing filtering and pagination logic ---
     candidates_reg_qs = Candidate_registration.objects.all()
     candidates_can_qs = Candidate.objects.all()
 
-    # --- Apply Filters from GET parameters ---
     search_term = request.GET.get('search', '').strip()
     date_from = request.GET.get('dateFrom')
     date_to = request.GET.get('dateTo')
@@ -1457,15 +1454,9 @@ def get_candidates_api(request):
     employees = [s for s in request.GET.get('employee', '').split(',') if s]
     lead_statuses = [s for s in request.GET.get('status', '').split(',') if s]
 
-    # Combine filters for both models
     q_filter = Q()
     if search_term:
-        q_filter &= (
-            Q(candidate_name__icontains=search_term) |
-            Q(candidate_mobile_number__icontains=search_term) |
-            Q(unique_code__icontains=search_term) |
-            Q(current_working_status__icontains=search_term)
-        )
+        q_filter &= (Q(candidate_name__icontains=search_term) | Q(candidate_mobile_number__icontains=search_term) | Q(unique_code__icontains=search_term) | Q(current_working_status__icontains=search_term))
     if date_from:
         q_filter &= Q(register_time__date__gte=date_from)
     if date_to:
@@ -1482,7 +1473,6 @@ def get_candidates_api(request):
     candidates_reg_qs = candidates_reg_qs.filter(q_filter)
     candidates_can_qs = candidates_can_qs.filter(q_filter)
 
-    # Combine, sort, and paginate the filtered results
     filtered_candidates_list = sorted(
         list(chain(candidates_reg_qs, candidates_can_qs)),
         key=lambda x: x.register_time,
@@ -1497,15 +1487,12 @@ def get_candidates_api(request):
     except (EmptyPage, PageNotAnInteger):
         return JsonResponse({'candidates': [], 'has_next': False, 'total_count': 0})
 
-    # Serialize the data for the current page into JSON format
     candidates_data = []
     for candidate in page_obj.object_list:
         model_type = 'registration' if isinstance(candidate, Candidate_registration) else 'candidate'
-        
         profile_url = reverse('admin_candidate_profile', args=[candidate.id])
         if candidate.lead_source == 'EVMS':
             profile_url = reverse('evms_candidate_profile', args=[candidate.id])
-
         candidates_data.append({
             'id': candidate.id,
             'model_type': model_type,
@@ -1525,12 +1512,10 @@ def get_candidates_api(request):
             'experience_year': candidate.experience_year,
             'experience_month': candidate.experience_month,
             'employee_name': candidate.employee_name,
-            # AFTER (Correct)
             'registered_time': candidate.register_time.strftime("%b %d, %Y %H:%M"),
             'full_registered_time': candidate.register_time.isoformat(),
             'resume_url': candidate.candidate_resume.url if candidate.candidate_resume else None,
             'profile_url': profile_url,
-            # Data attributes for client-side use if needed, but primarily for consistency
             'data_status': slugify(candidate.lead_generate or ''),
             'data_connection_status': slugify(candidate.call_connection or 'unknown'),
             'data_lead_source': slugify(candidate.lead_source or 'unknown'),
@@ -1542,6 +1527,59 @@ def get_candidates_api(request):
         'has_next': page_obj.has_next(),
         'total_count': paginator.count
     })
+
+# --- NEW VIEW FOR BULK ASSIGNMENT ---
+@login_required
+@require_POST
+def bulk_assign_candidates_api(request):
+    """
+    API endpoint to handle the bulk assignment of candidates to an employee.
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+
+    try:
+        data = json.loads(request.body)
+        candidates_to_assign = data.get('candidates', [])
+        employee_id = data.get('employee_id')
+
+        if not candidates_to_assign or not employee_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing candidate or employee information.'}, status=400)
+
+        employee_instance = Employee.objects.get(pk=employee_id)
+        
+        # Separate candidates by their model type
+        reg_ids = [c['id'] for c in candidates_to_assign if c['model_type'] == 'registration']
+        can_ids = [c['id'] for c in candidates_to_assign if c['model_type'] == 'candidate']
+
+        updated_reg_count = 0
+        updated_can_count = 0
+
+        # Update both the new `assigned_to` ForeignKey and the old `employee_name` CharField
+        employee_full_name = f"{employee_instance.first_name} {employee_instance.last_name}"
+
+        if reg_ids:
+            updated_reg_count = Candidate_registration.objects.filter(pk__in=reg_ids).update(
+                assigned_to=employee_instance,
+                employee_name=employee_full_name 
+            )
+        
+        if can_ids:
+            updated_can_count = Candidate.objects.filter(pk__in=can_ids).update(
+                assigned_to=employee_instance,
+                employee_name=employee_full_name
+            )
+
+        total_updated = updated_reg_count + updated_can_count
+        return JsonResponse({
+            'status': 'success',
+            'message': f'{total_updated} candidates have been successfully assigned to {employee_full_name}.'
+        })
+
+    except Employee.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Selected employee not found.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @login_required
 def delete_candidate(request, candidate_id, model_type=None):
@@ -5319,3 +5357,57 @@ def admin_task_detail_and_reassign(request, pk):
         'priority_choices': Task.PRIORITY_CHOICES,
     }
     return render(request, 'crm/task_detail.html', context)
+
+
+def is_admin_or_staff(user):
+    """Check if the user is a superuser or staff member."""
+    return user.is_authenticated and (user.is_superuser or user.is_staff)
+
+@user_passes_test(is_admin_or_staff)
+def bulk_assign_candidates(request):
+    """
+    A view for administrators and staff to bulk-assign unassigned candidates 
+    to a specific employee.
+    """
+    if request.method == 'POST':
+        candidate_ids = request.POST.getlist('candidate_ids')
+        employee_id = request.POST.get('employee_id')
+
+        if not candidate_ids:
+            messages.error(request, "Please select at least one candidate to assign.")
+            return redirect('bulk_assign_candidates')
+
+        if not employee_id:
+            messages.error(request, "Please select an employee to assign the candidates to.")
+            return redirect('bulk_assign_candidates')
+
+        try:
+            # Find the employee to assign the candidates to
+            assign_to_employee = Employee.objects.get(pk=employee_id)
+            
+            # Efficiently update all selected candidates in a single database query
+            candidates_to_assign = Candidate_registration.objects.filter(pk__in=candidate_ids)
+            updated_count = candidates_to_assign.update(assigned_to=assign_to_employee)
+
+            messages.success(
+                request, 
+                f"Successfully assigned {updated_count} candidates to {assign_to_employee}."
+            )
+
+        except Employee.DoesNotExist:
+            messages.error(request, "The selected employee could not be found.")
+        except Exception as e:
+            messages.error(request, f"An unexpected error occurred: {e}")
+            
+        return redirect('bulk_assign_candidates')
+
+    # For GET requests, display the page
+    # We fetch only unassigned candidates to keep the list clean
+    unassigned_candidates = Candidate_registration.objects.filter(assigned_to__isnull=True)
+    all_employees = Employee.objects.all()
+
+    context = {
+        'candidates': unassigned_candidates,
+        'employees': all_employees,
+    }
+    return render(request, 'crm/bulk_assign_candidates.html', context)

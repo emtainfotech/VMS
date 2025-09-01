@@ -14,15 +14,15 @@
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
                         <a href="{% url 'admin_candidate_registration' %}" class="btn btn-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 7v4m0 0v4m0-4h4m-4 0H8" /><path d="M16 21v-2a4 4 0 0 0 -8 0v2" /><circle cx="12" cy="7" r="4" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
                             Add New Candidate
                         </a>
                         <a href="{% url 'download_candidates' %}" class="btn btn-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4v12" /></svg>
+                             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>
                             Download Candidate Data
                         </a>
                         <a href="{% url 'admin_candidate_bulk_upload' %}" class="btn btn-primary">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 -5l5 5" /><path d="M12 6v12" /></svg>
+                             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-upload" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 9l5 -5l5 5" /><path d="M12 4l0 12" /></svg>
                             Bulk Upload Candidates
                         </a>
                     </div>
@@ -61,6 +61,7 @@
                     <table class="table table-vcenter table-hover table-nowrap" id="candidatesTable">
                         <thead>
                             <tr>
+                                <th class="w-1"><input class="form-check-input m-0 align-middle" type="checkbox" id="selectAllCheckbox" aria-label="Select all candidates"></th>
                                 <th class="w-1">#</th>
                                 <th>Connection Status</th>
                                 <th>Candidate</th>
@@ -103,6 +104,51 @@
     </div>
 </div>
 
+<!-- Bulk Actions Bar -->
+<div id="bulk-actions-bar" class="bulk-actions-bar">
+    <div class="container-xl d-flex justify-content-between align-items-center h-100">
+        <div>
+            <span id="selected-count" class="fw-bold">0</span> candidates selected
+        </div>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignModal">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user-check" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4" /><path d="M15 19l2 2l4 -4" /></svg>
+                Assign Selected
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Assignment Modal -->
+<div class="modal" id="assignModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Candidates</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Assign <strong id="assign-modal-count">0</strong> selected candidates to:</p>
+                <div class="form-group">
+                    <label for="employee-select" class="form-label">Employee</label>
+                    <select class="form-select" id="employee-select">
+                        <option value="">-- Select an Employee --</option>
+                        {% for employee in all_employees %}
+                            <option value="{{ employee.id }}">{{ employee.first_name }} {{ employee.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn me-auto" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmAssignmentBtn">Confirm Assignment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Filter Modal -->
 <div class="modal" id="filterModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -134,17 +180,17 @@
                     <div class="col-md-6 col-lg-3">
                         <label class="form-label">Lead Source</label>
                         <div class="filter-options-pane-modal" id="leadSourceFilterOptions">
-                            <div class="input-icon mb-2"><input type="text" class="form-control dropdown-search-input" placeholder="Search..." data-filter-target="leadSourceCheckboxes"><span class="input-icon-addon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span></div>
-                            <label class="form-check cursor-pointer"><input class="form-check-input select-all-checkbox" type="checkbox"><span class="form-check-label font-weight-bold">Select All</span></label>
-                            <div id="leadSourceCheckboxes"></div>
+                             <div class="input-icon mb-2"><input type="text" class="form-control dropdown-search-input" placeholder="Search..." data-filter-target="leadSourceCheckboxes"><span class="input-icon-addon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span></div>
+                             <label class="form-check cursor-pointer"><input class="form-check-input select-all-checkbox" type="checkbox"><span class="form-check-label font-weight-bold">Select All</span></label>
+                             <div id="leadSourceCheckboxes"></div>
                         </div>
                     </div>
                     <div class="col-md-6 col-lg-3">
                         <label class="form-label">Employee</label>
                         <div class="filter-options-pane-modal" id="employeeFilterOptions">
-                            <div class="input-icon mb-2"><input type="text" class="form-control dropdown-search-input" placeholder="Search..." data-filter-target="employeeCheckboxes"><span class="input-icon-addon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span></div>
-                            <label class="form-check cursor-pointer"><input class="form-check-input select-all-checkbox" type="checkbox"><span class="form-check-label font-weight-bold">Select All</span></label>
-                            <div id="employeeCheckboxes"></div>
+                             <div class="input-icon mb-2"><input type="text" class="form-control dropdown-search-input" placeholder="Search..." data-filter-target="employeeCheckboxes"><span class="input-icon-addon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span></div>
+                             <label class="form-check cursor-pointer"><input class="form-check-input select-all-checkbox" type="checkbox"><span class="form-check-label font-weight-bold">Select All</span></label>
+                             <div id="employeeCheckboxes"></div>
                         </div>
                     </div>
                     <div class="col-md-6 col-lg-3">
@@ -167,8 +213,10 @@
 
 {{ filter_options|json_script:"filter-options-data" }}
 
+<!-- JAVASCRIPT TEMPLATE FOR CANDIDATE ROWS -->
 <script type="text/template" id="candidate-row-template">
     <tr data-id="{id}">
+        <td><input class="form-check-input m-0 align-middle candidate-checkbox" type="checkbox" data-id="{id}" data-model-type="{model_type}"></td>
         <td>{index}</td>
         <td>{connectionBadge}</td>
         <td>
@@ -186,13 +234,7 @@
         <td><div class="text-muted">{experienceDisplay}</div></td>
         <td class="text-muted">{employeeName}</td>
         <td class="text-muted" title="{full_registered_time}">{registered_time}</td>
-        <td class="text-center actions-cell">
-            <div class="btn-list d-flex justify-content-center align-items-center flex-nowrap">
-                <a href="{profile_url}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg></a>
-                {resumeButtons}
-                <button onclick="confirmDelete({id}, '{name_escaped}', '{model_type}')" class="btn btn-sm btn-icon btn-danger" title="Delete Candidate" data-bs-toggle="tooltip"><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 7l16 0"></path><path d="M10 11l0 6"></path><path d="M14 11l0 6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg></button>
-            </div>
-        </td>
+        <td class="text-center actions-cell">{actions}</td>
     </tr>
 </script>
 
@@ -210,18 +252,24 @@
     .status-other { background-color: rgba(102, 16, 242, 0.1); color: #6610f2; }
     .table-responsive.table-scrollable-body { position: relative; }
     #candidatesTable thead th { position: sticky; top: 0; background-color: var(--tblr-card-bg, white); z-index: 10; box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); }
+    .filter-options-pane-modal { max-height: 250px; overflow-y: auto; }
     .cursor-pointer { cursor: pointer; }
-    /* New styles for filter pane inside the modal */
-    .filter-options-pane-modal {
-        position: relative;
-        display: block;
-        border: 1px solid var(--tblr-border-color);
-        border-radius: var(--tblr-border-radius);
-        padding: 0.75rem;
-        max-height: 250px;
-        overflow-y: auto;
+
+    .bulk-actions-bar {
+        position: fixed;
+        bottom: -100px; /* Start hidden */
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background-color: var(--tblr-card-bg, white);
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1050;
+        transition: bottom 0.3s ease-in-out;
     }
-    .filter-options-pane-modal .form-check { margin-bottom: 0.5rem; }
+
+    .bulk-actions-bar.show {
+        bottom: 0;
+    }
 </style>
 
 <script>
@@ -231,6 +279,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let isLoading = false;
     let searchTimeout;
     const FILTERS_STORAGE_KEY = 'adminCandidateFilters';
+    let selectedCandidates = new Map();
 
     // --- DOM ELEMENTS ---
     const tableBody = document.getElementById('candidates-tbody');
@@ -246,13 +295,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const modalApplyBtn = document.getElementById('modalApplyFiltersBtn');
     const modalClearBtn = document.getElementById('modalClearFiltersBtn');
     const clearAllFiltersBtn = document.getElementById('clearAllFiltersBtn');
-
-    if (!rowTemplateEl) {
-        console.error("Critical error: Candidate row template not found!");
-        return;
-    }
-    const rowTemplate = rowTemplateEl.innerHTML;
-
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const bulkActionsBar = document.getElementById('bulk-actions-bar');
+    const selectedCountSpan = document.getElementById('selected-count');
+    const assignModalCountSpan = document.getElementById('assign-modal-count');
+    const employeeSelect = document.getElementById('employee-select');
+    const confirmAssignmentBtn = document.getElementById('confirmAssignmentBtn');
     const filterSets = {
         connectionStatus: { container: document.getElementById('connectionStatusCheckboxes'), values: filterOptions.connection_statuses },
         leadSource: { container: document.getElementById('leadSourceCheckboxes'), values: filterOptions.lead_sources },
@@ -260,7 +308,37 @@ document.addEventListener("DOMContentLoaded", function () {
         status: { container: document.getElementById('statusCheckboxes'), values: filterOptions.lead_statuses }
     };
 
-    // --- PERSISTENCE & STATE MANAGEMENT ---
+    if (!rowTemplateEl) {
+        console.error("Critical error: Candidate row template not found!");
+        return;
+    }
+    const rowTemplate = rowTemplateEl.innerHTML;
+
+    // --- BULK ASSIGNMENT ---
+    function updateBulkActionsUI() {
+        const count = selectedCandidates.size;
+        selectedCountSpan.textContent = count;
+        assignModalCountSpan.textContent = count;
+        bulkActionsBar.classList.toggle('show', count > 0);
+        
+        const visibleCheckboxes = tableBody.querySelectorAll('.candidate-checkbox').length;
+        selectAllCheckbox.checked = count > 0 && count === visibleCheckboxes;
+        selectAllCheckbox.indeterminate = count > 0 && count < visibleCheckboxes;
+    }
+    
+    function handleCheckboxChange(checkbox) {
+        const id = checkbox.dataset.id;
+        const modelType = checkbox.dataset.modelType;
+        const key = `${id}_${modelType}`;
+        if (checkbox.checked) {
+            selectedCandidates.set(key, { id: id, model_type: modelType });
+        } else {
+            selectedCandidates.delete(key);
+        }
+        updateBulkActionsUI();
+    }
+
+    // --- FILTERS & LOCAL STORAGE ---
     function saveFiltersToStorage() {
         const filters = {
             search: searchInput.value.trim(),
@@ -298,8 +376,8 @@ document.addEventListener("DOMContentLoaded", function () {
         dateFromInput.value = '';
         dateToInput.value = '';
         for (const key in filterSets) {
-            const pane = filterSets[key].container.closest('.filter-options-pane-modal');
-            pane.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            filterSets[key].container.closest('.filter-options-pane-modal')
+                .querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
         }
         updateAllCountsAndCheckboxes();
         applyFilters();
@@ -310,83 +388,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let isFilterApplied = Object.values(savedFilters).some(val => Array.isArray(val) ? val.length > 0 : val);
         clearAllFiltersBtn.style.display = isFilterApplied ? 'inline-flex' : 'none';
     }
-
-    // --- DATA LOADING & RENDERING ---
-    function createCandidateRowHTML(candidate, index) {
-        // This function remains unchanged from your original code
-        const connectionStatus = candidate.call_connection ? candidate.call_connection.toLowerCase() : '';
-        let badgeClass = 'bg-secondary', iconClass = 'fa-question-circle';
-        if (connectionStatus === 'yes' || connectionStatus === 'connected') { badgeClass = 'bg-success'; iconClass = 'fa-check-circle'; }
-        else if (connectionStatus === 'no') { badgeClass = 'bg-danger'; iconClass = 'fa-times-circle'; }
-        else if (connectionStatus === 'pending') { badgeClass = 'bg-warning text-dark'; iconClass = 'fa-clock'; }
-        const resumeButtons = candidate.resume_url ? `<a href="${candidate.resume_url}" target="_blank" class="btn btn-sm btn-icon" title="View Resume" data-bs-toggle="tooltip"><svg class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 9h1"/><path d="M9 13h6"/><path d="M9 17h6"/></svg></a><a href="${candidate.resume_url}" download class="btn btn-sm btn-icon" title="Download Resume" data-bs-toggle="tooltip"><svg class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 11l5 5l5-5"/><path d="M12 4L12 16"/></svg></a>` : '';
-        return rowTemplate.replace(/{index}/g, index).replace(/{id}/g, candidate.id).replace(/{connectionBadge}/g, candidate.call_connection ? `<span class="badge text-white ${badgeClass} px-3 py-1 rounded-pill text-capitalize" title="Call Connection: ${candidate.call_connection}"><i class="fa text-white ${iconClass} me-1"></i> ${candidate.call_connection}</span>` : `<span class="badge bg-secondary px-3 py-1 rounded-pill">Unknown</span>`).replace(/{avatar}/g, candidate.photo_url ? `<img src="${candidate.photo_url}" class="avatar avatar-md rounded-circle" alt="${candidate.name}">` : `<div class="avatar avatar-md rounded-circle bg-blue-lt">${candidate.name_initial}</div>`).replace(/{profile_url}/g, candidate.profile_url).replace(/{name}/g, candidate.name).replace(/{uniqueCode}/g, candidate.lead_source === 'EVMS' ? `<code>${candidate.refer_code}-${candidate.unique_id}</code>` : `<code>${candidate.unique_code}</code>`).replace(/{contactInfo}/g, `<a href="tel:${candidate.mobile}" class="text-reset d-block">${candidate.mobile}</a>${candidate.email ? `<a href="mailto:${candidate.email}" class="text-reset d-block small text-truncate" style="max-width: 150px;">${candidate.email}</a>` : ''}`).replace(/{leadSourceDisplay}/g, candidate.lead_source === 'Other' && candidate.other_lead_source ? candidate.other_lead_source : (candidate.lead_source || '-')).replace(/{data_status}/g, candidate.data_status).replace(/{leadStatusDisplay}/g, candidate.lead_status === 'Other' && candidate.other_lead_status ? candidate.other_lead_status : (candidate.lead_status || '-')).replace(/{experienceDisplay}/g, candidate.experience_year || candidate.experience_month ? `${candidate.experience_year || 0}y ${candidate.experience_month || 0}m` : 'Fresher').replace(/{employeeName}/g, candidate.employee_name || "Unassigned").replace(/{full_registered_time}/g, candidate.full_registered_time).replace(/{registered_time}/g, candidate.registered_time).replace(/{resumeButtons}/g, resumeButtons).replace(/{name_escaped}/g, candidate.name.replace(/'/g, "\\'")).replace(/{model_type}/g, candidate.model_type);
-    }
-
-    function loadCandidates() {
-        if (isLoading) return Promise.resolve();
-        isLoading = true;
-        
-        loadMoreContainer.style.display = 'none';
-        loadingIndicator.style.display = 'block';
-        noResultsMessage.style.display = 'none';
-
-        const pageToFetch = currentPage + 1;
-        const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
-        
-        const currentFilters = {};
-        if (savedFilters.search) currentFilters.search = savedFilters.search;
-        if (savedFilters.dateFrom) currentFilters.dateFrom = savedFilters.dateFrom;
-        if (savedFilters.dateTo) currentFilters.dateTo = savedFilters.dateTo;
-        for (const key in filterSets) {
-            if (savedFilters[key] && savedFilters[key].length > 0) {
-                 currentFilters[key] = savedFilters[key].join(',');
-            }
-        }
-        
-        const params = new URLSearchParams({ page: pageToFetch, ...currentFilters });
-        
-        return fetch(`/crm/api/get-candidates/?${params.toString()}`)
-            .then(response => response.ok ? response.json() : Promise.reject(`HTTP error! status: ${response.status}`))
-            .then(data => {
-                if (pageToFetch === 1 && data.candidates.length === 0) {
-                    noResultsMessage.style.display = 'block';
-                }
-                let currentCount = tableBody.rows.length;
-                const newRowsHTML = data.candidates.map(c => createCandidateRowHTML(c, ++currentCount)).join('');
-                tableBody.insertAdjacentHTML('beforeend', newRowsHTML);
-                
-                currentPage = pageToFetch;
-
-                if (data.has_next) {
-                    loadMoreContainer.style.display = 'block';
-                }
-
-                document.getElementById('showingTo').textContent = tableBody.rows.length;
-                document.getElementById('totalCount').textContent = data.total_count;
-                document.getElementById('total-candidates').textContent = data.total_count;
-                document.getElementById('showingFrom').textContent = tableBody.rows.length > 0 ? '1' : '0';
-            })
-            .catch(error => {
-                console.error("Failed to load candidates:", error);
-                const totalRows = tableBody.rows.length;
-                const totalCount = parseInt(document.getElementById('totalCount').textContent, 10);
-                if(totalRows < totalCount) loadMoreContainer.style.display = 'block';
-            })
-            .finally(() => {
-                isLoading = false;
-                loadingIndicator.style.display = 'none';
-            });
-    }
-
-    // --- FILTERING LOGIC ---
-    function applyFilters() {
-        saveFiltersToStorage();
-        tableBody.innerHTML = '';
-        currentPage = 0; // Reset page count for the new filter set
-        loadCandidates();
-    }
-
+    
     function setupFilterCheckboxes() {
         for (const key in filterSets) {
             const config = filterSets[key];
@@ -403,6 +405,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const checkboxes = pane.querySelectorAll('.filter-checkbox');
         const checkedCount = pane.querySelectorAll('.filter-checkbox:checked').length;
         const selectAll = pane.querySelector('.select-all-checkbox');
+        if (!selectAll) return;
         if (checkedCount === 0) {
             selectAll.checked = false;
             selectAll.indeterminate = false;
@@ -416,22 +419,101 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
     function updateAllCountsAndCheckboxes() {
-         document.querySelectorAll('.filter-options-pane-modal').forEach(pane => {
-             updateSelectAllCheckbox(pane);
-         });
+        document.querySelectorAll('.filter-options-pane-modal').forEach(pane => {
+            updateSelectAllCheckbox(pane);
+        });
     }
 
+    // --- DATA LOADING & RENDERING ---
+    function createCandidateRowHTML(candidate, index) {
+        let connectionBadge = `<span class="badge bg-secondary px-3 py-1 rounded-pill">Unknown</span>`;
+        if (candidate.call_connection) {
+            const status = candidate.call_connection.toLowerCase();
+            let badgeClass = 'bg-secondary';
+            if (status === 'yes' || status === 'connected') badgeClass = 'bg-success';
+            else if (status === 'no') badgeClass = 'bg-danger';
+            else if (status === 'pending') badgeClass = 'bg-warning text-dark';
+            connectionBadge = `<span class="badge text-white ${badgeClass} px-3 py-1 rounded-pill text-capitalize">${candidate.call_connection}</span>`;
+        }
+
+        const avatar = candidate.photo_url ? `<img src="${candidate.photo_url}" class="avatar avatar-md rounded-circle" alt="${candidate.name}">` : `<div class="avatar avatar-md rounded-circle bg-blue-lt">${candidate.name_initial}</div>`;
+        const uniqueCode = candidate.lead_source === 'EVMS' ? `<code>${candidate.refer_code}-${candidate.unique_id}</code>` : `<code>${candidate.unique_code}</code>`;
+        let contactInfo = `<a href="tel:${candidate.mobile}" class="text-reset d-block">${candidate.mobile}</a>`;
+        if (candidate.email) contactInfo += `<a href="mailto:${candidate.email}" class="text-reset d-block small text-truncate" style="max-width: 150px;">${candidate.email}</a>`;
+        
+        const leadSourceDisplay = candidate.lead_source === 'Other' && candidate.other_lead_source ? candidate.other_lead_source : (candidate.lead_source || '-');
+        const leadStatusDisplay = candidate.lead_status === 'Other' && candidate.other_lead_status ? candidate.other_lead_status : (candidate.lead_status || '-');
+        const experienceDisplay = (candidate.experience_year || candidate.experience_month) ? `${candidate.experience_year || 0}y ${candidate.experience_month || 0}m` : 'Fresher';
+        const nameEscaped = candidate.name.replace(/'/g, "\\'");
+        
+        let actions = `<div class="btn-list d-flex justify-content-center align-items-center flex-nowrap"><a href="${candidate.profile_url}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg></a>`;
+        if (candidate.resume_url) {
+            actions += `<a href="${candidate.resume_url}" target="_blank" class="btn btn-sm btn-icon" title="View Resume" data-bs-toggle="tooltip"><svg class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 9h1"/><path d="M9 13h6"/><path d="M9 17h6"/></svg></a><a href="${candidate.resume_url}" download class="btn btn-sm btn-icon" title="Download Resume" data-bs-toggle="tooltip"><svg class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 11l5 5l5-5"/><path d="M12 4L12 16"/></svg></a>`;
+        }
+        actions += `<button onclick="confirmDelete('${candidate.id}', '${nameEscaped}', '${candidate.model_type}')" class="btn btn-sm btn-icon btn-danger" title="Delete Candidate" data-bs-toggle="tooltip"><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 7l16 0"></path><path d="M10 11l0 6"></path><path d="M14 11l0 6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg></button></div>`;
+
+        return rowTemplate.replace(/{id}/g, candidate.id).replace(/{model_type}/g, candidate.model_type).replace('{index}', index).replace('{connectionBadge}', connectionBadge).replace('{avatar}', avatar).replace('{profile_url}', candidate.profile_url).replace('{name}', candidate.name).replace('{uniqueCode}', uniqueCode).replace('{contactInfo}', contactInfo).replace('{leadSourceDisplay}', leadSourceDisplay).replace('{data_status}', candidate.data_status).replace('{leadStatusDisplay}', leadStatusDisplay).replace('{experienceDisplay}', experienceDisplay).replace('{employeeName}', candidate.employee_name || "Unassigned").replace('{full_registered_time}', candidate.full_registered_time).replace('{registered_time}', candidate.registered_time).replace('{actions}', actions);
+    }
+
+    function loadCandidates() {
+        if (isLoading) return;
+        isLoading = true;
+        loadMoreContainer.style.display = 'none';
+        loadingIndicator.style.display = 'block';
+        if (currentPage === 0) noResultsMessage.style.display = 'none';
+
+        const pageToFetch = currentPage + 1;
+        const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
+        const currentFilters = {};
+        if (savedFilters.search) currentFilters.search = savedFilters.search;
+        if (savedFilters.dateFrom) currentFilters.dateFrom = savedFilters.dateFrom;
+        if (savedFilters.dateTo) currentFilters.dateTo = savedFilters.dateTo;
+        Object.keys(savedFilters).forEach(key => {
+            if (Array.isArray(savedFilters[key]) && savedFilters[key].length > 0) currentFilters[key] = savedFilters[key].join(',');
+        });
+        
+        const params = new URLSearchParams({ page: pageToFetch, ...currentFilters });
+        
+        fetch(`/crm/api/get-candidates/?${params.toString()}`)
+            .then(response => response.ok ? response.json() : Promise.reject(`HTTP error! status: ${response.status}`))
+            .then(data => {
+                if (pageToFetch === 1 && data.candidates.length === 0) noResultsMessage.style.display = 'block';
+                let currentCount = tableBody.rows.length;
+                const newRowsHTML = data.candidates.map(c => createCandidateRowHTML(c, ++currentCount)).join('');
+                tableBody.insertAdjacentHTML('beforeend', newRowsHTML);
+                currentPage = pageToFetch;
+                loadMoreContainer.style.display = data.has_next ? 'block' : 'none';
+                document.getElementById('showingTo').textContent = tableBody.rows.length;
+                document.getElementById('totalCount').textContent = data.total_count;
+                document.getElementById('total-candidates').textContent = data.total_count;
+                document.getElementById('showingFrom').textContent = tableBody.rows.length > 0 ? '1' : '0';
+            })
+            .catch(error => console.error("Failed to load candidates:", error))
+            .finally(() => {
+                isLoading = false;
+                loadingIndicator.style.display = 'none';
+            });
+    }
+
+    function applyFilters() {
+        selectedCandidates.clear();
+        updateBulkActionsUI();
+        selectAllCheckbox.checked = false;
+        saveFiltersToStorage();
+        tableBody.innerHTML = '';
+        currentPage = 0;
+        loadCandidates();
+    }
+    
     // --- INITIALIZATION & EVENT LISTENERS ---
     function initializeEventListeners() {
         loadMoreBtn.addEventListener('click', loadCandidates);
         modalApplyBtn.addEventListener('click', applyFilters);
         clearAllFiltersBtn.addEventListener('click', clearAllFilters);
-
         searchInput.addEventListener('input', () => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(applyFilters, 500);
         });
-
         modalClearBtn.addEventListener('click', () => {
             dateFromInput.value = '';
             dateToInput.value = '';
@@ -440,63 +522,67 @@ document.addEventListener("DOMContentLoaded", function () {
                 updateSelectAllCheckbox(pane);
             });
         });
-
         document.querySelectorAll('.dropdown-search-input').forEach(input => {
             input.addEventListener('input', () => {
                 const searchTerm = input.value.toLowerCase();
                 const targetId = input.getAttribute('data-filter-target');
-                const container = document.getElementById(targetId);
-                container.querySelectorAll('.form-check').forEach(label => {
-                    const labelText = label.querySelector('.form-check-label').textContent.toLowerCase();
-                    label.style.display = labelText.includes(searchTerm) ? '' : 'none';
+                document.getElementById(targetId).querySelectorAll('.form-check').forEach(label => {
+                    label.style.display = label.querySelector('.form-check-label').textContent.toLowerCase().includes(searchTerm) ? '' : 'none';
                 });
             });
         });
-
         document.querySelectorAll('.select-all-checkbox').forEach(el => {
             el.addEventListener('change', (e) => {
                 const pane = e.target.closest('.filter-options-pane-modal');
                 pane.querySelectorAll('.filter-checkbox:not([style*="display: none"])').forEach(cb => cb.checked = e.target.checked);
             });
         });
-        
-        document.querySelectorAll('.filter-checkbox').forEach(el => {
-            el.addEventListener('change', (e) => {
-                 const pane = e.target.closest('.filter-options-pane-modal');
-                 updateSelectAllCheckbox(pane);
+        document.querySelectorAll('.filter-options-pane-modal').forEach(pane => {
+            pane.addEventListener('change', e => {
+                if (e.target.classList.contains('filter-checkbox')) {
+                    updateSelectAllCheckbox(pane);
+                }
             });
+        });
+        confirmAssignmentBtn.addEventListener('click', () => {
+            const employeeId = employeeSelect.value;
+            if (!employeeId) {
+                alert('Please select an employee.');
+                return;
+            }
+            fetch("{% url 'bulk_assign_candidates_api' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({
+                    candidates: Array.from(selectedCandidates.values()),
+                    employee_id: employeeId,
+                }),
+            }).then(response => response.json()).then(data => {
+                alert(data.status === 'success' ? data.message : 'Error: ' + data.message);
+                if (data.status === 'success') {
+                    bootstrap.Modal.getInstance(document.getElementById('assignModal')).hide();
+                    applyFilters();
+                }
+            }).catch(error => console.error('Assignment Error:', error));
+        });
+        selectAllCheckbox.addEventListener('change', () => {
+            tableBody.querySelectorAll('.candidate-checkbox').forEach(cb => {
+                cb.checked = selectAllCheckbox.checked;
+                handleCheckboxChange(cb);
+            });
+        });
+        tableBody.addEventListener('change', e => {
+            if (e.target.classList.contains('candidate-checkbox')) handleCheckboxChange(e.target);
         });
     }
 
-    function checkInitialLoad() {
-        const initialCount = tableBody.rows.length;
-        const totalCount = parseInt(document.getElementById('totalCount').textContent, 10);
-        if (initialCount > 0 && initialCount < totalCount) {
-            loadMoreContainer.style.display = 'block';
-        } else {
-            loadMoreContainer.style.display = 'none';
-        }
-    }
-
+    // --- SCRIPT START ---
     setupFilterCheckboxes();
     loadFiltersFromStorage();
     initializeEventListeners();
-    
-    // Perform initial data load based on persisted filters
-    tableBody.innerHTML = ''; // Clear server-rendered rows
-    currentPage = 0; // Start fetching from page 1
-    loadCandidates().then(() => {
-        // After the initial async load, check if "load more" is needed.
-        const initialCount = tableBody.rows.length;
-        const totalCount = parseInt(document.getElementById('totalCount').textContent, 10);
-        if (initialCount > 0 && initialCount >= totalCount) {
-            loadMoreContainer.style.display = 'none';
-        } else if (initialCount === 0) {
-            // No results message is already handled by loadCandidates
-        } else {
-             loadMoreContainer.style.display = 'block';
-        }
-    });
+    tableBody.innerHTML = '';
+    currentPage = 0;
+    loadCandidates();
 });
 
 function confirmDelete(candidateId, candidateName, modelType) {
@@ -506,3 +592,4 @@ function confirmDelete(candidateId, candidateName, modelType) {
 }
 </script> 
 {% endblock content %}
+

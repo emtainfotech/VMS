@@ -963,7 +963,7 @@ def employee_candidate_list(request):
         return render(request, 'employee/404.html', status=404)
 
     all_candidates = get_filtered_candidates(request, logged_in_employee)
-    paginator = Paginator(all_candidates, 50) 
+    paginator = Paginator(all_candidates, 100) 
     page_obj = paginator.get_page(1)
     
 
@@ -986,7 +986,7 @@ def filter_candidates_api(request):
 
     all_filtered_candidates = get_filtered_candidates(request, logged_in_employee)
     page_number = request.GET.get('page', 1)
-    paginator = Paginator(all_filtered_candidates, 50)
+    paginator = Paginator(all_filtered_candidates, 100)
     page_obj = paginator.get_page(page_number)
 
     rendered_rows_html = render_to_string(

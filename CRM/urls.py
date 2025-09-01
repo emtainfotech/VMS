@@ -70,6 +70,7 @@ urlpatterns = [
     path('api/get-candidates/', get_candidates_api, name='get_candidates_api'),
     path('admin/tasks/', admin_task_dashboard, name='admin_task_dashboard'),
     path('tasks/<int:pk>/', admin_task_detail_and_reassign, name='admin_task_detail_and_reassign'),
+    path('bulk-assign/', bulk_assign_candidates_api, name='bulk_assign_candidates_api'),
 
     path('admin/', admin.site.urls),
 ]

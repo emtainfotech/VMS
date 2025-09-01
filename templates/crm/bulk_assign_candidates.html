@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover-color: #4338ca;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --text-color: #1e293b;
+            --secondary-text-color: #475569;
+            --border-color: #e2e8f0;
+            --shadow-medium: rgba(0, 0, 0, 0.05);
+            --focus-ring: 0 0 0 3px rgba(79, 70, 229, 0.2);
+            --status-connected-bg: #dcfce7;
+            --status-connected-text: #166534;
+            --status-notconnected-bg: #fee2e2;
+            --status-notconnected-text: #991b1b;
+            --status-yes-bg: #ede9fe;
+            --status-yes-text: #5b21b6;
+            --status-hot-bg: #fef3c7;
+            --status-hot-text: #92400e;
+            --status-cold-bg: #dbeafe;
+            --status-cold-text: #1e40af;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0;
+            padding: 2rem;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { 
+            max-width: 1400px;
+            margin: 1rem auto; 
+            background-color: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px var(--shadow-medium);
+            border: 1px solid var(--border-color);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .header h1 {
+            color: var(--text-color);
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        .header .count {
+            color: var(--secondary-text-color);
+            font-size: 1rem;
+            font-weight: 400;
+        }
+        
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #fdfdfd;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .filter-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--secondary-text-color);
+        }
+        .filter-group input, .filter-group select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background-color: white;
+            box-sizing: border-box;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+        .btn {
+            padding: 0.6rem 1.25rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover { background-color: var(--primary-hover-color); }
+        .btn-secondary {
+            background-color: var(--card-background);
+            color: var(--secondary-text-color);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover { background-color: #f1f5f9; }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        th, td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--secondary-text-color);
+            font-weight: 600;
+        }
+        td {
+            font-size: 0.9rem;
+        }
+
+        .candidate-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--border-color);
+            color: var(--secondary-text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        .candidate-name {
+            font-weight: 500;
+        }
+        .candidate-code {
+            font-size: 0.8rem;
+            color: var(--secondary-text-color);
+        }
+        .contact-info {
+            font-size: 0.8rem;
+            color: var(--secondary-text-color);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        .status-connected { background-color: var(--status-connected-bg); color: var(--status-connected-text); }
+        .status-not-connected { background-color: var(--status-notconnected-bg); color: var(--status-notconnected-text); }
+        .status-yes { background-color: var(--status-yes-bg); color: var(--status-yes-text); }
+
+        .lead-status {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .lead-hot { background-color: var(--status-hot-bg); color: var(--status-hot-text); }
+        .lead-cold { background-color: var(--status-cold-bg); color: var(--status-cold-text); }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Candidate Management</h1>
+                <span class="count">{{ candidates|length }} candidates found</span>
+            </div>
+            <!-- Add action buttons here if needed, e.g., Add New Candidate -->
+        </div>
+
+        
+            <div class="filters">
+                <div class="filter-group" style="grid-column: 1 / -1;">
+                    <label for="q">Search Candidate (Name, Email, Mobile, Code)</label>
+                    <input type="text" id="q" name="q" value="{{ current_filters.q }}" placeholder="Search...">
+                </div>
+                <div class="filter-group">
+                    <label for="connection_status">Connection Status</label>
+                    <select id="connection_status" name="connection_status">
+                        <option value="">All</option>
+                        {% for status in connection_statuses %}
+                        <option value="{{ status }}" {% if current_filters.connection_status == status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="lead_source">Lead Source</label>
+                    <select id="lead_source" name="lead_source">
+                        <option value="">All</option>
+                        {% for source in lead_sources %}
+                        <option value="{{ source }}" {% if current_filters.lead_source == source %}selected{% endif %}>{{ source }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="employee">Employee</label>
+                    <select id="employee" name="employee">
+                        <option value="">All</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.id }}" {% if current_filters.employee == emp.id|stringformat:"s" %}selected{% endif %}>{{ emp.first_name }} {{ emp.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" value="{{ current_filters.start_date }}">
+                </div>
+                <div class="filter-group">
+                    <label for="end_date">End Date</label>
+                    <input type="date" id="end_date" name="end_date" value="{{ current_filters.end_date }}">
+                </div>
+                <div class="filter-buttons">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                   
+                </div>
+            </div>
+        <!-- </form> -->
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Connection Status</th>
+                        <th>Candidate</th>
+                        <th>Contact</th>
+                        <th>Lead Source</th>
+                        <th>Lead Status</th>
+                        <th>Experience</th>
+                        <th>Employee</th>
+                        <th>Registered</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for candidate in candidates %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            {% if candidate.call_connection == 'Connected' %}
+                                <span class="status-badge status-connected">Connected</span>
+                            {% elif candidate.call_connection == 'Not Connected' %}
+                                <span class="status-badge status-not-connected">Not Connected</span>
+                            {% elif candidate.call_connection == 'Yes' %}
+                                <span class="status-badge status-yes">Yes</span>
+                            {% else %}
+                                {{ candidate.call_connection|default:'N/A' }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="candidate-cell">
+                                <div class="avatar">{{ candidate.candidate_name|first|upper }}</div>
+                                <div>
+                                    <div class="candidate-name">{{ candidate.candidate_name }}</div>
+                                    <div class="candidate-code">{{ candidate.unique_code }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>{{ candidate.candidate_mobile_number }}</div>
+                            <div class="contact-info">{{ candidate.candidate_email_address|default:'' }}</div>
+                        </td>
+                        <td>{{ candidate.lead_source|default:'N/A' }}</td>
+                        <td>
+                            {% if 'Hot' in candidate.lead_generate %}
+                                <span class="lead-status lead-hot">Hot</span>
+                            {% elif 'Cold' in candidate.lead_generate %}
+                                <span class="lead-status lead-cold">Cold</span>
+                            {% else %}
+                                {{ candidate.lead_generate|default:'N/A' }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if candidate.experience_year %}
+                                {{ candidate.experience_year }}
+                                {% if candidate.experience_month %}
+                                    , {{ candidate.experience_month }}
+                                {% endif %}
+                            {% else %}
+                                Fresher
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if candidate.assigned_to %}
+                                {{ candidate.assigned_to.first_name }} {{ candidate.assigned_to.last_name }}
+                                <div class="contact-info">({{ candidate.assigned_to.user.username }})</div>
+                            {% else %}
+                                <span style="color: var(--secondary-text-color);">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ candidate.register_time|date:"M. d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 2rem;">No candidates match the current filters.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

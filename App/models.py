@@ -770,6 +770,14 @@ def get_next_unique_code():
 
 
 class Candidate_registration(models.Model):
+    assigned_to = models.ForeignKey(
+        Employee,
+        on_delete=models.SET_NULL, # If an employee is deleted, the candidate becomes unassigned.
+        null=True,
+        blank=True,
+        related_name='assigned_candidates',
+        verbose_name="Assigned Employee"
+    )
     employee_name = models.CharField(max_length=50)
     employee_assigned = models.CharField(max_length=50)
     register_time = models.DateTimeField(default=timezone.now)
