@@ -342,7 +342,7 @@
                             <a class="dropdown-item {% if request.path == '/employee/leads/' %}active{% endif %}" href="{% url 'employee_generated_leads' %}">Leads</a>
                             <a class="dropdown-item {% if request.path == '/employee/follow-up-candidate/' %}active{% endif %}" href="{% url 'employee_follow_up_candidate' %}">Follow Up</a>
                             <a class="dropdown-item {% if request.path == '/employee/selected-candidate-list/' %}active{% endif %}" href="{% url 'employee_selected_candidate' %}">Selected</a>
-                            <a class="dropdown-item {% if request.path == '/employee/employee-assignment/' %}active{% endif %}" href="{% url 'employee_assign_candidate' %}">Assigned</a>
+                            <a class="dropdown-item {% if request.path == '/employee/my-assigned-candidates/' %}active{% endif %}" href="{% url 'employee_assigned_candidate_list' %}">Assigned</a>
                         </div>
                     </li>
 

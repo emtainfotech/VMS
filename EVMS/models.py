@@ -71,6 +71,7 @@ class Vendor_bank_details(models.Model) :
     
 
 class Candidate(models.Model):
+    
     employee_name = models.CharField(max_length=50)
     employee_assigned = models.CharField(max_length=50)
     register_time = models.DateTimeField(default=now)

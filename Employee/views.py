@@ -4980,15 +4980,123 @@ def employee_evms_delete_interview(request, interview_id):
     return redirect('employee_evms_interview_list', candidate_id=candidate_id)
 
 
-def employee_assign_candidate(request) :
-    logged_in_employee = get_object_or_404(Employee, user=request.user)
-    candidates_reg = Candidate_registration.objects.filter( employee_assigned=logged_in_employee)
-    candidates_can = Candidate.objects.filter( employee_assigned=logged_in_employee)
-    candidates = list(chain(candidates_reg, candidates_can))
-    candidates.sort(key=lambda x: x.selection_date or date.min, reverse=True)
+# Helper to get unique, sorted, non-empty values from a queryset for a given field
+def get_unique_filter_options(queryset, field_name):
+    values = queryset.values_list(field_name, flat=True).distinct()
+    return sorted([v for v in values if v])
 
-    return render(request, 'employee/candidate-assignment.html', { 'candidates' : candidates })
+@login_required
+def employee_assigned_candidate_list(request):
+    """
+    Renders the page for an employee to view their assigned candidates, 
+    with filter options derived from their specific candidate pool.
+    """
+    try:
+        employee = get_object_or_404(Employee, user=request.user)
+    except Employee.DoesNotExist:
+        return render(request, 'crm/403_forbidden.html', status=403)
 
+    # Base queryset scoped to the logged-in employee
+    candidates_qs = Candidate_registration.objects.filter(assigned_to=employee)
+
+    # Fetch filter options ONLY from the employee's assigned candidates
+    filter_options = {
+        'connection_statuses': get_unique_filter_options(candidates_qs, 'call_connection'),
+        'lead_sources': get_unique_filter_options(candidates_qs, 'lead_source'),
+        'lead_statuses': get_unique_filter_options(candidates_qs, 'lead_generate'),
+    }
+
+    # Prepare initial page load data
+    paginator = Paginator(candidates_qs.order_by('-register_time'), 50)
+    
+    context = {
+        'total_candidates_count': paginator.count,
+        'filter_options': filter_options,
+    }
+    return render(request, 'employee/candidate-assignment.html', context)
+
+@login_required
+def employee_get_assigned_candidates_api(request):
+    """
+    Secure API view that provides filtered and paginated candidate data
+    for the currently logged-in employee ONLY.
+    """
+    try:
+        employee = get_object_or_404(Employee, user=request.user)
+    except Employee.DoesNotExist:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    # CRITICAL: Base queryset is already filtered for the specific employee
+    candidates_qs = Candidate_registration.objects.filter(assigned_to=employee)
+
+    # Apply additional filters from GET parameters
+    search_term = request.GET.get('search', '').strip()
+    date_from = request.GET.get('dateFrom')
+    date_to = request.GET.get('dateTo')
+    connection_statuses = [s for s in request.GET.get('connectionStatus', '').split(',') if s]
+    lead_sources = [s for s in request.GET.get('leadSource', '').split(',') if s]
+    lead_statuses = [s for s in request.GET.get('status', '').split(',') if s]
+
+    q_filter = Q()
+    if search_term:
+        q_filter &= (Q(candidate_name__icontains=search_term) | Q(candidate_mobile_number__icontains=search_term) | Q(unique_code__icontains=search_term))
+    if date_from:
+        q_filter &= Q(register_time__date__gte=date_from)
+    if date_to:
+        q_filter &= Q(register_time__date__lte=date_to)
+    if connection_statuses:
+        q_filter &= Q(call_connection__in=connection_statuses)
+    if lead_sources:
+        q_filter &= Q(lead_source__in=lead_sources)
+    if lead_statuses:
+        q_filter &= Q(lead_generate__in=lead_statuses)
+    
+    filtered_candidates = candidates_qs.filter(q_filter).order_by('-register_time')
+
+    paginator = Paginator(filtered_candidates, 50)
+    page_number = request.GET.get('page', 1)
+    
+    try:
+        page_obj = paginator.page(page_number)
+    except (EmptyPage, PageNotAnInteger):
+        return JsonResponse({'candidates': [], 'has_next': False, 'total_count': 0})
+
+    # Serialize data for JSON response
+    candidates_data = []
+    for candidate in page_obj.object_list:
+        profile_url = reverse('employee_candidate_profile', args=[candidate.id])
+        if candidate.lead_source == 'EVMS':
+            profile_url = reverse('employee_evms_candidate_profile', args=[candidate.id])
+            
+        candidates_data.append({
+            'id': candidate.id,
+            'call_connection': candidate.call_connection,
+            'photo_url': candidate.candidate_photo.url if candidate.candidate_photo else None,
+            'name': candidate.candidate_name,
+            'name_initial': candidate.candidate_name[0].upper() if candidate.candidate_name else '',
+            'unique_code': candidate.unique_code,
+            'refer_code': getattr(candidate, 'refer_code', ''),
+            'unique_id': getattr(candidate, 'unique_id', ''),
+            'mobile': candidate.candidate_mobile_number,
+            'email': candidate.candidate_email_address,
+            'lead_source': candidate.lead_source,
+            'other_lead_source': getattr(candidate, 'other_lead_source', ''),
+            'lead_status': candidate.lead_generate,
+            'other_lead_status': getattr(candidate, 'other_lead_generate', ''),
+            'experience_year': candidate.experience_year,
+            'experience_month': candidate.experience_month,
+            'registered_time': candidate.register_time.strftime("%b %d, %Y %H:%M"),
+            'full_registered_time': candidate.register_time.isoformat(),
+            'resume_url': candidate.candidate_resume.url if candidate.candidate_resume else None,
+            'profile_url': profile_url,
+            'data_status': slugify(candidate.lead_generate or 'unknown'),
+        })
+        
+    return JsonResponse({
+        'candidates': candidates_data,
+        'has_next': page_obj.has_next(),
+        'total_count': paginator.count
+    })
 
 
 @login_required
