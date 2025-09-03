@@ -249,10 +249,11 @@
     .status-not-interested { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
     .status-connect-later { background-color: rgba(23, 162, 184, 0.1); color: #17a2b8; }
     .status-dnd { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
+    .status-unknown { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
     .status-other { background-color: rgba(102, 16, 242, 0.1); color: #6610f2; }
     .table-responsive.table-scrollable-body { position: relative; }
     #candidatesTable thead th { position: sticky; top: 0; background-color: var(--tblr-card-bg, white); z-index: 10; box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); }
-    .filter-options-pane-modal { max-height: 250px; overflow-y: auto; }
+    .filter-options-pane-modal { max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 1rem; border-radius: 4px; }
     .cursor-pointer { cursor: pointer; }
 
     .bulk-actions-bar {
@@ -275,7 +276,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     // --- STATE & CONFIG ---
-    let currentPage = 1;
+    let currentPage = 0;
     let isLoading = false;
     let searchTimeout;
     const FILTERS_STORAGE_KEY = 'adminCandidateFilters';
@@ -322,8 +323,13 @@ document.addEventListener("DOMContentLoaded", function () {
         bulkActionsBar.classList.toggle('show', count > 0);
         
         const visibleCheckboxes = tableBody.querySelectorAll('.candidate-checkbox').length;
-        selectAllCheckbox.checked = count > 0 && count === visibleCheckboxes;
-        selectAllCheckbox.indeterminate = count > 0 && count < visibleCheckboxes;
+        if (visibleCheckboxes > 0) {
+            selectAllCheckbox.checked = count === visibleCheckboxes;
+            selectAllCheckbox.indeterminate = count > 0 && count < visibleCheckboxes;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
     }
     
     function handleCheckboxChange(checkbox) {
@@ -392,6 +398,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function setupFilterCheckboxes() {
         for (const key in filterSets) {
             const config = filterSets[key];
+            if (!config.container) continue;
             config.values.forEach(value => {
                 const label = document.createElement('label');
                 label.className = 'form-check cursor-pointer';
@@ -426,15 +433,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // --- DATA LOADING & RENDERING ---
     function createCandidateRowHTML(candidate, index) {
-        let connectionBadge = `<span class="badge bg-secondary px-3 py-1 rounded-pill">Unknown</span>`;
-        if (candidate.call_connection) {
-            const status = candidate.call_connection.toLowerCase();
-            let badgeClass = 'bg-secondary';
-            if (status === 'yes' || status === 'connected') badgeClass = 'bg-success';
-            else if (status === 'no') badgeClass = 'bg-danger';
-            else if (status === 'pending') badgeClass = 'bg-warning text-dark';
-            connectionBadge = `<span class="badge text-white ${badgeClass} px-3 py-1 rounded-pill text-capitalize">${candidate.call_connection}</span>`;
-        }
+        const connectionBadge = candidate.call_connection 
+            ? `<span class="badge text-white ${getConnectionBadgeClass(candidate.call_connection)} px-3 py-1 rounded-pill text-capitalize">${candidate.call_connection}</span>`
+            : `<span class="badge bg-secondary px-3 py-1 rounded-pill">Unknown</span>`;
 
         const avatar = candidate.photo_url ? `<img src="${candidate.photo_url}" class="avatar avatar-md rounded-circle" alt="${candidate.name}">` : `<div class="avatar avatar-md rounded-circle bg-blue-lt">${candidate.name_initial}</div>`;
         const uniqueCode = candidate.lead_source === 'EVMS' ? `<code>${candidate.refer_code}-${candidate.unique_id}</code>` : `<code>${candidate.unique_code}</code>`;
@@ -452,7 +453,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         actions += `<button onclick="confirmDelete('${candidate.id}', '${nameEscaped}', '${candidate.model_type}')" class="btn btn-sm btn-icon btn-danger" title="Delete Candidate" data-bs-toggle="tooltip"><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 7l16 0"></path><path d="M10 11l0 6"></path><path d="M14 11l0 6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg></button></div>`;
 
-        return rowTemplate.replace(/{id}/g, candidate.id).replace(/{model_type}/g, candidate.model_type).replace('{index}', index).replace('{connectionBadge}', connectionBadge).replace('{avatar}', avatar).replace('{profile_url}', candidate.profile_url).replace('{name}', candidate.name).replace('{uniqueCode}', uniqueCode).replace('{contactInfo}', contactInfo).replace('{leadSourceDisplay}', leadSourceDisplay).replace('{data_status}', candidate.data_status).replace('{leadStatusDisplay}', leadStatusDisplay).replace('{experienceDisplay}', experienceDisplay).replace('{employeeName}', candidate.employee_name || "Unassigned").replace('{full_registered_time}', candidate.full_registered_time).replace('{registered_time}', candidate.registered_time).replace('{actions}', actions);
+        return rowTemplate.replace(/{id}/g, candidate.id).replace(/{model_type}/g, candidate.model_type).replace('{index}', index).replace('{connectionBadge}', connectionBadge).replace('{avatar}', avatar).replace('{profile_url}', candidate.profile_url).replace(/{name}/g, candidate.name).replace('{uniqueCode}', uniqueCode).replace('{contactInfo}', contactInfo).replace('{leadSourceDisplay}', leadSourceDisplay).replace('{data_status}', candidate.data_status).replace('{leadStatusDisplay}', leadStatusDisplay).replace('{experienceDisplay}', experienceDisplay).replace('{employeeName}', candidate.employee_name || "Unassigned").replace('{full_registered_time}', candidate.full_registered_time).replace('{registered_time}', candidate.registered_time).replace('{actions}', actions);
+    }
+
+    function getConnectionBadgeClass(status) {
+        const s = status.toLowerCase();
+        if (s === 'yes' || s === 'connected') return 'bg-success';
+        if (s === 'no') return 'bg-danger';
+        if (s === 'pending') return 'bg-warning text-dark';
+        return 'bg-secondary';
     }
 
     function loadCandidates() {
@@ -498,7 +507,6 @@ document.addEventListener("DOMContentLoaded", function () {
     function applyFilters() {
         selectedCandidates.clear();
         updateBulkActionsUI();
-        selectAllCheckbox.checked = false;
         saveFiltersToStorage();
         tableBody.innerHTML = '';
         currentPage = 0;
@@ -565,14 +573,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }).catch(error => console.error('Assignment Error:', error));
         });
+        
+        // ** FIX FOR SELECT ALL CHECKBOX **
         selectAllCheckbox.addEventListener('change', () => {
-            tableBody.querySelectorAll('.candidate-checkbox').forEach(cb => {
-                cb.checked = selectAllCheckbox.checked;
-                handleCheckboxChange(cb);
+            const isChecked = selectAllCheckbox.checked;
+            tableBody.querySelectorAll('.candidate-checkbox').forEach(checkbox => {
+                // Only change state if it's different, to avoid unnecessary handleCheckboxChange calls
+                if (checkbox.checked !== isChecked) {
+                    checkbox.checked = isChecked;
+                    handleCheckboxChange(checkbox);
+                }
             });
+            // A final single UI update after the loop
+            updateBulkActionsUI();
         });
+
         tableBody.addEventListener('change', e => {
-            if (e.target.classList.contains('candidate-checkbox')) handleCheckboxChange(e.target);
+            if (e.target.classList.contains('candidate-checkbox')) {
+                handleCheckboxChange(e.target);
+            }
         });
     }
 
@@ -580,9 +599,7 @@ document.addEventListener("DOMContentLoaded", function () {
     setupFilterCheckboxes();
     loadFiltersFromStorage();
     initializeEventListeners();
-    tableBody.innerHTML = '';
-    currentPage = 0;
-    loadCandidates();
+    applyFilters();
 });
 
 function confirmDelete(candidateId, candidateName, modelType) {
