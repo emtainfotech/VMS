@@ -1654,3 +1654,137 @@ class Document(models.Model):
 
     def __str__(self):
         return self.file_name
+    
+# your_app/models.py
+
+import uuid
+from django.db import models
+from django.utils import timezone
+from datetime import timedelta
+
+class OnboardingEmployee(models.Model):
+    """ Main model to store employee details. """
+    GENDER_CHOICES = [
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other'),
+        ('prefer-not-to-say', 'Prefer not to say'),
+    ]
+    MARITAL_STATUS_CHOICES = [
+        ('single', 'Single'),
+        ('married', 'Married'),
+        ('divorced', 'Divorced'),
+        ('widowed', 'Widowed'),
+    ]
+    ONBOARDING_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+    ]
+
+    # Core details (provided by HR initially)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    
+    # Onboarding link control
+    onboarding_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True)
+    token_created_at = models.DateTimeField(null=True, blank=True)
+    onboarding_status = models.CharField(max_length=20, choices=ONBOARDING_STATUS_CHOICES, default='pending')
+
+    # Step 1: Personal Details
+    date_of_birth = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True)
+    phone_number = models.CharField(max_length=20, blank=True)
+    employee_id = models.CharField(max_length=50, blank=True)
+    date_of_joining = models.DateField(null=True, blank=True)
+
+    # Step 3: Family Details
+    marital_status = models.CharField(max_length=20, choices=MARITAL_STATUS_CHOICES, blank=True)
+    number_of_children = models.PositiveIntegerField(null=True, blank=True, default=0)
+
+    # Step 5: Additional Information
+    skills_certifications = models.TextField(blank=True)
+    additional_notes = models.TextField(blank=True)
+
+    def is_token_valid(self):
+        """ Checks if the onboarding token is still valid (within 24 hours). """
+        if self.token_created_at:
+            return timezone.now() < self.token_created_at + timedelta(hours=24)
+        return False
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.email})"
+
+class OnboardingAddress(models.Model):
+    """ Model to store current and permanent addresses for an employee. """
+    ADDRESS_TYPE_CHOICES = [
+        ('current', 'Current'),
+        ('permanent', 'Permanent'),
+    ]
+    employee = models.ForeignKey(OnboardingEmployee, related_name='addresses', on_delete=models.CASCADE)
+    address_type = models.CharField(max_length=10, choices=ADDRESS_TYPE_CHOICES)
+    street_address = models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    zip_code = models.CharField(max_length=20)
+    country = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.employee}'s {self.get_address_type_display()} Address"
+
+class OnboardingEmergencyContact(models.Model):
+    """ Model for employee's emergency contact. """
+    employee = models.OneToOneField(OnboardingEmployee, on_delete=models.CASCADE, related_name='emergency_contact')
+    contact_name = models.CharField(max_length=200)
+    relationship = models.CharField(max_length=100)
+    phone_number = models.CharField(max_length=20)
+    email = models.EmailField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Emergency Contact for {self.employee}"
+
+class OnboardingEducation(models.Model):
+    """ Model for storing multiple education records for an employee. """
+    employee = models.ForeignKey(OnboardingEmployee, related_name='education_history', on_delete=models.CASCADE)
+    degree = models.CharField(max_length=200)
+    field_of_study = models.CharField(max_length=200)
+    institution = models.CharField(max_length=200)
+    graduation_year = models.PositiveIntegerField()
+    grade = models.CharField(max_length=50, blank=True)
+    location = models.CharField(max_length=150, blank=True)
+
+    def __str__(self):
+        return f"{self.degree} from {self.institution} for {self.employee}"
+
+class OnboardingExperience(models.Model):
+    """ Model for storing multiple work experience records for an employee. """
+    employee = models.ForeignKey(OnboardingEmployee, related_name='work_experience', on_delete=models.CASCADE)
+    job_title = models.CharField(max_length=200)
+    company_name = models.CharField(max_length=200)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    currently_working = models.BooleanField(default=False)
+    job_description = models.TextField(blank=True)
+    location = models.CharField(max_length=150, blank=True)
+    salary = models.CharField(max_length=100, blank=True)
+
+    def __str__(self):
+        return f"{self.job_title} at {self.company_name} for {self.employee}"
+
+# --- NEW MODEL FOR DOCUMENTS ---
+class OnboardingDocument(models.Model):
+    """ Model to store multiple documents for an employee. """
+    DOCUMENT_TYPE_CHOICES = [
+        ('photo_id', 'Photo ID (Aadhar/PAN)'),
+        ('address_proof', 'Address Proof'),
+        ('photograph', 'Passport Size Photograph'),
+        ('resume', 'Resume/CV'),
+        ('offer_letter', 'Signed Offer Letter'),
+    ]
+    employee = models.ForeignKey(OnboardingEmployee, related_name='documents', on_delete=models.CASCADE)
+    document_type = models.CharField(max_length=50, choices=DOCUMENT_TYPE_CHOICES)
+    document_file = models.FileField(upload_to='employee-onboarding-documents/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.get_document_type_display()} for {self.employee}"

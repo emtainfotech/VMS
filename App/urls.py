@@ -74,6 +74,11 @@ urlpatterns = [
     path('tickets/edit/<int:ticket_id>/', edit_ticket, name='edit_ticket'),
     path('tickets/delete/<int:ticket_id>/', delete_ticket, name='delete_ticket'),
     path('tickets/view/<int:ticket_id>/', view_ticket, name='view_ticket'),
+    path('hr/initiate/', hr_initiate_onboarding, name='hr_initiate'),
+    path('hr/employee/<int:employee_id>/', hr_view_employee_details, name='hr_view_details'),
+    
+    # Employee URL
+    path('onboarding/<uuid:token>/', employee_onboarding, name='employee_onboarding'),
     
     
 

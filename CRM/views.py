@@ -2950,6 +2950,7 @@ def evms_candidate_profile(request, id):
     else:
         messages.error(request, "You are not authorized to view this page.")
         return render(request, 'crm/404.html', status=404)
+
 @login_required
 def evms_vendor_candidate_profile(request,id) :
     if request.user.is_staff or request.user.is_superuser:
@@ -3973,6 +3974,10 @@ def crm_admin_profile(request,id):
 
 @login_required
 def admin_candidate_chat_list(request, candidate_id):
+
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
     candidate = get_object_or_404(Candidate_registration, id=candidate_id)
     logged_in_employee = Employee.objects.get(user=request.user)
     
@@ -4028,6 +4033,10 @@ def admin_delete_chat(request, pk):
 
 @login_required
 def admin_interview_list(request, candidate_id):
+
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+
     candidate = get_object_or_404(Candidate_registration, id=candidate_id)
     companys = Company_registration.objects.all()
     vacancies = VacancyDetails.objects.filter(vacancy_status='Active').order_by('-id')
@@ -4128,6 +4137,10 @@ def send_interview_email(request, interview):
 
 @login_required
 def admin_interview_detail(request, interview_id):
+
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
     interview = get_object_or_404(Candidate_Interview, id=interview_id)
     companys = Company_registration.objects.all()
     
@@ -4176,6 +4189,10 @@ def admin_delete_interview(request, interview_id):
 
 @login_required
 def admin_company_communication_list(request, company_id):
+
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
     company = get_object_or_404(Company_registration, id=company_id)
     
     if request.method == 'POST':
@@ -4237,6 +4254,10 @@ def admin_company_communication_list(request, company_id):
 
 @login_required
 def admin_company_communication_detail(request, communication_id):
+
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
     communication = get_object_or_404(company_communication, id=communication_id)
     
     if request.method == 'POST':
@@ -4312,6 +4333,10 @@ def admin_send_communication_email(request, communication):
     
 @login_required
 def admin_company_contacts_list(request, company_id):
+
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
     company = get_object_or_404(Company_registration, id=company_id)
     
     if request.method == 'POST':
@@ -4376,6 +4401,10 @@ def admin_company_contacts_list(request, company_id):
 
 @login_required
 def admin_company_contact_detail(request, contact_id):
+
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
     contact = get_object_or_404(Company_spoke_person, id=contact_id)
     
     if request.method == 'POST':
@@ -4415,6 +4444,9 @@ def admin_delete_company_contact(request, contact_id):
 
 @login_required
 def download_candidate_details(request):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+
     from EVMS.models import Candidate
     from App.models import Candidate_registration
     import csv
@@ -4534,6 +4566,9 @@ def admin_get_next_unique_code(prefix='EMTA'):
 
 @login_required
 def vendor_bank_details(request, vendor_code):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
     try:
         vendor = Vendor.objects.get(refer_code=vendor_code)
         bank_details = Vendor_bank_details.objects.get(vendor=vendor)
@@ -4601,6 +4636,10 @@ def process_payment(request, vendor_code):
 
 @login_required
 def admin_evms_candidate_chat_list(request, candidate_id):
+
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
     candidate = get_object_or_404(Candidate, id=candidate_id)
     logged_in_employee = Employee.objects.get(user=request.user)
     
@@ -4656,6 +4695,10 @@ def admin_evms_delete_chat(request, pk):
 
 @login_required
 def admin_evms_interview_list(request, candidate_id):
+
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
     candidate = get_object_or_404(Candidate, id=candidate_id)
     companys = Company_registration.objects.all()
     vacancies = VacancyDetails.objects.filter(vacancy_status='Active').order_by('-id')
@@ -4756,6 +4799,8 @@ def send_evms_interview_email(request, interview):
 
 @login_required
 def admin_evms_interview_detail(request, interview_id):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
     interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id)
     companys = Company_registration.objects.all()
     
@@ -4807,6 +4852,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Subquery, OuterRef
 
 def admin_invoice_list(request):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
     candidates_reg = Candidate_registration.objects.filter(selection_status='Selected')
     candidates_can = Candidate.objects.filter(selection_status='Selected')
     candidates = list(chain(candidates_reg, candidates_can))
@@ -4821,6 +4868,9 @@ def admin_invoice_list(request):
 
 
 def generate_candidate_invoice(request, candidate_id):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
     try:
         candidate = Candidate_registration.objects.get(id=candidate_id, selection_status='Selected')
     except ObjectDoesNotExist:
@@ -4847,6 +4897,10 @@ def generate_candidate_invoice(request, candidate_id):
 
 
 def selected_candidate_in_company(request, company_id):
+
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
     try:
         company = Company_registration.objects.get(id=company_id)
     except Company_registration.DoesNotExist:
@@ -4867,6 +4921,8 @@ def selected_candidate_in_company(request, company_id):
     return render(request, 'crm/selected-candidate-in-company.html', context)
 
 def bulk_candidate_invoice_generate(request, company_id):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
     try:
         company = Company_registration.objects.get(id=company_id)
     except Company_registration.DoesNotExist:
@@ -4887,6 +4943,8 @@ def bulk_candidate_invoice_generate(request, company_id):
     return render(request, 'crm/bulk-candidate-invoice-generate.html', context)
 
 def generate_bulk_candidate_invoice(request, company_id):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
     try:
         company = Company_registration.objects.get(id=company_id)
     except Company_registration.DoesNotExist:
@@ -4908,6 +4966,9 @@ def generate_bulk_candidate_invoice(request, company_id):
 
 
 def admin_assign_candidate(request) :
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+
     candidates_reg = Candidate_registration.objects.filter(employee_assigned__isnull=False)
     candidates_can = Candidate.objects.filter(employee_assigned__isnull=False)
     candidates = list(chain(candidates_reg, candidates_can))
@@ -4996,6 +5057,9 @@ def _get_chart_data(queryset, start_date, end_date):
 # ===================================================================================
 @login_required
 def employee_calls_list(request):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
+    
     period = request.GET.get('period', 'today')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
@@ -5104,6 +5168,8 @@ def employee_calls_list(request):
 
 @login_required
 def get_filtered_activity_list(request):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
     list_type = request.GET.get('list_type')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
@@ -5164,6 +5230,8 @@ def get_filtered_activity_list(request):
 
 @login_required
 def get_employee_candidates(request):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
     employee_id = request.GET.get('employee_id')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
@@ -5224,6 +5292,8 @@ from django.utils import timezone
 
 @login_required
 def admin_task_dashboard(request):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
     """
     Admin/Manager view:
     - Displays a form to create new tasks.
@@ -5294,6 +5364,8 @@ def admin_task_dashboard(request):
 
 @login_required
 def admin_task_detail_and_reassign(request, pk):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
     """
     Employee/Admin view:
     - Shows details of a specific task and its history.
@@ -5365,6 +5437,8 @@ def is_admin_or_staff(user):
 
 @user_passes_test(is_admin_or_staff)
 def bulk_assign_candidates(request):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return render(request, 'crm/404.html', status=404)
     """
     A view for administrators and staff to bulk-assign unassigned candidates 
     to a specific employee.

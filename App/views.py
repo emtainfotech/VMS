@@ -4039,3 +4039,218 @@ def view_ticket(request, ticket_id):
         'timezone': timezone,
     }
     return render(request, 'hrms/ticket_detail.html', context)
+
+
+# your_app/views.py
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.core.mail import send_mail
+from django.urls import reverse
+from django.utils import timezone
+from django.conf import settings
+from django.db import transaction
+
+# --- HR Views ---
+
+def hr_initiate_onboarding(request):
+    """
+    Page for HR to enter a new employee's name and email.
+    This creates an Employee record and sends them an onboarding link.
+    """
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
+
+        # Create employee record
+        employee = OnboardingEmployee.objects.create(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            token_created_at=timezone.now() # Set token creation time
+        )
+
+        # Build the unique onboarding link
+        onboarding_link = request.build_absolute_uri(
+            reverse('employee_onboarding', args=[employee.onboarding_token])
+        )
+
+        # Send the email
+        subject = 'Welcome! Complete Your Onboarding Process'
+        message = (
+            f"Hello {first_name},\n\n"
+            f"Welcome to the team! Please complete your onboarding by clicking the link below. "
+            f"This link is valid for 24 hours.\n\n"
+            f"Your Onboarding Link: {onboarding_link}\n\n"
+            f"Best regards,\n"
+            f"The HR Team"
+        )
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+
+        return render(request, 'hrms/hr_initiate_success.html', {'email': email})
+
+    return render(request, 'hrms/hr_initiate.html')
+
+def hr_view_employee_details(request, employee_id):
+    """
+    Page for HR to view the completed details of a specific employee.
+    """
+    employee = get_object_or_404(OnboardingEmployee, id=employee_id)
+    # Fetch all related data
+    current_address = employee.addresses.filter(address_type='current').first()
+    permanent_address = employee.addresses.filter(address_type='permanent').first()
+    
+    context = {
+        'employee': employee,
+        'current_address': current_address,
+        'permanent_address': permanent_address,
+        'emergency_contact': getattr(employee, 'emergency_contact', None),
+        'education_history': employee.education_history.all(),
+        'work_experience': employee.work_experience.all(),
+    }
+    return render(request, 'hrms/hr_employee_details.html', context)
+
+
+# --- Employee View ---
+
+@transaction.atomic # Ensures all database operations succeed or none do
+def employee_onboarding(request, token):
+    """
+    The main onboarding page for the employee.
+    """
+    employee = get_object_or_404(OnboardingEmployee, onboarding_token=token)
+
+    # Check if the form has already been completed or the link is expired
+    if employee.onboarding_status == 'completed':
+        return render(request, 'onboarding_invalid.html', {'reason': 'This onboarding form has already been completed.'})
+    if not employee.is_token_valid():
+        return render(request, 'onboarding_invalid.html', {'reason': 'This onboarding link has expired. Please contact HR.'})
+
+    if request.method == 'POST':
+        # --- Step 1: Personal Details ---
+        employee.date_of_birth = request.POST.get('date_of_birth')
+        employee.gender = request.POST.get('gender')
+        employee.phone_number = request.POST.get('phone_number')
+        employee.employee_id = request.POST.get('employee_id')
+        employee.date_of_joining = request.POST.get('date_of_joining')
+
+        # --- Step 2: Address Details ---
+        # Clear existing addresses to avoid duplicates
+        employee.addresses.all().delete()
+        OnboardingAddress.objects.create(
+            employee=employee, address_type='current',
+            street_address=request.POST.get('current_street_address'),
+            city=request.POST.get('current_city'),
+            state=request.POST.get('current_state'),
+            zip_code=request.POST.get('current_zip_code'),
+            country=request.POST.get('current_country'),
+        )
+        if request.POST.get('sameAddress'):
+            # If same, copy current address details to permanent
+            OnboardingAddress.objects.create(
+                employee=employee, address_type='permanent',
+                street_address=request.POST.get('current_street_address'),
+                city=request.POST.get('current_city'),
+                state=request.POST.get('current_state'),
+                zip_code=request.POST.get('current_zip_code'),
+                country=request.POST.get('current_country'),
+            )
+        else:
+            OnboardingAddress.objects.create(
+                employee=employee, address_type='permanent',
+                street_address=request.POST.get('permanent_street_address'),
+                city=request.POST.get('permanent_city'),
+                state=request.POST.get('permanent_state'),
+                zip_code=request.POST.get('permanent_zip_code'),
+                country=request.POST.get('permanent_country'),
+            )
+        
+        # --- Step 3: Family Details ---
+        employee.marital_status = request.POST.get('marital_status')
+        employee.number_of_children = request.POST.get('number_of_children')
+        
+        # Create/Update Emergency Contact
+        OnboardingEmergencyContact.objects.update_or_create(
+            employee=employee,
+            defaults={
+                'contact_name': request.POST.get('emergency_contact_name'),
+                'relationship': request.POST.get('emergency_relationship'),
+                'phone_number': request.POST.get('emergency_phone_number'),
+                'email': request.POST.get('emergency_email'),
+            }
+        )
+
+        # --- Step 4: Education History (Handles multiple entries) ---
+        employee.education_history.all().delete()
+        degrees = request.POST.getlist('degree')
+        fields_of_study = request.POST.getlist('field_of_study')
+        institutions = request.POST.getlist('institution')
+        graduation_years = request.POST.getlist('graduation_year')
+        grades = request.POST.getlist('grade')
+        edu_locations = request.POST.getlist('education_location')
+
+        for i in range(len(degrees)):
+            if degrees[i]: # Only create if a degree is provided
+                OnboardingEducation.objects.create(
+                    employee=employee,
+                    degree=degrees[i],
+                    field_of_study=fields_of_study[i],
+                    institution=institutions[i],
+                    graduation_year=graduation_years[i],
+                    grade=grades[i],
+                    location=edu_locations[i],
+                )
+
+        # --- Step 5: Work Experience (Handles multiple entries) ---
+        employee.work_experience.all().delete()
+        job_titles = request.POST.getlist('job_title')
+        company_names = request.POST.getlist('company_name')
+        start_dates = request.POST.getlist('start_date')
+        end_dates = request.POST.getlist('end_date')
+        job_descriptions = request.POST.getlist('job_description')
+        exp_locations = request.POST.getlist('experience_location')
+        salaries = request.POST.getlist('salary')
+        # Note: Checkboxes only submit a value if they are checked.
+        # This part is tricky and requires careful handling in the template/JS.
+        # For simplicity, we assume a parallel list might be sent or infer from end_date.
+        for i in range(len(job_titles)):
+            if job_titles[i]:
+                OnboardingExperience.objects.create(
+                    employee=employee,
+                    job_title=job_titles[i],
+                    company_name=company_names[i],
+                    start_date=start_dates[i] or None,
+                    end_date=end_dates[i] or None,
+                    currently_working=not end_dates[i], # Simple inference
+                    job_description=job_descriptions[i],
+                    location=exp_locations[i],
+                    salary=salaries[i],
+                )
+        # --- NEW: Step 6: Document Upload ---
+        employee.documents.all().delete() # Clear old docs if re-submitting
+        for key, uploaded_file in request.FILES.items():
+            # 'key' will be 'doc_photo_id', 'doc_address_proof', etc.
+            # We extract the document type from the key.
+            doc_type = key.replace('doc_', '') 
+            OnboardingDocument.objects.create(
+                employee=employee,
+                document_type=doc_type,
+                document_file=uploaded_file
+            )
+
+
+        # --- Finalization ---
+        employee.skills_certifications = request.POST.get('skills_certifications')
+        employee.additional_notes = request.POST.get('additional_notes')
+        
+        employee.onboarding_status = 'completed'
+        employee.onboarding_token = None # Invalidate token after use
+        employee.token_created_at = None
+        employee.save()
+        
+        # The frontend JS handles showing a success message, so we don't need a redirect here.
+        # The form submission should be handled with AJAX/Fetch in the template.
+        return render(request, 'hrms/onboarding_success.html')
+
+    # For a GET request, just render the form
+    return render(request, 'hrms/employee_onboarding.html', {'employee': employee})
