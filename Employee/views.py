@@ -91,7 +91,7 @@ def employee_login(request):
 
             # If IP check passes or is not enabled, proceed with login
             login(request, user)
-            EmployeeSession.objects.create(user=user)
+            EmployeeSessionIP.objects.create(user=user)
             return redirect('employee_dashboard') # Redirect to the employee dashboard
         else:
             return render(request, 'employee/login.html', {'error': 'Invalid credentials'})

@@ -68,7 +68,7 @@ class Employee(models.Model):
 
 # You would also have your EmployeeSession model here
 # For example:
-class EmployeeSession(models.Model):
+class EmployeeSessionIP(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     login_time = models.DateTimeField(auto_now_add=True)
 
