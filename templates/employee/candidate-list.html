@@ -254,9 +254,10 @@ document.addEventListener("DOMContentLoaded", function () {
      */
     function updateClearAllButtonVisibility() {
         const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
-        let isFilterApplied = Object.values(savedFilters).some(val => Array.isArray(val) ? val.length > 0 : val);
+        let isFilterApplied = Object.values(savedFilters).some(val => (Array.isArray(val) ? val.length > 0 : val) || (typeof val === 'string' && val.length > 0));
         clearAllFiltersBtn.style.display = isFilterApplied ? 'inline-flex' : 'none';
     }
+
 
     /**
      * Fetches candidates from the API based on current filters and page.
@@ -299,7 +300,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 scrollContainer.scrollTop = 0;
             }
 
-            // **FIX**: Always update filter options after new data is added or replaced
             updateFilterOptions();
 
             hasNextPage = data.has_next;
@@ -328,7 +328,7 @@ document.addEventListener("DOMContentLoaded", function () {
         allRows.forEach(row => {
             for (const key in filterConfigs) {
                 const value = row.getAttribute(filterConfigs[key].dataAttr);
-                if (value) {
+                if (value && value.trim() !== '' && value.trim() !== 'None') {
                     uniqueValues[key].add(value);
                 }
             }
@@ -338,10 +338,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         for (const key in filterConfigs) {
             const config = filterConfigs[key];
-            // Preserve currently checked values before rebuilding
             const savedChecked = new Set(Array.from(config.pane.querySelectorAll('.filter-checkbox:checked')).map(cb => cb.value));
 
-            const values = Array.from(uniqueValues[key]).filter(Boolean).sort();
+            const values = Array.from(uniqueValues[key]).sort();
             
             let optionsHTML = `
                 <div class="input-icon mb-2">
@@ -359,8 +358,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <label class="form-check cursor-pointer">
                         <input class="form-check-input filter-checkbox" type="checkbox" value="${value}" ${isChecked}>
                         <span class="form-check-label">${toTitleCase(value)}</span>
-                    </label>
-                `;
+                    </label>`;
             });
             config.pane.innerHTML = optionsHTML;
             updateSelectAllCheckbox(key);
@@ -429,7 +427,6 @@ document.addEventListener("DOMContentLoaded", function () {
         
         for (const key in filterConfigs) {
             const config = filterConfigs[key];
-            // Use event delegation for dynamically added checkboxes
             config.pane.addEventListener('change', (e) => {
                 if (e.target.matches('.filter-checkbox, .select-all-checkbox')) {
                     if (e.target.matches('.select-all-checkbox')) {
@@ -469,6 +466,7 @@ document.addEventListener("DOMContentLoaded", function () {
     updateFilterOptions(); 
     loadFiltersFromStorage();
     initializeEventListeners();
+    fetchCandidates(1, false);
     reinitializeTooltips();
 });
 </script>
