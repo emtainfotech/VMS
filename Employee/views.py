@@ -912,13 +912,14 @@ def get_filtered_candidates(request, employee):
     statuses = request.GET.getlist('status[]')
     connection_statuses = request.GET.getlist('connection_status[]')
     lead_sources = request.GET.getlist('lead_source[]')
+    calling_remarks = request.GET.getlist('calling_remark[]')
 
     # CORRECTED: Use the imported datetime class directly
     date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else None
     date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else None
 
     # --- In-Memory Filtering ---
-    if any([search_term, date_from, date_to, statuses, connection_statuses, lead_sources]):
+    if any([search_term, date_from, date_to, statuses, connection_statuses, lead_sources, calling_remarks]):
         filtered_list = []
         for c in combined_candidates:
             if date_from and c.register_time.date() < date_from:
@@ -932,6 +933,8 @@ def get_filtered_candidates(request, employee):
                 continue
             if lead_sources and slugify(getattr(c, 'lead_source', '')) not in lead_sources:
                 continue
+            if calling_remarks and slugify(getattr(c, 'calling_remark', '')) not in calling_remarks:
+                continue
 
             if search_term:
                 search_data = (
@@ -939,7 +942,7 @@ def get_filtered_candidates(request, employee):
                     f"{c.candidate_mobile_number} "
                     f"{getattr(c, 'unique_code', '')} "
                     f"{getattr(c, 'calling_remark', '')} "
-                    f"{getattr(c, 'lead_source', '')}"
+                    f"{getattr(c, 'lead_source', '')} "
                 ).lower()
                 if search_term not in search_data:
                     continue

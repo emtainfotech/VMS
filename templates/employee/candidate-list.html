@@ -28,6 +28,7 @@
             <div class="card">
                 <div class="card-header">
                     <div class="row align-items-center g-2 w-100">
+                        <!-- Search Input -->
                         <div class="col-12 col-md-4">
                             <div class="input-group">
                                 <span class="input-group-text">
@@ -36,6 +37,7 @@
                                 <input type="text" id="searchInput" class="form-control" placeholder="Search candidates..." aria-label="Search candidates">
                             </div>
                         </div>
+                        <!-- Filter Buttons -->
                         <div class="col-12 col-md-8 d-flex justify-content-md-end">
                             <div class="btn-list">
                                 <button id="clearAllFiltersBtn" class="btn btn-light" style="display: none;">
@@ -82,8 +84,9 @@
     </div>
 </div>
 
+<!-- Filter Modal -->
 <div class="modal" id="filterModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Filter Candidates</h5>
@@ -91,6 +94,7 @@
             </div>
             <div class="modal-body">
                 <div class="row g-3">
+                    <!-- Date Filters -->
                     <div class="col-md-6">
                         <label for="dateFrom" class="form-label">Date From</label>
                         <input type="date" id="dateFrom" class="form-control" title="From Date">
@@ -100,22 +104,33 @@
                         <input type="date" id="dateTo" class="form-control" title="To Date">
                     </div>
 
-                    <div class="col-md-4">
+                    <!-- Filter Panes -->
+                    <div class="col-md-6 col-lg-3">
                         <label class="form-label">Connection Status</label>
-                        <div class="filter-options-pane" id="connectionStatusFilterOptions" style="position: relative; display: block; border: 1px solid #ddd; border-radius: 4px; padding: .75rem; max-height: 250px; overflow-y: auto;">
-                            </div>
+                        <div class="filter-options-pane" id="connectionStatusFilterOptions">
+                            <!-- Options will be populated by JS -->
+                        </div>
                     </div>
                     
-                    <div class="col-md-4">
+                    <div class="col-md-6 col-lg-3">
                         <label class="form-label">Lead Source</label>
-                        <div class="filter-options-pane" id="leadSourceFilterOptions" style="position: relative; display: block; border: 1px solid #ddd; border-radius: 4px; padding: .75rem; max-height: 250px; overflow-y: auto;">
-                            </div>
+                        <div class="filter-options-pane" id="leadSourceFilterOptions">
+                            <!-- Options will be populated by JS -->
+                        </div>
                     </div>
                     
-                    <div class="col-md-4">
+                    <div class="col-md-6 col-lg-3">
                         <label class="form-label">Lead Status</label>
-                        <div class="filter-options-pane" id="statusFilterOptions" style="position: relative; display: block; border: 1px solid #ddd; border-radius: 4px; padding: .75rem; max-height: 250px; overflow-y: auto;">
-                            </div>
+                        <div class="filter-options-pane" id="statusFilterOptions">
+                            <!-- Options will be populated by JS -->
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label">Calling Remark</label>
+                        <div class="filter-options-pane" id="callingRemarkFilterOptions">
+                            <!-- Options will be populated by JS -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -127,10 +142,8 @@
     </div>
 </div>
 
-
 <style>
-    /* All your existing styles remain unchanged here */
-    .status-badge{display:inline-block;padding:.25rem .5rem;border-radius:50rem;font-size:.75rem;font-weight:600;line-height:1;text-align:center;white-space:nowrap;vertical-align:baseline}.status-hot{background-color:rgba(253,126,20,.1);color:#fd7e14}.status-converted{background-color:rgba(32,201,151,.1);color:#20c997}.status-cold{background-color:rgba(250,82,82,.1);color:#fa5252}.status-not-interested{background-color:rgba(108,117,125,.1);color:#6c757d}.status-connect-later{background-color:rgba(0,123,255,.1);color:#007bff}.status-dnd{background-color:rgba(220,53,69,.1);color:#dc3545}.status-other{background-color:rgba(102,16,242,.1);color:#6610f2}.avatar-container{width:40px;height:40px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center}@media (max-width:768px){.card-header .row>div{width:100%}.card-header .input-group{margin-bottom:1rem}}.table-responsive.table-scrollable-body{position:relative}#candidatesTable thead th{position:sticky;top:0;z-index:10;box-shadow:0 2px 2px -1px rgba(0,0,0,.1)}.filter-dropdown-container{position:relative;width:100%;flex-grow:1;flex-basis:auto}@media (min-width:768px){.filter-dropdown-container{flex-grow:0;max-width:200px}}.dropdown-toggle-button{display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);color:var(--tblr-body-color);cursor:pointer;-webkit-user-select:none;user-select:none;line-height:1.5;transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out}.dropdown-toggle-button:hover{border-color:var(--tblr-border-color-hover)}.dropdown-toggle-button:focus,.dropdown-toggle-button.active{border-color:var(--tblr-primary);box-shadow:var(--tblr-focus-ring-shadow);outline:0}.dropdown-icon{margin-left:.5rem;transition:transform .2s;stroke-width:2;color:var(--tblr-icon-color)}.dropdown-toggle-button.active .dropdown-icon{transform:rotate(180deg)}.filter-options-pane{box-sizing:border-box}.filter-options-pane .form-check{margin-bottom:.5rem;color:var(--tblr-body-color)}.filter-options-pane .form-check:last-child{margin-bottom:0}.filter-options-pane .form-check-label{margin-left:.5rem}.filter-options-pane .select-all-checkbox+.form-check-label{font-weight:700;color:var(--tblr-body-color)}.cursor-pointer{cursor:pointer}
+    .status-badge{display:inline-block;padding:.25rem .5rem;border-radius:50rem;font-size:.75rem;font-weight:600;line-height:1;text-align:center;white-space:nowrap;vertical-align:baseline}.status-hot{background-color:rgba(253,126,20,.1);color:#fd7e14}.status-converted{background-color:rgba(32,201,151,.1);color:#20c997}.status-cold{background-color:rgba(250,82,82,.1);color:#fa5252}.status-not-interested{background-color:rgba(108,117,125,.1);color:#6c757d}.status-connect-later{background-color:rgba(0,123,255,.1);color:#007bff}.status-dnd{background-color:rgba(220,53,69,.1);color:#dc3545}.status-other{background-color:rgba(102,16,242,.1);color:#6610f2}.avatar-container{width:40px;height:40px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center}@media (max-width:768px){.card-header .row>div{width:100%}.card-header .input-group{margin-bottom:1rem}}.table-responsive.table-scrollable-body{position:relative}#candidatesTable thead th{position:sticky;top:0;z-index:10;box-shadow:0 2px 2px -1px rgba(0,0,0,.1)}.filter-options-pane{position: relative; display: block; border: 1px solid #ddd; border-radius: 4px; padding: .75rem; max-height: 250px; overflow-y: auto; box-sizing:border-box;}.filter-options-pane .form-check{margin-bottom:.5rem;color:var(--tblr-body-color)}.filter-options-pane .form-check:last-child{margin-bottom:0}.filter-options-pane .form-check-label{margin-left:.5rem}.filter-options-pane .select-all-checkbox+.form-check-label{font-weight:700;color:var(--tblr-body-color)}.cursor-pointer{cursor:pointer}
 </style>
 
 <script>
@@ -140,7 +153,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let hasNextPage = {{ page_obj.has_next|yesno:"true,false" }};
     let isLoading = false;
     let searchTimeout;
-    const FILTERS_STORAGE_KEY = 'candidateFilters';
+    const FILTERS_STORAGE_KEY = 'employeeCandidateFilters';
 
     // --- DOM ELEMENTS ---
     const searchInput = document.getElementById('searchInput');
@@ -170,6 +183,11 @@ document.addEventListener("DOMContentLoaded", function () {
             pane: document.getElementById('statusFilterOptions'),
             paramName: 'status',
             dataAttr: 'data-status'
+        },
+        callingRemark: {
+            pane: document.getElementById('callingRemarkFilterOptions'),
+            paramName: 'calling_remark',
+            dataAttr: 'data-calling-remark'
         }
     };
 
@@ -219,7 +237,6 @@ document.addEventListener("DOMContentLoaded", function () {
     function clearAllFilters() {
         localStorage.removeItem(FILTERS_STORAGE_KEY);
         
-        // Reset form fields
         searchInput.value = '';
         dateFromInput.value = '';
         dateToInput.value = '';
@@ -237,22 +254,9 @@ document.addEventListener("DOMContentLoaded", function () {
      */
     function updateClearAllButtonVisibility() {
         const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
-        let isFilterApplied = false;
-
-        if (savedFilters.search || savedFilters.date_from || savedFilters.date_to) {
-            isFilterApplied = true;
-        } else {
-            for (const key in filterConfigs) {
-                if (savedFilters[filterConfigs[key].paramName] && savedFilters[filterConfigs[key].paramName].length > 0) {
-                    isFilterApplied = true;
-                    break;
-                }
-            }
-        }
-        
+        let isFilterApplied = Object.values(savedFilters).some(val => Array.isArray(val) ? val.length > 0 : val);
         clearAllFiltersBtn.style.display = isFilterApplied ? 'inline-flex' : 'none';
     }
-
 
     /**
      * Fetches candidates from the API based on current filters and page.
@@ -295,6 +299,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 scrollContainer.scrollTop = 0;
             }
 
+            // **FIX**: Always update filter options after new data is added or replaced
+            updateFilterOptions();
+
             hasNextPage = data.has_next;
             currentPage = page;
             reinitializeTooltips();
@@ -307,22 +314,33 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Populates filter dropdowns with unique values from the initially loaded table rows.
+     * Populates AND updates filter options by scraping data-* attributes from ALL current table rows.
      */
-    function populateFilterOptions() {
-        const initialRows = document.querySelectorAll('#candidatesTable tbody tr');
-        const uniqueValues = { connectionStatus: new Set(), leadSource: new Set(), status: new Set() };
+    function updateFilterOptions() {
+        const allRows = document.querySelectorAll('#candidatesTable tbody tr');
+        const uniqueValues = { 
+            connectionStatus: new Set(), 
+            leadSource: new Set(), 
+            status: new Set(),
+            callingRemark: new Set()
+        };
 
-        initialRows.forEach(row => {
+        allRows.forEach(row => {
             for (const key in filterConfigs) {
-                uniqueValues[key].add(row.getAttribute(filterConfigs[key].dataAttr));
+                const value = row.getAttribute(filterConfigs[key].dataAttr);
+                if (value) {
+                    uniqueValues[key].add(value);
+                }
             }
         });
 
-        const toTitleCase = str => str ? str.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Unknown';
+        const toTitleCase = str => str ? str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A';
 
         for (const key in filterConfigs) {
             const config = filterConfigs[key];
+            // Preserve currently checked values before rebuilding
+            const savedChecked = new Set(Array.from(config.pane.querySelectorAll('.filter-checkbox:checked')).map(cb => cb.value));
+
             const values = Array.from(uniqueValues[key]).filter(Boolean).sort();
             
             let optionsHTML = `
@@ -336,43 +354,45 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
             
             values.forEach(value => {
+                const isChecked = savedChecked.has(value) ? 'checked' : '';
                 optionsHTML += `
                     <label class="form-check cursor-pointer">
-                        <input class="form-check-input filter-checkbox" type="checkbox" value="${value}">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="${value}" ${isChecked}>
                         <span class="form-check-label">${toTitleCase(value)}</span>
                     </label>
                 `;
             });
             config.pane.innerHTML = optionsHTML;
+            updateSelectAllCheckbox(key);
         }
     }
     
     function updateSelectAllCheckbox(key) {
         const config = filterConfigs[key];
+        if (!config || !config.pane) return;
         const checkboxes = config.pane.querySelectorAll('.filter-checkbox');
         const checkedCount = config.pane.querySelectorAll('.filter-checkbox:checked').length;
         const selectAll = config.pane.querySelector('.select-all-checkbox');
         
+        if (!selectAll) return;
+
         if (checkedCount === 0) {
             selectAll.checked = false;
             selectAll.indeterminate = false;
-        } else if (checkedCount === checkboxes.length) {
+        } else if (checkedCount > 0 && checkedCount === checkboxes.length) {
             selectAll.checked = true;
             selectAll.indeterminate = false;
         } else {
             selectAll.checked = false;
-            selectAll.indeterminate = true;
+            selectAll.indeterminate = checkedCount > 0;
         }
     }
 
     function reinitializeTooltips() {
-        const existingTooltips = bootstrap.Tooltip.getInstance(document.body);
-        if (existingTooltips) {
-             document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
-                 const instance = bootstrap.Tooltip.getInstance(el);
-                 if(instance) instance.dispose();
-            });
-        }
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+            const instance = bootstrap.Tooltip.getInstance(el);
+            if(instance) instance.dispose();
+        });
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
@@ -409,6 +429,7 @@ document.addEventListener("DOMContentLoaded", function () {
         
         for (const key in filterConfigs) {
             const config = filterConfigs[key];
+            // Use event delegation for dynamically added checkboxes
             config.pane.addEventListener('change', (e) => {
                 if (e.target.matches('.filter-checkbox, .select-all-checkbox')) {
                     if (e.target.matches('.select-all-checkbox')) {
@@ -445,10 +466,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // --- INITIALIZATION ---
-    populateFilterOptions();
+    updateFilterOptions(); 
     loadFiltersFromStorage();
     initializeEventListeners();
-    fetchCandidates(1, false); // Initial fetch based on loaded filters
     reinitializeTooltips();
 });
 </script>

@@ -32,7 +32,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne',
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,8 +43,6 @@ INSTALLED_APPS = [
     'EVMS',
     'Employee',
     'CRM',
-    'EMTACHAT', 
-    'channels',
 ]
 
 MIDDLEWARE = [
@@ -77,17 +75,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'VMS.wsgi.application'
-
-# Set the ASGI application
-ASGI_APPLICATION = 'VMS.asgi.application'
-
-# Configure the channel layer (using in-memory for development)
-# For production, use channels_redis
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-    },
-}
 
 
 # Database

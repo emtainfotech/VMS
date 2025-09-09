@@ -4,7 +4,8 @@
     data-status="{{ candidate.lead_generate|lower|slugify }}"
     data-connection-status="{{ candidate.call_connection|lower|default:'unknown'|slugify }}"
     data-lead-source="{{ candidate.lead_source|lower|slugify }}"
-    data-date="{{ candidate.register_time|date:'Y-m-d' }}">
+    data-date="{{ candidate.register_time|date:'Y-m-d' }}"
+    data-calling-remark="{{ candidate.calling_remark|slugify }}">
     
     <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
 

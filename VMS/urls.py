@@ -7,6 +7,5 @@ urlpatterns = [
     path('hrms/', include('App.urls')),
     path('employee/', include('Employee.urls')),
     path('crm/', include('CRM.urls')),
-    path('chat/', include('EMTACHAT.urls')),
     path('admin/', admin.site.urls),
 ]
