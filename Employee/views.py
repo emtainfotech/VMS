@@ -43,12 +43,14 @@ from datetime import datetime, timedelta
 from itertools import chain
 # from your_app.models import Employee, Candidate_registration, Candidate, Candidate_Interview, EVMS_Candidate_Interview, CandidateActivity # Import the new model
 from django.db.models.functions import TruncHour, TruncDay, TruncWeek, TruncMonth
-import logging
 from django.db.models import Count, F
 from datetime import datetime, timedelta, date
 from CRM.models import *
 from django.http import HttpResponseRedirect
+import logging
 
+# Get an instance of a logger to see debug info in your console
+logger = logging.getLogger(__name__)
 
 def get_client_ip(request):
     """
@@ -74,30 +76,49 @@ def employee_login(request):
         
         if user:
             try:
-                employee = user.employee # Access the related Employee object
+                employee = user.employee
                 
                 # Check for IP restriction if it's enabled for this employee
                 if employee.ip_restriction_enabled:
                     client_ip = get_client_ip(request)
-                    allowed_ips = [ip.strip() for ip in employee.allowed_ips.split(',') if ip.strip()]
+                    
+                    # Ensure allowed_ips is not None or empty before splitting
+                    if employee.allowed_ips:
+                        allowed_ips = [ip.strip() for ip in employee.allowed_ips.split(',') if ip.strip()]
+                    else:
+                        allowed_ips = [] # Treat empty field as no IPs allowed
+
+                    # HELPFUL DEBUGGING: Print to your server console
+                    logger.info(f"IP Check for user '{username}': Client IP is '{client_ip}', Allowed IPs are {allowed_ips}")
                     
                     if client_ip not in allowed_ips:
-                        # If IP is not allowed, render a custom error page with a 404 status
-                        return render(request, 'employee/ip_restriction_error.html', status=404)
+                        # SECURITY LOGGING: Log the failed attempt
+                        logger.warning(f"IP RESTRICTION: Blocked login for user '{username}' from unauthorized IP '{client_ip}'.")
+                        
+                        # Pass context to a new error page for better user feedback
+                        context = {
+                            'client_ip': client_ip,
+                            'allowed_ips': allowed_ips,
+                        }
+                        # Use 403 Forbidden, which is semantically correct
+                        return render(request, 'employee/ip_restriction_error.html', context, status=403)
 
             except Employee.DoesNotExist:
-                # This case handles if a User exists but has no associated Employee profile
-                return render(request, 'employee/login.html', {'error': 'No employee profile found for this user.'})
+                # Use 'error_message' to match your login template
+                return render(request, 'employee/login.html', {'error_message': 'No employee profile found for this user.'})
 
             # If IP check passes or is not enabled, proceed with login
             login(request, user)
-            EmployeeSession.objects.create(user=user)
-            return redirect('employee_dashboard') # Redirect to the employee dashboard
+            
+            # Use the new model name and store the IP
+            EmployeeLoginRecord.objects.create(user=user, ip_address=get_client_ip(request))
+            
+            return redirect('employee_dashboard')
         else:
-            return render(request, 'employee/login.html', {'error': 'Invalid credentials'})
+            # Use 'error_message' to match your login template
+            return render(request, 'employee/login.html', {'error_message': 'Invalid username or password.'})
             
     return render(request, 'employee/login.html')
-
 def is_admin(user):
     """
     A simple check to see if a user has admin privileges.

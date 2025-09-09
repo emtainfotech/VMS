@@ -66,14 +66,18 @@ class Employee(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.employee_id})"
 
-# You would also have your EmployeeSession model here
-# For example:
-class EmployeeSession(models.Model):
+# Renamed to avoid duplicacy and be more descriptive
+class EmployeeLoginRecord(models.Model):
+    """
+    Logs each successful employee login, including their IP address.
+    """
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     login_time = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True) # Store the IP on login
 
     def __str__(self):
-        return f"Session for {self.user.username} at {self.login_time}"
+        return f"Login for {self.user.username} from {self.ip_address} at {self.login_time}"
+
 
 class Employee_address(models.Model):
     employee = models.OneToOneField('Employee', on_delete=models.CASCADE, related_name='employee_address')
