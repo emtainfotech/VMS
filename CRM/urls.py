@@ -10,7 +10,8 @@ from Employee.views import manage_ip_restriction
 
 urlpatterns = [
     path('',crm_admin_login,name = 'crm_admin_login'),
-    path('login',crm_admin_login,name = 'crm_admin_login'),
+    path('login/',crm_admin_login,name = 'crm_admin_login'),
+    path('404/',user_not_found_view,name = 'user_not_found_view'),
     path('ip-restriction/', manage_ip_restriction, name='manage_ip_restriction'),
     path('admin-logout/', crm_admin_logout, name='crm_admin_logout'),
     path('crm-dashboard/',crm_dashboard,name = 'crm_dashboard'),

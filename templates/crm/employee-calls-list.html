@@ -181,6 +181,7 @@
                             <table class="table table-vcenter table-hover">
                                 <thead class="">
                                     <tr>
+                                        
                                         <th>Candidate</th>
                                         <th>Unique Code</th>
                                         <th>Mobile Number</th>
@@ -193,8 +194,8 @@
                                     {% for follow_up in follow_up_candidates %}
                                     <tr class="followup-row clickable-row" data-date="{{ follow_up.next_follow_up_date_time|date:'Y-m-d' }}" data-followup-id="{{ follow_up.id }}"
                                         data-url="{% if follow_up.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' follow_up.id %}{% else %}{% url 'admin_candidate_profile' follow_up.id %}{% endif %}">
-                                        <td>{{ follow_up.candidate_name }}</td>
                                         
+                                        <td>{{ follow_up.candidate_name }}</td>
                                         <td>
                                             {% if follow_up.lead_source == 'EVMS' %}
                                                 {{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}

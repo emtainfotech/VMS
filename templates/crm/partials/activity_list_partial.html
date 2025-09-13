@@ -9,6 +9,7 @@
         <table class="table card-table table-vcenter text-nowrap table-striped table-hover">
             <thead>
                 <tr>
+                    <th>S.No</th>
                     <th>Employee Name</th>
                     <th>Candidate Name</th>
                     <th>Activity Type</th>
@@ -21,6 +22,7 @@
             <tbody>
                 {% for activity in activities %}
                 <tr>
+                    <td>{{ forloop.counter }}</td>
                     <td>
                         {% if activity.employee and activity.employee.user %}
                             {{ activity.employee.first_name }} {{ activity.employee.last_name }} ({{ activity.employee.user.username }})

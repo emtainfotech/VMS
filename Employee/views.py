@@ -49,6 +49,12 @@ from CRM.models import *
 from django.http import HttpResponseRedirect
 import logging
 
+def user_not_found_view(request):
+    return render(request, 'employee/404.html', status=404)
+
+# This function checks if the user is a staff member
+def is_staff_member(user):
+    return user.is_staff
 # Get an instance of a logger to see debug info in your console
 logger = logging.getLogger(__name__)
 
@@ -126,7 +132,7 @@ def is_admin(user):
     """
     return user.is_superuser or user.is_staff
 
-@login_required
+
 @user_passes_test(is_admin)
 def manage_ip_restriction(request):
     """
@@ -159,7 +165,6 @@ def manage_ip_restriction(request):
     return render(request, 'employee/manage_ip_restriction.html', context)
 
 
-@login_required
 def employee_logout(request):
     if request.method == "POST":
         logout_reason = request.POST.get("logout_reason", "Employee is not working for 5 minutes")
@@ -176,9 +181,11 @@ def employee_logout(request):
 
     return redirect('employee_login')  # Redirect to login page after logout
 
-@login_required
+@login_required(login_url='/employee/404/')
+@user_passes_test(is_staff_member)
 def employee_dashboard(request):
-    if request.user.is_authenticated:
+    
+    if request.user.is_authenticated and request.user.is_staff:
         today1 = date.today()
         today = datetime.today().date()
         start_of_month = today.replace(day=1)
@@ -265,7 +272,7 @@ def employee_dashboard(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def punch_in(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
@@ -285,7 +292,7 @@ def punch_in(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def punch_out(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
@@ -311,7 +318,7 @@ def punch_out(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_profile_view(request,id):
     if request.user.is_authenticated:
         # Fetch the employee object or return a 404
@@ -510,7 +517,7 @@ def employee_profile_view(request,id):
     else:
         return render(request, 'employee/login.html', {'error': 'User not authenticated'})
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_leave_request_view(request):
     if request.user.is_authenticated:
         logged_in_employee = Employee.objects.get(user=request.user)
@@ -571,7 +578,7 @@ def employee_leave_request_view(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def edit_leave_request(request, leave_id):
     if request.user.is_authenticated:
         try:
@@ -626,7 +633,7 @@ def edit_leave_request(request, leave_id):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def delete_leave_request(request, leave_id):
     if request.user.is_authenticated:
         try:
@@ -651,7 +658,7 @@ def delete_leave_request(request, leave_id):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_holiday_view(request):
     if request.user.is_authenticated:
 
@@ -662,7 +669,7 @@ def employee_holiday_view(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def office_employee_expense_view(request):
     if request.user.is_authenticated:
         # Get the logged-in user and corresponding employee record
@@ -729,7 +736,7 @@ def office_employee_expense_view(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def handle_new_expense(request, logged_in_employee):
     if request.user.is_authenticated:
         """Handle creation of new expense"""
@@ -754,7 +761,7 @@ def handle_new_expense(request, logged_in_employee):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def handle_edit_expense(request, logged_in_employee):
     if request.user.is_authenticated:
         """Handle editing an existing expense"""
@@ -777,7 +784,7 @@ def handle_edit_expense(request, logged_in_employee):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def handle_delete_expense(request):
     if request.user.is_authenticated:
         """Handle deleting an expense"""
@@ -793,7 +800,7 @@ def base_view(request) :
     employees = Employee.objects.all()
     return render(request,'employee/base.html',{"employees" : employees})
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_resignation_view(request):
     if request.user.is_authenticated:
         logged_in_employee = Employee.objects.get(user=request.user)
@@ -833,7 +840,7 @@ def employee_resignation_view(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def edit_employee_resignation_view(request, resignation_id):
     if request.user.is_authenticated:
         resignation = get_object_or_404(Resignation, id=resignation_id, employee__user=request.user)
@@ -854,7 +861,7 @@ def edit_employee_resignation_view(request, resignation_id):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def delete_employee_resignation_view(request, resignation_id):
     if request.user.is_authenticated:
         resignation = get_object_or_404(Resignation, id=resignation_id, employee__user=request.user)
@@ -867,7 +874,7 @@ def delete_employee_resignation_view(request, resignation_id):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def update_task_status(request,task_id) :
     if request.user.is_authenticated:
         if request.method == 'POST':
@@ -881,7 +888,7 @@ def update_task_status(request,task_id) :
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
  
-@login_required   
+@login_required(login_url='/employee/404/')   
 def employee_update_task_status(request,task_id) :
     if request.user.is_authenticated:
         if request.method == 'POST':
@@ -977,7 +984,7 @@ def get_filtered_candidates(request, employee):
     return final_candidates
 
 # 2. MAIN VIEW: Handles the initial page load
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_candidate_list(request):
     if not request.user.is_authenticated:
         return render(request, 'employee/404.html', status=404)
@@ -999,7 +1006,7 @@ def employee_candidate_list(request):
     return render(request, 'employee/candidate-list.html', context)
 
 # 3. API VIEW: Handles AJAX requests for filtering and pagination
-@login_required
+@login_required(login_url='/employee/404/')
 def filter_candidates_api(request):
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Authentication required'}, status=401)
@@ -1025,7 +1032,7 @@ def filter_candidates_api(request):
     })
 
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_candidate_registration(request):
     logged_in_employee = Employee.objects.get(user=request.user)
     
@@ -1265,7 +1272,7 @@ def employee_candidate_registration(request):
         return render (request,'employee/candidate-registration.html',context)
    
 
-@login_required
+@login_required(login_url='/employee/404/')
 @require_POST
 def check_mobile_number_duplicate(request):
     """
@@ -1323,7 +1330,7 @@ from django.db.models.fields.files import FieldFile
 
 # Assuming these models are defined in your models.py
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_candidate_profile(request, id):
     if request.user.is_authenticated:
         logged_in_employee = Employee.objects.get(user=request.user)
@@ -1777,7 +1784,7 @@ def employee_candidate_profile(request, id):
 
 
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_company_registration(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
@@ -2011,7 +2018,7 @@ def employee_company_registration(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def search_companies(request):
     if request.user.is_authenticated:
         search_term = request.GET.get('search', '').strip()
@@ -2028,7 +2035,7 @@ def search_companies(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_company_list(request) :
     if request.user.is_authenticated:
         companys = Company_registration.objects.all().order_by('-id')
@@ -2037,7 +2044,7 @@ def employee_company_list(request) :
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_vacancy_list(request) :
     if request.user.is_authenticated:
         # Get all companies with their vacancy counts
@@ -2058,7 +2065,7 @@ def employee_vacancy_list(request) :
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_company_profile(request,id) :
     if request.user.is_authenticated:
         company = get_object_or_404(Company_registration, id=id)
@@ -2421,7 +2428,7 @@ def employee_company_profile(request,id) :
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_vendor_list(request) :
     if request.user.is_authenticated:
         vendors = Vendor.objects.all().order_by('-id')
@@ -2430,7 +2437,7 @@ def employee_vendor_list(request) :
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_evms_candidate_list(request) :
     if request.user.is_authenticated:
         logged_in_employee = request.user.employee
@@ -2440,7 +2447,7 @@ def employee_evms_candidate_list(request) :
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_vendor_candidate_list(request, id):
     if request.user.is_authenticated:
         vendor = get_object_or_404(Vendor, id=id)
@@ -2575,7 +2582,7 @@ def employee_vendor_candidate_list(request, id):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_evms_candidate_profile(request, id):
     if request.user.is_authenticated:
         candidate = get_object_or_404(Candidate, id=id)
@@ -2859,7 +2866,7 @@ def employee_evms_candidate_profile(request, id):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def evms_vendor_candidate_profile(request,id) :
     if request.user.is_authenticated:
         candidate = get_object_or_404(Candidate, id=id)
@@ -2991,7 +2998,7 @@ def evms_vendor_candidate_profile(request,id) :
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def birthday_and_anniversary_today(request):
     if request.user.is_authenticated:
         today = date.today()
@@ -3042,7 +3049,7 @@ def birthday_and_anniversary_today(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def same_designation_list_json(request):
     if request.user.is_authenticated:
         # Get the logged-in user's employee record
@@ -3082,7 +3089,7 @@ def same_designation_list_json(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def ticket_view(request):
     if request.user.is_authenticated:
         logged_in_employee = Employee.objects.get(user=request.user)
@@ -3532,7 +3539,7 @@ def _get_chart_data(queryset, period, start_date, end_date):
 # ===================================================================================
 # == INDIVIDUAL EMPLOYEE DASHBOARD VIEW
 # ===================================================================================
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_calls_list(request):
     try:
         logged_in_employee = Employee.objects.get(user=request.user)
@@ -3635,7 +3642,7 @@ def employee_calls_list(request):
     return render(request, 'employee/employee-calls-list.html', context)
 
 
-@login_required
+@login_required(login_url='/employee/404/')
 def get_employee_filtered_activity_list(request):
     list_type = request.GET.get('list_type')
     start_date_str = request.GET.get('start_date')
@@ -3721,7 +3728,7 @@ def get_employee_filtered_activity_list(request):
     
 #     return breakdown
     
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_chart_data(request):
     if request.user.is_authenticated:
         today1 = now().date()
@@ -3759,7 +3766,7 @@ def employee_chart_data(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def overall_employee_chart_data(request):
     if request.user.is_authenticated:
         today = now().date()
@@ -3817,7 +3824,7 @@ def overall_employee_chart_data(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def each_employee_chart_data(request):
     if request.user.is_authenticated:
         today = now().date()
@@ -3869,7 +3876,7 @@ def each_employee_chart_data(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def get_revenue_placement_data(request):
     if request.user.is_authenticated:
         filter_type = request.GET.get("filter", "week")
@@ -3911,7 +3918,7 @@ def get_revenue_placement_data(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_leave_details(request):
     if request.user.is_authenticated:
         """Return attendance data for the logged-in user from joining date to today."""
@@ -3984,7 +3991,7 @@ def employee_leave_details(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_attendance_details(request):
     if request.user.is_authenticated:
         if not request.user.is_authenticated:
@@ -4125,7 +4132,7 @@ def work_hours_summary(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_selected_candidate(request):
     if request.user.is_authenticated:
         logged_in_employee = Employee.objects.get(user=request.user)
@@ -4157,7 +4164,7 @@ def employee_selected_candidate(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_follow_up_candidate(request):
     if request.user.is_authenticated:
         logged_in_employee = Employee.objects.get(user=request.user)
@@ -4194,7 +4201,7 @@ def employee_follow_up_candidate(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_generated_leads(request):
     if request.user.is_authenticated:
         logged_in_employee = Employee.objects.get(user=request.user)
@@ -4222,7 +4229,7 @@ def employee_generated_leads(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def evms_vendor_paylist(request):
     if request.user.is_authenticated:
         # Get current month and year
@@ -4262,7 +4269,7 @@ def evms_vendor_paylist(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def evms_vendor_transaction_history(request):
     if request.user.is_authenticated:
         logged_in_employee = request.user.employee
@@ -4296,7 +4303,7 @@ def evms_vendor_transaction_history(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def export_vendors_to_excel(request):
     if request.user.is_authenticated:
         # Get all vendors with related data
@@ -4362,7 +4369,7 @@ def export_vendors_to_excel(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
     
-@login_required
+@login_required(login_url='/employee/404/')
 def candidate_chat_list(request, candidate_id):
     candidate = get_object_or_404(Candidate_registration, id=candidate_id)
     logged_in_employee = Employee.objects.get(user=request.user)
@@ -4408,7 +4415,7 @@ def candidate_chat_list(request, candidate_id):
     }
     return render(request, 'employee/candidate_chat_list.html', context)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def delete_chat(request, pk):
     chat = get_object_or_404(Candidate_chat, pk=pk)
     candidate_id = chat.candidate.id
@@ -4416,7 +4423,7 @@ def delete_chat(request, pk):
     messages.success(request, 'Chat record deleted successfully!')
     return redirect('candidate_chat_list', candidate_id=candidate_id)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def interview_list(request, candidate_id):
     candidate = get_object_or_404(Candidate_registration, id=candidate_id)
     companys = Company_registration.objects.all()
@@ -4484,7 +4491,7 @@ def interview_list(request, candidate_id):
     }
     return render(request, 'employee/candidate_interview_list.html', context)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def send_interview_email(request, interview):
     """Helper function to send interview details email"""
     subject = f"Interview Scheduled - {interview.company_name}"
@@ -4513,7 +4520,7 @@ def send_interview_email(request, interview):
     # Send email
     email.send()
 
-@login_required
+@login_required(login_url='/employee/404/')
 def interview_detail(request, interview_id):
     interview = get_object_or_404(Candidate_Interview, id=interview_id)
     companys = Company_registration.objects.all()
@@ -4552,7 +4559,7 @@ def interview_detail(request, interview_id):
     }
     return render(request, 'employee/candidate_interview_detail.html', context)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def delete_interview(request, interview_id):
     interview = get_object_or_404(Candidate_Interview, id=interview_id)
     candidate_id = interview.candidate.id
@@ -4560,7 +4567,7 @@ def delete_interview(request, interview_id):
     messages.success(request, 'Interview deleted successfully!')
     return redirect('interview_list', candidate_id=candidate_id)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def company_communication_list(request, company_id):
     company = get_object_or_404(Company_registration, id=company_id)
     
@@ -4620,7 +4627,7 @@ def company_communication_list(request, company_id):
     }
     return render(request, 'employee/company_communication_list.html', context)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def company_communication_detail(request, communication_id):
     communication = get_object_or_404(company_communication, id=communication_id)
     
@@ -4652,7 +4659,7 @@ def company_communication_detail(request, communication_id):
     }
     return render(request, 'employee/company_communication_detail.html', context)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def delete_company_communication(request, communication_id):
     communication = get_object_or_404(company_communication, id=communication_id)
     company_id = communication.company.id
@@ -4660,7 +4667,7 @@ def delete_company_communication(request, communication_id):
     messages.success(request, 'Communication record deleted successfully!')
     return redirect('company_communication_list', company_id=company_id)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def send_communication_email(request, communication):
     """Helper function to send communication details email"""
     subject = f"Communication Record: {communication.subject}"
@@ -4694,7 +4701,7 @@ def send_communication_email(request, communication):
     # Send email
     email.send()
     
-@login_required
+@login_required(login_url='/employee/404/')
 def company_contacts_list(request, company_id):
     company = get_object_or_404(Company_registration, id=company_id)
     
@@ -4759,7 +4766,7 @@ def company_contacts_list(request, company_id):
     }
     return render(request, 'employee/contacts_list.html', context)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def company_contact_detail(request, contact_id):
     contact = get_object_or_404(Company_spoke_person, id=contact_id)
     
@@ -4790,7 +4797,7 @@ def company_contact_detail(request, contact_id):
     }
     return render(request, 'employee/contact_detail.html', context)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def delete_company_contact(request, contact_id):
     contact = get_object_or_404(Company_spoke_person, id=contact_id)
     company_id = contact.company.id
@@ -4799,7 +4806,7 @@ def delete_company_contact(request, contact_id):
     return redirect('company_contacts_list', company_id=company_id)
 
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_evms_candidate_chat_list(request, candidate_id):
     candidate = get_object_or_404(Candidate, id=candidate_id)
     logged_in_employee = Employee.objects.get(user=request.user)
@@ -4846,7 +4853,7 @@ def employee_evms_candidate_chat_list(request, candidate_id):
     }
     return render(request, 'employee/evms_candidate_chat_list.html', context)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_evms_delete_chat(request, pk):
     chat = get_object_or_404(EVMS_Candidate_chat, pk=pk)
     candidate_id = chat.candidate.id
@@ -4854,7 +4861,7 @@ def employee_evms_delete_chat(request, pk):
     messages.success(request, 'Chat record deleted successfully!')
     return redirect('employee_evms_candidate_chat_list', candidate_id=candidate_id)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_evms_interview_list(request, candidate_id):
     candidate = get_object_or_404(Candidate, id=candidate_id)
     companys = Company_registration.objects.all()
@@ -4925,7 +4932,7 @@ def employee_evms_interview_list(request, candidate_id):
     }
     return render(request, 'employee/evms_candidate_interview_list.html', context)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def send_evms_interview_email(request, interview):
     """Helper function to send interview details email"""
     subject = f"Interview Scheduled - {interview.company_name}"
@@ -4954,7 +4961,7 @@ def send_evms_interview_email(request, interview):
     # Send email
     email.send()
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_evms_interview_detail(request, interview_id):
     interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id)
     companys = Company_registration.objects.all()
@@ -4995,7 +5002,7 @@ def employee_evms_interview_detail(request, interview_id):
     return render(request, 'employee/evms_candidate_interview_detail.html', context)
 
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_evms_delete_interview(request, interview_id):
     interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id)
     candidate_id = interview.candidate.id
@@ -5009,7 +5016,7 @@ def get_unique_filter_options(queryset, field_name):
     values = queryset.values_list(field_name, flat=True).distinct()
     return sorted([v for v in values if v])
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_assigned_candidate_list(request):
     """
     Renders the page for an employee to view their assigned candidates, 
@@ -5039,7 +5046,7 @@ def employee_assigned_candidate_list(request):
     }
     return render(request, 'employee/candidate-assignment.html', context)
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_get_assigned_candidates_api(request):
     """
     Secure API view that provides filtered and paginated candidate data
@@ -5123,7 +5130,7 @@ def employee_get_assigned_candidates_api(request):
     })
 
 
-@login_required
+@login_required(login_url='/employee/404/')
 def employee_task_dashboard(request):
     """
     Employee view:
@@ -5138,7 +5145,7 @@ def employee_task_dashboard(request):
     return render(request, 'employee/employee_dashboard.html', context)
 
 
-@login_required
+@login_required(login_url='/employee/404/')
 def task_detail_and_reassign(request, pk):
     """
     Employee/Admin view:

@@ -7,6 +7,7 @@ from django.urls import path
 
 urlpatterns = [
     path('',custom_admin_login,name = 'custom_admin_login'),
+    path('login/',custom_admin_login,name = 'custom_admin_login'),
     path("admin-logout/", custom_admin_logout, name="custom_admin_logout"),
     path('admin-signup/',admin_signup_view,name = 'admin_signup_view'),
     path('notifications/mark-as-read/', mark_notifications_as_read, name='mark_notifications_as_read'),

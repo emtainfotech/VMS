@@ -1,9 +1,10 @@
 <div class="border rounded p-3">
     <h5>All Activities by {{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})</h5>
     {% if activities %}
-    <table class="table table-sm table-striped mt-3">
+    <table id="activity-table" class="table table-sm table-striped mt-3">
         <thead>
             <tr>
+                <th>S.No</th>
                 <th>Candidate Name</th>
                 <th>Activity Type</th>
                 <th>Activity Time</th>
@@ -15,6 +16,7 @@
         <tbody>
             {% for activity in activities %}
             <tr>
+                <td>{{ forloop.counter }}</td>
                 <td>{{ activity.candidate.candidate_name }}</td>
                 <td>
                     {% if activity.action == 'call_made' %}
@@ -22,10 +24,10 @@
                     {% elif activity.action == 'created' %}
                         <span class="badge bg-green-lt">Created</span>
                     {% else %}
-                         <span class="badge bg-secondary-lt">{{ activity.action }}</span>
+                        <span class="badge bg-secondary-lt">{{ activity.action }}</span>
                     {% endif %}
                 </td>
-                <td>{{ activity.timestamp|date:"M d, Y H:i" }}</td>
+                <td class="activity-timestamp">{{ activity.timestamp|date:"M d, Y H:i" }}</td>
                 <td>
                     {% with logged_status=activity.changes.call_connection.new %}
                         {% if activity.action == 'call_made' and logged_status is not None %}
@@ -35,7 +37,7 @@
                                 <span class="badge bg-danger me-1"></span> {{ logged_status }}
                             {% endif %}
                         {% else %}
-                             {% if activity.candidate.call_connection == 'Connected' %}
+                            {% if activity.candidate.call_connection == 'Connected' %}
                                 <span class="badge bg-success me-1"></span> Connected
                             {% elif activity.candidate.call_connection %}
                                 <span class="badge bg-danger me-1"></span> {{ activity.candidate.call_connection }}
@@ -69,3 +71,53 @@
     <p class="text-muted mt-3">No activities found for this employee in the selected period.</p>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('activity-table');
+    if (!table) return; // Exit if the table doesn't exist
+
+    const tbody = table.querySelector('tbody');
+    const rows = tbody.querySelectorAll('tr');
+    const columnCount = table.querySelector('thead tr').children.length;
+    const timeGapThreshold = 20; // Time difference in minutes
+
+    // Loop through rows from the second one to the end
+    for (let i = 1; i < rows.length; i++) {
+        const currentRow = rows[i];
+        const previousRow = rows[i - 1];
+
+        // Get the timestamp cells. Make sure they exist before proceeding.
+        const currentTimeCell = currentRow.querySelector('.activity-timestamp');
+        const previousTimeCell = previousRow.querySelector('.activity-timestamp');
+
+        if (currentTimeCell && previousTimeCell) {
+            // Parse the text content into Date objects
+            const previousTime = new Date(previousTimeCell.textContent);
+            const currentTime = new Date(currentTimeCell.textContent);
+
+            // Calculate the difference in minutes
+            const diffMs = previousTime - currentTime; // Difference in milliseconds
+            const diffMinutes = Math.abs(diffMs / (1000 * 60));
+
+            // If the difference is greater than the threshold, insert a separator
+            if (diffMinutes > timeGapThreshold) {
+                const separatorRow = document.createElement('tr');
+                const separatorCell = document.createElement('td');
+                
+                separatorCell.setAttribute('colspan', columnCount);
+                separatorCell.innerHTML = '|'; // The separator character
+                separatorCell.style.textAlign = 'center';
+                separatorCell.style.border = 'none';
+                separatorCell.style.padding = '4px 0';
+                separatorCell.style.color = '#adb5bd'; // A muted color
+
+                separatorRow.appendChild(separatorCell);
+
+                // Insert the new separator row before the current row
+                tbody.insertBefore(separatorRow, currentRow);
+            }
+        }
+    }
+});
+</script>

@@ -79,8 +79,11 @@ from itertools import chain
 # from .models import Candidate_registration, Candidate, Candidate_Interview, EVMS_Candidate_Interview
 from django.utils import timezone
 
+def user_not_found_view(request):
+    return render(request, 'crm/404.html', status=404)
 
-@login_required
+
+@login_required(login_url='/crm/404/')
 def crm_dashboard(request):
     """
     Renders the CRM dashboard with various performance metrics.
@@ -407,8 +410,7 @@ def crm_dashboard(request):
 
 
 
-
-@login_required
+@login_required(login_url='/crm/404/')
 def employee_candidates_list(request, employee_name, filter_type):
     """
     Renders a page with a list of all candidates for a specific employee,
@@ -514,7 +516,7 @@ from django.utils import timezone
 # Import the necessary models from your application
 # (Assuming Employee, VacancyDetails, and Company_registration are in the same app)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_candidate_profile(request, id):
     if request.user.is_staff or request.user.is_superuser:
         candidate = get_object_or_404(Candidate_registration.objects.prefetch_related('activities__employee', 'interviews'), id=id)
@@ -909,7 +911,7 @@ def admin_candidate_profile(request, id):
         return render(request, 'crm/404.html', status=404)
     
     
-@login_required    
+@login_required(login_url='/crm/404/')    
 def admin_candidate_registration(request):
     if request.user.is_staff or request.user.is_superuser:
         logged_in_employee = Employee.objects.get(user=request.user)
@@ -1194,7 +1196,7 @@ def admin_candidate_registration(request):
 #     return f"EC{next_number:06d}"
 
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_candidate_bulk_upload(request):
     if request.user.is_staff or request.user.is_superuser:
         districts = [
@@ -1386,7 +1388,7 @@ def get_unique_filter_options(*querysets, field_name):
     # Filter out None or empty strings and sort
     return sorted([v for v in values if v])
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_candidate_list(request):
     """
     Renders the main candidate list page. It now includes a list of all employees
@@ -1433,7 +1435,7 @@ def admin_candidate_list(request):
     }
     return render(request, 'crm/candidate-list.html', context)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def get_candidates_api(request):
     """
     API view to handle AJAX requests for fetching, filtering, and paginating candidates.
@@ -1529,7 +1531,7 @@ def get_candidates_api(request):
     })
 
 # --- NEW VIEW FOR BULK ASSIGNMENT ---
-@login_required
+@login_required(login_url='/crm/404/')
 @require_POST
 def bulk_assign_candidates_api(request):
     """
@@ -1581,7 +1583,7 @@ def bulk_assign_candidates_api(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def delete_candidate(request, candidate_id, model_type=None):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
@@ -1632,7 +1634,7 @@ def delete_candidate(request, candidate_id, model_type=None):
     
     return redirect('admin_candidate_list')
     
-@login_required   
+@login_required(login_url='/crm/404/')   
 def admin_company_list(request) :
     if request.user.is_staff or request.user.is_superuser:
         companys = Company_registration.objects.all().order_by('-id')
@@ -1641,7 +1643,7 @@ def admin_company_list(request) :
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_company_profile(request, id):
     if request.user.is_staff or request.user.is_superuser:
         company = get_object_or_404(Company_registration, id=id)
@@ -2134,7 +2136,7 @@ def admin_company_profile(request, id):
         return render(request, 'crm/404.html', status=404)
     
     
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_vendor_list(request) :
     if request.user.is_staff or request.user.is_superuser:
         vendors = Vendor.objects.all().order_by('-id')
@@ -2143,7 +2145,7 @@ def admin_vendor_list(request) :
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_evms_candidate_list(request) :
     if request.user.is_staff or request.user.is_superuser:
         candidates = Candidate.objects.all().order_by('-id')
@@ -2152,7 +2154,7 @@ def admin_evms_candidate_list(request) :
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_vendor_candidate_list(request, id):
     if request.user.is_staff or request.user.is_superuser:
         vendor = get_object_or_404(Vendor, id=id)
@@ -2345,7 +2347,7 @@ import datetime as dt # Import datetime for date/time handling
 from django.db.models.fields.files import FieldFile # Import FieldFile
 
 
-@login_required
+@login_required(login_url='/crm/404/')
 def evms_candidate_profile(request, id):
     if request.user.is_staff or request.user.is_superuser:
         candidate = get_object_or_404(Candidate, id=id)
@@ -2951,7 +2953,7 @@ def evms_candidate_profile(request, id):
         messages.error(request, "You are not authorized to view this page.")
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def evms_vendor_candidate_profile(request,id) :
     if request.user.is_staff or request.user.is_superuser:
         candidate = get_object_or_404(Candidate, id=id)
@@ -3080,7 +3082,7 @@ def evms_vendor_candidate_profile(request,id) :
         }
         return render(request,'crm/evms-vendor-candidate-profile.html',context)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def download_attendance_excel(request, user_id):
     if not (request.user.is_staff or request.user.is_superuser):
         return HttpResponse("Unauthorized", status=403)
@@ -3165,7 +3167,7 @@ def download_attendance_excel(request, user_id):
 
     return response
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_company_registration(request):
     if request.user.is_staff or request.user.is_superuser:
         if request.method == 'POST':
@@ -3406,7 +3408,7 @@ def admin_company_registration(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_vendor_profile(request, id):
     if request.user.is_staff or request.user.is_superuser:
         vendor = get_object_or_404(Vendor, id=id)
@@ -3548,7 +3550,7 @@ def admin_vendor_profile(request, id):
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_evms_vendor_paylist(request):
     if request.user.is_staff or request.user.is_superuser:
         # Get current month and year
@@ -3586,7 +3588,7 @@ def admin_evms_vendor_paylist(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_evms_vendor_transaction_history(request):
     if request.user.is_staff or request.user.is_superuser:
     
@@ -3618,7 +3620,7 @@ def admin_evms_vendor_transaction_history(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_export_vendors_to_excel(request):
     if request.user.is_staff or request.user.is_superuser:
         # Get all vendors with related data
@@ -3684,7 +3686,7 @@ def admin_export_vendors_to_excel(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def selected_candidate(request) :
     if request.user.is_staff or request.user.is_superuser:
         logged_in_employee = request.user.employee
@@ -3700,7 +3702,7 @@ def selected_candidate(request) :
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def follow_up_candidate(request):
     if request.user.is_staff or request.user.is_superuser:
         today = timezone.now().date()
@@ -3729,7 +3731,7 @@ def follow_up_candidate(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def generated_leads(request):
     if request.user.is_staff or request.user.is_superuser:
         candidates_reg = Candidate_registration.objects.filter(lead_generate__in=['Hot', 'Converted']).order_by('-id')
@@ -3744,7 +3746,7 @@ def generated_leads(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_vacancy_list(request) :
     if request.user.is_staff or request.user.is_superuser:
         # Get all companies with their vacancy counts
@@ -3765,7 +3767,7 @@ def admin_vacancy_list(request) :
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def crm_admin_profile(request,id):
     if request.user.is_staff or request.user.is_superuser:
         # Fetch the employee object or return a 404
@@ -3972,7 +3974,7 @@ def crm_admin_profile(request,id):
     else:
         return render(request, 'hrms/admin-login.html', {'error': 'User not authenticated'})
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_candidate_chat_list(request, candidate_id):
 
     if not (request.user.is_staff or request.user.is_superuser):
@@ -4023,7 +4025,7 @@ def admin_candidate_chat_list(request, candidate_id):
     }
     return render(request, 'crm/candidate_chat_list.html', context)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_delete_chat(request, pk):
     chat = get_object_or_404(Candidate_chat, pk=pk)
     candidate_id = chat.candidate.id
@@ -4031,7 +4033,7 @@ def admin_delete_chat(request, pk):
     messages.success(request, 'Chat record deleted successfully!')
     return redirect('admin_candidate_chat_list', candidate_id=candidate_id)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_interview_list(request, candidate_id):
 
     if not (request.user.is_staff or request.user.is_superuser):
@@ -4106,7 +4108,7 @@ def admin_interview_list(request, candidate_id):
     }
     return render(request, 'crm/candidate_interview_list.html', context)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def send_interview_email(request, interview):
     """Helper function to send interview details email"""
     subject = f"Interview Scheduled - {interview.company_name}"
@@ -4135,7 +4137,7 @@ def send_interview_email(request, interview):
     # Send email
     email.send()
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_interview_detail(request, interview_id):
 
     if not (request.user.is_staff or request.user.is_superuser):
@@ -4179,7 +4181,7 @@ def admin_interview_detail(request, interview_id):
     }
     return render(request, 'crm/candidate_interview_detail.html', context)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_delete_interview(request, interview_id):
     interview = get_object_or_404(Candidate_Interview, id=interview_id)
     candidate_id = interview.candidate.id
@@ -4187,7 +4189,7 @@ def admin_delete_interview(request, interview_id):
     messages.success(request, 'Interview deleted successfully!')
     return redirect('admin_interview_list', candidate_id=candidate_id)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_company_communication_list(request, company_id):
 
     if not (request.user.is_staff or request.user.is_superuser):
@@ -4252,7 +4254,7 @@ def admin_company_communication_list(request, company_id):
     }
     return render(request, 'crm/company_communication_list.html', context)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_company_communication_detail(request, communication_id):
 
     if not (request.user.is_staff or request.user.is_superuser):
@@ -4289,7 +4291,7 @@ def admin_company_communication_detail(request, communication_id):
     }
     return render(request, 'crm/company_communication_detail.html', context)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_delete_company_communication(request, communication_id):
     communication = get_object_or_404(company_communication, id=communication_id)
     company_id = communication.company.id
@@ -4297,7 +4299,7 @@ def admin_delete_company_communication(request, communication_id):
     messages.success(request, 'Communication record deleted successfully!')
     return redirect('admin_company_communication_list', company_id=company_id)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_send_communication_email(request, communication):
     """Helper function to send communication details email"""
     subject = f"Communication Record: {communication.subject}"
@@ -4331,7 +4333,7 @@ def admin_send_communication_email(request, communication):
     # Send email
     email.send()
     
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_company_contacts_list(request, company_id):
 
     if not (request.user.is_staff or request.user.is_superuser):
@@ -4399,7 +4401,7 @@ def admin_company_contacts_list(request, company_id):
     }
     return render(request, 'crm/contacts_list.html', context)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_company_contact_detail(request, contact_id):
 
     if not (request.user.is_staff or request.user.is_superuser):
@@ -4434,7 +4436,7 @@ def admin_company_contact_detail(request, contact_id):
     }
     return render(request, 'crm/contact_detail.html', context)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_delete_company_contact(request, contact_id):
     contact = get_object_or_404(Company_spoke_person, id=contact_id)
     company_id = contact.company.id
@@ -4442,7 +4444,7 @@ def admin_delete_company_contact(request, contact_id):
     messages.success(request, 'Contact person deleted successfully!')
     return redirect('admin_company_contacts_list', company_id=company_id)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def download_candidate_details(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
@@ -4553,7 +4555,7 @@ def download_candidate_details(request):
 
     return response
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_get_next_unique_code(prefix='EMTA'):
     candidate = Candidate_registration.objects.filter(unique_code__regex=r'^EC\d{6}$').values_list('unique_code', flat=True)
     numbers = [int(re.search(r'\d{6}', unique_code).group()) for unique_code in candidate]
@@ -4564,7 +4566,7 @@ def admin_get_next_unique_code(prefix='EMTA'):
         next_number = 1 
     return f"EC{next_number:06d}"
 
-@login_required
+@login_required(login_url='/crm/404/')
 def vendor_bank_details(request, vendor_code):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
@@ -4594,7 +4596,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 # from .models import Vendor, Candidate
 
-@login_required
+@login_required(login_url='/crm/404/')
 @require_POST
 @csrf_exempt
 def process_payment(request, vendor_code):
@@ -4634,7 +4636,7 @@ def process_payment(request, vendor_code):
             'message': str(e)
         }, status=400)    
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_evms_candidate_chat_list(request, candidate_id):
 
     if not (request.user.is_staff or request.user.is_superuser):
@@ -4685,7 +4687,7 @@ def admin_evms_candidate_chat_list(request, candidate_id):
     }
     return render(request, 'crm/evms_candidate_chat_list.html', context)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_evms_delete_chat(request, pk):
     chat = get_object_or_404(EVMS_Candidate_chat, pk=pk)
     candidate_id = chat.candidate.id
@@ -4693,7 +4695,7 @@ def admin_evms_delete_chat(request, pk):
     messages.success(request, 'Chat record deleted successfully!')
     return redirect('admin_evms_candidate_chat_list', candidate_id=candidate_id)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_evms_interview_list(request, candidate_id):
 
     if not (request.user.is_staff or request.user.is_superuser):
@@ -4768,7 +4770,7 @@ def admin_evms_interview_list(request, candidate_id):
     }
     return render(request, 'crm/evms_candidate_interview_list.html', context)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def send_evms_interview_email(request, interview):
     """Helper function to send interview details email"""
     subject = f"Interview Scheduled - {interview.company_name}"
@@ -4797,7 +4799,7 @@ def send_evms_interview_email(request, interview):
     # Send email
     email.send()
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_evms_interview_detail(request, interview_id):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
@@ -4839,7 +4841,7 @@ def admin_evms_interview_detail(request, interview_id):
     }
     return render(request, 'crm/evms_candidate_interview_detail.html', context)
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_evms_delete_interview(request, interview_id):
     interview = get_object_or_404(EVMS_Candidate_Interview, id=interview_id)
     candidate_id = interview.candidate.id
@@ -5055,7 +5057,7 @@ def _get_chart_data(queryset, start_date, end_date):
 # ===================================================================================
 # == MANAGER DASHBOARD VIEWS
 # ===================================================================================
-@login_required
+@login_required(login_url='/crm/404/')
 def employee_calls_list(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
@@ -5166,7 +5168,7 @@ def employee_calls_list(request):
     return render(request, 'crm/employee-calls-list.html', context)
 
 
-@login_required
+@login_required(login_url='/crm/404/')
 def get_filtered_activity_list(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
@@ -5228,7 +5230,7 @@ def get_filtered_activity_list(request):
     return render(request, 'crm/partials/activity_list_partial.html', context)
 
 
-@login_required
+@login_required(login_url='/crm/404/')
 def get_employee_candidates(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
@@ -5290,7 +5292,7 @@ from django.contrib.auth.decorators import login_required
 from CRM.models import *
 from django.utils import timezone
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_task_dashboard(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
@@ -5362,7 +5364,7 @@ def admin_task_dashboard(request):
     return render(request, 'crm/admin_dashboard.html', context)
 
 
-@login_required
+@login_required(login_url='/crm/404/')
 def admin_task_detail_and_reassign(request, pk):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)

@@ -25,7 +25,7 @@ class Employee(models.Model):
     Represents an employee, linked to a standard Django User.
     Includes fields for IP-based login restrictions.
     """
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     contact_number = models.CharField(max_length=15)
@@ -50,6 +50,9 @@ class Employee(models.Model):
         blank=True,
         help_text="Comma-separated list of allowed IP addresses (e.g., 192.168.1.1, 127.0.0.1)."
     )
+
+    # unique login session management
+    active_session_key = models.CharField(max_length=40, null=True, blank=True)
     # ------------------------------------
 
     def save(self, *args, **kwargs):
