@@ -53,7 +53,7 @@
                             {% if lead_status == 'Hot' or lead_status == 'Converted' %}
                                 <span class="badge bg-warning-lt">{{ lead_status }}</span>
                             {% else %}
-                                {{ lead_status|default:'-' }}
+                                {{ activity.candidate.calling_remark }}
                             {% endif %}
                         {% else %}
                             {{ activity.candidate.lead_generate|default:'-' }}
@@ -78,7 +78,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!table) return; // Exit if the table doesn't exist
 
     const tbody = table.querySelector('tbody');
+    if (!tbody) return; // Exit if there's no table body
+
     const rows = tbody.querySelectorAll('tr');
+    // Ensure there are at least 2 rows to compare
+    if (rows.length < 2) return;
+
     const columnCount = table.querySelector('thead tr').children.length;
     const timeGapThreshold = 20; // Time difference in minutes
 
@@ -87,35 +92,38 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentRow = rows[i];
         const previousRow = rows[i - 1];
 
-        // Get the timestamp cells. Make sure they exist before proceeding.
+        // Get the timestamp cells.
         const currentTimeCell = currentRow.querySelector('.activity-timestamp');
         const previousTimeCell = previousRow.querySelector('.activity-timestamp');
 
         if (currentTimeCell && previousTimeCell) {
             // Parse the text content into Date objects
-            const previousTime = new Date(previousTimeCell.textContent);
-            const currentTime = new Date(currentTimeCell.textContent);
+            const previousTime = new Date(previousTimeCell.textContent.trim());
+            const currentTime = new Date(currentTimeCell.textContent.trim());
 
-            // Calculate the difference in minutes
-            const diffMs = previousTime - currentTime; // Difference in milliseconds
-            const diffMinutes = Math.abs(diffMs / (1000 * 60));
+            // Check if dates are valid before comparing
+            if (!isNaN(previousTime) && !isNaN(currentTime)) {
+                // Calculate the difference in minutes
+                const diffMs = previousTime - currentTime; // Difference in milliseconds
+                const diffMinutes = Math.abs(diffMs / (1000 * 60));
 
-            // If the difference is greater than the threshold, insert a separator
-            if (diffMinutes > timeGapThreshold) {
-                const separatorRow = document.createElement('tr');
-                const separatorCell = document.createElement('td');
-                
-                separatorCell.setAttribute('colspan', columnCount);
-                separatorCell.innerHTML = '|'; // The separator character
-                separatorCell.style.textAlign = 'center';
-                separatorCell.style.border = 'none';
-                separatorCell.style.padding = '4px 0';
-                separatorCell.style.color = '#adb5bd'; // A muted color
+                // If the difference is greater than the threshold, insert a separator
+                if (diffMinutes > timeGapThreshold) {
+                    const separatorRow = document.createElement('tr');
+                    const separatorCell = document.createElement('td');
+                    
+                    separatorCell.setAttribute('colspan', columnCount);
+                    separatorCell.innerHTML = '|'; // The separator character
+                    separatorCell.style.textAlign = 'center';
+                    separatorCell.style.border = 'none';
+                    separatorCell.style.padding = '4px 0';
+                    separatorCell.style.color = '#adb5bd'; // A muted color
 
-                separatorRow.appendChild(separatorCell);
+                    separatorRow.appendChild(separatorCell);
 
-                // Insert the new separator row before the current row
-                tbody.insertBefore(separatorRow, currentRow);
+                    // Insert the new separator row before the current row
+                    tbody.insertBefore(separatorRow, currentRow);
+                }
             }
         }
     }
