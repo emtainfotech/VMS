@@ -5015,6 +5015,22 @@ from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMon
 # ===================================================================================
 # == HELPER FUNCTION (Used by multiple views)
 # ===================================================================================
+import calendar
+from datetime import datetime, timedelta
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.db.models import Count, Max, Q
+from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+
+# Assuming your models are imported correctly
+# from .models import Employee, CandidateActivity, Candidate_registration, Candidate_Interview
+
+# ===================================================================================
+# == HELPER FUNCTION (Unchanged)
+# ===================================================================================
 def _get_chart_data(queryset, start_date, end_date):
     chart_labels = []
     chart_data = []
@@ -5055,24 +5071,25 @@ def _get_chart_data(queryset, start_date, end_date):
 
 
 # ===================================================================================
-# == MANAGER DASHBOARD VIEWS
+# == MAIN DASHBOARD VIEW (Updated)
 # ===================================================================================
 @login_required(login_url='/crm/404/')
 def employee_calls_list(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
     
+    # --- Filter Processing ---
     period = request.GET.get('period', 'today')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
-    selected_employee_ids = request.GET.getlist('employees')
+    # CHANGED: Now using 'employees' to match the form, supporting multiple selections
+    selected_employee_ids = request.GET.getlist('employees') 
     
     today = timezone.now().date()
-    if start_date_str and end_date_str:
+    if period == 'custom' and start_date_str and end_date_str:
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-            period = 'custom'
         except (ValueError, TypeError):
             start_date = end_date = today
             period = 'today'
@@ -5085,15 +5102,18 @@ def employee_calls_list(request):
     elif period == 'year':
         start_date = today.replace(month=1, day=1)
         end_date = today.replace(month=12, day=31)
-    else:
+    else: # 'today' or default
         start_date = end_date = today
         period = 'today'
 
-    all_employees = Employee.objects.all()
+    # --- Base Querysets ---
+    all_employees = Employee.objects.all().order_by('first_name')
     employee_queryset = Employee.objects.all()
+    # UPDATED: Filter the main employee queryset if any employees are selected
     if selected_employee_ids:
         employee_queryset = employee_queryset.filter(id__in=selected_employee_ids)
 
+    # --- Employee Stats Calculation ---
     base_activity_filter = Q(candidateactivity__timestamp__date__range=[start_date, end_date], candidateactivity__action__in=['call_made', 'created'], candidateactivity__employee__isnull=False)
     connected_filter = Q(Q(candidateactivity__action='call_made', candidateactivity__changes__call_connection__new__iexact='Connected') | Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected'))
     
@@ -5115,14 +5135,13 @@ def employee_calls_list(request):
         hot_leads = employee_activities.filter(Q(changes__lead_generate__new__iexact='Hot')).count()
         converted_leads = employee_activities.filter(hot_to_converted_filter).count()
         hot_leads_count = hot_leads + converted_leads
-        if hot_leads_count > 0:
-            stat.conversion_percentage = round((converted_leads / hot_leads_count) * 100)
-        else:
-            stat.conversion_percentage = 0
+        stat.conversion_percentage = round((converted_leads / hot_leads_count) * 100) if hot_leads_count > 0 else 0
 
+    # --- Total Stats Calculation ---
     all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created'], employee__isnull=False)
     selections_queryset = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date])
 
+    # UPDATED: Apply employee filter to total stats queries
     if selected_employee_ids:
         all_activities_queryset = all_activities_queryset.filter(employee_id__in=selected_employee_ids)
         selections_queryset = selections_queryset.filter(updated_by_id__in=selected_employee_ids)
@@ -5138,43 +5157,53 @@ def employee_calls_list(request):
     )
     total_stats = {**total_stats_agg, 'total_leads_generated': total_leads_generated_count, 'total_selections': total_selections_count}
 
+    # --- Chart Data Calculation ---
     unique_lead_activities = all_activities_queryset.filter(lead_transition_filter)
     unique_leads_dict = {}
     for activity in unique_lead_activities.order_by('timestamp'):
-        key = (activity.candidate_id, activity.timestamp.date())
-        unique_leads_dict[key] = activity
-    unique_lead_activity_ids = [activity.id for activity in unique_leads_dict.values()]
-    unique_leads_queryset = CandidateActivity.objects.filter(id__in=unique_lead_activity_ids)
+        unique_leads_dict[(activity.candidate_id, activity.timestamp.date())] = activity
+    unique_leads_queryset = CandidateActivity.objects.filter(id__in=[act.id for act in unique_leads_dict.values()])
     
     main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date)
     leads_chart_labels, leads_chart_data = _get_chart_data(unique_leads_queryset, start_date, end_date)
     
-    interview_detail_reg = Candidate_Interview.objects.filter(interview_date_time__date__range=[start_date, end_date], status__in=['scheduled', 'rescheduled'])
-    # Add other interview/follow-up models here if needed
+    # --- Today's Schedule Calculation ---
+    interview_detail_reg = Candidate_Interview.objects.filter(interview_date_time__date=today, status__in=['scheduled', 'rescheduled'])
+    follow_up_candidates_reg = Candidate_registration.objects.filter(next_follow_up_date_time__date=today)
+
+    # UPDATED: Filter today's items by selected employees as well
     if selected_employee_ids:
-        interview_detail_reg = interview_detail_reg.filter(candidate__employee_assigned_id__in=selected_employee_ids)
-        # Filter other querysets
+        interview_detail_reg = interview_detail_reg.filter(candidate__employee_name__in=selected_employee_ids)
+        follow_up_candidates_reg = follow_up_candidates_reg.filter(employee_name__in=selected_employee_ids)
+
     interview_detail = sorted(list(interview_detail_reg), key=lambda x: x.interview_date_time)
-    follow_up_candidates = sorted(list(Candidate_registration.objects.filter(next_follow_up_date_time__date__range=[start_date, end_date])), key=lambda x: x.next_follow_up_date_time)
+    follow_up_candidates = sorted(list(follow_up_candidates_reg), key=lambda x: x.next_follow_up_date_time)
 
     context = {
         'employee_stats': employee_stats, 'period': period, 'start_date': start_date, 'end_date': end_date,
         'main_chart_labels': main_chart_labels, 'main_chart_data': main_chart_data,
         'leads_chart_labels': leads_chart_labels, 'leads_chart_data': leads_chart_data,
         'total_stats': total_stats, 'interview_detail': interview_detail,
-        'follow_up_candidates': follow_up_candidates, 'all_employees': all_employees,
+        'follow_up_candidates': follow_up_candidates, 
+        'all_employees': all_employees, # NEW: Pass all employees for the dropdown
+        # CHANGED: Convert IDs to int for template comparison
         'selected_employee_ids': [int(eid) for eid in selected_employee_ids],
     }
     return render(request, 'crm/employee-calls-list.html', context)
 
 
+# ===================================================================================
+# == AJAX VIEW: FILTERED ACTIVITY LIST (Updated)
+# ===================================================================================
 @login_required(login_url='/crm/404/')
 def get_filtered_activity_list(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
+        
     list_type = request.GET.get('list_type')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
+    # CHANGED: Accept multiple employee IDs from AJAX call
     selected_employee_ids = request.GET.getlist('employees')
 
     try:
@@ -5182,56 +5211,60 @@ def get_filtered_activity_list(request):
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
     except (ValueError, TypeError):
         return JsonResponse({"error": "Invalid date format."}, status=400)
-        
+    
+    # This view is now fully aware of the employee filter
     if list_type == 'selected':
         list_title = "Selected Candidates"
-        candidates = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date], updated_by__isnull=False).select_related('updated_by__user').order_by('-selection_date')
+        candidates = Candidate_registration.objects.filter(
+            selection_status__iexact='Selected', 
+            selection_date__range=[start_date, end_date], 
+            updated_by__isnull=False
+        ).select_related('updated_by__user').order_by('-selection_date')
         if selected_employee_ids:
             candidates = candidates.filter(updated_by_id__in=selected_employee_ids)
         context = {'candidates': candidates, 'list_title': list_title}
         return render(request, 'crm/partials/selected_candidate_list_partial.html', context)
 
-    activities = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created', 'updated'], employee__isnull=False).select_related('employee__user', 'candidate')
+    activities = CandidateActivity.objects.filter(
+        timestamp__date__range=[start_date, end_date], 
+        action__in=['call_made', 'created', 'updated'], 
+        employee__isnull=False
+    ).select_related('employee__user', 'candidate')
 
     if selected_employee_ids:
         activities = activities.filter(employee_id__in=selected_employee_ids)
 
+    # (No changes to the logic below, it correctly filters the 'activities' queryset)
     list_title = "All Activities"
     LEAD_STATUSES = ['Hot', 'Converted']
-    
     if list_type == 'leads':
         list_title = "Lead Generating Activities"
         leads_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
         activities = activities.filter(leads_filter)
-        
-        unique_leads = {}
-        for activity in activities.order_by('timestamp'):
-            key = (activity.candidate_id, activity.timestamp.date())
-            unique_leads[key] = activity
+        unique_leads = { (act.candidate_id, act.timestamp.date()): act for act in activities.order_by('timestamp') }
         activities = sorted(list(unique_leads.values()), key=lambda x: x.timestamp, reverse=True)
-    
     elif list_type == 'connected':
         list_title = "Connected Activities"
-        connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
-        activities = activities.filter(connected_filter)
+        activities = activities.filter(Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected')))
     elif list_type == 'not_connected':
         list_title = "Not Connected Activities"
-        connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
-        activities = activities.filter(~connected_filter)
+        activities = activities.filter(~Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected')))
     elif list_type == 'converted':
         list_title = "Hot to Converted Activities"
-        converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
-        activities = activities.filter(converted_filter)
-    
-    else: # This covers 'total'
+        activities = activities.filter(Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot'))
+    else: # 'total'
         activities = activities.filter(action__in=['call_made', 'created']).order_by('-timestamp')
     
     context = {'activities': activities, 'list_title': list_title}
     return render(request, 'crm/partials/activity_list_partial.html', context)
 
 
+# ===================================================================================
+# == AJAX VIEW: SINGLE EMPLOYEE DETAILS (Unchanged)
+# ===================================================================================
 @login_required(login_url='/crm/404/')
 def get_employee_candidates(request):
+    # This view is for a single employee, so it doesn't need the multi-select filter
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
     employee_id = request.GET.get('employee_id')
@@ -5240,52 +5273,34 @@ def get_employee_candidates(request):
 
     if not all([employee_id, start_date_str, end_date_str]):
         return JsonResponse({"error": "Missing parameters."}, status=400)
-        
     try:
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
         employee = get_object_or_404(Employee, pk=employee_id)
-
         employee_activities_queryset = CandidateActivity.objects.filter(
-            employee=employee,
-            timestamp__date__range=[start_date, end_date],
+            employee=employee, timestamp__date__range=[start_date, end_date],
             action__in=['call_made', 'created']
         ).select_related('candidate').order_by('-timestamp')
-
         html_content = render_to_string(
             'crm/partials/candidate_list_partial.html',
             {'activities': employee_activities_queryset, 'employee': employee}
         )
-        
         activity_chart_labels, activity_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date)
-        
         LEAD_STATUSES = ['Hot', 'Converted']
         leads_filter_q = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
-        
         employee_lead_transitions = employee_activities_queryset.filter(leads_filter_q)
         unique_employee_leads_dict = {}
         for activity in employee_lead_transitions.order_by('timestamp'):
-            key = (activity.candidate_id, activity.timestamp.date())
-            unique_employee_leads_dict[key] = activity
-        unique_employee_lead_ids = [act.id for act in unique_employee_leads_dict.values()]
-        unique_employee_leads_qs = CandidateActivity.objects.filter(id__in=unique_employee_lead_ids)
-        
+            unique_employee_leads_dict[(activity.candidate_id, activity.timestamp.date())] = activity
+        unique_employee_leads_qs = CandidateActivity.objects.filter(id__in=[act.id for act in unique_employee_leads_dict.values()])
         leads_chart_labels, leads_chart_data = _get_chart_data(unique_employee_leads_qs, start_date, end_date)
-
         return JsonResponse({
             'html': html_content,
-            'activity_chart_data': {
-                'labels': activity_chart_labels,
-                'data': activity_chart_data,
-            },
-            'leads_chart_data': {
-                'labels': leads_chart_labels,
-                'data': leads_chart_data,
-            }
+            'activity_chart_data': {'labels': activity_chart_labels, 'data': activity_chart_data,},
+            'leads_chart_data': {'labels': leads_chart_labels, 'data': leads_chart_data,}
         })
     except (ValueError, Employee.DoesNotExist):
         return JsonResponse({"error": "Invalid request."}, status=400)
-
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required

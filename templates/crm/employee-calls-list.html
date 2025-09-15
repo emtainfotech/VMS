@@ -2,12 +2,17 @@
 
 {% block content %}
 <style>
+    /* NOTE: For a better multi-select experience, consider a library like TomSelect or Select2 */
     .clickable-card .card:hover {
         border-color: #206bc4;
         box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
         cursor: pointer;
         transform: translateY(-2px);
         transition: all .2s ease-in-out;
+    }
+    /* Style for active employee rows */
+    .employee-row.active {
+        background-color: #e9f2ff !important;
     }
 </style>
 
@@ -24,57 +29,67 @@
             </div>
         </div>
     </div>
-<style>
-    .clickable-card .card:hover {
-        border-color: #206bc4; box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
-        cursor: pointer; transform: translateY(-2px); transition: all .2s ease-in-out;
-    }
-</style>
+
     <div class="page-body">
         <div class="container-xl">
             <div class="card card-body mb-4">
-                <form method="get" action="{% url 'admin_calls_list' %}">
+                <form method="get" action="{% url 'admin_calls_list' %}" id="main-filter-form">
                     <div class="row g-3 align-items-end">
-                        <div class="col-md-3"><label class="form-label">Period</label><select name="period" class="form-select"><option value="today" {% if period == 'today' %}selected{% endif %}>Today</option><option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option><option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option><option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option><option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option></select></div>
-                        <div class="col-md-3"><label class="form-label">Start Date</label><input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}"></div>
-                        <div class="col-md-3"><label class="form-label">End Date</label><input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}"></div>
-                        <div class="col-md-3"><button type="submit" class="btn btn-primary w-100">Apply Filter</button></div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Filter by Employee(s)</label>
+                            <select name="employees" id="employee_filter" class="form-select">
+                                {% for employee in all_employees %}
+                                    <option value="{{ employee.id }}" {% if employee.id in selected_employee_ids %}selected{% endif %}>
+                                        {{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Period</label>
+                            <select name="period" id="period_filter" class="form-select">
+                                <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
+                                <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
+                                <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
+                                <option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option>
+                                <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" name="start_date" id="start_date_filter" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">End Date</label>
+                            <input type="date" name="end_date" id="end_date_filter" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+                        </div>
+
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                        </div>
                     </div>
                 </form>
             </div>
             
             <div class="row g-4 mb-4">
-                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="total">
-                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3">{{ total_stats.total_activities }}</div><div class="text-muted">Total Calls</div></div></div>
-                </div>
-                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="connected">
-                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-success">{{ total_stats.total_connected }}</div><div class="text-muted">Total Connected</div></div></div>
-                </div>
-                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="not_connected">
-                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-danger">{{ total_stats.total_not_connected }}</div><div class="text-muted">Total Not Connected</div></div></div>
-                </div>
-                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="leads">
-                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-warning">{{ total_stats.total_leads_generated }}</div><div class="text-muted">Total Leads Generated</div></div></div>
-                </div>
-                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="selected">
-                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-success">{{ total_stats.total_selections }}</div><div class="text-muted">Total Selection's</div></div></div>
-                </div>
-                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="converted">
-                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-primary">{{ total_stats.total_conversion_percentage }}%</div><div class="text-muted">Total Conversion</div></div></div>
-                </div>
-                
+                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="total"><div class="card"><div class="card-body text-center"><div class="h1 mb-3">{{ total_stats.total_activities }}</div><div class="text-muted">Total Calls</div></div></div></div>
+                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="connected"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-success">{{ total_stats.total_connected }}</div><div class="text-muted">Total Connected</div></div></div></div>
+                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="not_connected"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-danger">{{ total_stats.total_not_connected }}</div><div class="text-muted">Total Not Connected</div></div></div></div>
+                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="leads"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-warning">{{ total_stats.total_leads_generated }}</div><div class="text-muted">Total Leads Generated</div></div></div></div>
+                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="selected"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-success">{{ total_stats.total_selections }}</div><div class="text-muted">Total Selection's</div></div></div></div>
+                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="converted"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-primary">{{ total_stats.total_conversion_percentage|default:0 }}%</div><div class="text-muted">Total Conversion</div></div></div></div>
             </div>
 
             <div id="activity-details-container" class="mb-4"></div>
-
-            
 
             <div class="card mb-4">
                 <div class="card-header"><h3 class="card-title">Employee Breakdown</h3></div>
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter text-nowrap table-striped table-hover">
-                        <thead><tr><th>Employee Name</th><th>Total Activities</th><th>Connected</th><th>Not Connected</th><th>Leads Generated</th><th>Selections</th>
-                                <th>H-C Conv. %</th><th>Last Activity</th></tr></thead>
+                        <thead><tr><th>Employee Name</th><th>Total Activities</th><th>Connected</th><th>Not Connected</th><th>Leads Generated</th><th>Selections</th><th>H-C Conv. %</th><th>Last Activity</th></tr></thead>
                         <tbody>
                             {% for stat in employee_stats %}
                             <tr class="employee-row" data-employee-id="{{ stat.id }}" data-employee-name="{{ stat.first_name }} {{ stat.last_name }} ({{ stat.user.username }})" style="cursor: pointer;">
@@ -99,136 +114,17 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="6" class="text-center">No activity data found for the selected period.</td></tr>
+                            <tr><td colspan="8" class="text-center">No activity data found for the selected filters.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="row g-4">
-                <div class="col-lg-6"><div class="card"><div class="card-header"><h3 class="card-title">All Employees: Activity Volume Trend</h3></div><div class="card-body"><div id="mainActivityChart"></div></div></div></div>
-                <div class="col-lg-6"><div class="card"><div class="card-header"><h3 class="card-title">All Employees: Lead Generation Trend</h3></div><div class="card-body"><div id="mainLeadsChart"></div></div></div></div>
-            </div>
-
-            <div class="row mt-4">
-            <div class="col-lg-12 mb-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Today's Interviews</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-vcenter table-hover">
-                                <thead class="">
-                                    <tr>
-                                        <th>Candidate</th>
-                                        <th>Status</th>
-                                        <th>Employee</th>
-                                        <th>Time</th>
-                                        <th class="w-1"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for interview in interview_detail %}
-                                    <tr class="interview-row clickable-row" data-date="{{ interview.interview_date_time|date:'Y-m-d' }}" data-interview-id="{{ interview.id }}"
-                                        data-url="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}">
-                                        <td>{{ interview.candidate.candidate_name }}</td>
-                                        <td>{{ interview.status }}</td>
-                                        <td>{{ interview.candidate.employee_name }}</td>
-                                        <td class="interview-time" data-time="{{ interview.interview_date_time|date:'H:i' }}">{{ interview.interview_date_time|date:"M d, Y H:i" }}</td>
-                                        <td>
-                                            <a href="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}" class="btn btn-link">
-                                                View
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="7" class="text-center py-4">
-                                            <div class="empty">
-                                                <div class="empty-icon">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                                        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                                                        <path d="M9 10l.01 0" />
-                                                        <path d="M15 10l.01 0" />
-                                                        <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
-                                                    </svg>
-                                                </div>
-                                                <p class="empty-title">No interviews scheduled for today</p>
-                                                <p class="empty-subtitle text-muted">
-                                                    Check back later for updates
-                                                </p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Today's Follow Ups</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-vcenter table-hover">
-                                <thead class="">
-                                    <tr>
-                                        
-                                        <th>Candidate</th>
-                                        <th>Unique Code</th>
-                                        <th>Mobile Number</th>
-                                        <th>Employee</th>
-                                        <th>Time</th>
-                                        <th class="w-1"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for follow_up in follow_up_candidates %}
-                                    <tr class="followup-row clickable-row" data-date="{{ follow_up.next_follow_up_date_time|date:'Y-m-d' }}" data-followup-id="{{ follow_up.id }}"
-                                        data-url="{% if follow_up.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' follow_up.id %}{% else %}{% url 'admin_candidate_profile' follow_up.id %}{% endif %}">
-                                        
-                                        <td>{{ follow_up.candidate_name }}</td>
-                                        <td>
-                                            {% if follow_up.lead_source == 'EVMS' %}
-                                                {{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}
-                                            {% else %}
-                                                {{ follow_up.unique_code|default:"-" }}
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ follow_up.candidate_mobile_number|default:"-" }}</td>
-                                        <td>{{ follow_up.employee_name }}</td>
-                                        <td class="followup-time" data-time="{{ follow_up.next_follow_up_date_time|date:'H:i' }}">{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td>
-                                        <td>
-                                            {% if follow_up.lead_source == 'EVMS' %}
-                                                <a href="{% url 'evms_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
-                                                    View
-                                                </a>
-                                            {% else %}
-                                                <a href="{% url 'admin_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">
-                                                    View
-                                                </a>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="row g-4"><div class="col-lg-6"><div class="card"><div class="card-header"><h3 class="card-title">All Employees: Activity Volume Trend</h3></div><div class="card-body"><div id="mainActivityChart"></div></div></div></div><div class="col-lg-6"><div class="card"><div class="card-header"><h3 class="card-title">All Employees: Lead Generation Trend</h3></div><div class="card-body"><div id="mainLeadsChart"></div></div></div></div></div>
+            <div class="row mt-4"><div class="col-lg-12 mb-4"><div class="card"><div class="card-header"><h3 class="card-title">Today's Interviews</h3></div><div class="card-body"><div class="table-responsive"><table class="table table-vcenter table-hover"><thead><tr><th>Candidate</th><th>Status</th><th>Employee</th><th>Time</th><th class="w-1"></th></tr></thead><tbody>{% for interview in interview_detail %}<tr class="interview-row clickable-row" data-date="{{ interview.interview_date_time|date:'Y-m-d' }}" data-interview-id="{{ interview.id }}" data-url="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}"><td>{{ interview.candidate.candidate_name }}</td><td>{{ interview.status }}</td><td>{{ interview.candidate.employee_name }}</td><td class="interview-time" data-time="{{ interview.interview_date_time|date:'H:i' }}">{{ interview.interview_date_time|date:"M d, Y H:i" }}</td><td><a href="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}" class="btn btn-link">View</a></td></tr>{% empty %}<tr><td colspan="7" class="text-center py-4"><div class="empty"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" /></svg></div><p class="empty-title">No interviews scheduled for today</p><p class="empty-subtitle text-muted">Check back later for updates</p></div></td></tr>{% endfor %}</tbody></table></div></div></div></div></div>
+            <div class="col-lg-12"><div class="card"><div class="card-header"><h3 class="card-title">Today's Follow Ups</h3></div><div class="card-body"><div class="table-responsive"><table class="table table-vcenter table-hover"><thead><tr><th>Candidate</th><th>Unique Code</th><th>Mobile Number</th><th>Employee</th><th>Time</th><th class="w-1"></th></tr></thead><tbody>{% for follow_up in follow_up_candidates %}<tr class="followup-row clickable-row" data-date="{{ follow_up.next_follow_up_date_time|date:'Y-m-d' }}" data-followup-id="{{ follow_up.id }}" data-url="{% if follow_up.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' follow_up.id %}{% else %}{% url 'admin_candidate_profile' follow_up.id %}{% endif %}"><td>{{ follow_up.candidate_name }}</td><td>{% if follow_up.lead_source == 'EVMS' %}{{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}{% else %}{{ follow_up.unique_code|default:"-" }}{% endif %}</td><td>{{ follow_up.candidate_mobile_number|default:"-" }}</td><td>{{ follow_up.employee_name }}</td><td class="followup-time" data-time="{{ follow_up.next_follow_up_date_time|date:'H:i' }}">{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td><td>{% if follow_up.lead_source == 'EVMS' %}<a href="{% url 'evms_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">View</a>{% else %}<a href="{% url 'admin_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">View</a>{% endif %}</td></tr>{% endfor %}</tbody></table></div></div></div></div>
         </div>
-        </div>
-    </div>
-</div>
     </div>
 </div>
 
@@ -236,39 +132,46 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const chartInstances = {};
-
-    function getBaseChartOptions(labels, seriesData, chartTitle, colors) {
-        return {
-            chart: { type: 'area', height: 300, zoom: { enabled: false }, toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } } },
-            colors: colors,
-            series: [{ name: chartTitle, data: seriesData }],
-            labels: labels,
-            xaxis: { type: 'category', labels: { rotate: -45, rotateAlways: false, hideOverlappingLabels: true, trim: true, style: { fontSize: '10px' } } },
-            yaxis: { min: 0, tickAmount: 5, labels: { formatter: (val) => val.toFixed(0) } },
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 2 },
-            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
-            tooltip: { theme: 'dark' }
-        };
-    }
-
-    const mainActivityChart = new ApexCharts(document.querySelector("#mainActivityChart"), getBaseChartOptions({{ main_chart_labels|safe }}, {{ main_chart_data|safe }}, 'Total Activities', ['#206bc4']));
-    mainActivityChart.render();
-
-    const mainLeadsChart = new ApexCharts(document.querySelector("#mainLeadsChart"), getBaseChartOptions({{ leads_chart_labels|safe }}, {{ leads_chart_data|safe }}, 'Leads Generated', ['#f59f00']));
-    mainLeadsChart.render();
-
-    const detailsContainer = document.getElementById('activity-details-container');
     
+    // =========================================================================
+    // Filter Handling & AJAX Logic
+    // =========================================================================
+    const periodSelect = document.getElementById('period_filter');
+    const startDateInput = document.getElementById('start_date_filter');
+    const endDateInput = document.getElementById('end_date_filter');
+    const employeeSelect = document.getElementById('employee_filter');
+
+    // --- Helper function to get all current filter values as URL parameters ---
+    function getCurrentFilters() {
+        const params = new URLSearchParams();
+        params.append('start_date', startDateInput.value);
+        params.append('end_date', endDateInput.value);
+        
+        // Append all selected employee IDs
+        for (const option of employeeSelect.selectedOptions) {
+            params.append('employees', option.value);
+        }
+        return params.toString();
+    }
+    
+    // --- Date Filter UI Logic ---
+    function toggleDateInputs() {
+        const isCustom = periodSelect.value === 'custom';
+        startDateInput.disabled = !isCustom;
+        endDateInput.disabled = !isCustom;
+    }
+    periodSelect.addEventListener('change', toggleDateInputs);
+    toggleDateInputs(); // Run on page load
+
+    // --- AJAX for Stat Cards ---
+    const detailsContainer = document.getElementById('activity-details-container');
     document.querySelectorAll('.clickable-card').forEach(card => {
         card.addEventListener('click', async function() {
             const filterType = this.dataset.filterType;
             detailsContainer.innerHTML = '<div class="card card-body text-center">Loading details...</div>';
 
-            const startDate = "{{ start_date|date:'Y-m-d' }}";
-            const endDate = "{{ end_date|date:'Y-m-d' }}";
-            const url = `{% url 'get_filtered_activity_list' %}?list_type=${filterType}&start_date=${startDate}&end_date=${endDate}`;
+            const filterParams = getCurrentFilters();
+            const url = `{% url 'get_filtered_activity_list' %}?list_type=${filterType}&${filterParams}`;
 
             try {
                 const response = await fetch(url);
@@ -282,50 +185,53 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
-
+    
+    // --- Close button for AJAX-loaded table ---
     document.addEventListener('click', function(event) {
         if (event.target && event.target.id === 'close-details-table') {
             detailsContainer.innerHTML = '';
         }
     });
 
+    // --- AJAX for Expanding Employee Details ---
+    const chartInstances = {};
     document.querySelectorAll('.employee-row').forEach(row => {
         row.addEventListener('click', async function () {
             const employeeId = this.dataset.employeeId;
-            const employeeName = this.dataset.employeeName;
             const detailsRow = document.getElementById(`details-for-${employeeId}`);
-            const candidateContainer = detailsRow.querySelector('.candidate-list-container');
-            
-            const activityChartContainer = detailsRow.querySelector(`#activity-chart-for-${employeeId}`);
-            const leadsChartContainer = detailsRow.querySelector(`#leads-chart-for-${employeeId}`);
-            const activityChartTitle = detailsRow.querySelector(`#activity-chart-title-for-${employeeId}`);
-            const leadsChartTitle = detailsRow.querySelector(`#leads-chart-title-for-${employeeId}`);
-            
             const isVisible = detailsRow.style.display === 'table-row';
-            detailsRow.style.display = isVisible ? 'none' : 'table-row';
-            this.classList.toggle('active', !isVisible);
 
+            // Close all other details rows first
+            document.querySelectorAll('.candidate-details-row').forEach(r => r.style.display = 'none');
+            document.querySelectorAll('.employee-row').forEach(r => r.classList.remove('active'));
+
+            // Toggle the clicked row
+            detailsRow.style.display = isVisible ? 'none' : 'table-row';
+            if (!isVisible) {
+                this.classList.add('active');
+            }
+
+            const candidateContainer = detailsRow.querySelector('.candidate-list-container');
             if (!isVisible && candidateContainer.innerHTML.trim() === '') {
                 candidateContainer.innerHTML = '<div class="text-center p-4">Loading details...</div>';
-                activityChartTitle.innerText = `Activity Trend for ${employeeName}`;
-                leadsChartTitle.innerText = `Lead Gen Trend for ${employeeName}`;
-
-                const startDate = "{{ start_date|date:'Y-m-d' }}";
-                const endDate = "{{ end_date|date:'Y-m-d' }}";
-                const url = `{% url 'get_employee_candidates' %}?employee_id=${employeeId}&start_date=${startDate}&end_date=${endDate}`;
+                
+                const filterParams = getCurrentFilters();
+                const url = `{% url 'get_employee_candidates' %}?employee_id=${employeeId}&${filterParams}`;
                 
                 try {
                     const response = await fetch(url);
                     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                    
                     const result = await response.json();
                     candidateContainer.innerHTML = result.html;
 
+                    // Render charts
                     if (chartInstances[employeeId]) {
                         chartInstances[employeeId].activity.destroy();
                         chartInstances[employeeId].leads.destroy();
                     }
-
+                    const activityChartContainer = detailsRow.querySelector(`#activity-chart-for-${employeeId}`);
+                    const leadsChartContainer = detailsRow.querySelector(`#leads-chart-for-${employeeId}`);
+                    
                     const empActivityChart = new ApexCharts(activityChartContainer, getBaseChartOptions(result.activity_chart_data.labels, result.activity_chart_data.data, 'Activities', ['#206bc4']));
                     empActivityChart.render();
 
@@ -340,373 +246,32 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
-});
-</script>
 
 
- <style>
-        .notification-container {
-          position: fixed;
-          /* bottom: 20px;
-          right: 20px; */
-          z-index: 9999;
-          display: flex;
-          flex-direction: column-reverse;
-          gap: 15px;
-          max-height: calc(100vh - 40px);
-          overflow-y: auto;
-        }
+    // =========================================================================
+    // Chart Rendering (Original Code)
+    // =========================================================================
+    function getBaseChartOptions(labels, seriesData, chartTitle, colors) {
+        return {
+            chart: { type: 'area', height: 300, zoom: { enabled: false }, toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } } },
+            colors: colors, series: [{ name: chartTitle, data: seriesData }], labels: labels,
+            xaxis: { type: 'category', labels: { rotate: -45, rotateAlways: false, hideOverlappingLabels: true, trim: true, style: { fontSize: '10px' } } },
+            yaxis: { min: 0, tickAmount: 5, labels: { formatter: (val) => val.toFixed(0) } },
+            dataLabels: { enabled: false }, stroke: { curve: 'smooth', width: 2 },
+            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
+            tooltip: { theme: 'dark' }
+        };
+    }
 
-        .notification-card {
-          background: white;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-          width: 350px;
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          animation: slideIn 0.3s ease-out;
-          transform-origin: right bottom;
-        }
-
-        @keyframes slideIn {
-          from { transform: translateX(100%) scale(0.9); opacity: 0; }
-          to { transform: translateX(0) scale(1); opacity: 1; }
-        }
-
-        .notification-header {
-          padding: 12px 16px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          border-radius: 8px 8px 0 0;
-          color: white;
-        }
-
-        .followup-header { background: #4a6bdf; }
-        .interview-header { background: #ff9800; }
-        .notification-title { margin: 0; font-size: 16px; font-weight: 600; }
-        .notification-close { background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0; line-height: 1; }
-        .notification-body { padding: 16px; color: #333; }
-        .notification-details { margin-top: 12px; background: #f8f9fa; padding: 12px; border-radius: 6px; }
-        .detail-label { font-weight: 600; color: #555; display: inline-block; width: 100px; }
-        .detail-value { color: #222; }
-        .notification-footer { display: flex; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid #eee; gap: 8px; }
-        .notification-btn { padding: 8px 16px; border-radius: 4px; font-size: 14px; cursor: pointer; text-decoration: none; border: none; transition: all 0.2s; }
-        .notification-btn.primary { background: #4a6bdf; color: white; }
-        .notification-btn.warning { background: #ff9800; color: white; }
-        .notification-btn.secondary { background: #f0f0f0; color: #333; }
-        .notification-btn.danger { background: #f44336; color: white; }
-        .notification-container::-webkit-scrollbar { width: 6px; }
-        .notification-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
-        .notification-container::-webkit-scrollbar-track { background: transparent; }
-    </style>
-    <div class="notification-container" id="notificationContainer"></div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Notification system setup
-            const notificationContainer = document.getElementById('notificationContainer');
-            let activeNotifications = new Set();
-            let notificationQueue = [];
-            let isProcessingQueue = false;
-
-            // Load snoozed notifications from localStorage
-            let snoozedNotifications = JSON.parse(localStorage.getItem('snoozedNotifications')) || {};
-
-            // Clean up expired snoozes on load
-            const now = Date.now();
-            for (const id in snoozedNotifications) {
-                if (snoozedNotifications[id] < now) {
-                    delete snoozedNotifications[id];
-                }
-            }
-            localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
-
-            // Audio elements
-            const followUpSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-            const interviewSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-            followUpSound.volume = 0.5;
-            interviewSound.volume = 0.5;
-
-            // ===== FOLLOW UP NOTIFICATIONS =====
-            const followUpRows = document.querySelectorAll('.followup-row');
-            let followUpAlarmIntervals = {};
-
-            // ===== INTERVIEW NOTIFICATIONS =====
-            const interviewRows = document.querySelectorAll('.interview-row');
-            let interviewAlarmIntervals = {};
-
-            // ===== COMMON NOTIFICATION FUNCTIONS =====
-            function isValidNotification(data) {
-                const requiredFields = ['id', 'candidateName', 'time'];
-                return requiredFields.every(field =>
-                    data[field] !== undefined &&
-                    data[field] !== null &&
-                    data[field].toString().trim() !== ''
-                );
-            }
-
-            function createNotificationCard(type, data) {
-                if (!isValidNotification(data)) {
-                    console.log('Invalid notification data:', data);
-                    return null;
-                }
-
-                const notificationId = 'notification-' + Date.now() + '-' + data.id;
-                const headerClass = type === 'followup' ? 'followup-header' : 'interview-header';
-                const btnClass = type === 'followup' ? 'primary' : 'warning';
-
-                const card = document.createElement('div');
-                card.className = 'notification-card';
-                card.id = notificationId;
-
-                if (type === 'followup') {
-                    card.innerHTML = `
-                        <div class="notification-header ${headerClass}">
-                            <h5 class="notification-title">⏰ Follow Up Reminder</h5>
-                            <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">×</button>
-                        </div>
-                        <div class="notification-body">
-                            <p>It's time for your follow up with <strong>${data.candidateName}</strong></p>
-                            <div class="notification-details">
-                                <div><span class="detail-label">Unique Code:</span> <span class="detail-value">${data.uniqueCode || '-'}</span></div>
-                                <div><span class="detail-label">Mobile:</span> <span class="detail-value">${data.mobile || '-'}</span></div>
-                                <div><span class="detail-label">Follow Up Time:</span> <span class="detail-value">${data.time}</span></div>
-                            </div>
-                        </div>
-                        <div class="notification-footer">
-                            <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'followup')">Snooze (5 min)</button>
-                            <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'followup')">Close</button>
-                            <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'followup'); removeNotification('${notificationId}', '${data.id}', 'followup')">View Details</a>
-                        </div>
-                    `;
-                } else { // Interview
-                    card.innerHTML = `
-                        <div class="notification-header ${headerClass}">
-                            <h5 class="notification-title">🎤 Interview Alert</h5>
-                            <button type="button" class="notification-close" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">×</button>
-                        </div>
-                        <div class="notification-body">
-                            <p>Interview with <strong>${data.candidateName}</strong> is scheduled in 15 minutes!</p>
-                            <div class="notification-details">
-                                <div><span class="detail-label">Time:</span> <span class="detail-value">${data.time}</span></div>
-                                <div><span class="detail-label">Location:</span> <span class="detail-value">${data.location || 'Not specified'}</span></div>
-                                ${data.position ? `<div><span class="detail-label">Position:</span> <span class="detail-value">${data.position}</span></div>` : ''}
-                            </div>
-                        </div>
-                        <div class="notification-footer">
-                            <button class="notification-btn secondary" onclick="snoozeNotification('${notificationId}', '${data.id}', 'interview')">Snooze (5 min)</button>
-                            <button class="notification-btn secondary" onclick="removeNotification('${notificationId}', '${data.id}', 'interview')">Close</button>
-                            <a href="${data.viewLink || '#'}" class="notification-btn ${btnClass}" onclick="stopNotificationAlarm('${data.id}', 'interview'); removeNotification('${notificationId}', '${data.id}', 'interview')">View Details</a>
-                        </div>
-                    `;
-                }
-                return { card, notificationId, id: data.id, type };
-            }
-
-            function showNotification(type, data) {
-                // Check if this notification is currently snoozed
-                if (snoozedNotifications[data.id] && snoozedNotifications[data.id] > Date.now()) {
-                    return;
-                }
-
-                const notification = createNotificationCard(type, data);
-                if (!notification) return;
-
-                const { card, notificationId, id } = notification;
-                notificationContainer.prepend(card);
-                activeNotifications.add(notificationId);
-
-                // Play appropriate sound
-                const sound = type === 'followup' ? followUpSound : interviewSound;
-                sound.currentTime = 0;
-                sound.play().catch(error => console.log('Error playing sound:', error));
-
-                // Auto-remove after timeout
-                const timeout = type === 'followup' ? 60000 : 30000;
-                setTimeout(() => {
-                    if (activeNotifications.has(notificationId)) {
-                        removeNotification(notificationId, id, type);
-                    }
-                }, timeout);
-            }
-
-            function processQueue() {
-                if (notificationQueue.length === 0 || isProcessingQueue) return;
-
-                isProcessingQueue = true;
-                const { type, data } = notificationQueue.shift();
-                showNotification(type, data);
-
-                setTimeout(() => {
-                    isProcessingQueue = false;
-                    if (notificationQueue.length > 0) {
-                        processQueue();
-                    }
-                }, 1000);
-            }
-
-            // ===== GLOBAL FUNCTIONS =====
-            window.removeNotification = function(notificationId, id, type) {
-                const notification = document.getElementById(notificationId);
-                if (notification) {
-                    notification.style.animation = 'slideIn 0.3s ease-out reverse';
-                    setTimeout(() => {
-                        notification.remove();
-                        activeNotifications.delete(notificationId);
-                    }, 250);
-                }
-
-                if (type === 'interview') {
-                    stopNotificationSound('interview');
-                }
-            };
-
-            window.snoozeNotification = function(notificationId, id, type) {
-                window.stopNotificationSound(type);
-                window.removeNotification(notificationId, id, type);
-                snoozedNotifications[id] = Date.now() + (5 * 60 * 1000);
-                localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
-                setTimeout(() => {
-                    delete snoozedNotifications[id];
-                    localStorage.setItem('snoozedNotifications', JSON.stringify(snoozedNotifications));
-                }, 5 * 60 * 1000);
-            };
-
-            window.stopNotificationAlarm = function(id, type) {
-                if (type === 'followup' && followUpAlarmIntervals[id]) {
-                    clearInterval(followUpAlarmIntervals[id]);
-                    delete followUpAlarmIntervals[id];
-                } else if (type === 'interview' && interviewAlarmIntervals[id]) {
-                    clearInterval(interviewAlarmIntervals[id]);
-                    delete interviewAlarmIntervals[id];
-                }
-            };
-
-            window.stopNotificationSound = function(type) {
-                const sound = type === 'followup' ? followUpSound : interviewSound;
-                sound.pause();
-                sound.currentTime = 0;
-            };
-
-            // ===== COMBINED TIME CHECK =====
-            function checkAllNotifications() {
-                const now = new Date();
-                const currentDate = now.toISOString().split('T')[0];
-                const currentTime = now.getHours() * 60 + now.getMinutes();
-                followUpRows.forEach(row => {
-                    const followUpDate = row.dataset.date;
-                    const followUpTime = row.querySelector('.followup-time').getAttribute('data-time');
-                    const [hours, minutes] = followUpTime.split(':').map(Number);
-                    const followUpDateTime = hours * 60 + minutes;
-                    const followUpId = row.dataset.followupId;
-
-                    if (followUpDate === currentDate) {
-                        const timeUntilFollowUp = followUpDateTime - currentTime;
-                        if (timeUntilFollowUp > 0 && timeUntilFollowUp <= 30) {
-                            if (!followUpAlarmIntervals[followUpId] && !(snoozedNotifications[followUpId] && snoozedNotifications[followUpId] > Date.now())) {
-                                const data = {
-                                    id: followUpId,
-                                    candidateName: row.cells[0].textContent,
-                                    uniqueCode: row.cells[1].textContent.trim(),
-                                    mobile: row.cells[2].textContent,
-                                    time: row.querySelector('.followup-time').textContent,
-                                    viewLink: row.querySelector('a')?.href
-                                };
-                                if (isValidNotification(data)) {
-                                    notificationQueue.push({ type: 'followup', data });
-                                    followUpAlarmIntervals[followUpId] = setInterval(() => {
-                                        notificationQueue.push({ type: 'followup', data });
-                                    }, 5 * 60 * 1000);
-                                }
-                            }
-                        }
-                    }
-                });
-                interviewRows.forEach(row => {
-                    const interviewDate = row.dataset.date;
-                    const interviewTimeStr = row.querySelector('.interview-time').getAttribute('data-time');
-                    const [hours, minutes] = interviewTimeStr.split(':').map(Number);
-                    const interviewTime = hours * 60 + minutes;
-                    const timeUntilInterview = interviewTime - currentTime;
-                    const interviewId = row.dataset.interviewId;
-
-                    if (interviewDate === currentDate) {
-                        if (timeUntilInterview > 0 && timeUntilInterview <= 15) {
-                            if (!interviewAlarmIntervals[interviewId] && !(snoozedNotifications[interviewId] && snoozedNotifications[interviewId] > Date.now())) {
-                                const data = {
-                                    id: interviewId,
-                                    candidateName: row.cells[0].textContent,
-                                    time: row.querySelector('.interview-time').textContent,
-                                    location: row.cells[4]?.textContent || 'Not specified',
-                                    position: row.cells[3]?.textContent,
-                                    viewLink: row.querySelector('a')?.href
-                                };
-
-                                if (isValidNotification(data)) {
-                                    notificationQueue.push({ type: 'interview', data });
-                                    interviewAlarmIntervals[interviewId] = setInterval(() => {
-                                        notificationQueue.push({ type: 'interview', data });
-                                    }, 5 * 60 * 1000);
-                                }
-                            }
-                        }
-                    }
-                });
-                processQueue();
-            }
-            setInterval(checkAllNotifications, 60 * 1000);
-            checkAllNotifications();
-        });
-    </script>
-
-    
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const table = document.getElementById('activity-table');
-    if (!table) return; // Exit if the table doesn't exist
-
-    const tbody = table.querySelector('tbody');
-    const rows = tbody.querySelectorAll('tr');
-    const columnCount = table.querySelector('thead tr').children.length;
-    const timeGapThreshold = 20; // Time difference in minutes
-
-    // Loop through rows from the second one to the end
-    for (let i = 1; i < rows.length; i++) {
-        const currentRow = rows[i];
-        const previousRow = rows[i - 1];
-
-        // Get the timestamp cells. Make sure they exist before proceeding.
-        const currentTimeCell = currentRow.querySelector('.activity-timestamp');
-        const previousTimeCell = previousRow.querySelector('.activity-timestamp');
-
-        if (currentTimeCell && previousTimeCell) {
-            // Parse the text content into Date objects
-            const previousTime = new Date(previousTimeCell.textContent);
-            const currentTime = new Date(currentTimeCell.textContent);
-
-            // Calculate the difference in minutes
-            const diffMs = previousTime - currentTime; // Difference in milliseconds
-            const diffMinutes = Math.abs(diffMs / (1000 * 60));
-
-            // If the difference is greater than the threshold, insert a separator
-            if (diffMinutes > timeGapThreshold) {
-                const separatorRow = document.createElement('tr');
-                const separatorCell = document.createElement('td');
-                
-                separatorCell.setAttribute('colspan', columnCount);
-                separatorCell.innerHTML = '|'; // The separator character
-                separatorCell.style.textAlign = 'center';
-                separatorCell.style.border = 'none';
-                separatorCell.style.padding = '4px 0';
-                separatorCell.style.color = '#adb5bd'; // A muted color
-
-                separatorRow.appendChild(separatorCell);
-
-                // Insert the new separator row before the current row
-                tbody.insertBefore(separatorRow, currentRow);
-            }
-        }
+    if (document.querySelector("#mainActivityChart")) {
+        const mainActivityChart = new ApexCharts(document.querySelector("#mainActivityChart"), getBaseChartOptions({{ main_chart_labels|safe }}, {{ main_chart_data|safe }}, 'Total Activities', ['#206bc4']));
+        mainActivityChart.render();
+    }
+    if (document.querySelector("#mainLeadsChart")) {
+        const mainLeadsChart = new ApexCharts(document.querySelector("#mainLeadsChart"), getBaseChartOptions({{ leads_chart_labels|safe }}, {{ leads_chart_data|safe }}, 'Leads Generated', ['#f59f00']));
+        mainLeadsChart.render();
     }
 });
 </script>
 
-    {% endblock %}
+{% endblock %}
