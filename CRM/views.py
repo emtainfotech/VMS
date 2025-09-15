@@ -4993,6 +4993,12 @@ from django.template.loader import render_to_string
 # ===================================================================================
 # == HELPER FUNCTION (Used by multiple views)
 # ===================================================================================
+# Make sure these imports are at the top of your views.py
+import calendar
+from datetime import datetime, timedelta
+from django.db.models import Count
+from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
+
 def _get_chart_data(queryset, start_date, end_date):
     chart_labels = []
     chart_data = []
@@ -5002,9 +5008,12 @@ def _get_chart_data(queryset, start_date, end_date):
     if time_delta.days < 1:
         data_by_time = queryset.annotate(hour=TruncHour('timestamp')).values('hour').annotate(count=Count('id')).order_by('hour')
         time_counts = {i: 0 for i in range(24)}
-        for group in data_by_time: time_counts[group['hour'].hour] = group['count']
+        for group in data_by_time:
+            if group['hour']:
+                time_counts[group['hour'].hour] = group['count']
         chart_labels = [f"{hour}:00" for hour in time_counts.keys()]
         chart_data = list(time_counts.values())
+
     # Daily view (for up to 2 weeks)
     elif time_delta.days <= 14:
         data_by_time = queryset.annotate(date=TruncDate('timestamp')).values('date').annotate(count=Count('id')).order_by('date')
@@ -5014,6 +5023,7 @@ def _get_chart_data(queryset, start_date, end_date):
                 time_counts[group['date']] = group['count']
         chart_labels = [day.strftime('%a, %b %d') for day in time_counts.keys()]
         chart_data = list(time_counts.values())
+
     # Weekly view (for up to 3 months)
     elif time_delta.days <= 92:
         data_by_time = queryset.annotate(week=TruncWeek('timestamp')).values('week').annotate(count=Count('id')).order_by('week')
@@ -5023,35 +5033,45 @@ def _get_chart_data(queryset, start_date, end_date):
             time_counts[current_date] = 0
             current_date += timedelta(weeks=1)
         for group in data_by_time:
-            if group['week'] in time_counts: time_counts[group['week']] = group['count']
+            if group['week'] in time_counts:
+                time_counts[group['week']] = group['count']
         chart_labels = [week_start.strftime('Week of %b %d') for week_start in time_counts.keys()]
         chart_data = list(time_counts.values())
+
     # Monthly view (for > 3 months)
     else:
-        # --- THIS ENTIRE BLOCK IS REWRITTEN ---
-        data_by_month = queryset.annotate(month=TruncMonth('timestamp')).values('month').annotate(count=Count('id')).order_by('month')
+        # --- NEW, MORE ROBUST LOGIC ---
+        # 1. Get counts from the database, grouped by the first day of the month.
+        data_by_month = queryset.annotate(
+            month_start=TruncMonth('timestamp')
+        ).values('month_start').annotate(
+            count=Count('id')
+        ).order_by('month_start')
+
+        # 2. Store the database results in a simple dictionary with string keys ('YYYY-MM') for easy lookup.
+        db_counts = {
+            group['month_start'].strftime('%Y-%m'): group['count']
+            for group in data_by_month if group['month_start']
+        }
+
+        # 3. Generate a complete list of all months in the selected date range. This ensures no gaps.
+        all_months_in_range = []
+        current_month_start = start_date.replace(day=1)
+        while current_month_start <= end_date:
+            all_months_in_range.append(current_month_start)
+            # Manually calculate the next month to avoid external libraries
+            year, month = current_month_start.year, current_month_start.month
+            if month == 12:
+                current_month_start = current_month_start.replace(year=year + 1, month=1)
+            else:
+                current_month_start = current_month_start.replace(month=month + 1)
         
-        # Create a dictionary to hold counts for each month in the range
-        time_counts = {}
-        current_month = start_date.replace(day=1)
-        while current_month <= end_date:
-            time_counts[current_month] = 0
-            current_month += relativedelta(months=1)
-            
-        # Populate the dictionary with actual counts from the database
-        for group in data_by_month:
-            month_key = group['month']
-            if month_key in time_counts:
-                time_counts[month_key] = group['count']
-                
-        # Create labels and data, ensuring correct order and format
-        chart_labels = [month.strftime('%b %Y') for month in time_counts.keys()]
-        chart_data = list(time_counts.values())
+        # 4. Create the final chart labels and data by looking up values from our dictionary.
+        chart_labels = [month.strftime('%b %Y') for month in all_months_in_range]
+        chart_data = [db_counts.get(month.strftime('%Y-%m'), 0) for month in all_months_in_range]
 
     return chart_labels, chart_data
-
-
-# ===================================================================================
+# ==================================================================
 # == MAIN DASHBOARD VIEW (UPDATED)
 # ===================================================================================
 @login_required(login_url='/crm/404/')

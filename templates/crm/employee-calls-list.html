@@ -36,46 +36,47 @@
     <div class="page-body">
         <div class="container-xl">
             <div class="card card-body mb-4">
-                <form method="get" action="{% url 'admin_calls_list' %}" id="main-filter-form">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-4">
-                            <label class="form-label">Filter by Employee(s)</label>
-                            <select name="employees" id="employee_filter" multiple>
-                                <option value="all">All Employees</option>
-                                {% for employee in all_employees %}
-                                    <option value="{{ employee.id }}" {% if employee.id in selected_employee_ids %}selected{% endif %}>
-                                        {{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="col-md-2">
-                            <label class="form-label">Period</label>
-                            <select name="period" id="period_filter" class="form-select">
-                                <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
-                                <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
-                                <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
-                                <option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option>
-                                <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-2">
-                            <label class="form-label">Start Date</label>
-                            <input type="date" name="start_date" id="start_date_filter" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">End Date</label>
-                            <input type="date" name="end_date" id="end_date_filter" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
-                        </div>
-
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
-                        </div>
-                    </div>
-                </form>
+    <form method="get" action="{% url 'admin_calls_list' %}" id="main-filter-form">
+        <div class="row g-3 align-items-end">
+            
+            <div class="col-md-4">
+                <label class="form-label">Filter by Employee(s)</label>
+                <select name="employees" id="employee_filter" multiple>
+                    <option value="all">All Employees</option>
+                    {% for employee in all_employees %}
+                        <option value="{{ employee.id }}" {% if employee.id in selected_employee_ids %}selected{% endif %}>
+                            {{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})
+                        </option>
+                    {% endfor %}
+                </select>
             </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Period</label>
+                <select name="period" id="period_filter" class="form-select">
+                    <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
+                    <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
+                    <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
+                    <option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option>
+                    <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Start Date</label>
+                <input type="date" name="start_date" id="start_date_filter" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">End Date</label>
+                <input type="date" name="end_date" id="end_date_filter" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+            </div>
+        </div>
+    </form>
+</div>
             
             <div class="row g-4 mb-4">
                 <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="total"><div class="card"><div class="card-body text-center"><div class="h1 mb-3">{{ total_stats.total_activities }}</div><div class="text-muted">Total Calls</div></div></div></div>
@@ -149,40 +150,63 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     
-    // --- Initialize Tom Select for a better multi-select UI ---
-    let employeeSelect = new TomSelect('#employee_filter', {
-        plugins: ['remove_button'],
-        onItemAdd: function(value, item) {
-            if (value !== 'all' && this.items.includes('all')) {
-                this.removeItem('all', true);
-            }
-            if (value === 'all' && this.items.length > 1) {
-                let currentItems = [...this.items];
-                currentItems.forEach(itemId => {
-                    if (itemId !== 'all') {
-                        this.removeItem(itemId, true);
-                    }
-                });
-            }
-        },
-    });
+    // --- Initialize Tom Select (if the element exists) ---
+    const employeeFilterElement = document.getElementById('employee_filter');
+    if (employeeFilterElement) {
+        let employeeSelect = new TomSelect('#employee_filter', {
+            plugins: ['remove_button'],
+            onItemAdd: function(value, item) {
+                if (value !== 'all' && this.items.includes('all')) {
+                    this.removeItem('all', true);
+                }
+                if (value === 'all' && this.items.length > 1) {
+                    let currentItems = [...this.items];
+                    currentItems.forEach(itemId => {
+                        if (itemId !== 'all') {
+                            this.removeItem(itemId, true);
+                        }
+                    });
+                }
+            },
+        });
 
-    if ({{ selected_employee_ids|length }} === 0) {
-        employeeSelect.addItem('all', true);
+        if ({{ selected_employee_ids|length }} === 0) {
+            employeeSelect.addItem('all', true);
+        }
     }
     
-    // --- General Filter and AJAX Logic ---
+    // --- General Filter and AJAX Logic with safety checks ---
     const periodSelect = document.getElementById('period_filter');
     const startDateInput = document.getElementById('start_date_filter');
     const endDateInput = document.getElementById('end_date_filter');
 
+    function toggleDateInputs() {
+        // This function will only run if all date-related elements exist
+        if (periodSelect && startDateInput && endDateInput) {
+            const isCustom = periodSelect.value === 'custom';
+            startDateInput.disabled = !isCustom;
+            endDateInput.disabled = !isCustom;
+        }
+    }
+
+    // Add event listener only if the period select element exists
+    if (periodSelect) {
+        periodSelect.addEventListener('change', toggleDateInputs);
+        toggleDateInputs(); // Run on page load
+    }
+
     function getCurrentFilters() {
         const params = new URLSearchParams();
-        params.append('start_date', startDateInput.value);
-        params.append('end_date', endDateInput.value);
+        if (startDateInput && endDateInput) {
+            params.append('start_date', startDateInput.value);
+            params.append('end_date', endDateInput.value);
+        }
         
-        for (const value of employeeSelect.items) {
-            params.append('employees', value);
+        const tomSelectInstance = employeeFilterElement ? employeeFilterElement.tomselect : null;
+        if (tomSelectInstance) {
+            for (const value of tomSelectInstance.items) {
+                params.append('employees', value);
+            }
         }
         return params.toString();
     }
