@@ -4980,43 +4980,9 @@ def admin_assign_candidate(request) :
 
 
 
-# crm/views.py
-
-# from django.shortcuts import render, get_object_or_404
-# from django.utils import timezone
-# from datetime import timedelta, datetime
-# from django.db.models import Count, Max, Q
-# from .models import Employee, Candidate_registration, CandidateActivity # Make sure to import your Employee model
-# from django.http import HttpResponse
-# from django.template.loader import render_to_string
-
-# crm/views.py
-
-# from django.shortcuts import render, get_object_or_404
-# from django.utils import timezone
-# from datetime import timedelta, datetime
-# from django.db.models import Count, Max, Q
-from django.db.models.functions import TruncDate
-from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMonth, Coalesce
-# from django.db.models import , IntegerField
-# from .models import Employee, Candidate_registration, CandidateActivity
-# from django.http import JsonResponse
-# from django.template.loader import render_to_string
-# UPDATED: Helper function can now accept an extra filter
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
-from django.template.loader import render_to_string
-from django.utils import timezone
-from datetime import timedelta, datetime, date
-import calendar
-from django.db.models import Count, Max, Q, Subquery, OuterRef, IntegerField
-from django.db.models.functions import TruncDate, TruncHour, TruncWeek, TruncMonth, Coalesce
-# from .models import Employee, CandidateActivity, Candidate_registration
-# ===================================================================================
-# == HELPER FUNCTION (Used by multiple views)
-# ===================================================================================
 import calendar
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta # Make sure to add this import
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -5024,24 +4990,22 @@ from django.db.models import Count, Max, Q
 from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
 from django.http import JsonResponse
 from django.template.loader import render_to_string
-
-# Assuming your models are imported correctly
-# from .models import Employee, CandidateActivity, Candidate_registration, Candidate_Interview
-
 # ===================================================================================
-# == HELPER FUNCTION (Unchanged)
+# == HELPER FUNCTION (Used by multiple views)
 # ===================================================================================
 def _get_chart_data(queryset, start_date, end_date):
     chart_labels = []
     chart_data = []
     time_delta = end_date - start_date
 
+    # Daily view (for a single day)
     if time_delta.days < 1:
         data_by_time = queryset.annotate(hour=TruncHour('timestamp')).values('hour').annotate(count=Count('id')).order_by('hour')
         time_counts = {i: 0 for i in range(24)}
         for group in data_by_time: time_counts[group['hour'].hour] = group['count']
         chart_labels = [f"{hour}:00" for hour in time_counts.keys()]
         chart_data = list(time_counts.values())
+    # Daily view (for up to 2 weeks)
     elif time_delta.days <= 14:
         data_by_time = queryset.annotate(date=TruncDate('timestamp')).values('date').annotate(count=Count('id')).order_by('date')
         time_counts = {start_date + timedelta(days=i): 0 for i in range((end_date - start_date).days + 1)}
@@ -5050,6 +5014,7 @@ def _get_chart_data(queryset, start_date, end_date):
                 time_counts[group['date']] = group['count']
         chart_labels = [day.strftime('%a, %b %d') for day in time_counts.keys()]
         chart_data = list(time_counts.values())
+    # Weekly view (for up to 3 months)
     elif time_delta.days <= 92:
         data_by_time = queryset.annotate(week=TruncWeek('timestamp')).values('week').annotate(count=Count('id')).order_by('week')
         time_counts = {}
@@ -5061,28 +5026,42 @@ def _get_chart_data(queryset, start_date, end_date):
             if group['week'] in time_counts: time_counts[group['week']] = group['count']
         chart_labels = [week_start.strftime('Week of %b %d') for week_start in time_counts.keys()]
         chart_data = list(time_counts.values())
+    # Monthly view (for > 3 months)
     else:
-        data_by_time = queryset.annotate(month=TruncMonth('timestamp')).values('month').annotate(count=Count('id')).order_by('month')
-        time_counts = {i: 0 for i in range(1, 13)}
-        for group in data_by_time: time_counts[group['month'].month] = group['count']
-        chart_labels = [calendar.month_name[i] for i in range(1, 13)]
+        # --- THIS ENTIRE BLOCK IS REWRITTEN ---
+        data_by_month = queryset.annotate(month=TruncMonth('timestamp')).values('month').annotate(count=Count('id')).order_by('month')
+        
+        # Create a dictionary to hold counts for each month in the range
+        time_counts = {}
+        current_month = start_date.replace(day=1)
+        while current_month <= end_date:
+            time_counts[current_month] = 0
+            current_month += relativedelta(months=1)
+            
+        # Populate the dictionary with actual counts from the database
+        for group in data_by_month:
+            month_key = group['month']
+            if month_key in time_counts:
+                time_counts[month_key] = group['count']
+                
+        # Create labels and data, ensuring correct order and format
+        chart_labels = [month.strftime('%b %Y') for month in time_counts.keys()]
         chart_data = list(time_counts.values())
+
     return chart_labels, chart_data
 
 
 # ===================================================================================
-# == MAIN DASHBOARD VIEW (Updated)
+# == MAIN DASHBOARD VIEW (UPDATED)
 # ===================================================================================
 @login_required(login_url='/crm/404/')
 def employee_calls_list(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
     
-    # --- Filter Processing ---
     period = request.GET.get('period', 'today')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
-    # CHANGED: Now using 'employees' to match the form, supporting multiple selections
     selected_employee_ids = request.GET.getlist('employees') 
     
     today = timezone.now().date()
@@ -5102,18 +5081,17 @@ def employee_calls_list(request):
     elif period == 'year':
         start_date = today.replace(month=1, day=1)
         end_date = today.replace(month=12, day=31)
-    else: # 'today' or default
+    else:
         start_date = end_date = today
         period = 'today'
 
-    # --- Base Querysets ---
     all_employees = Employee.objects.all().order_by('first_name')
     employee_queryset = Employee.objects.all()
-    # UPDATED: Filter the main employee queryset if any employees are selected
-    if selected_employee_ids:
+    
+    apply_employee_filter = selected_employee_ids and 'all' not in selected_employee_ids
+    if apply_employee_filter:
         employee_queryset = employee_queryset.filter(id__in=selected_employee_ids)
 
-    # --- Employee Stats Calculation ---
     base_activity_filter = Q(candidateactivity__timestamp__date__range=[start_date, end_date], candidateactivity__action__in=['call_made', 'created'], candidateactivity__employee__isnull=False)
     connected_filter = Q(Q(candidateactivity__action='call_made', candidateactivity__changes__call_connection__new__iexact='Connected') | Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected'))
     
@@ -5137,12 +5115,10 @@ def employee_calls_list(request):
         hot_leads_count = hot_leads + converted_leads
         stat.conversion_percentage = round((converted_leads / hot_leads_count) * 100) if hot_leads_count > 0 else 0
 
-    # --- Total Stats Calculation ---
     all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created'], employee__isnull=False)
     selections_queryset = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date])
 
-    # UPDATED: Apply employee filter to total stats queries
-    if selected_employee_ids:
+    if apply_employee_filter:
         all_activities_queryset = all_activities_queryset.filter(employee_id__in=selected_employee_ids)
         selections_queryset = selections_queryset.filter(updated_by_id__in=selected_employee_ids)
 
@@ -5157,7 +5133,6 @@ def employee_calls_list(request):
     )
     total_stats = {**total_stats_agg, 'total_leads_generated': total_leads_generated_count, 'total_selections': total_selections_count}
 
-    # --- Chart Data Calculation ---
     unique_lead_activities = all_activities_queryset.filter(lead_transition_filter)
     unique_leads_dict = {}
     for activity in unique_lead_activities.order_by('timestamp'):
@@ -5167,17 +5142,21 @@ def employee_calls_list(request):
     main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date)
     leads_chart_labels, leads_chart_data = _get_chart_data(unique_leads_queryset, start_date, end_date)
     
-    # --- Today's Schedule Calculation ---
-    interview_detail_reg = Candidate_Interview.objects.filter(interview_date_time__date=today, status__in=['scheduled', 'rescheduled'])
-    follow_up_candidates_reg = Candidate_registration.objects.filter(next_follow_up_date_time__date=today)
+    interview_detail_qs = Candidate_Interview.objects.filter(
+        interview_date_time__date__range=[start_date, end_date], 
+        status__in=['scheduled', 'rescheduled']
+    )
+    follow_up_candidates_qs = Candidate_registration.objects.filter(
+        next_follow_up_date_time__date__range=[start_date, end_date]
+    )
 
-    # UPDATED: Filter today's items by selected employees as well
-    if selected_employee_ids:
-        interview_detail_reg = interview_detail_reg.filter(candidate__employee_name__in=selected_employee_ids)
-        follow_up_candidates_reg = follow_up_candidates_reg.filter(employee_name__in=selected_employee_ids)
+    # NOTE: The problematic filter lines have been removed from this section.
+    # When you provide the model definitions, we can add the correct filter back in.
+    if apply_employee_filter:
+        pass # No filter applied here for now
 
-    interview_detail = sorted(list(interview_detail_reg), key=lambda x: x.interview_date_time)
-    follow_up_candidates = sorted(list(follow_up_candidates_reg), key=lambda x: x.next_follow_up_date_time)
+    interview_detail = sorted(list(interview_detail_qs), key=lambda x: x.interview_date_time)
+    follow_up_candidates = sorted(list(follow_up_candidates_qs), key=lambda x: x.next_follow_up_date_time)
 
     context = {
         'employee_stats': employee_stats, 'period': period, 'start_date': start_date, 'end_date': end_date,
@@ -5185,16 +5164,11 @@ def employee_calls_list(request):
         'leads_chart_labels': leads_chart_labels, 'leads_chart_data': leads_chart_data,
         'total_stats': total_stats, 'interview_detail': interview_detail,
         'follow_up_candidates': follow_up_candidates, 
-        'all_employees': all_employees, # NEW: Pass all employees for the dropdown
-        # CHANGED: Convert IDs to int for template comparison
-        'selected_employee_ids': [int(eid) for eid in selected_employee_ids],
+        'all_employees': all_employees,
+        'selected_employee_ids': [int(eid) for eid in selected_employee_ids if eid.isdigit()],
     }
     return render(request, 'crm/employee-calls-list.html', context)
 
-
-# ===================================================================================
-# == AJAX VIEW: FILTERED ACTIVITY LIST (Updated)
-# ===================================================================================
 @login_required(login_url='/crm/404/')
 def get_filtered_activity_list(request):
     if not (request.user.is_staff or request.user.is_superuser):
@@ -5203,7 +5177,6 @@ def get_filtered_activity_list(request):
     list_type = request.GET.get('list_type')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
-    # CHANGED: Accept multiple employee IDs from AJAX call
     selected_employee_ids = request.GET.getlist('employees')
 
     try:
@@ -5212,7 +5185,8 @@ def get_filtered_activity_list(request):
     except (ValueError, TypeError):
         return JsonResponse({"error": "Invalid date format."}, status=400)
     
-    # This view is now fully aware of the employee filter
+    apply_employee_filter = selected_employee_ids and 'all' not in selected_employee_ids
+    
     if list_type == 'selected':
         list_title = "Selected Candidates"
         candidates = Candidate_registration.objects.filter(
@@ -5220,7 +5194,7 @@ def get_filtered_activity_list(request):
             selection_date__range=[start_date, end_date], 
             updated_by__isnull=False
         ).select_related('updated_by__user').order_by('-selection_date')
-        if selected_employee_ids:
+        if apply_employee_filter:
             candidates = candidates.filter(updated_by_id__in=selected_employee_ids)
         context = {'candidates': candidates, 'list_title': list_title}
         return render(request, 'crm/partials/selected_candidate_list_partial.html', context)
@@ -5231,10 +5205,9 @@ def get_filtered_activity_list(request):
         employee__isnull=False
     ).select_related('employee__user', 'candidate')
 
-    if selected_employee_ids:
+    if apply_employee_filter:
         activities = activities.filter(employee_id__in=selected_employee_ids)
 
-    # (No changes to the logic below, it correctly filters the 'activities' queryset)
     list_title = "All Activities"
     LEAD_STATUSES = ['Hot', 'Converted']
     if list_type == 'leads':
@@ -5259,12 +5232,8 @@ def get_filtered_activity_list(request):
     return render(request, 'crm/partials/activity_list_partial.html', context)
 
 
-# ===================================================================================
-# == AJAX VIEW: SINGLE EMPLOYEE DETAILS (Unchanged)
-# ===================================================================================
 @login_required(login_url='/crm/404/')
 def get_employee_candidates(request):
-    # This view is for a single employee, so it doesn't need the multi-select filter
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
     employee_id = request.GET.get('employee_id')

@@ -1,8 +1,8 @@
 {% extends 'crm/base.html' %}
 
 {% block content %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.css" rel="stylesheet">
 <style>
-    /* NOTE: For a better multi-select experience, consider a library like TomSelect or Select2 */
     .clickable-card .card:hover {
         border-color: #206bc4;
         box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
@@ -10,9 +10,12 @@
         transform: translateY(-2px);
         transition: all .2s ease-in-out;
     }
-    /* Style for active employee rows */
     .employee-row.active {
         background-color: #e9f2ff !important;
+    }
+    .ts-control {
+        padding: .5rem .75rem !important;
+        font-size: .875rem;
     }
 </style>
 
@@ -35,10 +38,10 @@
             <div class="card card-body mb-4">
                 <form method="get" action="{% url 'admin_calls_list' %}" id="main-filter-form">
                     <div class="row g-3 align-items-end">
-                        
                         <div class="col-md-4">
                             <label class="form-label">Filter by Employee(s)</label>
-                            <select name="employees" id="employee_filter" class="form-select">
+                            <select name="employees" id="employee_filter" multiple>
+                                <option value="all">All Employees</option>
                                 {% for employee in all_employees %}
                                     <option value="{{ employee.id }}" {% if employee.id in selected_employee_ids %}selected{% endif %}>
                                         {{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})
@@ -122,48 +125,76 @@
             </div>
 
             <div class="row g-4"><div class="col-lg-6"><div class="card"><div class="card-header"><h3 class="card-title">All Employees: Activity Volume Trend</h3></div><div class="card-body"><div id="mainActivityChart"></div></div></div></div><div class="col-lg-6"><div class="card"><div class="card-header"><h3 class="card-title">All Employees: Lead Generation Trend</h3></div><div class="card-body"><div id="mainLeadsChart"></div></div></div></div></div>
-            <div class="row mt-4"><div class="col-lg-12 mb-4"><div class="card"><div class="card-header"><h3 class="card-title">Today's Interviews</h3></div><div class="card-body"><div class="table-responsive"><table class="table table-vcenter table-hover"><thead><tr><th>Candidate</th><th>Status</th><th>Employee</th><th>Time</th><th class="w-1"></th></tr></thead><tbody>{% for interview in interview_detail %}<tr class="interview-row clickable-row" data-date="{{ interview.interview_date_time|date:'Y-m-d' }}" data-interview-id="{{ interview.id }}" data-url="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}"><td>{{ interview.candidate.candidate_name }}</td><td>{{ interview.status }}</td><td>{{ interview.candidate.employee_name }}</td><td class="interview-time" data-time="{{ interview.interview_date_time|date:'H:i' }}">{{ interview.interview_date_time|date:"M d, Y H:i" }}</td><td><a href="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}" class="btn btn-link">View</a></td></tr>{% empty %}<tr><td colspan="7" class="text-center py-4"><div class="empty"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" /></svg></div><p class="empty-title">No interviews scheduled for today</p><p class="empty-subtitle text-muted">Check back later for updates</p></div></td></tr>{% endfor %}</tbody></table></div></div></div></div></div>
-            <div class="col-lg-12"><div class="card"><div class="card-header"><h3 class="card-title">Today's Follow Ups</h3></div><div class="card-body"><div class="table-responsive"><table class="table table-vcenter table-hover"><thead><tr><th>Candidate</th><th>Unique Code</th><th>Mobile Number</th><th>Employee</th><th>Time</th><th class="w-1"></th></tr></thead><tbody>{% for follow_up in follow_up_candidates %}<tr class="followup-row clickable-row" data-date="{{ follow_up.next_follow_up_date_time|date:'Y-m-d' }}" data-followup-id="{{ follow_up.id }}" data-url="{% if follow_up.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' follow_up.id %}{% else %}{% url 'admin_candidate_profile' follow_up.id %}{% endif %}"><td>{{ follow_up.candidate_name }}</td><td>{% if follow_up.lead_source == 'EVMS' %}{{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}{% else %}{{ follow_up.unique_code|default:"-" }}{% endif %}</td><td>{{ follow_up.candidate_mobile_number|default:"-" }}</td><td>{{ follow_up.employee_name }}</td><td class="followup-time" data-time="{{ follow_up.next_follow_up_date_time|date:'H:i' }}">{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td><td>{% if follow_up.lead_source == 'EVMS' %}<a href="{% url 'evms_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">View</a>{% else %}<a href="{% url 'admin_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">View</a>{% endif %}</td></tr>{% endfor %}</tbody></table></div></div></div></div>
+            <div class="row mt-4">
+                <div class="col-lg-12 mb-4">
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Scheduled Interviews</h3></div>
+                        <div class="card-body"><div class="table-responsive"><table class="table table-vcenter table-hover"><thead><tr><th>Candidate</th><th>Status</th><th>Employee</th><th>Time</th><th class="w-1"></th></tr></thead><tbody>{% for interview in interview_detail %}<tr class="interview-row clickable-row" data-date="{{ interview.interview_date_time|date:'Y-m-d' }}" data-interview-id="{{ interview.id }}" data-url="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}"><td>{{ interview.candidate.candidate_name }}</td><td>{{ interview.status }}</td><td>{{ interview.candidate.employee_name }}</td><td class="interview-time" data-time="{{ interview.interview_date_time|date:'H:i' }}">{{ interview.interview_date_time|date:"M d, Y H:i" }}</td><td><a href="{% if interview.candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' interview.candidate.id %}{% else %}{% url 'admin_candidate_profile' interview.candidate.id %}{% endif %}" class="btn btn-link">View</a></td></tr>{% empty %}<tr><td colspan="7" class="text-center py-4"><div class="empty"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" /></svg></div><p class="empty-title">No interviews found for the selected period.</p></div></td></tr>{% endfor %}</tbody></table></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header"><h3 class="card-title">Scheduled Follow Ups</h3></div>
+                    <div class="card-body"><div class="table-responsive"><table class="table table-vcenter table-hover"><thead><tr><th>Candidate</th><th>Unique Code</th><th>Mobile Number</th><th>Employee</th><th>Time</th><th class="w-1"></th></tr></thead><tbody>{% for follow_up in follow_up_candidates %}<tr class="followup-row clickable-row" data-date="{{ follow_up.next_follow_up_date_time|date:'Y-m-d' }}" data-followup-id="{{ follow_up.id }}" data-url="{% if follow_up.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' follow_up.id %}{% else %}{% url 'admin_candidate_profile' follow_up.id %}{% endif %}"><td>{{ follow_up.candidate_name }}</td><td>{% if follow_up.lead_source == 'EVMS' %}{{ follow_up.refer_code|default:"-" }}-{{ follow_up.unique_id|default:"-" }}{% else %}{{ follow_up.unique_code|default:"-" }}{% endif %}</td><td>{{ follow_up.candidate_mobile_number|default:"-" }}</td><td>{{ follow_up.employee_name }}</td><td class="followup-time" data-time="{{ follow_up.next_follow_up_date_time|date:'H:i' }}">{{ follow_up.next_follow_up_date_time|date:"M d, Y H:i" }}</td><td>{% if follow_up.lead_source == 'EVMS' %}<a href="{% url 'evms_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">View</a>{% else %}<a href="{% url 'admin_candidate_profile' follow_up.id %}" class="btn btn-link btn-sm">View</a>{% endif %}</td></tr>{% empty %}<tr><td colspan="7" class="text-center py-4">No follow-ups found for the selected period.</td></tr>{% endfor %}</tbody></table></div></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     
-    // =========================================================================
-    // Filter Handling & AJAX Logic
-    // =========================================================================
+    // --- Initialize Tom Select for a better multi-select UI ---
+    let employeeSelect = new TomSelect('#employee_filter', {
+        plugins: ['remove_button'],
+        onItemAdd: function(value, item) {
+            if (value !== 'all' && this.items.includes('all')) {
+                this.removeItem('all', true);
+            }
+            if (value === 'all' && this.items.length > 1) {
+                let currentItems = [...this.items];
+                currentItems.forEach(itemId => {
+                    if (itemId !== 'all') {
+                        this.removeItem(itemId, true);
+                    }
+                });
+            }
+        },
+    });
+
+    if ({{ selected_employee_ids|length }} === 0) {
+        employeeSelect.addItem('all', true);
+    }
+    
+    // --- General Filter and AJAX Logic ---
     const periodSelect = document.getElementById('period_filter');
     const startDateInput = document.getElementById('start_date_filter');
     const endDateInput = document.getElementById('end_date_filter');
-    const employeeSelect = document.getElementById('employee_filter');
 
-    // --- Helper function to get all current filter values as URL parameters ---
     function getCurrentFilters() {
         const params = new URLSearchParams();
         params.append('start_date', startDateInput.value);
         params.append('end_date', endDateInput.value);
         
-        // Append all selected employee IDs
-        for (const option of employeeSelect.selectedOptions) {
-            params.append('employees', option.value);
+        for (const value of employeeSelect.items) {
+            params.append('employees', value);
         }
         return params.toString();
     }
     
-    // --- Date Filter UI Logic ---
     function toggleDateInputs() {
         const isCustom = periodSelect.value === 'custom';
         startDateInput.disabled = !isCustom;
         endDateInput.disabled = !isCustom;
     }
     periodSelect.addEventListener('change', toggleDateInputs);
-    toggleDateInputs(); // Run on page load
+    toggleDateInputs();
 
-    // --- AJAX for Stat Cards ---
     const detailsContainer = document.getElementById('activity-details-container');
     document.querySelectorAll('.clickable-card').forEach(card => {
         card.addEventListener('click', async function() {
@@ -186,14 +217,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
     
-    // --- Close button for AJAX-loaded table ---
     document.addEventListener('click', function(event) {
         if (event.target && event.target.id === 'close-details-table') {
             detailsContainer.innerHTML = '';
         }
     });
 
-    // --- AJAX for Expanding Employee Details ---
     const chartInstances = {};
     document.querySelectorAll('.employee-row').forEach(row => {
         row.addEventListener('click', async function () {
@@ -201,11 +230,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const detailsRow = document.getElementById(`details-for-${employeeId}`);
             const isVisible = detailsRow.style.display === 'table-row';
 
-            // Close all other details rows first
             document.querySelectorAll('.candidate-details-row').forEach(r => r.style.display = 'none');
             document.querySelectorAll('.employee-row').forEach(r => r.classList.remove('active'));
 
-            // Toggle the clicked row
             detailsRow.style.display = isVisible ? 'none' : 'table-row';
             if (!isVisible) {
                 this.classList.add('active');
@@ -224,7 +251,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     const result = await response.json();
                     candidateContainer.innerHTML = result.html;
 
-                    // Render charts
                     if (chartInstances[employeeId]) {
                         chartInstances[employeeId].activity.destroy();
                         chartInstances[employeeId].leads.destroy();
@@ -247,10 +273,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-
-    // =========================================================================
-    // Chart Rendering (Original Code)
-    // =========================================================================
     function getBaseChartOptions(labels, seriesData, chartTitle, colors) {
         return {
             chart: { type: 'area', height: 300, zoom: { enabled: false }, toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } } },
