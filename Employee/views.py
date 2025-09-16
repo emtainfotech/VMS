@@ -5206,3 +5206,4 @@ def task_detail_and_reassign(request, pk):
         'priority_choices': Task.PRIORITY_CHOICES,
     }
     return render(request, 'employee/task_detail.html', context)
+

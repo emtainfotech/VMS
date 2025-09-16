@@ -5256,41 +5256,88 @@ def get_filtered_activity_list(request):
 def get_employee_candidates(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
+        
     employee_id = request.GET.get('employee_id')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
 
     if not all([employee_id, start_date_str, end_date_str]):
         return JsonResponse({"error": "Missing parameters."}, status=400)
+        
     try:
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
         employee = get_object_or_404(Employee, pk=employee_id)
+        
         employee_activities_queryset = CandidateActivity.objects.filter(
             employee=employee, timestamp__date__range=[start_date, end_date],
             action__in=['call_made', 'created']
         ).select_related('candidate').order_by('-timestamp')
+
+        # --- NEW LOGIC TO PROCESS ACTIVITIES AND GAPS ---
+        activities_for_template = []
+        activities_list = list(employee_activities_queryset)
+        
+        for i, activity in enumerate(activities_list):
+            # Add the actual activity to our new list
+            activities_for_template.append({
+                'type': 'activity',
+                'data': activity
+            })
+
+            # Check for a time gap between this activity and the next (older) one
+            if i + 1 < len(activities_list):
+                next_activity = activities_list[i+1]
+                time_difference = activity.timestamp - next_activity.timestamp
+                
+                # If the gap is more than 15 minutes, insert a gap marker
+                if time_difference > timedelta(minutes=15):
+                    hours, remainder = divmod(time_difference.total_seconds(), 3600)
+                    minutes, _ = divmod(remainder, 60)
+                    hours, minutes = int(hours), int(minutes) # Convert to integers
+                    
+                    duration_str = "Gap of "
+                    if hours > 0:
+                        duration_str += f"{hours}h "
+                    if minutes > 0 or hours == 0: # Show minutes if > 0 or if hours is 0
+                        duration_str += f"{minutes}m"
+                    
+                    activities_for_template.append({
+                        'type': 'gap',
+                        'duration': duration_str.strip()
+                    })
+        # --- END OF NEW LOGIC ---
+        
         html_content = render_to_string(
             'crm/partials/candidate_list_partial.html',
-            {'activities': employee_activities_queryset, 'employee': employee}
+            # Use the newly created list for the template context
+            {'processed_activities': activities_for_template, 'employee': employee}
         )
+        
+        # NOTE: The chart and lead calculations below should still use the original, unprocessed queryset
         activity_chart_labels, activity_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date)
+        
         LEAD_STATUSES = ['Hot', 'Converted']
         leads_filter_q = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
         employee_lead_transitions = employee_activities_queryset.filter(leads_filter_q)
+        
         unique_employee_leads_dict = {}
         for activity in employee_lead_transitions.order_by('timestamp'):
             unique_employee_leads_dict[(activity.candidate_id, activity.timestamp.date())] = activity
         unique_employee_leads_qs = CandidateActivity.objects.filter(id__in=[act.id for act in unique_employee_leads_dict.values()])
+        
         leads_chart_labels, leads_chart_data = _get_chart_data(unique_employee_leads_qs, start_date, end_date)
+        
         return JsonResponse({
             'html': html_content,
             'activity_chart_data': {'labels': activity_chart_labels, 'data': activity_chart_data,},
             'leads_chart_data': {'labels': leads_chart_labels, 'data': leads_chart_data,}
         })
+
     except (ValueError, Employee.DoesNotExist):
         return JsonResponse({"error": "Invalid request."}, status=400)
 
+        
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from CRM.models import *
