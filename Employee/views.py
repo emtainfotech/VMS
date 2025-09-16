@@ -125,6 +125,7 @@ def employee_login(request):
             return render(request, 'employee/login.html', {'error_message': 'Invalid username or password.'})
             
     return render(request, 'employee/login.html')
+
 def is_admin(user):
     """
     A simple check to see if a user has admin privileges.
@@ -182,95 +183,90 @@ def employee_logout(request):
     return redirect('employee_login')  # Redirect to login page after logout
 
 @login_required(login_url='/employee/404/')
-@user_passes_test(is_staff_member)
 def employee_dashboard(request):
+    today1 = date.today()
+    today = datetime.today().date()
+    start_of_month = today.replace(day=1)
+    logged_in_employee = get_object_or_404(Employee, user=request.user)
+    additional_info, _ = EmployeeAdditionalInfo.objects.get_or_create(employee=logged_in_employee)
+    tasks = Task.objects.filter(assigned_to=logged_in_employee).order_by('-id')
+    today = now().date()
+
+    # Fetch all sessions for today for the logged-in user
+    sessions = EmployeeSession.objects.filter(user=request.user, punch_in_time__date=today)
+
+    # Initialize session to None
+    session = None
+
+    # Calculate total login duration for today
+    total_work_duration = timedelta()  # Initialize to 0 duration
+    for session in sessions:
+        if session.punch_out_time:
+            # Add the duration of completed sessions
+            total_work_duration += session.punch_out_time - session.punch_in_time
+        else:
+            # If the session is ongoing, calculate duration up to the current time
+            total_work_duration += now() - session.punch_in_time
+
+    # Convert the total duration to a readable format
+    hours, remainder = divmod(total_work_duration.total_seconds(), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    total_punch_in_time_formatted = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
     
-    if request.user.is_authenticated and request.user.is_staff:
-        today1 = date.today()
-        today = datetime.today().date()
-        start_of_month = today.replace(day=1)
-        logged_in_employee = get_object_or_404(Employee, user=request.user)
-        additional_info, _ = EmployeeAdditionalInfo.objects.get_or_create(employee=logged_in_employee)
-        tasks = Task.objects.filter(assigned_to=logged_in_employee).order_by('-id')
-        today = now().date()
+    # Get the first login of the day, if any
+    first_punch_in_time = sessions.first().punch_in_time if sessions.exists() else None
 
-        # Fetch all sessions for today for the logged-in user
-        sessions = EmployeeSession.objects.filter(user=request.user, punch_in_time__date=today)
+    meetings = Meeting.objects.filter(date=today).order_by('-id')
+    office_expenses = OfficeExpense.objects.filter(employee_name=logged_in_employee, purchase_date=today).order_by('-id')
+    # notifications = Notification.objects.filter(user=request.user).order_by('-id')
+    selected_candidates = Candidate_registration.objects.filter(
+        selection_status__in=['Selected', 'Pending', 'Rejected'],
+        register_time__date=today1,
+        employee_name=logged_in_employee
+    ).order_by('-id')
+    total_call_count = Candidate_registration.objects.filter(
+        register_time__date=today1, employee_name=logged_in_employee
+    ).count()
+    total_connected_call = Candidate_registration.objects.filter(
+        call_connection='Yes', register_time__date=today1, employee_name=logged_in_employee
+    ).count()
+    total_lead_generate = Candidate_registration.objects.filter(
+        lead_generate='Hot', register_time__date=today1, employee_name=logged_in_employee
+    ).count()
+    total_placement = Candidate_registration.objects.filter(
+        selection_status='Selected', register_time__date=today1, employee_name=logged_in_employee
+    ).count()
+    todays_earning = Candidate_registration.objects.filter(
+        register_time__date=today1, employee_name=logged_in_employee
+    ).aggregate(total_earning=Sum('emta_commission', output_field=models.FloatField()))['total_earning'] or 0.0
+    monthly_earning = Candidate_registration.objects.filter(
+        register_time__date__gte=start_of_month,
+        register_time__date__lte=today,
+        employee_name=logged_in_employee
+    ).aggregate(total_earning=Sum('emta_commission', output_field=models.FloatField()))['total_earning'] or 0.0
 
-        # Initialize session to None
-        session = None
+    context = {
+        'session': session,
+        'sessions': sessions,
+        'meetings': meetings,
+        'additional_info' : additional_info,
+        'office_expenses': office_expenses,
+        # 'notifications': notifications,
+        'logged_in_employee': logged_in_employee,
+        'tasks': tasks,
+        'selected_candidates': selected_candidates,
+        'total_call_count': total_call_count,
+        'total_connected_call': total_connected_call,
+        'total_lead_generate': total_lead_generate,
+        'total_placement': total_placement,
+        'todays_earning': todays_earning,
+        'monthly_earning': monthly_earning,
+        "total_punch_in_time_formatted": total_punch_in_time_formatted,
+        'first_punch_in_time': first_punch_in_time
+    }
 
-        # Calculate total login duration for today
-        total_work_duration = timedelta()  # Initialize to 0 duration
-        for session in sessions:
-            if session.punch_out_time:
-                # Add the duration of completed sessions
-                total_work_duration += session.punch_out_time - session.punch_in_time
-            else:
-                # If the session is ongoing, calculate duration up to the current time
-                total_work_duration += now() - session.punch_in_time
+    return render(request, 'employee/dashboard.html', context)
 
-        # Convert the total duration to a readable format
-        hours, remainder = divmod(total_work_duration.total_seconds(), 3600)
-        minutes, seconds = divmod(remainder, 60)
-        total_punch_in_time_formatted = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
-        
-        # Get the first login of the day, if any
-        first_punch_in_time = sessions.first().punch_in_time if sessions.exists() else None
-
-        meetings = Meeting.objects.filter(date=today).order_by('-id')
-        office_expenses = OfficeExpense.objects.filter(employee_name=logged_in_employee, purchase_date=today).order_by('-id')
-        # notifications = Notification.objects.filter(user=request.user).order_by('-id')
-        selected_candidates = Candidate_registration.objects.filter(
-            selection_status__in=['Selected', 'Pending', 'Rejected'],
-            register_time__date=today1,
-            employee_name=logged_in_employee
-        ).order_by('-id')
-        total_call_count = Candidate_registration.objects.filter(
-            register_time__date=today1, employee_name=logged_in_employee
-        ).count()
-        total_connected_call = Candidate_registration.objects.filter(
-            call_connection='Yes', register_time__date=today1, employee_name=logged_in_employee
-        ).count()
-        total_lead_generate = Candidate_registration.objects.filter(
-            lead_generate='Hot', register_time__date=today1, employee_name=logged_in_employee
-        ).count()
-        total_placement = Candidate_registration.objects.filter(
-            selection_status='Selected', register_time__date=today1, employee_name=logged_in_employee
-        ).count()
-        todays_earning = Candidate_registration.objects.filter(
-            register_time__date=today1, employee_name=logged_in_employee
-        ).aggregate(total_earning=Sum('emta_commission', output_field=models.FloatField()))['total_earning'] or 0.0
-        monthly_earning = Candidate_registration.objects.filter(
-            register_time__date__gte=start_of_month,
-            register_time__date__lte=today,
-            employee_name=logged_in_employee
-        ).aggregate(total_earning=Sum('emta_commission', output_field=models.FloatField()))['total_earning'] or 0.0
-
-        context = {
-            'session': session,
-            'sessions': sessions,
-            'meetings': meetings,
-            'additional_info' : additional_info,
-            'office_expenses': office_expenses,
-            # 'notifications': notifications,
-            'logged_in_employee': logged_in_employee,
-            'tasks': tasks,
-            'selected_candidates': selected_candidates,
-            'total_call_count': total_call_count,
-            'total_connected_call': total_connected_call,
-            'total_lead_generate': total_lead_generate,
-            'total_placement': total_placement,
-            'todays_earning': todays_earning,
-            'monthly_earning': monthly_earning,
-            "total_punch_in_time_formatted": total_punch_in_time_formatted,
-            'first_punch_in_time': first_punch_in_time
-        }
-
-        return render(request, 'employee/dashboard.html', context)
-    else:
-        # If the user is not an admin, show a 404 page
-        return render(request, 'employee/404.html', status=404)
 
 @login_required(login_url='/employee/404/')
 def punch_in(request):
