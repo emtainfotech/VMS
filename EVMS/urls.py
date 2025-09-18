@@ -31,6 +31,7 @@ urlpatterns = [
     path('resend-reset-otp/', resend_reset_otp, name='resend_reset_otp'),
     path('sitemap.xml/', sitemap_view, name='sitemap_view'),
     path('robots.txt/', robot_txt_view, name='robot_txt_view'),
+    path('api/submit-application/', submit_application_view, name='submit_application'),
                
     
     path('admin/', admin.site.urls),

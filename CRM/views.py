@@ -5538,3 +5538,17 @@ def bulk_assign_candidates(request):
         'employees': all_employees,
     }
     return render(request, 'crm/bulk_assign_candidates.html', context)
+
+
+@login_required
+def emta_co_in_job_application_view(request):
+    # Fetch all application objects from the database, ordered by the newest first
+    applications = JobApplication.objects.all()
+    
+    # Pass the applications to the template context
+    context = {
+        'applications': applications
+    }
+    
+    # Render the HTML template
+    return render(request, 'crm/emta_co_in_job_application.html', context)

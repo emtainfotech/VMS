@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'EVMS',
     'Employee',
     'CRM',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -53,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'VMS.urls'
@@ -73,6 +75,9 @@ TEMPLATES = [
         },
     },
 ]
+
+# For development, you can allow all origins
+CORS_ALLOW_ALL_ORIGINS = True
 
 WSGI_APPLICATION = 'VMS.wsgi.application'
 

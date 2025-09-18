@@ -413,6 +413,9 @@
                             <a class="dropdown-item {% if request.path == '/crm/ip-restriction/' %}active{% endif %}" href="{% url 'manage_ip_restriction' %}">
                                 IP Restrictions
                             </a>
+                            <a class="dropdown-item {% if request.path == '/crm/emta.co.in/applications/' %}active{% endif %}" href="{% url 'emta_co_in_job_application_view' %}">
+                                EMTA CO IN Applications
+                            </a>
                              <!-- <a class="dropdown-item {% if request.path == '/crm/leads/' %}active{% endif %}" href="{% url 'generated_leads' %}">
                                 Leads
                             </a>

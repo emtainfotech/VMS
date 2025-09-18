@@ -71,7 +71,6 @@ class Vendor_bank_details(models.Model) :
     
 
 class Candidate(models.Model):
-    
     employee_name = models.CharField(max_length=50)
     employee_assigned = models.CharField(max_length=50)
     register_time = models.DateTimeField(default=now)
@@ -395,3 +394,38 @@ class Referal_poster(models.Model) :
     referal_image = models.FileField(upload_to='referal_poster/', null=True, blank=True)
         
         
+# EMTA.co.in Job Application Model
+
+from django.db import models
+import os
+
+# A function to define the upload path for resumes
+def resume_upload_path(instance, filename):
+    # Files will be uploaded to MEDIA_ROOT/resumes/<email>_<filename>
+    return os.path.join('resumes', f"{instance.email}_{filename}")
+
+class JobApplication(models.Model):
+    # Personal Information
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=50)
+    phone = models.CharField(max_length=15)
+    
+    # Professional Information
+    position_of_interest = models.CharField(max_length=255, blank=True, null=True, verbose_name="Position of Interest")
+    previous_experience = models.TextField(verbose_name="Previous Work Experience")
+    resume = models.FileField(upload_to=resume_upload_path, blank=True, null=True)
+    portfolio_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Portfolio URL")
+    
+    # Logistics
+    interview_availability = models.TextField()
+    address = models.TextField(blank=True, null=True)
+    
+    # Timestamps
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Application from {self.first_name} {self.last_name} for {self.position_of_interest}"
+
+    class Meta:
+        ordering = ['-submitted_at']

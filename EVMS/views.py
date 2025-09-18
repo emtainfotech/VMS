@@ -1395,3 +1395,41 @@ def refer_poster_vendor_view(request):
     return render(request, 'evms/referal-poster.html', {'poster': poster})
 
 
+# EMTA.CO.IN - Job Application Submission View
+@csrf_exempt # Use this for simplicity in testing, but consider proper CSRF handling for production
+def submit_application_view(request):
+    if request.method == "POST":
+        try:
+            # Create a new JobApplication instance
+            application = JobApplication(
+                first_name=request.POST.get('firstName'),
+                last_name=request.POST.get('lastName'),
+                email=request.POST.get('email'),
+                phone=request.POST.get('phone'),
+                position_of_interest=request.POST.get('jobTitle'),
+                previous_experience=request.POST.get('workExperience'),
+                portfolio_url=request.POST.get('portfolio'),
+                interview_availability=request.POST.get('interviewAvailability'),
+                address=request.POST.get('address'),
+                resume=request.FILES.get('Resume') # Handle the uploaded file
+            )
+            application.save()
+            
+            # Return a success response
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Your application has been submitted successfully!'
+            }, status=201)
+
+        except Exception as e:
+            # Return an error response if something goes wrong
+            return JsonResponse({
+                'status': 'error',
+                'message': f'An error occurred: {str(e)}'
+            }, status=400)
+    
+    # If not a POST request, return an error
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request method. Please use POST.'
+    }, status=405)
