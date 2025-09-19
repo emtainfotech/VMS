@@ -429,3 +429,28 @@ class JobApplication(models.Model):
 
     class Meta:
         ordering = ['-submitted_at']
+
+
+class CourseInquiry(models.Model):
+    COURSE_CHOICES = [
+        ('Sales Officer', 'Sales Officer Training Program'),
+        ('Relationship Manager', 'Relationship Manager Training Program'),
+        ('Credit Officer', 'Credit Officer Training Program'),
+        ('Operations Training', 'Operations Training Program'),
+    ]
+
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=15)
+    course_interest = models.CharField(max_length=100, choices=COURSE_CHOICES)
+    address = models.TextField(blank=True, null=True)
+    comment = models.TextField(blank=True, null=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Inquiry from {self.first_name} {self.last_name} for {self.course_interest}"
+
+    class Meta:
+        ordering = ['-submitted_at']
+        verbose_name_plural = "Course Inquiries"
