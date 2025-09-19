@@ -1433,34 +1433,3 @@ def submit_application_view(request):
         'status': 'error',
         'message': 'Invalid request method. Please use POST.'
     }, status=405)
-
-
-def submit_course_inquiry_view(request):
-    if request.method == "POST":
-        try:
-            inquiry = CourseInquiry(
-                first_name=request.POST.get('firstName'),
-                last_name=request.POST.get('lastName'),
-                email=request.POST.get('email'),
-                phone=request.POST.get('phone'),
-                course_interest=request.POST.get('course'),
-                address=request.POST.get('address'),
-                comment=request.POST.get('comment')
-            )
-            inquiry.save()
-            
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Thank you for your inquiry! We will be in touch shortly.'
-            }, status=201)
-
-        except Exception as e:
-            return JsonResponse({
-                'status': 'error',
-                'message': f'An error occurred: {str(e)}'
-            }, status=400)
-    
-    return JsonResponse({
-        'status': 'error',
-        'message': 'Invalid request method. Please use POST.'
-    }, status=405)

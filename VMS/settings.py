@@ -81,6 +81,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 WSGI_APPLICATION = 'VMS.wsgi.application'
 
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
