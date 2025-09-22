@@ -72,7 +72,10 @@ urlpatterns = [
     path('admin/tasks/', admin_task_dashboard, name='admin_task_dashboard'),
     path('tasks/<int:pk>/', admin_task_detail_and_reassign, name='admin_task_detail_and_reassign'),
     path('bulk-assign/', bulk_assign_candidates_api, name='bulk_assign_candidates_api'),
-    path('emta-co-in/applications/', emta_co_in_job_application_view, name='emta_co_in_job_application_view'),
+    path('emta/job-applications/', emta_co_in_job_application_view, name='emta_co_in_job_application_view'),
+    path('emta/course-inquiries/', emta_co_in_course_application_view, name='emta_co_in_course_application_view'),
+    path('emta/contact-queries/', emta_co_in_contact_queries_view, name='emta_co_in_contact_queries_view'),
+
 
     path('admin/', admin.site.urls),
 ]

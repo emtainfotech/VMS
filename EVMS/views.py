@@ -1468,3 +1468,29 @@ def submit_course_inquiry_view(request):
         'message': 'Invalid request method. Please use POST.'
     }, status=405)
 
+@csrf_exempt
+def submit_contact_query_view(request):
+    if request.method == "POST":
+        try:
+            query = ContactQuery(
+                name=request.POST.get('name'),
+                email=request.POST.get('email'),
+                phone=request.POST.get('phone'),
+                subject=request.POST.get('subject'),
+                message=request.POST.get('message'),
+            )
+            query.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Your message has been sent successfully! We will get back to you soon.'
+            }, status=201)
+
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'An error occurred: {str(e)}'
+            }, status=400)
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+

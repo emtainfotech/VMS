@@ -454,3 +454,19 @@ class CourseInquiry(models.Model):
     class Meta:
         ordering = ['-submitted_at']
         verbose_name_plural = "Course Inquiries"
+
+
+class ContactQuery(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True) # Phone is optional
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Query from {self.name} - Subject: {self.subject}"
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = "Contact Queries"
