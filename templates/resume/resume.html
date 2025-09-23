@@ -1,0 +1,260 @@
+
+{% extends "resume/base.html" %}
+{% block content %}
+  <div class="main-banner">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-6 align-self-center">
+          <div class="caption header-text">
+            <h6>Welcome to EMTA</h6>
+            <h2>BEST RESUME SITE EVER!</h2>
+            <p>"Best Resume Site Ever" is the go-to platform for high-quality, customizable resume templates tailored for all industries. Create a standout resume effortlessly and get noticed by employers!</p>
+            <div class="search-input">
+              {% comment %} <form id="search" action="#">
+                <input type="text" placeholder="Type Something" id='searchText' name="searchKeyword" onkeypress="handle" />
+                <button role="button">Search Now</button>
+              </form> {% endcomment %}
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 offset-lg-2">
+          <div class="right-image">
+           <img src="/static/resume/assets/images/banner-image.png" alt="">
+            <span class="price">Free</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- <div class="features">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 col-md-6">
+          <a href="#">
+            <div class="item">
+              <div class="image">
+                <img src="/static/resume/assets/images/featured-01.png" alt="" style="max-width: 44px;">
+              </div>
+              <h4>Easy Access</h4>
+            </div>
+          </a>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <a href="#">
+            <div class="item">
+              <div class="image">
+                <img src="/static/resume/assets/images/featured-02.png" alt="" style="max-width: 44px;">
+              </div>
+              <h4>User More</h4>
+            </div>
+          </a>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <a href="#">
+            <div class="item">
+              <div class="image">
+                <img src="/static/resume/assets/images/featured-03.png" alt="" style="max-width: 44px;">
+              </div>
+              <h4>Reply Ready</h4>
+            </div>
+          </a>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <a href="#">
+            <div class="item">
+              <div class="image">
+                <img src="/static/resume/assets/images/featured-04.png" alt="" style="max-width: 44px;">
+              </div>
+              <h4>Easy Layout</h4>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>  -->
+  <div class="section trending">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-6">
+          <div class="section-heading">
+  
+            <h6>Trending</h6>
+            <h2>Trending Resumes</h2>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="main-button">
+            <a href="{% url "resume_list" %}">View All</a>
+          </div>
+        </div>
+        <div class="section trending" style="margin-top: -50px;">
+          <div class="container">
+            <ul class="trending-filter">
+              <li>
+                <a class="is_active" href="#!" data-filter="*">Show All</a>
+              </li>
+              {% for sector in unique_sectors %}
+                <li>
+                  <a href="#!" data-filter=".{{ sector }}">{{ sector }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+            <div class="row trending-box">
+              {% for resume in resumes %}
+                <div class="col-lg-3 col-md-6 align-self-center mb-30 trending-items col-md-6 {{ resume.sector }}">
+                  <div class="item">
+                    <div class="thumb">
+                      <a href="{% url 'details' resume.id %}"><img src="{{ resume.resume_image.url }}" alt="{{ resume.sector }} Resume" /></a>
+                      <span class="price">{{ resume.sector }}</span>
+                    </div>
+                    <div class="down-content">
+                      <span class="category">{{ resume.description }}</span>
+                      <h4>{{ resume.name }}</h4>
+                      <a href="{% url 'details' resume.id %}"><i class="fa fa-eye"></i></a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+            
+          </div>
+        </div>
+
+        
+      
+
+<div class="section trending">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="section-heading">
+            <h6>TOP COVER LETTER</h6>
+            <h2>Trending Cover Letter</h2>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="main-button">
+            <a href="{% url "cover_list" %}">View All</a>
+          </div>
+        </div>
+        {% for coverletter in coverletters %}
+        <div class="col-lg-3 col-md-6">
+            <div class="item">
+                <div class="thumb">
+                  {% if coverletter.cover_image %}
+                  <a href="{% url 'cover_details' coverletter.id %}"><img src="{{ coverletter.cover_image.url }}" alt=""></a>
+                  {% else %}
+                  <a href="{% url 'cover_details' coverletter.id %}"><img src="/static/resume/assets/images/sagar.png" alt=""></a>
+                  {% endif %}
+                  <span class="price">{{ coverletter.sector }}</span>
+                </div>
+                <div class="down-content">
+                    <span class="category">{{ coverletter.description }}</span>
+                    <h4>{{ coverletter.name }}</h4> 
+                    
+                    <a href="{% url 'cover_details' coverletter.id %}"><i class="fa fa-eye"></i></a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+        
+      </div>
+    </div>
+  </div>
+
+  {% comment %} <div class="section categories">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12 text-center">
+          <div class="section-heading">
+            <h6>Categories</h6>
+            <h2>Top Categories</h2>
+          </div>
+        </div>
+        <div class="col-lg col-sm-6 col-xs-12">
+          <div class="item">
+            <h4>Action</h4>
+            <div class="thumb">
+              <a href="product-details.html"><img src="/static/resume/assets/images/categories-01.jpg" alt=""></a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg col-sm-6 col-xs-12">
+          <div class="item">
+            <h4>Action</h4>
+            <div class="thumb">
+              <a href="product-details.html"><img src="/static/resume/assets/images/categories-05.jpg" alt=""></a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg col-sm-6 col-xs-12">
+          <div class="item">
+            <h4>Action</h4>
+            <div class="thumb">
+              <a href="product-details.html"><img src="/static/resume/assets/images/categories-03.jpg" alt=""></a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg col-sm-6 col-xs-12">
+          <div class="item">
+            <h4>Action</h4>
+            <div class="thumb">
+              <a href="product-details.html"><img src="/static/resume//static/resume/assets/images/categories-04.jpg" alt=""></a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg col-sm-6 col-xs-12">
+          <div class="item">
+            <h4>Action</h4>
+            <div class="thumb">
+              <a href="product-details.html"><img src="/static/resume/assets/images/categories-05.jpg" alt=""></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> {% endcomment %}
+  
+  {% comment %} <div class="section cta">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-5">
+          <div class="shop">
+            <div class="row">
+              <div class="col-lg-12">
+                <div class="section-heading">
+                  <h6>Our Shop</h6>
+                  <h2>Go Pre-Order Buy & Get Best <em>Prices</em> For You!</h2>
+                </div>
+                <p>Lorem ipsum dolor consectetur adipiscing, sed do eiusmod tempor incididunt.</p>
+                <div class="main-button">
+                  <a href="shop.html">Shop Now</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5 offset-lg-2 align-self-end">
+          <div class="subscribe">
+            <div class="row">
+              <div class="col-lg-12">
+                <div class="section-heading">
+                  <h6>NEWSLETTER</h6>
+                  <h2>Get Up To $100 Off Just Buy <em>Subscribe</em> Newsletter!</h2>
+                </div>
+                <div class="search-input">
+                  <form id="subscribe" action="#">
+                    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Your email...">
+                    <button type="submit">Subscribe Now</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> {% endcomment %}
+
+  {% endblock content %}

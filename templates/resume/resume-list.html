@@ -1,0 +1,66 @@
+{% extends 'resume/base.html' %}
+{% block content %}
+  <div class="page-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12">
+          <h3>Our Resume's</h3>
+          <span class="breadcrumb"><a href="#">Home</a> > Our Resume</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section trending">
+    <div class="container">
+      <ul class="trending-filter">
+        <li>
+          <a class="is_active" href="#!" data-filter="*">Show All</a>
+        </li>
+        {% for sector in unique_sectors %}
+          <li>
+            <a href="#!" data-filter=".{{ sector }}">{{ sector }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      <div class="row trending-box">
+        {% for resume in resumes %}
+          <div class="col-lg-3 col-md-6 align-self-center mb-30 trending-items col-md-6 {{ resume.sector }}">
+            <div class="item">
+              <div class="thumb">
+                <a href="{% url 'details' resume.id %}"><img src="{{ resume.resume_image.url }}" alt="{{ resume.sector }} Resume" /></a>
+                <span class="price">{{ resume.sector }}</span>
+              </div>
+              <div class="down-content">
+                <span class="category">{{ resume.description }}</span>
+                <h4>{{ resume.name }}</h4>
+                <a href="{% url 'details' resume.id %}"><i class="fa fa-eye"></i></a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <ul class="pagination">
+            <li>
+              <a href="#">&lt;</a>
+            </li>
+            <li>
+              <a href="#">1</a>
+            </li>
+            <li>
+              <a class="is_active" href="#">2</a>
+            </li>
+            <li>
+              <a href="#">3</a>
+            </li>
+            <li>
+              <a href="#">&gt;</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
