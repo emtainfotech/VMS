@@ -3594,11 +3594,7 @@ def employee_calls_list(request):
     hot_lead_candidates = calls_in_period.filter(hot_leads_filter).values_list('candidate_id', flat=True).distinct()
     converted_leads = calls_in_period.filter(hot_to_converted_filter, candidate_id__in=hot_lead_candidates).values_list('candidate_id', flat=True).distinct().count()
     
-    if len(hot_lead_candidates) > 0:
-        conversion_percentage = round((converted_leads / len(hot_lead_candidates)) * 100)
-    else:
-        conversion_percentage = 0
-    # --- END OF FIX ---
+    
 
     # Generate chart data
     activity_chart_queryset = calls_in_period.filter(action__in=['call_made', 'created'])
@@ -3628,7 +3624,7 @@ def employee_calls_list(request):
         'not_connected_calls': call_stats.get('not_connected_calls', 0),
         'leads_generated': leads_generated_count,
         'selections': selections_count,
-        'conversion_percentage': conversion_percentage,
+        'conversion_percentage': converted_leads,
         'activity_chart_labels': activity_chart_labels,
         'activity_chart_data': activity_chart_data,
         'leads_chart_labels': leads_chart_labels,
