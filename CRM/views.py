@@ -4997,24 +4997,26 @@ from django.template.loader import render_to_string
 import calendar
 from datetime import datetime, timedelta
 from django.db.models import Count
-from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
+from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth, Coalesce
 
-def _get_chart_data(queryset, start_date, end_date):
+
+# ===================================================================================
+# == HELPER FUNCTION (Used by multiple views)
+# ===================================================================================
+def _get_chart_data(queryset, start_date, end_date, filter_q=None):
+    if filter_q:
+        queryset = queryset.filter(filter_q)
+
     chart_labels = []
     chart_data = []
     time_delta = end_date - start_date
 
-    # Daily view (for a single day)
     if time_delta.days < 1:
         data_by_time = queryset.annotate(hour=TruncHour('timestamp')).values('hour').annotate(count=Count('id')).order_by('hour')
         time_counts = {i: 0 for i in range(24)}
-        for group in data_by_time:
-            if group['hour']:
-                time_counts[group['hour'].hour] = group['count']
+        for group in data_by_time: time_counts[group['hour'].hour] = group['count']
         chart_labels = [f"{hour}:00" for hour in time_counts.keys()]
         chart_data = list(time_counts.values())
-
-    # Daily view (for up to 2 weeks)
     elif time_delta.days <= 14:
         data_by_time = queryset.annotate(date=TruncDate('timestamp')).values('date').annotate(count=Count('id')).order_by('date')
         time_counts = {start_date + timedelta(days=i): 0 for i in range((end_date - start_date).days + 1)}
@@ -5023,8 +5025,6 @@ def _get_chart_data(queryset, start_date, end_date):
                 time_counts[group['date']] = group['count']
         chart_labels = [day.strftime('%a, %b %d') for day in time_counts.keys()]
         chart_data = list(time_counts.values())
-
-    # Weekly view (for up to 3 months)
     elif time_delta.days <= 92:
         data_by_time = queryset.annotate(week=TruncWeek('timestamp')).values('week').annotate(count=Count('id')).order_by('week')
         time_counts = {}
@@ -5033,46 +5033,20 @@ def _get_chart_data(queryset, start_date, end_date):
             time_counts[current_date] = 0
             current_date += timedelta(weeks=1)
         for group in data_by_time:
-            if group['week'] in time_counts:
-                time_counts[group['week']] = group['count']
+            if group['week'] in time_counts: time_counts[group['week']] = group['count']
         chart_labels = [week_start.strftime('Week of %b %d') for week_start in time_counts.keys()]
         chart_data = list(time_counts.values())
-
-    # Monthly view (for > 3 months)
     else:
-        # --- NEW, MORE ROBUST LOGIC ---
-        # 1. Get counts from the database, grouped by the first day of the month.
-        data_by_month = queryset.annotate(
-            month_start=TruncMonth('timestamp')
-        ).values('month_start').annotate(
-            count=Count('id')
-        ).order_by('month_start')
-
-        # 2. Store the database results in a simple dictionary with string keys ('YYYY-MM') for easy lookup.
-        db_counts = {
-            group['month_start'].strftime('%Y-%m'): group['count']
-            for group in data_by_month if group['month_start']
-        }
-
-        # 3. Generate a complete list of all months in the selected date range. This ensures no gaps.
-        all_months_in_range = []
-        current_month_start = start_date.replace(day=1)
-        while current_month_start <= end_date:
-            all_months_in_range.append(current_month_start)
-            # Manually calculate the next month to avoid external libraries
-            year, month = current_month_start.year, current_month_start.month
-            if month == 12:
-                current_month_start = current_month_start.replace(year=year + 1, month=1)
-            else:
-                current_month_start = current_month_start.replace(month=month + 1)
-        
-        # 4. Create the final chart labels and data by looking up values from our dictionary.
-        chart_labels = [month.strftime('%b %Y') for month in all_months_in_range]
-        chart_data = [db_counts.get(month.strftime('%Y-%m'), 0) for month in all_months_in_range]
-
+        data_by_time = queryset.annotate(month=TruncMonth('timestamp')).values('month').annotate(count=Count('id')).order_by('month')
+        time_counts = {i: 0 for i in range(1, 13)}
+        for group in data_by_time: time_counts[group['month'].month] = group['count']
+        chart_labels = [calendar.month_name[i] for i in range(1, 13)]
+        chart_data = list(time_counts.values())
     return chart_labels, chart_data
-# ==================================================================
-# == MAIN DASHBOARD VIEW (UPDATED)
+
+
+# ===================================================================================
+# == MANAGER DASHBOARD VIEWS
 # ===================================================================================
 @login_required(login_url='/crm/404/')
 def employee_calls_list(request):
@@ -5125,17 +5099,17 @@ def employee_calls_list(request):
     LEAD_STATUSES = ['Hot', 'Converted']
     lead_transition_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
     
+    # --- START OF CHANGE ---
     for stat in employee_stats:
         employee_activities = CandidateActivity.objects.filter(employee=stat, timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created', 'updated'])
         stat.leads_generated = employee_activities.filter(lead_transition_filter).annotate(date=TruncDate('timestamp')).values('candidate_id', 'date').distinct().count()
         stat.selections = Candidate_registration.objects.filter(updated_by=stat, selection_status__iexact='Selected', selection_date__range=[start_date, end_date]).count()
+        
+        # This now calculates a simple count instead of a percentage
         hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
-        hot_leads = employee_activities.filter(Q(changes__lead_generate__new__iexact='Hot')).count()
-        converted_leads = employee_activities.filter(hot_to_converted_filter).count()
-        hot_leads_count = hot_leads + converted_leads
-        stat.conversion_percentage = round((converted_leads / hot_leads_count) * 100) if hot_leads_count > 0 else 0
+        stat.converted_leads_count = employee_activities.filter(hot_to_converted_filter).count()
 
-    all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created'], employee__isnull=False)
+    all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created', 'updated'], employee__isnull=False)
     selections_queryset = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date])
 
     if apply_employee_filter:
@@ -5146,12 +5120,22 @@ def employee_calls_list(request):
     total_leads_generated_count = all_activities_queryset.filter(lead_transition_filter).annotate(date=TruncDate('timestamp')).values('candidate_id', 'date').distinct().count()
     total_selections_count = selections_queryset.count()
     
+    total_hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
+    
     total_stats_agg = all_activities_queryset.aggregate(
-        total_activities=Count('id'),
+        total_activities=Count('id', filter=Q(action__in=['call_made', 'created'])),
         total_connected=Count('id', filter=total_connected_filter),
-        total_not_connected=Count('id', filter=~total_connected_filter),
+        total_not_connected=Count('id', filter=~total_connected_filter & Q(action__in=['call_made', 'created'])),
+        # This new aggregation gets the total converted leads count
+        total_converted_leads=Count('id', filter=total_hot_to_converted_filter)
     )
-    total_stats = {**total_stats_agg, 'total_leads_generated': total_leads_generated_count, 'total_selections': total_selections_count}
+    
+    total_stats = {
+        **total_stats_agg, 
+        'total_leads_generated': total_leads_generated_count, 
+        'total_selections': total_selections_count
+    }
+    # --- END OF CHANGE ---
 
     unique_lead_activities = all_activities_queryset.filter(lead_transition_filter)
     unique_leads_dict = {}
@@ -5159,21 +5143,15 @@ def employee_calls_list(request):
         unique_leads_dict[(activity.candidate_id, activity.timestamp.date())] = activity
     unique_leads_queryset = CandidateActivity.objects.filter(id__in=[act.id for act in unique_leads_dict.values()])
     
-    main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset, start_date, end_date)
+    main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset.filter(action__in=['call_made', 'created']), start_date, end_date)
     leads_chart_labels, leads_chart_data = _get_chart_data(unique_leads_queryset, start_date, end_date)
     
-    interview_detail_qs = Candidate_Interview.objects.filter(
-        interview_date_time__date__range=[start_date, end_date], 
-        status__in=['scheduled', 'rescheduled']
-    )
-    follow_up_candidates_qs = Candidate_registration.objects.filter(
-        next_follow_up_date_time__date__range=[start_date, end_date]
-    )
+    interview_detail_qs = Candidate_Interview.objects.filter(interview_date_time__date__range=[start_date, end_date], status__in=['scheduled', 'rescheduled'])
+    follow_up_candidates_qs = Candidate_registration.objects.filter(next_follow_up_date_time__date__range=[start_date, end_date])
 
-    # NOTE: The problematic filter lines have been removed from this section.
-    # When you provide the model definitions, we can add the correct filter back in.
     if apply_employee_filter:
-        pass # No filter applied here for now
+        # Placeholder for your specific filter logic based on your models
+        pass
 
     interview_detail = sorted(list(interview_detail_qs), key=lambda x: x.interview_date_time)
     follow_up_candidates = sorted(list(follow_up_candidates_qs), key=lambda x: x.next_follow_up_date_time)
@@ -5188,6 +5166,7 @@ def employee_calls_list(request):
         'selected_employee_ids': [int(eid) for eid in selected_employee_ids if eid.isdigit()],
     }
     return render(request, 'crm/employee-calls-list.html', context)
+
 
 @login_required(login_url='/crm/404/')
 def get_filtered_activity_list(request):

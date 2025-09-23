@@ -84,7 +84,7 @@
                 <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="not_connected"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-danger">{{ total_stats.total_not_connected }}</div><div class="text-muted">Total Not Connected</div></div></div></div>
                 <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="leads"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-warning">{{ total_stats.total_leads_generated }}</div><div class="text-muted">Total Leads Generated</div></div></div></div>
                 <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="selected"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-success">{{ total_stats.total_selections }}</div><div class="text-muted">Total Selection's</div></div></div></div>
-                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="converted"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-primary">{{ total_stats.total_conversion_percentage|default:0 }}%</div><div class="text-muted">Total Conversion</div></div></div></div>
+                <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="converted"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-primary">{{ total_stats.total_converted_leads }}</div><div class="text-muted">Total Conversion</div></div></div></div>
             </div>
 
             <div id="activity-details-container" class="mb-4"></div>
@@ -103,7 +103,7 @@
         <td><span class="badge bg-red text-red-fg">{{ stat.not_connected_calls }}</span></td>
         <td><span class="badge bg-warning text-warning-fg">{{ stat.leads_generated }}</span></td>
         <td><span class="badge bg-info text-info-fg">{{ stat.selections }}</span></td>
-        <td><span class="badge" style="background-color: #e5dff6; color: #6f42c1;">{{ stat.conversion_percentage }}%</span></td>
+        <td><span class="badge" style="background-color: #e5dff6; color: #6f42c1;">{{ stat.converted_leads_count }}</span></td>
         
         <td class="last-activity-cell" data-timestamp="{% if stat.last_call_made %}{{ stat.last_call_made.isoformat }}{% endif %}">
             {% if stat.last_call_made %}{{ stat.last_call_made|date:"M d, Y H:i" }}{% else %}N/A{% endif %}
