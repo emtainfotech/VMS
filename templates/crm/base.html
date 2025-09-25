@@ -410,6 +410,9 @@
                             <span class="nav-link-title">Others</span>
                         </a>
                         <div class="dropdown-menu">
+                            <a class="dropdown-item {% if request.path == '/crm/banking-counselling/' %}active{% endif %}" href="{% url 'manage_banking_counselling' %}">
+                                Banking Counselling
+                            </a>
                             <a class="dropdown-item {% if request.path == '/crm/ip-restriction/' %}active{% endif %}" href="{% url 'manage_ip_restriction' %}">
                                 IP Restrictions
                             </a>

@@ -75,6 +75,7 @@ urlpatterns = [
     path('emta/job-applications/', emta_co_in_job_application_view, name='emta_co_in_job_application_view'),
     path('emta/course-inquiries/', emta_co_in_course_application_view, name='emta_co_in_course_application_view'),
     path('emta/contact-queries/', emta_co_in_contact_queries_view, name='emta_co_in_contact_queries_view'),
+    path('banking-counselling/', banking_counselling_view, name='manage_banking_counselling'),
 
 
     path('admin/', admin.site.urls),
