@@ -105,11 +105,7 @@
                 <div class="col-lg-3 col-md-6 align-self-center mb-30 trending-items col-md-6 {{ resume.sector }}">
                   <div class="item">
                     <div class="thumb">
-                      {% if resume.resume_image %}
                       <a href="{% url 'details' resume.id %}"><img src="{{ resume.resume_image.url }}" alt="{{ resume.sector }} Resume" /></a>
-                      {% else %}
-                      <a href="{% url 'details' resume.id %}"><img src="{{ resume.resume_file.url }}" alt="Default Resume Image" /></a>
-                      {% endif %}
                       <span class="price">{{ resume.sector }}</span>
                     </div>
                     <div class="down-content">
