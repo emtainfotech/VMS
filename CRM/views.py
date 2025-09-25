@@ -5542,3 +5542,11 @@ def emta_co_in_contact_queries_view(request):
         'queries': queries
     }
     return render(request, 'crm/emta_co_in_contact_queries.html', context)
+
+@login_required
+def banking_counselling_view(request):
+    candidates = Candidate_registration.objects.filter(calling_remark = 'Shortlisted for Banking Counselling')
+    context = {
+        'candidates': candidates
+    }
+    return render(request, 'crm/banking_counselling.html', context)

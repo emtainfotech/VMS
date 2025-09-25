@@ -1,0 +1,567 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">Banking Counselling</h2>
+                    <div class="text-muted mt-1">
+                        <span id="total-leads">{{ candidates|length }}</span> candidate leads
+                    </div>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <a href="{% url 'admin_candidate_registration' %}" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M12 5l0 14" />
+                                <path d="M5 12l14 0" />
+                            </svg>
+                            Add New Candidate
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center w-100">
+                        <div class="col-12 col-md-4 mb-3 mb-md-0">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                                        <path d="M21 21l-6 -6" />
+                                    </svg>
+                                </span>
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search leads..."
+                                    aria-label="Search leads">
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <div class="row g-2">
+                                <div class="col-auto">
+                                    <label for="statusFilter" class="form-label visually-hidden">Status:</label>
+                                    <select id="statusFilter" class="form-select">
+                                        <option value="">All Statuses</option>
+                                        <option value="Converted">Converted</option>
+                                        <option value="Hot">Hot</option>
+                                        <option value="Cold">Cold</option>
+                                        <option value="Not Interested">Not Interested</option>
+                                        <option value="Connect Later">Connect Later</option>
+                                        <option value="DND">DND</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <label for="employeeFilter" class="form-label visually-hidden">Employee:</label>
+                                    <div class="dropdown">
+                                        <button class="btn dropdown-toggle" type="button" id="employeeFilterBtn" {# Changed ID for clarity #}
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            Employee
+                                        </button>
+                                        <ul class="dropdown-menu p-2" aria-labelledby="employeeFilterBtn" {# Changed aria-labelledby #}
+                                            style="max-height: 300px; overflow-y: auto;">
+                                            <input type="text" class="form-control mb-2" id="employeeSearchInput"
+                                                placeholder="Search employee..."> {# Removed onkeyup here, will attach with JS #}
+                                            <li>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value=""
+                                                        id="employeeAll" checked>
+                                                    <label class="form-check-label" for="employeeAll">
+                                                        All Employees
+                                                    </label>
+                                                </div>
+                                            </li>
+                                            {% regroup candidates by employee_name as employees_by_name %}
+                                            {% for employee_group in employees_by_name %}
+                                                {% if employee_group.grouper %}
+                                                <li>
+                                                    <div class="form-check employee-checkbox-item">
+                                                        <input class="form-check-input employee-checkbox" type="checkbox"
+                                                            value="{{ employee_group.grouper }}" id="employee-{{ employee_group.grouper|slugify }}"> {# Use slugify for unique and valid IDs #}
+                                                        <label class="form-check-label" for="employee-{{ employee_group.grouper|slugify }}">
+                                                            {{ employee_group.grouper }}
+                                                        </label>
+                                                    </div>
+                                                </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <label for="dateRangeFilter" class="form-label visually-hidden">Registration Date:</label>
+                                    <input type="text" class="form-control" id="dateRangeFilter" placeholder="Registration Date Range">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <style>
+                    /* Existing status badge styles */
+                    .status-badge {
+                        display: inline-block;
+                        padding: 0.25rem 0.5rem;
+                        border-radius: 50rem;
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        line-height: 1;
+                        text-align: center;
+                        white-space: nowrap;
+                        vertical-align: baseline;
+                    }
+
+                    .status-hot {
+                        background-color: rgba(253, 126, 20, 0.1);
+                        color: #fd7e14;
+                    }
+
+                    .status-converted {
+                        background-color: rgba(32, 201, 151, 0.1);
+                        color: #20c997;
+                    }
+
+                    .status-cold {
+                        background-color: rgba(250, 82, 82, 0.1);
+                        color: #fa5252;
+                    }
+
+                    .status-not-interested {
+                        background-color: rgba(108, 117, 125, 0.1);
+                        color: #6c757d;
+                    }
+
+                    .status-connect-later {
+                        background-color: rgba(0, 123, 255, 0.1);
+                        color: #007bff;
+                    }
+
+                    .status-dnd {
+                        background-color: rgba(220, 53, 69, 0.1);
+                        color: #dc3545;
+                    }
+
+                    .status-other {
+                        background-color: rgba(102, 16, 242, 0.1);
+                        color: #6610f2;
+                    }
+
+                    /* Sticky header styles */
+                    .table-responsive {
+                        position: relative; /* Needed for sticky positioning context */
+                        overflow-y: auto; /* Enable vertical scrolling */
+                        max-height: 600px; /* Adjust as needed to allow scrolling */
+                    }
+
+                    #leadsTable thead th {
+                        position: sticky;
+                        top: 0;
+                        background-color: var(--tblr-card-bg); /* Use Tabler's card background variable for consistent look */
+                        z-index: 10; /* Ensure header is above scrolling content */
+                        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); /* Optional: add a subtle shadow */
+                    }
+                </style>
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-hover table-nowrap" id="leadsTable">
+                        <thead>
+                            <tr>
+                                <th class="w-1">#</th>
+                                <th>Candidate</th>
+                                <th>Contact Details</th>
+                                <th>Lead Status</th>
+                                <th>Assigned Employee</th>
+                                <th>Registration Date</th>
+                                <th>Resume</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for candidate in candidates %}
+                            <tr data-search="{{ candidate.candidate_name|lower }} {{ candidate.unique_code|lower }} {{ candidate.candidate_mobile_number }}"
+                                data-status="{{ candidate.lead_generate|lower|slugify }}"
+                                data-employee="{{ candidate.employee_name|lower }}"
+                                data-registration-date="{{ candidate.register_time|date:"Y-m-d" }}">
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            {% if candidate.candidate_photo %}
+                                            <img src="{{ candidate.candidate_photo.url }}"
+                                                class="avatar avatar-md rounded-circle"
+                                                alt="{{ candidate.candidate_name }}">
+                                            {% else %}
+                                            <div class="avatar avatar-md rounded-circle bg-blue-lt">
+                                                {{ candidate.candidate_name|first|upper }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-medium">
+                                                <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' candidate.id %}{% else %}{% url 'admin_candidate_profile' candidate.id %}{% endif %}"
+                                                    class="text-reset">
+                                                    {{ candidate.candidate_name }}
+                                                </a>
+                                            </div>
+                                            <div class="text-muted small">
+                                                {% if candidate.lead_source == 'EVMS' %}
+                                                <code>{{ candidate.refer_code }}-{{ candidate.unique_id }}</code>
+                                                {% else %}
+                                                <code>{{ candidate.unique_code }}</code>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-muted">
+                                        <a href="tel:{{ candidate.candidate_mobile_number }}"
+                                            class="text-reset d-block">
+                                            {{ candidate.candidate_mobile_number }}
+                                        </a>
+                                        {% if candidate.candidate_email_address %}
+                                        <a href="mailto:{{ candidate.candidate_email_address }}"
+                                            class="text-reset d-block small text-truncate" style="max-width: 150px;">
+                                            {{ candidate.candidate_email_address }}
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="status-badge status-{{ candidate.lead_generate|lower|slugify }}">
+                                        {{ candidate.lead_generate }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-muted small">
+                                        {{ candidate.employee_name }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-muted small">
+                                        {{ candidate.register_time|date:"M d, Y" }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if candidate.candidate_resume %}
+                                    <div class="btn-list">
+                                        <a href="{{ candidate.candidate_resume.url }}" target="_blank"
+                                            class="btn btn-sm btn-icon" title="View Resume" data-bs-toggle="tooltip">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                class="icon icon-tabler icon-tabler-file-text" width="24" height="24"
+                                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+                                                <path
+                                                    d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z">
+                                                </path>
+                                                <path d="M9 9l1 0"></path>
+                                                <path d="M9 13l6 0"></path>
+                                                <path d="M9 17l6 0"></path>
+                                            </svg>
+                                        </a>
+                                        <a href="{{ candidate.candidate_resume.url }}" download
+                                            class="btn btn-sm btn-icon" title="Download Resume" data-bs-toggle="tooltip">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                class="icon icon-tabler icon-tabler-download" width="24" height="24"
+                                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+                                                <path d="M7 11l5 5l5 -5"></path>
+                                                <path d="M12 4l0 12"></path>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted small">No resume</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-list justify-content-center">
+                                        <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' candidate.id %}{% else %}{% url 'admin_candidate_profile' candidate.id %}{% endif %}"
+                                            class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24"
+                                                height="24" viewBox="0 0 24 24" stroke-width="2"
+                                                stroke="currentColor" fill="none" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                                                <path
+                                                    d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                                            </svg>
+                                        </a>
+                                        <a href="tel:{{ candidate.candidate_mobile_number }}"
+                                            class="btn btn-sm btn-icon" title="Call Candidate" data-bs-toggle="tooltip">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                class="icon icon-tabler icon-tabler-phone" width="24" height="24"
+                                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path
+                                                    d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2">
+                                                </path>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-footer d-flex align-items-center">
+                    <div class="pagination-info">
+                        Showing <span id="showingFrom">1</span> to <span id="showingTo">{{ candidates|length }}</span>
+                        of <span id="totalCount">{{ candidates|length }}</span> leads
+                    </div>
+                    <ul class="pagination m-0 ms-auto">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M15 6l-6 6l6 6" />
+                                </svg>
+                                prev
+                            </a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">
+                                next
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M9 6l6 6l-6 6" />
+                                </svg>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-container {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f1f5f9;
+    }
+
+    .badge.bg-blue-lt {
+        background-color: rgba(65, 138, 221, 0.1);
+        color: #418add;
+        padding: 0.25rem 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .card-header .row>div {
+            width: 100%;
+        }
+
+        .card-header .input-group {
+            margin-bottom: 1rem;
+        }
+
+        #leadsTable td {
+            white-space: normal !important;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Search and filter functionality
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const employeeFilterBtn = document.getElementById('employeeFilterBtn'); // Reference the button
+        const employeeSearchInput = document.getElementById('employeeSearchInput');
+        const employeeAllCheckbox = document.getElementById('employeeAll');
+        // Employee checkboxes are dynamically added, so we'll query them after the DOM is ready
+        let employeeCheckboxes = document.querySelectorAll('.employee-checkbox'); // Initial query
+
+        const dateRangeFilter = document.getElementById('dateRangeFilter');
+        const leadsTable = document.getElementById('leadsTable');
+        const rows = leadsTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        const totalCountEl = document.getElementById('totalCount');
+        const showingFromEl = document.getElementById('showingFrom');
+        const showingToEl = document.getElementById('showingTo');
+
+        // Initialize Flatpickr for date range filter
+        flatpickr(dateRangeFilter, {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            onChange: function (selectedDates, dateStr, instance) {
+                filterLeads();
+            }
+        });
+
+        function filterLeads() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusFilterValue = statusFilter.value.toLowerCase();
+
+            // Re-query employee checkboxes to ensure all are included if DOM changes
+            employeeCheckboxes = document.querySelectorAll('.employee-checkbox');
+
+            const selectedEmployees = Array.from(employeeCheckboxes)
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value.toLowerCase());
+
+            // If "All Employees" is checked or no specific employees are selected, show all.
+            const allEmployeesSelected = employeeAllCheckbox.checked || selectedEmployees.length === 0;
+
+            let startDate = null;
+            let endDate = null;
+            if (dateRangeFilter._flatpickr && dateRangeFilter._flatpickr.selectedDates.length === 2) {
+                startDate = dateRangeFilter._flatpickr.selectedDates[0];
+                endDate = dateRangeFilter._flatpickr.selectedDates[1];
+            }
+
+
+            let visibleCount = 0;
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const searchContent = row.getAttribute('data-search');
+                const rowStatus = row.getAttribute('data-status');
+                const rowEmployee = row.getAttribute('data-employee');
+                const rowRegistrationDate = new Date(row.getAttribute('data-registration-date'));
+
+                const matchesSearch = searchContent.includes(searchTerm);
+                const matchesStatus = statusFilterValue === '' ||
+                    (rowStatus && rowStatus.toLowerCase().includes(statusFilterValue));
+
+                const matchesEmployee = allEmployeesSelected || selectedEmployees.includes(rowEmployee);
+
+                let matchesDateRange = true;
+                if (startDate && endDate) {
+                    // Normalize dates to start of day for accurate range comparison
+                    const rowDate = new Date(rowRegistrationDate.getFullYear(), rowRegistrationDate.getMonth(), rowRegistrationDate.getDate());
+                    const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                    const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                    matchesDateRange = rowDate >= start && rowDate <= end;
+                }
+
+                if (matchesSearch && matchesStatus && matchesEmployee && matchesDateRange) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+
+            // Update counters
+            showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
+            showingToEl.textContent = visibleCount;
+            document.getElementById('total-leads').textContent = visibleCount;
+        }
+
+        // Function to filter employee checkboxes within the dropdown
+        function filterEmployeeCheckboxesDisplay() {
+            const search = employeeSearchInput.value.toLowerCase();
+            document.querySelectorAll('.employee-checkbox-item').forEach(item => {
+                const employeeName = item.querySelector('label').textContent.toLowerCase();
+                if (employeeName.includes(search)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Event listeners
+        searchInput.addEventListener('input', filterLeads);
+        statusFilter.addEventListener('change', filterLeads);
+        dateRangeFilter.addEventListener('change', filterLeads); // Flatpickr onChange also calls filterLeads, but this is a fallback.
+
+        // Add input event listener for the employee search input
+        employeeSearchInput.addEventListener('input', filterEmployeeCheckboxesDisplay);
+
+        employeeAllCheckbox.addEventListener('change', function () {
+            employeeCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            filterLeads(); // Re-filter leads when 'All Employees' changes
+        });
+
+        // Attach change listeners to individual employee checkboxes
+        // This needs to be done *after* the DOM is loaded and the checkboxes exist.
+        // It's already correctly set up, but just a reminder.
+        employeeCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                if (!this.checked) {
+                    employeeAllCheckbox.checked = false;
+                } else {
+                    const allChecked = Array.from(employeeCheckboxes).every(cb => cb.checked);
+                    employeeAllCheckbox.checked = allChecked;
+                }
+                filterLeads(); // Re-filter leads when individual employee selection changes
+            });
+        });
+
+        // Prevent dropdown from closing when interacting with its contents (search, checkboxes)
+        document.querySelector('.dropdown-menu').addEventListener('click', function (e) {
+            e.stopPropagation(); // Stop the click from propagating to the document, which would close the dropdown
+        });
+
+        // Initial filter on page load
+        filterLeads();
+
+        // Make table rows clickable (except when clicking on buttons)
+        document.querySelectorAll('#leadsTable tbody tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                // Check if the click was on a button or link or a checkbox within the row
+                if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.closest('.form-check')) {
+                    return;
+                }
+
+                // Find the profile link in the row and navigate to it
+                const profileLink = row.querySelector('td:nth-child(2) a');
+                if (profileLink) {
+                    window.location.href = profileLink.href;
+                }
+            });
+
+            // Change cursor on hover
+            row.style.cursor = 'pointer';
+        });
+    });
+</script>
+
+{% endblock %}
