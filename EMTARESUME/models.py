@@ -32,7 +32,7 @@ class ResumeData(models.Model):
 class CoverData(models.Model):
     # Basic information fields
     name = models.CharField(max_length=50)
-    description = models.CharField(max_length=200, blank=True)
+    description = models.CharField(max_length=200, blank=True, null=True)
     category = models.CharField(max_length=50)
     sector = models.CharField(max_length=50)
 
