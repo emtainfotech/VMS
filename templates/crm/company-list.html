@@ -34,7 +34,7 @@
       <div class="card">
         <div class="card-header">
           <div class="row align-items-center">
-            <div class="col-12 col-md-12 mb-3 mb-md-0">
+            <div class="col-12 col-md-6 mb-3 mb-md-0">
               <div class="input-group">
                 <span class="input-group-text">
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -46,7 +46,36 @@
                 <input type="text" id="searchInput" class="form-control" placeholder="Search companies..." aria-label="Search companies">
               </div>
             </div>
-            
+            <div class="col-12 col-md-6 mb-3 mb-md-0">
+              <div class="input-group">
+                <span class="input-group-text">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M3 7h18"/>
+                    <path d="M6 10v6"/>
+                    <path d="M10 10v6"/>
+                    <path d="M14 10v6"/>
+                    <path d="M18 10v6"/>
+                  </svg>
+                </span>
+                <select id="statusFilter" class="form-select" aria-label="Filter by Status">
+                  <option value="">All Statuses</option>
+                  <option value="Approved">Approved</option>
+<option value="Pending">Pending</option>
+<option value="Rejected">Rejected</option>
+
+<option value="Proposal Accepted">Proposal Accepted</option>
+<option value="Proposal Under Discussion">Proposal Under Discussion</option>
+<option value="On Hold(by Us)">On Hold(by Us)</option>
+<option value="On Hold(by Company)">On Hold(by Company)</option>
+<option value="Revised Proposal to Sent">Revised Proposal to Sent</option>
+<option value="Follow-Up Required">Follow-Up Required</option>
+<option value="Proposal to be Sent">Proposal to be Sent</option>
+
+                  <!-- Add more statuses as needed -->
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -286,41 +315,46 @@
     tooltipTriggerList.map(function (tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-  
-    // Search functionality only
+
+    // Search and status filter functionality
     const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
     const rows = document.querySelectorAll("#companiesTable tbody tr");
     const totalCountEl = document.getElementById('totalCount');
     const showingFromEl = document.getElementById('showingFrom');
     const showingToEl = document.getElementById('showingTo');
     const totalCompaniesEl = document.getElementById('total-companies');
-  
+
     function filterCompanies() {
       const searchTerm = searchInput.value.toLowerCase();
+      const statusTerm = statusFilter.value;
       let visibleCount = 0;
-  
+
       rows.forEach(row => {
         const searchContent = row.getAttribute("data-search") || "";
+        const rowStatus = row.getAttribute("data-status") || "";
         const matchesSearch = searchContent.includes(searchTerm);
-  
-        if (matchesSearch) {
+        const matchesStatus = !statusTerm || rowStatus === statusTerm;
+
+        if (matchesSearch && matchesStatus) {
           row.style.display = "";
           visibleCount++;
         } else {
           row.style.display = "none";
         }
       });
-  
+
       // Update visible counters (optional)
       if (showingFromEl) showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
       if (showingToEl) showingToEl.textContent = visibleCount;
       if (totalCountEl) totalCountEl.textContent = visibleCount;
       if (totalCompaniesEl) totalCompaniesEl.textContent = visibleCount;
     }
-  
-    // Event listener
+
+    // Event listeners
     searchInput.addEventListener("input", filterCompanies);
-  
+    statusFilter.addEventListener("change", filterCompanies);
+
     // Make table rows clickable (excluding buttons/links)
     rows.forEach(row => {
       row.addEventListener('click', (e) => {
@@ -330,7 +364,7 @@
       });
       row.style.cursor = 'pointer';
     });
-  
+
     // Initial call
     filterCompanies();
   });

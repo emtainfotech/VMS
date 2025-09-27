@@ -911,111 +911,170 @@ def admin_candidate_profile(request, id):
         return render(request, 'crm/404.html', status=404)
     
     
-@login_required(login_url='/crm/404/')    
+@login_required(login_url='/crm/404/')
 def admin_candidate_registration(request):
-    if request.user.is_staff or request.user.is_superuser:
-        logged_in_employee = Employee.objects.get(user=request.user)
-        if request.method == 'POST':
-            candidate_name = request.POST.get('candidate_name')
-            # unique_code = request.POST.get('unique_code')
-            candidate_mobile_number = request.POST.get('candidate_mobile_number')
-            candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
-            candidate_email_address = request.POST.get('candidate_email_address')
-            gender = request.POST.get('gender')
-            lead_source = request.POST.get('lead_source')
-            preferred_location = request.POST.getlist('preferred_location')
-            origin_location = request.POST.get('origin_location')
-            qualification = request.POST.get('qualification')
-            diploma = request.POST.get('diploma')
-            sector = request.POST.getlist('sector')
-            department = request.POST.getlist('department')
-            experience_year = request.POST.get('experience_year')
-            experience_month = request.POST.get('experience_month')
-            current_company = request.POST.get('current_company')
-            current_working_status = request.POST.get('current_working_status')
-            current_salary = request.POST.get('current_salary')
-            expected_salary = request.POST.get('expected_salary')
-            candidate_photo = request.FILES.get('candidate_photo')
-            candidate_resume = request.FILES.get('candidate_resume')
-            call_connection = request.POST.get('call_connection')
-            calling_remark = request.POST.get('calling_remark')
-            lead_generate = request.POST.get('lead_generate')
-            send_for_interview = request.POST.get('send_for_interview')
-            next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
-            remark = request.POST.get('remark')
-            preferred_location_str = ', '.join(preferred_location)
-            sector_str = ', '.join(sector)
-            department_str = ', '.join(department)
-            other_lead_source = request.POST.get('other_lead_source')
-            other_qualification = request.POST.get('other_qualification')
-            other_origin_location = request.POST.get('other_origin_location')
-            other_preferred_location = request.POST.get('other_preferred_location')
-            other_qualification = request.POST.get('other_qualification')
-            other_sector = request.POST.get('other_sector')
-            other_department = request.POST.get('other_department')
-            current_salary_type = request.POST.get('current_salary_type')
-            expected_salary_type = request.POST.get('expected_salary_type')
-            
-            # Check for duplicates
-            duplicate_mobile = Candidate_registration.objects.filter(
-                candidate_mobile_number=candidate_mobile_number
-            ).exists()
-            
-            duplicate_email = Candidate_registration.objects.filter(
-                candidate_email_address=candidate_email_address
-            ).exists()
-            
-            if duplicate_mobile or duplicate_email:
-                errors = []
-                if duplicate_mobile:
-                    errors.append("Mobile number already registered")
-                if duplicate_email:
-                    errors.append("Email address already registered")
-                return JsonResponse({'status': 'error', 'errors': errors}, status=400)
-            
-            # Save to database if no duplicates
-            Candidate_registration.objects.create(
-                employee_name=logged_in_employee,
-                candidate_name=candidate_name,
-                # unique_code=unique_code,
-                candidate_mobile_number=candidate_mobile_number,
-                candidate_alternate_mobile_number=candidate_alternate_mobile_number,
-                candidate_email_address=candidate_email_address,
-                gender=gender,
-                lead_source=lead_source,
-                preferred_location=preferred_location_str,
-                origin_location=origin_location,
-                qualification=qualification,
-                diploma=diploma,
-                sector=sector_str,
-                department=department_str,
-                experience_year=experience_year,
-                experience_month=experience_month,
-                current_company=current_company,
-                current_working_status=current_working_status,
-                current_salary=current_salary,
-                expected_salary=expected_salary,
-                call_connection=call_connection,
-                calling_remark=calling_remark,
-                lead_generate=lead_generate,
-                send_for_interview=send_for_interview,
-                next_follow_up_date_time=next_follow_up_date_time,
-                candidate_photo=candidate_photo,
-                candidate_resume=candidate_resume,
-                remark=remark,
-                other_lead_source=other_lead_source,
-                other_qualification=other_qualification,
-                other_origin_location=other_origin_location,
-                other_preferred_location=other_preferred_location,
-                other_sector=other_sector,
-                other_department=other_department,
-                current_salary_type=current_salary_type,
-                expected_salary_type=expected_salary_type
-            )
-            
-            return JsonResponse({'status': 'success', 'redirect_url': reverse('admin_candidate_list')})
+    logged_in_employee = Employee.objects.get(user=request.user)
+    
+    if request.method == 'POST':
+        candidate_mobile_number = request.POST.get('candidate_mobile_number')
         
-        # suggested_unique_code = admin_get_next_unique_code(request)
+        # Check for duplicates by mobile number
+        try:
+            duplicate_candidate = Candidate_registration.objects.get(
+                candidate_mobile_number=candidate_mobile_number
+            )
+            # If a duplicate is found, return a JSON response with the candidate's details
+            return JsonResponse({
+                'status': 'duplicate',
+                'message': 'Mobile number already registered.',
+                'candidate_id': duplicate_candidate.id,
+                'candidate_name': duplicate_candidate.candidate_name,
+                'candidate_profile_url': reverse('admin_candidate_profile', args=[duplicate_candidate.id])
+            }, status=409)  # Use status code 409 for Conflict
+        except Candidate_registration.DoesNotExist:
+            pass # No duplicate found, continue with registration
+
+        # Process the form data
+        candidate_name = request.POST.get('candidate_name')
+        candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
+        candidate_email_address = request.POST.get('candidate_email_address')
+        gender = request.POST.get('gender')
+        lead_source = request.POST.get('lead_source')
+        preferred_location = request.POST.getlist('preferred_location')
+        origin_location = request.POST.get('origin_location')
+        qualification = request.POST.get('qualification')
+        diploma = request.POST.get('diploma')
+        sector = request.POST.getlist('sector')
+        department = request.POST.getlist('department')
+        experience_year = request.POST.get('experience_year')
+        experience_month = request.POST.get('experience_month')
+        current_company = request.POST.get('current_company')
+        current_working_status = request.POST.get('current_working_status')
+        current_salary = request.POST.get('current_salary')
+        expected_salary = request.POST.get('expected_salary')
+        candidate_photo = request.FILES.get('candidate_photo')
+        candidate_resume = request.FILES.get('candidate_resume')
+        call_connection = request.POST.get('call_connection')
+        calling_remark = request.POST.get('calling_remark')
+        lead_generate = request.POST.get('lead_generate')
+        send_for_interview = request.POST.get('send_for_interview')
+        next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
+        remark = request.POST.get('remark')
+        submit_by = request.POST.get('submit_by')
+        preferred_location_str = ', '.join(preferred_location)
+        sector_str = ', '.join(sector)
+        department_str = ', '.join(department)
+        other_lead_source = request.POST.get('other_lead_source')
+        other_qualification = request.POST.get('other_qualification')
+        other_origin_location = request.POST.get('other_origin_location')
+        other_preferred_location = request.POST.get('other_preferred_location')
+        other_sector = request.POST.get('other_sector')
+        other_department = request.POST.get('other_department')
+        current_salary_type = request.POST.get('current_salary_type')
+        expected_salary_type = request.POST.get('expected_salary_type')
+        
+        # Save to database
+        candidate = Candidate_registration.objects.create(
+            employee_name=logged_in_employee,
+            candidate_name=candidate_name,
+            candidate_mobile_number=candidate_mobile_number,
+            candidate_alternate_mobile_number=candidate_alternate_mobile_number,
+            candidate_email_address=candidate_email_address,
+            gender=gender,
+            lead_source=lead_source,
+            preferred_location=preferred_location_str,
+            origin_location=origin_location,
+            qualification=qualification,
+            diploma=diploma,
+            sector=sector_str,
+            department=department_str,
+            experience_year=experience_year,
+            experience_month=experience_month,
+            current_company=current_company,
+            current_working_status=current_working_status,
+            current_salary=current_salary,
+            expected_salary=expected_salary,
+            call_connection=call_connection,
+            calling_remark=calling_remark,
+            lead_generate=lead_generate,
+            send_for_interview=send_for_interview,
+            next_follow_up_date_time=next_follow_up_date_time,
+            candidate_photo=candidate_photo,
+            candidate_resume=candidate_resume,
+            remark=remark,
+            submit_by=submit_by,
+            other_lead_source=other_lead_source,
+            other_qualification=other_qualification,
+            other_origin_location=other_origin_location,
+            other_preferred_location=other_preferred_location,
+            other_sector=other_sector,
+            other_department=other_department,
+            current_salary_type=current_salary_type,
+            expected_salary_type=expected_salary_type
+        )
+
+        # Create a CandidateActivity record
+        CandidateActivity.objects.create(
+            candidate=candidate,
+            employee=logged_in_employee,
+            action='created',
+            # changes=changes,
+            remark="Created via unified form"
+        )
+
+        return JsonResponse({'status': 'success', 'redirect_url': reverse('admin_candidate_list')})
+    else:
+        # suggested_unique_code = get_next_unique_code()
+
+        state = [
+            "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", 
+            "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", 
+            "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
+            "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+            # Union Territories
+            "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", 
+            "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+        ]
+
+        state_distict = {
+            "Andhra Pradesh": ["Anantapur", "Chittoor", "East Godavari", "Guntur", "Krishna", "Kurnool", "Nellore", "Prakasam", "Srikakulam", "Visakhapatnam", "Vizianagaram", "West Godavari"],  
+            "Arunachal Pradesh": ["Anjaw", "Changlang", "Dibang Valley", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang"],
+            "Assam": ["Barpeta", "Bongaigaon", "Cachar", "Charaideo", "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao", "Goalpara", "Golaghat", "Hailakandi", "Hazaribag", "Jorhat", "Kamrup Metropolitan", "Kamrup", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Moranha", "Nagaon", "Nalbari", "North Cachar Hills", "Sivasagar", "Sonitpur", "South Cachar Hills", "Tinsukia", "Udalguri", "West Karbi Anglong"],
+            "Bihar": ["Araria", "Aurangabad", "Bhojpur", "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran"],
+            "Chhattisgarh": ["Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur", "Bilaspur", "Dakshin Bastar Dantewada", "Dhamtari", "Durg", "Gariyaband", "Gaurela Pendra Marwahi", "Janjgir-Champa", "Jashpur", "Kabirdham", "Kanker", "Kondagaon", "Korba", "Koriya", "Mahasamund", "Mungeli", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur"],
+            "Goa": ["North Goa", "South Goa"],
+            "Gujarat": ["Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch", "Bhavnagar", "Botad", "Chhota Udaipur", "Dahod", "Dang", "Devbhoomi Dwarka", "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch", "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal", "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar", "Tapi", "Vadodara", "Valsad"],
+            "Haryana": ["Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram", "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh", "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa", "Sonipat", "Yamunanagar"],
+            "Himachal Pradesh": ["Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu", "Lahaul and Spiti", "Mandi", "Shimla", "Sirmaur", "Solan", "Una"],
+            "Jharkhand": ["Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum", "Garhwa", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamtara", "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu", "Ramgarh", "Ranchi", "Sahebganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum"],
+            "Karnataka": ["Bagalkot", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar", "Chamarajanagar", "Chikballapur", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi", "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi", "Uttara Kannada", "Vijayapura", "Yadgir"],
+            "Kerala": ["Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam", "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad"],
+            "Madhya Pradesh": ["Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal", "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni", "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch", "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh", "Ujjain", "Umaria", "Vidisha"],
+            "Maharashtra": ["Ahmednagar", "Akola", "Amravati", "Aurangabad", "Beed", "Bhandara", "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli", "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban", "Nagpur", "Nanded", "Nandurbar", "Nashik", "Osmanabad", "Palghar", "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara", "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal"],
+            "Manipur": ["Bishnupur", "Chandel", "Churachandpur", "Imphal East", "Imphal West", "Jiribam", "Kakching", "Kamjong", "Kangpokpi", "Noney", "Pherzawl", "Senapati", "Tamenglong", "Tengnoupal", "Thoubal", "Ukhrul"],
+            "Meghalaya": ["East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "North Garo Hills", "Ri Bhoi", "South Garo Hills", "South West Garo Hills", "South West Khasi Hills", "West Garo Hills", "West Jaintia Hills", "West Khasi Hills"],
+            "Mizoram": ["Aizawl", "Champhai", "Hnahthial", "Khawzawl", "Kolasib", "Lawngtlai", "Lunglei", "Mamit", "Saiha", "Saitual", "Serchhip"],
+            "Nagaland": ["Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung", "Mon", "Peren", "Phek", "Tuensang", "Wokha", "Zunheboto"],
+            "Odisha": ["Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Bhubaneswar", "Boudh", "Cuttack", "Deogarh", "Dhenkanal", "Gajapati", "Ganjam", "Jagatsinghpur", "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar", "Khordha", "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", "Puri", "Rayagada", "Sambalpur", "Subarnapur", "Sundargarh"],
+            "Punjab": ["Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka", "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana", "Mansa", "Moga", "Muktsar", "Nawanshahr", "Pathankot", "Patiala", "Rupnagar", "Sangrur", "SAS Nagar", "Tarn Taran"],
+            "Rajasthan": ["Ajmer", "Alwar", "Banswara", "Baran", "Barmer", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh", "Churu", "Dausa", "Dholpur", "Dungarpur", "Hanumangarh", "Jaipur", "Jaisalmer", "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Karauli", "Kota", "Nagaur", "Pali", "Pratapgarh", "Rajsamand", "Sawai Madhopur", "Sikar", "Sirohi", "Sri Ganganagar", "Tonk", "Udaipur"],
+            "Sikkim": ["East Sikkim", "North Sikkim", "South Sikkim", "West Sikkim"],
+            "Tamil Nadu": ["Ariyalur", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kanchipuram", "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Salem", "Sivaganga", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"],
+            "Telangana": ["Adilabad", "Bhadradri Kothagudem", "Hyderabad", "Jagtial", "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar", "Khammam", "Komaram Bheem Asifabad", "Mahabubabad", "Mahabubnagar", "Mancherial", "Medak", "Medchal-Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda", "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli", "Rajanna Sircilla", "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad", "Wanaparthy", "Warangal Rural", "Warangal Urban", "Yadadri Bhuvanagiri"],
+            "Tripura": ["Dhalai", "Gomati", "Khowai", "North Tripura", "Sepahijala", "South Tripura", "Unakoti", "West Tripura"],
+            "Uttar Pradesh": ["Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur", "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor", "Budaun", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah", "Etawah", "Ayodhya", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat", "Kanpur Nagar", "Kasganj", "Kaushambi", "Kushinagar", "Lakhimpur Kheri", "Lalitpur", "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau", "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh", "Prayagraj", "Rae Bareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar", "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra", "Sultanpur", "Unnao", "Varanasi"],
+            "Uttarakhand": ["Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", "Uttarkashi"],
+            "West Bengal": ["Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong", "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur", "Purulia", "South 24 Parganas", "Uttar Dinajpur"],
+            # Union Territories
+            "Andaman and Nicobar Islands": ["Nicobar", "North and Middle Andaman", "South Andaman"],
+            "Chandigarh": ["Chandigarh"],
+            "Dadra and Nagar Haveli and Daman and Diu": ["Dadra and Nagar Haveli", "Daman", "Diu"],
+            "Delhi": ["Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi", "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi"],
+            "Jammu and Kashmir": ["Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur"],
+            "Ladakh": ["Kargil", "Leh"],
+            "Lakshadweep": ["Lakshadweep"],
+            "Puducherry": ["Karaikal", "Mahe", "Puducherry", "Yanam"]
+        }
 
         districts = [
             "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
@@ -1056,121 +1115,28 @@ def admin_candidate_registration(request):
 
         ]
         
-
-
         job_sectors = [
-        "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
-        "Healthcare and Pharmaceuticals","Education and Training",
-        "Retail and E-commerce", "Manufacturing and Production","Real Estate and Construction", "Hospitality and Tourism",
-        "Media and Entertainment", "Telecommunications","Logistics and Supply Chain","Marketing and Advertising","Human Resources",
-        "Legal and Compliance","Engineering and Infrastructure","Automobile Industry",
-        "Fashion and Textile", "FMCG (Fast Moving Consumer Goods)",
-        "Agriculture and Farming", "Insurance","Government Sector","NGO and Social Services",
-        "Energy and Power","Aviation and Aerospace"
+            "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
+            "Healthcare and Pharmaceuticals","Education and Training",
+            "Retail and E-commerce", "Manufacturing and Production","Real Estate and Construction", "Hospitality and Tourism",
+            "Media and Entertainment", "Telecommunications","Logistics and Supply Chain","Marketing and Advertising","Human Resources",
+            "Legal and Compliance","Engineering and Infrastructure","Automobile Industry",
+            "Fashion and Textile", "FMCG (Fast Moving Consumer Goods)",
+            "Agriculture and Farming", "Insurance","Government Sector","NGO and Social Services",
+            "Energy and Power","Aviation and Aerospace"
         ]
         departments = [
-        # IT (Information Technology)
-        "Software Development", "IT Support", "Web Development", 
-        "Network Administration", "Cybersecurity", 
-        "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)",
-
-        # BPO (Business Process Outsourcing)
-        "Customer Support", "Technical Support", "Voice Process", 
-        "Non-Voice Process", "Back Office Operations",
-
-        # Banking and Finance
-        "Investment Banking", "Retail Banking", "Loan Processing", 
-        "Risk Management", "Accounting and Auditing", 
-        "Financial Analysis", "Wealth Management",
-
-        # Healthcare and Pharmaceuticals
-        "Medical Representatives", "Clinical Research", "Nursing", 
-        "Medical Technicians", "Pharmacy Operations", 
-        "Healthcare Administration",
-
-        # Education and Training
-        "Teaching", "Curriculum Development", "Academic Counseling", 
-        "E-Learning Development", "Education Administration",
-
-        # Retail and E-commerce
-        "Store Operations", "Supply Chain Management", 
-        "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
-
-        # Manufacturing and Production
-        "Production Planning", "Quality Control", "Maintenance and Repair", 
-        "Operations Management", "Inventory Management",
-
-        # Real Estate and Construction
-        "Sales and Marketing", "Civil Engineering", "Project Management", 
-        "Interior Designing", "Surveying and Valuation",
-
-        # Hospitality and Tourism
-        "Hotel Management", "Travel Coordination", "Event Planning", 
-        "Food and Beverage Services", "Guest Relations",
-
-        # Media and Entertainment
-        "Content Writing", "Video Editing", "Graphic Designing", 
-        "Social Media Management", "Event Production",
-
-        # Telecommunications
-        "Network Installation", "Customer Support", "Telecom Engineering", 
-        "Technical Operations", "Business Development",
-
-        # Logistics and Supply Chain
-        "Logistics Coordination", "Warehouse Management", "Procurement", 
-        "Transportation Management", "Inventory Control",
-
-        # Marketing and Advertising
-        "Market Research", "Brand Management", "Advertising Sales", 
-        "Public Relations", "Digital Marketing",
-
-        # Human Resources
-        "Recruitment", "Employee Relations", "Payroll and Benefits", 
-        "Training and Development", "HR Analytics",
-
-        # Legal and Compliance
-        "Corporate Law", "Compliance Auditing", "Contract Management", 
-        "Intellectual Property Rights", "Legal Advisory",
-
-        # Engineering and Infrastructure
-        "Civil Engineering", "Mechanical Engineering", 
-        "Electrical Engineering", "Project Planning", "Structural Design",
-
-        # Automobile Industry
-        "Automotive Design", "Production and Assembly", "Sales and Service", 
-        "Supply Chain Management", "Quality Assurance",
-
-        # Fashion and Textile
-        "Fashion Design", "Merchandising", "Production Management", 
-        "Quality Control", "Retail Sales",
-
-        # FMCG (Fast Moving Consumer Goods)
-        "Sales and Marketing", "Supply Chain Operations", 
-        "Production Management", "Quality Control", "Brand Management",
-
-        # Agriculture and Farming
-        "Agribusiness Management", "Farm Operations", "Food Processing", 
-        "Agricultural Sales", "Quality Assurance",
-
-        # Insurance
-        "Sales and Business Development", "Underwriting", 
-        "Claims Management", "Actuarial Services", "Policy Administration",
-
-        # Government Sector
-        "Administrative Services", "Public Relations", 
-        "Policy Analysis", "Clerical Positions", "Field Operations",
-
-        # NGO and Social Services
-        "Community Development", "Fundraising", "Program Management", 
-        "Volunteer Coordination", "Policy Advocacy",
-
-        # Energy and Power
-        "Renewable Energy Operations", "Power Plant Engineering", 
-        "Energy Efficiency Management", "Electrical Design", "Maintenance",
-
-        # Aviation and Aerospace
-        "Flight Operations", "Ground Staff", "Aircraft Maintenance", 
-        "Cabin Crew", "Research and Development"
+            # IT (Information Technology)
+            "Software Development", "IT Support", "Web Development", "Network Administration", "Cybersecurity", "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)","Customer Support", "Technical Support", "Voice Process", "Non-Voice Process", "Back Office Operations","Investment Banking", "Retail Banking", "Loan Processing", 
+            "Risk Management", "Accounting and Auditing", "Medical Representatives", "Clinical Research", "Nursing", 
+            "Medical Technicians", "Pharmacy Operations", 
+            "Healthcare Administration","Teaching", "Curriculum Development", "Academic Counseling", "E-Learning Development", "Education Administration","Store Operations", "Supply Chain Management", "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
+            "Production Planning", "Quality Control", "Maintenance and Repair", "Operations Management", "Inventory Management","Sales and Marketing", "Civil Engineering", "Project Management", "Interior Designing", "Surveying and Valuation","Hotel Management", "Travel Coordination", "Event Planning", "Food and Beverage Services", "Guest Relations",
+            "Content Writing", "Video Editing", "Graphic Designing", "Social Media Management", "Event Production","Network Installation", "Customer Support", "Telecom Engineering", "Technical Operations", "Business Development","Logistics Coordination", "Warehouse Management", "Procurement", "Transportation Management", "Inventory Control","Market Research", "Brand Management", "Advertising Sales", "Public Relations", "Digital Marketing",
+            "Recruitment", "Employee Relations", "Payroll and Benefits", "Training and Development", "HR Analytics","Corporate Law", "Compliance Auditing", "Contract Management", "Intellectual Property Rights", "Legal Advisory","Civil Engineering", "Mechanical Engineering", "Electrical Engineering", "Project Planning", "Structural Design","Automotive Design", "Production and Assembly", "Sales and Service", 
+            "Supply Chain Management", "Quality Assurance","Fashion Design", "Merchandising", "Production Management", "Quality Control", "Retail Sales","Sales and Marketing", "Supply Chain Operations", "Production Management", "Quality Control", "Brand Management","Agribusiness Management", "Farm Operations", "Food Processing", "Agricultural Sales", "Quality Assurance",
+            "Sales and Business Development", "Underwriting", "Claims Management", "Actuarial Services", "Policy Administration","Administrative Services", "Public Relations", "Policy Analysis", "Clerical Positions", "Field Operations","Community Development", "Fundraising", "Program Management", "Volunteer Coordination", "Policy Advocacy",
+            "Renewable Energy Operations", "Power Plant Engineering", "Energy Efficiency Management", "Electrical Design", "Maintenance","Flight Operations", "Ground Staff", "Aircraft Maintenance", "Cabin Crew", "Research and Development"
         ]
 
 
@@ -1178,23 +1144,42 @@ def admin_candidate_registration(request):
             # 'suggested_unique_code':suggested_unique_code,
             'districts' : districts,
             'job_sectors' : job_sectors,
-            'departments' : departments
+            'departments' : departments,
+            'state' : state,
+            'state_distict' : state_distict
         }
-        return render (request,'crm/candidate-registration.html',context)    
-    else:
-        # If the user is not an admin, show a 404 page
-        return render(request, 'crm/404.html', status=404)
-    
-# def admin_get_next_unique_code():
-#     candidate = Candidate_registration.objects.filter(unique_code__regex=r'^EC\d{6}$').values_list('unique_code', flat=True)
-#     numbers = [int(re.search(r'\d{6}', code).group()) for code in candidate if re.search(r'\d{6}', code)]
+        return render (request,'crm/candidate-registration.html',context)
+   
 
-#     if numbers:
-#         next_number = max(numbers) + 1  
-#     else:
-#         next_number = 1 
-#     return f"EC{next_number:06d}"
+@login_required(login_url='/employee/404/')
+@require_POST
+def check_mobile_number_duplicate(request):
+    """
+    Checks if a mobile number already exists and returns details for the modal.
+    """
+    try:
+        data = json.loads(request.body)
+        mobile_number = data.get('mobile_number')
+    except (json.JSONDecodeError, KeyError):
+        return JsonResponse({'error': 'Invalid request body'}, status=400)
 
+    if mobile_number:
+        try:
+            duplicate_candidate = Candidate_registration.objects.get(
+                candidate_mobile_number=mobile_number
+            )
+            # If a candidate is found, return all data needed for the modal
+            return JsonResponse({
+                'status': 'duplicate',
+                'candidate_name': duplicate_candidate.candidate_name,
+                # ADD THIS LINE to provide the URL for the button
+                'candidate_profile_url': reverse('admin_candidate_profile', args=[duplicate_candidate.id])
+            }, status=409)
+        except Candidate_registration.DoesNotExist:
+            # If no candidate is found, return a success status
+            return JsonResponse({'status': 'unique'}, status=200)
+
+    return JsonResponse({'error': 'Mobile number is required'}, status=400)
 
 @login_required(login_url='/crm/404/')
 def admin_candidate_bulk_upload(request):
@@ -5550,3 +5535,275 @@ def banking_counselling_view(request):
         'candidates': candidates
     }
     return render(request, 'crm/banking_counselling.html', context)
+
+
+@login_required(login_url='/crm/404/')
+def admin_bfsi_candidate_registration(request):
+    logged_in_employee = Employee.objects.get(user=request.user)
+    
+    if request.method == 'POST':
+        candidate_mobile_number = request.POST.get('candidate_mobile_number')
+        
+        # Check for duplicates by mobile number
+        try:
+            duplicate_candidate = Candidate_registration.objects.get(
+                candidate_mobile_number=candidate_mobile_number
+            )
+            # If a duplicate is found, return a JSON response with the candidate's details
+            return JsonResponse({
+                'status': 'duplicate',
+                'message': 'Mobile number already registered.',
+                'candidate_id': duplicate_candidate.id,
+                'candidate_name': duplicate_candidate.candidate_name,
+                'candidate_profile_url': reverse('admin_candidate_profile', args=[duplicate_candidate.id])
+            }, status=409)  # Use status code 409 for Conflict
+        except Candidate_registration.DoesNotExist:
+            pass # No duplicate found, continue with registration
+
+        # Process the form data
+        candidate_name = request.POST.get('candidate_name')
+        candidate_alternate_mobile_number = request.POST.get('candidate_alternate_mobile_number')
+        candidate_email_address = request.POST.get('candidate_email_address')
+        gender = request.POST.get('gender')
+        lead_source = request.POST.get('lead_source')
+        preferred_location = request.POST.getlist('preferred_location')
+        origin_location = request.POST.get('origin_location')
+        qualification = request.POST.get('qualification')
+        diploma = request.POST.get('diploma')
+        sector = request.POST.getlist('sector')
+        department = request.POST.getlist('department')
+        experience_year = request.POST.get('experience_year')
+        experience_month = request.POST.get('experience_month')
+        current_company = request.POST.get('current_company')
+        current_working_status = request.POST.get('current_working_status')
+        current_salary = request.POST.get('current_salary')
+        expected_salary = request.POST.get('expected_salary')
+        candidate_photo = request.FILES.get('candidate_photo')
+        candidate_resume = request.FILES.get('candidate_resume')
+        call_connection = request.POST.get('call_connection')
+        calling_remark = request.POST.get('calling_remark')
+        lead_generate = request.POST.get('lead_generate')
+        send_for_interview = request.POST.get('send_for_interview')
+        next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
+        remark = request.POST.get('remark')
+        submit_by = request.POST.get('submit_by')
+        preferred_location_str = ', '.join(preferred_location)
+        sector_str = ', '.join(sector)
+        department_str = ', '.join(department)
+        other_lead_source = request.POST.get('other_lead_source')
+        other_qualification = request.POST.get('other_qualification')
+        other_origin_location = request.POST.get('other_origin_location')
+        other_preferred_location = request.POST.get('other_preferred_location')
+        other_sector = request.POST.get('other_sector')
+        other_department = request.POST.get('other_department')
+        current_salary_type = request.POST.get('current_salary_type')
+        expected_salary_type = request.POST.get('expected_salary_type')
+        
+        # Save to database
+        candidate = Candidate_registration.objects.create(
+            employee_name=logged_in_employee,
+            candidate_name=candidate_name,
+            candidate_mobile_number=candidate_mobile_number,
+            candidate_alternate_mobile_number=candidate_alternate_mobile_number,
+            candidate_email_address=candidate_email_address,
+            gender=gender,
+            lead_source=lead_source,
+            preferred_location=preferred_location_str,
+            origin_location=origin_location,
+            qualification=qualification,
+            diploma=diploma,
+            sector=sector_str,
+            department=department_str,
+            experience_year=experience_year,
+            experience_month=experience_month,
+            current_company=current_company,
+            current_working_status=current_working_status,
+            current_salary=current_salary,
+            expected_salary=expected_salary,
+            call_connection=call_connection,
+            calling_remark=calling_remark,
+            lead_generate=lead_generate,
+            send_for_interview=send_for_interview,
+            next_follow_up_date_time=next_follow_up_date_time,
+            candidate_photo=candidate_photo,
+            candidate_resume=candidate_resume,
+            remark=remark,
+            submit_by=submit_by,
+            other_lead_source=other_lead_source,
+            other_qualification=other_qualification,
+            other_origin_location=other_origin_location,
+            other_preferred_location=other_preferred_location,
+            other_sector=other_sector,
+            other_department=other_department,
+            current_salary_type=current_salary_type,
+            expected_salary_type=expected_salary_type
+        )
+
+        # Create a CandidateActivity record
+        CandidateActivity.objects.create(
+            candidate=candidate,
+            employee=logged_in_employee,
+            action='created',
+            # changes=changes,
+            remark="Created via unified form"
+        )
+
+        return JsonResponse({'status': 'success', 'redirect_url': reverse('banking_counselling_view')})
+    else:
+        # suggested_unique_code = get_next_unique_code()
+
+        state = [
+            "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", 
+            "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", 
+            "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
+            "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+            # Union Territories
+            "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", 
+            "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+        ]
+
+        state_distict = {
+            "Andhra Pradesh": ["Anantapur", "Chittoor", "East Godavari", "Guntur", "Krishna", "Kurnool", "Nellore", "Prakasam", "Srikakulam", "Visakhapatnam", "Vizianagaram", "West Godavari"],  
+            "Arunachal Pradesh": ["Anjaw", "Changlang", "Dibang Valley", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang"],
+            "Assam": ["Barpeta", "Bongaigaon", "Cachar", "Charaideo", "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao", "Goalpara", "Golaghat", "Hailakandi", "Hazaribag", "Jorhat", "Kamrup Metropolitan", "Kamrup", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Moranha", "Nagaon", "Nalbari", "North Cachar Hills", "Sivasagar", "Sonitpur", "South Cachar Hills", "Tinsukia", "Udalguri", "West Karbi Anglong"],
+            "Bihar": ["Araria", "Aurangabad", "Bhojpur", "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran"],
+            "Chhattisgarh": ["Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur", "Bilaspur", "Dakshin Bastar Dantewada", "Dhamtari", "Durg", "Gariyaband", "Gaurela Pendra Marwahi", "Janjgir-Champa", "Jashpur", "Kabirdham", "Kanker", "Kondagaon", "Korba", "Koriya", "Mahasamund", "Mungeli", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur", "Narayanpur"],
+            "Goa": ["North Goa", "South Goa"],
+            "Gujarat": ["Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch", "Bhavnagar", "Botad", "Chhota Udaipur", "Dahod", "Dang", "Devbhoomi Dwarka", "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch", "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal", "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar", "Tapi", "Vadodara", "Valsad"],
+            "Haryana": ["Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram", "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh", "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa", "Sonipat", "Yamunanagar"],
+            "Himachal Pradesh": ["Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu", "Lahaul and Spiti", "Mandi", "Shimla", "Sirmaur", "Solan", "Una"],
+            "Jharkhand": ["Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum", "Garhwa", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamtara", "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu", "Ramgarh", "Ranchi", "Sahebganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum"],
+            "Karnataka": ["Bagalkot", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar", "Chamarajanagar", "Chikballapur", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi", "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi", "Uttara Kannada", "Vijayapura", "Yadgir"],
+            "Kerala": ["Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam", "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad"],
+            "Madhya Pradesh": ["Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal", "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni", "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch", "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh", "Ujjain", "Umaria", "Vidisha"],
+            "Maharashtra": ["Ahmednagar", "Akola", "Amravati", "Aurangabad", "Beed", "Bhandara", "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli", "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban", "Nagpur", "Nanded", "Nandurbar", "Nashik", "Osmanabad", "Palghar", "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara", "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal"],
+            "Manipur": ["Bishnupur", "Chandel", "Churachandpur", "Imphal East", "Imphal West", "Jiribam", "Kakching", "Kamjong", "Kangpokpi", "Noney", "Pherzawl", "Senapati", "Tamenglong", "Tengnoupal", "Thoubal", "Ukhrul"],
+            "Meghalaya": ["East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "North Garo Hills", "Ri Bhoi", "South Garo Hills", "South West Garo Hills", "South West Khasi Hills", "West Garo Hills", "West Jaintia Hills", "West Khasi Hills"],
+            "Mizoram": ["Aizawl", "Champhai", "Hnahthial", "Khawzawl", "Kolasib", "Lawngtlai", "Lunglei", "Mamit", "Saiha", "Saitual", "Serchhip"],
+            "Nagaland": ["Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung", "Mon", "Peren", "Phek", "Tuensang", "Wokha", "Zunheboto"],
+            "Odisha": ["Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Bhubaneswar", "Boudh", "Cuttack", "Deogarh", "Dhenkanal", "Gajapati", "Ganjam", "Jagatsinghpur", "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar", "Khordha", "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", "Puri", "Rayagada", "Sambalpur", "Subarnapur", "Sundargarh"],
+            "Punjab": ["Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka", "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana", "Mansa", "Moga", "Muktsar", "Nawanshahr", "Pathankot", "Patiala", "Rupnagar", "Sangrur", "SAS Nagar", "Tarn Taran"],
+            "Rajasthan": ["Ajmer", "Alwar", "Banswara", "Baran", "Barmer", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh", "Churu", "Dausa", "Dholpur", "Dungarpur", "Hanumangarh", "Jaipur", "Jaisalmer", "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Karauli", "Kota", "Nagaur", "Pali", "Pratapgarh", "Rajsamand", "Sawai Madhopur", "Sikar", "Sirohi", "Sri Ganganagar", "Tonk", "Udaipur"],
+            "Sikkim": ["East Sikkim", "North Sikkim", "South Sikkim", "West Sikkim"],
+            "Tamil Nadu": ["Ariyalur", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kanchipuram", "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Salem", "Sivaganga", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"],
+            "Telangana": ["Adilabad", "Bhadradri Kothagudem", "Hyderabad", "Jagtial", "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar", "Khammam", "Komaram Bheem Asifabad", "Mahabubabad", "Mahabubnagar", "Mancherial", "Medak", "Medchal-Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda", "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli", "Rajanna Sircilla", "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad", "Wanaparthy", "Warangal Rural", "Warangal Urban", "Yadadri Bhuvanagiri"],
+            "Tripura": ["Dhalai", "Gomati", "Khowai", "North Tripura", "Sepahijala", "South Tripura", "Unakoti", "West Tripura"],
+            "Uttar Pradesh": ["Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur", "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor", "Budaun", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah", "Etawah", "Ayodhya", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat", "Kanpur Nagar", "Kasganj", "Kaushambi", "Kushinagar", "Lakhimpur Kheri", "Lalitpur", "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau", "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh", "Prayagraj", "Rae Bareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar", "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra", "Sultanpur", "Unnao", "Varanasi"],
+            "Uttarakhand": ["Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", "Uttarkashi"],
+            "West Bengal": ["Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong", "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur", "Purulia", "South 24 Parganas", "Uttar Dinajpur"],
+            # Union Territories
+            "Andaman and Nicobar Islands": ["Nicobar", "North and Middle Andaman", "South Andaman"],
+            "Chandigarh": ["Chandigarh"],
+            "Dadra and Nagar Haveli and Daman and Diu": ["Dadra and Nagar Haveli", "Daman", "Diu"],
+            "Delhi": ["Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi", "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi"],
+            "Jammu and Kashmir": ["Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur"],
+            "Ladakh": ["Kargil", "Leh"],
+            "Lakshadweep": ["Lakshadweep"],
+            "Puducherry": ["Karaikal", "Mahe", "Puducherry", "Yanam"]
+        }
+
+        districts = [
+            "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal",
+            "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori",
+            "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni",
+            "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch",
+            "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni",
+            "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
+            "Ujjain", "Umaria", "Vidisha","Anantapur", "Chittoor", "East Godavari", "Guntur", "Krishna", "Kurnool", "Nellore", "Prakasam", "Srikakulam", "Visakhapatnam", "Vizianagaram", "West Godavari",
+            "Anjaw", "Changlang", "Dibang Valley", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang", "East Siang",
+            "Barpeta", "Bongaigaon", "Cachar", "Charaideo", "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao", "Goalpara", "Golaghat", "Hailakandi", "Hazaribag", "Jorhat", "Kamrup Metropolitan", "Kamrup", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Moranha", "Nagaon", "Nalbari", "North Cachar Hills", "Sivasagar", "Sonitpur", "South Cachar Hills", "Tinsukia", "Udalguri", "West Karbi Anglong",
+            "Araria", "Aurangabad", "Bhojpur", "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran",
+            "Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur", "Bilaspur", "Dakshin Bastar Dantewada", "Dhamtari", "Durg", "Gariyaband", "Gaurela Pendra Marwahi", "Janjgir-Champa", "Jashpur", "Kabirdham", "Kanker", "Kondagaon", "Korba", "Koriya", "Mahasamund", "Mungeli", "Narayanpur",
+            "North Goa", "South Goa","Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch", "Bhavnagar", "Botad", "Chhota Udaipur", "Dahod", "Dang", "Devbhoomi Dwarka", "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch", "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal", "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar", "Tapi", "Vadodara", "Valsad",
+            "Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram", "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh", "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa", "Sonipat", "Yamunanagar",
+            "Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu", "Lahaul and Spiti", "Mandi", "Shimla", "Sirmaur", "Solan", "Una",
+            "Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum", "Garhwa", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamtara", "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu", "Ramgarh", "Ranchi", "Sahebganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum",
+            "Bagalkot", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar", "Chamarajanagar", "Chikballapur", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi", "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi", "Uttara Kannada", "Vijayapura", "Yadgir",
+            "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam", "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad",
+            "Ahmednagar", "Akola", "Amravati", "Aurangabad", "Beed", "Bhandara", "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli", "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban", "Nagpur", "Nanded", "Nandurbar", "Nashik", "Osmanabad", "Palghar", "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara", "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal",
+            "Bishnupur", "Chandel", "Churachandpur", "Imphal East", "Imphal West", "Jiribam", "Kakching", "Kamjong", "Kangpokpi", "Noney", "Pherzawl", "Senapati", "Tamenglong", "Tengnoupal", "Thoubal", "Ukhrul",
+            "East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "North Garo Hills", "Ri Bhoi", "South Garo Hills", "South West Garo Hills", "South West Khasi Hills", "West Garo Hills", "West Jaintia Hills", "West Khasi Hills",
+            "Aizawl", "Champhai", "Hnahthial", "Khawzawl", "Kolasib", "Lawngtlai", "Lunglei", "Mamit", "Saiha", "Saitual", "Serchhip",
+            "Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung", "Mon", "Peren", "Phek", "Tuensang", "Wokha", "Zunheboto",
+            "Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Bhubaneswar", "Boudh", "Cuttack", "Deogarh", "Dhenkanal", "Gajapati", "Ganjam", "Jagatsinghpur", "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar", "Khordha", "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", "Puri", "Rayagada", "Sambalpur", "Subarnapur", "Sundargarh",
+            "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka", "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana", "Mansa", "Moga", "Muktsar", "Nawanshahr", "Pathankot", "Patiala", "Rupnagar", "Sangrur", "SAS Nagar", "Tarn Taran",
+            "Ajmer", "Alwar", "Banswara", "Baran", "Barmer", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh", "Churu", "Dausa", "Dholpur", "Dungarpur", "Hanumangarh", "Jaipur", "Jaisalmer", "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Karauli", "Kota", "Nagaur", "Pali", "Pratapgarh", "Rajsamand", "Sawai Madhopur", "Sikar", "Sirohi", "Sri Ganganagar", "Tonk", "Udaipur",
+            "East Sikkim", "North Sikkim", "South Sikkim", "West Sikkim",
+            "Ariyalur", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kanchipuram", "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Salem", "Sivaganga", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar",
+            "Adilabad", "Bhadradri Kothagudem", "Hyderabad", "Jagtial", "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar", "Khammam", "Komaram Bheem Asifabad", "Mahabubabad", "Mahabubnagar", "Mancherial", "Medak", "Medchal-Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda", "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli", "Rajanna Sircilla", "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad", "Wanaparthy", "Warangal Rural", "Warangal Urban", "Yadadri Bhuvanagiri",
+            "Dhalai", "Gomati", "Khowai", "North Tripura", "Sepahijala", "South Tripura", "Unakoti", "West Tripura",
+            "Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur", "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor", "Budaun", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah", "Etawah", "Ayodhya", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat", "Kanpur Nagar", "Kasganj", "Kaushambi", "Kushinagar", "Lakhimpur Kheri", "Lalitpur", "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau", "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh", "Prayagraj", "Rae Bareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar", "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra", "Sultanpur", "Unnao", "Varanasi",
+            "Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", "Uttarkashi",
+            "Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong", "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur", "Purulia", "South 24 Parganas", "Uttar Dinajpur",
+            "Nicobar", "North and Middle Andaman", "South Andaman", "Chandigarh", "Dadra and Nagar Haveli", "Daman", "Diu", "Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi", "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi",
+            "Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur",
+            "Kargil", "Leh", "Lakshadweep", "Karaikal", "Mahe", "Puducherry", "Yanam"
+
+        ]
+        
+        job_sectors = [
+            "IT (Information Technology)", "BPO (Business Process Outsourcing)","Banking and Finance",
+            "Healthcare and Pharmaceuticals","Education and Training",
+            "Retail and E-commerce", "Manufacturing and Production","Real Estate and Construction", "Hospitality and Tourism",
+            "Media and Entertainment", "Telecommunications","Logistics and Supply Chain","Marketing and Advertising","Human Resources",
+            "Legal and Compliance","Engineering and Infrastructure","Automobile Industry",
+            "Fashion and Textile", "FMCG (Fast Moving Consumer Goods)",
+            "Agriculture and Farming", "Insurance","Government Sector","NGO and Social Services",
+            "Energy and Power","Aviation and Aerospace"
+        ]
+
+        departments = [
+            # IT (Information Technology)
+            "Software Development", "IT Support", "Web Development", "Network Administration", "Cybersecurity", "Data Science & Analytics", "Cloud Computing", "Quality Assurance (QA)","Customer Support", "Technical Support", "Voice Process", "Non-Voice Process", "Back Office Operations","Investment Banking", "Retail Banking", "Loan Processing", 
+            "Risk Management", "Accounting and Auditing", "Medical Representatives", "Clinical Research", "Nursing", 
+            "Medical Technicians", "Pharmacy Operations", 
+            "Healthcare Administration","Teaching", "Curriculum Development", "Academic Counseling", "E-Learning Development", "Education Administration","Store Operations", "Supply Chain Management", "Sales and Merchandising", "E-commerce Operations", "Digital Marketing",
+            "Production Planning", "Quality Control", "Maintenance and Repair", "Operations Management", "Inventory Management","Sales and Marketing", "Civil Engineering", "Project Management", "Interior Designing", "Surveying and Valuation","Hotel Management", "Travel Coordination", "Event Planning", "Food and Beverage Services", "Guest Relations",
+            "Content Writing", "Video Editing", "Graphic Designing", "Social Media Management", "Event Production","Network Installation", "Customer Support", "Telecom Engineering", "Technical Operations", "Business Development","Logistics Coordination", "Warehouse Management", "Procurement", "Transportation Management", "Inventory Control","Market Research", "Brand Management", "Advertising Sales", "Public Relations", "Digital Marketing",
+            "Recruitment", "Employee Relations", "Payroll and Benefits", "Training and Development", "HR Analytics","Corporate Law", "Compliance Auditing", "Contract Management", "Intellectual Property Rights", "Legal Advisory","Civil Engineering", "Mechanical Engineering", "Electrical Engineering", "Project Planning", "Structural Design","Automotive Design", "Production and Assembly", "Sales and Service", 
+            "Supply Chain Management", "Quality Assurance","Fashion Design", "Merchandising", "Production Management", "Quality Control", "Retail Sales","Sales and Marketing", "Supply Chain Operations", "Production Management", "Quality Control", "Brand Management","Agribusiness Management", "Farm Operations", "Food Processing", "Agricultural Sales", "Quality Assurance",
+            "Sales and Business Development", "Underwriting", "Claims Management", "Actuarial Services", "Policy Administration","Administrative Services", "Public Relations", "Policy Analysis", "Clerical Positions", "Field Operations","Community Development", "Fundraising", "Program Management", "Volunteer Coordination", "Policy Advocacy",
+            "Renewable Energy Operations", "Power Plant Engineering", "Energy Efficiency Management", "Electrical Design", "Maintenance","Flight Operations", "Ground Staff", "Aircraft Maintenance", "Cabin Crew", "Research and Development"
+        ]
+
+
+        context = {
+            # 'suggested_unique_code':suggested_unique_code,
+            'districts' : districts,
+            'job_sectors' : job_sectors,
+            'departments' : departments,
+            'state' : state,
+            'state_distict' : state_distict
+        }
+        return render (request,'crm/bfsi-candidate-registration.html',context)
+   
+
+@login_required(login_url='/employee/404/')
+@require_POST
+def check_mobile_number_duplicate_bfsi(request):
+    """
+    Checks if a mobile number already exists and returns details for the modal.
+    """
+    try:
+        data = json.loads(request.body)
+        mobile_number = data.get('mobile_number')
+    except (json.JSONDecodeError, KeyError):
+        return JsonResponse({'error': 'Invalid request body'}, status=400)
+
+    if mobile_number:
+        try:
+            duplicate_candidate = Candidate_registration.objects.get(
+                candidate_mobile_number=mobile_number
+            )
+            # If a candidate is found, return all data needed for the modal
+            return JsonResponse({
+                'status': 'duplicate',
+                'candidate_name': duplicate_candidate.candidate_name,
+                # ADD THIS LINE to provide the URL for the button
+                'candidate_profile_url': reverse('admin_candidate_profile', args=[duplicate_candidate.id])
+            }, status=409)
+        except Candidate_registration.DoesNotExist:
+            # If no candidate is found, return a success status
+            return JsonResponse({'status': 'unique'}, status=200)
+
+    return JsonResponse({'error': 'Mobile number is required'}, status=400)

@@ -16,6 +16,7 @@ urlpatterns = [
     path('admin-logout/', crm_admin_logout, name='crm_admin_logout'),
     path('crm-dashboard/',crm_dashboard,name = 'crm_dashboard'),
     path('admin-candidate-registration/',admin_candidate_registration,name = 'admin_candidate_registration'),
+    path('check-mobile-number-crm/',check_mobile_number_duplicate,name = 'check_mobile_number_duplicate'),
     path('candidate-list/',admin_candidate_list,name = 'admin_candidate_list'),
     path('candidate-details/<int:id>/', admin_candidate_profile, name='admin_candidate_profile'),
     path('candidate/<int:candidate_id>/<str:model_type>/delete/', delete_candidate, name='delete_candidate'),
@@ -76,6 +77,8 @@ urlpatterns = [
     path('emta/course-inquiries/', emta_co_in_course_application_view, name='emta_co_in_course_application_view'),
     path('emta/contact-queries/', emta_co_in_contact_queries_view, name='emta_co_in_contact_queries_view'),
     path('banking-counselling/', banking_counselling_view, name='manage_banking_counselling'),
+    path('admin-bfsi-candidate-registration/',admin_bfsi_candidate_registration,name = 'admin_bfsi_candidate_registration'),
+    path('check-mobile-number-bfsi/',check_mobile_number_duplicate_bfsi,name = 'check_mobile_number_duplicate_bfsi'),
 
 
     path('admin/', admin.site.urls),

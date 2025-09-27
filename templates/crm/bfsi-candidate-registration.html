@@ -452,7 +452,7 @@
                                                     
                                                     <hr>
                                                     
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-3">
                                                         <div class="mb-3">
                                                             <label class="form-label">Call Connection</label>
                                                             <select class="form-control form-select" name='call_connection' required>
@@ -464,14 +464,20 @@
                                                         </div>
                                                     </div>
                                                     
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-3">
                                                         <div class="mb-3">
                                                             <label class="form-label">Calling Remark</label>
                                                             <select class="form-control form-select" name='calling_remark'>
-                                                                <option value="" disabled selected>Select Status</option>
+                                                              <option value="" disabled selected>Select Status</option>
+                                                                <option value="Shortlisted for Banking Counselling" {% if Candidate_registration.calling_remark == "Shortlisted for Banking Counselling" %}selected{% endif %}>Shortlisted for Banking Counselling</option>
+                                                                <option value="Not Interested in BFSI Training" {% if Candidate_registration.calling_remark == "Not Interested in BFSI Training" %}selected{% endif %}>Not Interested in BFSI Training</option>
+                                                                <option value="Not Interested in BFSI Jobs" {% if Candidate_registration.calling_remark == "Not Interested in BFSI Jobs" %}selected{% endif %}>Not Interested in BFSI Jobs</option>
+                                                                <option value="Not Interested Due to Training Duration" {% if Candidate_registration.calling_remark == "Not Interested Due to Training Duration" %}selected{% endif %}>Not Interested Due to Training Duration</option>
+                                                                <option value="Not Interested Due to Training Fee" {% if Candidate_registration.calling_remark == "Not Interested Due to Training Fee" %}selected{% endif %}>Not Interested Due to Training Fee</option>
+                                                                <option value="Not Eligible Due to CIBIL Score" {% if Candidate_registration.calling_remark == "Not Eligible Due to CIBIL Score" %}selected{% endif %}>Not Eligible Due to CIBIL Score</option>
+                                                                <option value="Not Eligible Due to Education Issue" {% if Candidate_registration.calling_remark == "Not Eligible Due to Education Issue" %}selected{% endif %}>Not Eligible Due to Education Issue</option>
                                                                 <option value="Lead Generate" {% if Candidate_registration.calling_remark == "Lead Generate" %}selected{% endif %}>Lead Generate</option>
                                                                 <option value="Follow-Up" {% if Candidate_registration.calling_remark == "Follow-Up" %}selected{% endif %}>Follow-Up</option>
-                                                                <option value="Shortlisted for Banking Counselling" {% if Candidate_registration.calling_remark == "Shortlisted for Banking Counselling" %}selected{% endif %}>Shortlisted for Banking Counselling</option>
                                                                 <option value="RNR" {% if Candidate_registration.calling_remark == "RNR" %}selected{% endif %}>RNR</option>
                                                                 <option value="Switch Off" {% if Candidate_registration.calling_remark == "Switch Off" %}selected{% endif %}>Switch Off</option>
                                                                 <option value="Not Intrested" {% if Candidate_registration.calling_remark == "Not Intrested" %}selected{% endif %}>Not Intrested</option>
@@ -487,11 +493,12 @@
                                                                 <option value="No Incoming" {% if Candidate_registration.calling_remark == "No Incoming" %}selected{% endif %}>No Incoming</option>
                                                                 <option value="Temporary Not Available" {% if Candidate_registration.calling_remark == "Temporary Not Available" %}selected{% endif %}>Temporary Not Available</option>
                                                                 <option value="Out Of Town" {% if Candidate_registration.calling_remark == "Out Of Town" %}selected{% endif %}>Out Of Town</option>
+                                                                
                                                             </select>
                                                         </div>
                                                     </div>
                                                     
-                                                    <!-- <div class="col-md-3">
+                                                    <div class="col-md-3">
                                                         <div class="mb-3">
                                                             <label class="form-label">Lead Status</label>
                                                             <select class="form-control form-select" name='lead_generate' >
@@ -520,9 +527,28 @@
                                                             </select>
                                                             <div class="invalid-feedback">Please select lead generate status.</div>
                                                         </div>
-                                                    </div> -->
-                                                    
-                                                    <div class="col-md-4">
+                                                    </div>
+
+                                                    <div class="col-md-3">
+                                                      <div class="mb-3">
+                                                          <label class="form-label">Lead For</label>
+                                                          <select class="form-control form-select" name='bfsi_lead_for' >
+                                                              <option value="" disabled selected>Select Status</option>
+                                                              <option value="Training" {% if candidate.bfsi_lead_for == "Training" %}selected{% endif %}>
+                                                                  Training
+                                                              </option>
+                                                              <option value="Direct Jobs" {% if candidate.bfsi_lead_for == "Direct Jobs" %}selected{% endif %}>
+                                                                  Direct Jobs
+                                                              </option>
+                                                              <option value="Training and Jobs" {% if candidate.bfsi_lead_for == "Training and Jobs" %}selected{% endif %}>
+                                                                  Training and Jobs <span class="text-muted">(Both)</span>
+                                                              </option>
+                                                          </select>
+                                                          <div class="invalid-feedback">Please select lead generate status.</div>
+                                                      </div>
+                                                  </div>
+                                                
+                                                  <div class="col-md-4">
                                                         <div class="mb-3">
                                                             <label class="form-label">Next Follow-Up Date</label>
                                                             <input type="datetime-local" name='next_follow_up_date_time' class="form-control" 
@@ -619,7 +645,7 @@
 
             // Only check if the input is a valid 10-digit number
             if (mobileNumber.length === 10 && /^\d{10}$/.test(mobileNumber)) {
-                fetch(`/crm/check-mobile-number-crm/`, {
+                fetch(`/crm/check-mobile-number-bfsi/`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -961,7 +987,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Only check if it's a valid 10-digit number
         if (/^\d{10}$/.test(mobileNumber)) {
-            fetch(`/crm/check-mobile-number-crm/`, { // Uses the updated view
+            fetch(`/crm/check-mobile-number-bfsi/`, { // Uses the updated view
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
