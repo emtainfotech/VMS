@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // 3. Manually trigger the download
         const tempLink = document.createElement('a');
         tempLink.href = downloadUrl;
-        tempLink.setAttribute('download', 'filtered_candidates.csv');
+        tempLink.setAttribute('download', 'candidates_data.csv');
         document.body.appendChild(tempLink);
         tempLink.click();
         document.body.removeChild(tempLink);

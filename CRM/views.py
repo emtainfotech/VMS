@@ -4483,7 +4483,7 @@ def download_candidate_details(request):
     # Create a dynamic filename
     filename = f"candidates_{datetime.now().strftime('%Y-%m-%d')}.csv"
     if employee_name or start_date_str or end_date_str:
-        filename = f"filtered_candidates_{datetime.now().strftime('%Y-%m-%d')}.csv"
+        filename = f"{employee_name}_candidates_{datetime.now().strftime('%Y-%m-%d')}.csv"
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -5631,7 +5631,18 @@ def emta_co_in_contact_queries_view(request):
 
 @login_required
 def banking_counselling_view(request):
-    candidates = Candidate_registration.objects.filter(calling_remark = 'Shortlisted for Banking Counselling')
+    candidates = Candidate_registration.objects.filter(
+    calling_remark__in=[
+        "Shortlisted for Banking Counselling",
+        "Not Interested in BFSI Training",
+        "Not Interested in BFSI Jobs",
+        "Not Interested Due to Training Duration",
+        "Not Interested Due to Training Fee",
+        "Not Eligible Due to CIBIL Score",
+        "Not Eligible Due to Education Issue",
+    ]
+)
+
     context = {
         'candidates': candidates
     }
