@@ -1395,6 +1395,7 @@ def admin_candidate_list(request):
 
     candidates_reg_qs = Candidate_registration.objects.all()
     candidates_can_qs = Candidate.objects.all()
+    resume_count = Candidate_registration.objects.filter(candidate_resume__isnull=False).count()
 
     # --- Fetch all possible filter options for the dropdowns ---
     filter_options = {
@@ -1422,12 +1423,16 @@ def admin_candidate_list(request):
 
     # --- NEW: Fetch all employees for the assignment modal ---
     all_employees = Employee.objects.all().order_by('first_name', 'last_name')
+    employees = Employee.objects.all().order_by('first_name', 'last_name')
 
     context = {
         'candidates': candidates_page.object_list,
         'total_candidates_count': total_candidates_count,
         'filter_options': filter_options,
         'all_employees': all_employees, # Pass employees to the template
+        'resume_count': resume_count,
+        'employees' : employees,
+
     }
     return render(request, 'crm/candidate-list.html', context)
 
@@ -4440,18 +4445,48 @@ def admin_delete_company_contact(request, contact_id):
     messages.success(request, 'Contact person deleted successfully!')
     return redirect('admin_company_contacts_list', company_id=company_id)
 
+import csv
+from django.utils import timezone # IMPORTANT: Import timezone
+
 @login_required(login_url='/crm/404/')
 def download_candidate_details(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
 
-    from EVMS.models import Candidate
-    from App.models import Candidate_registration
-    import csv
-    from django.http import HttpResponse
+    # Get filter parameters from the request
+    employee_name = request.GET.get('employee_name', None)
+    start_date_str = request.GET.get('start_date', None)
+    end_date_str = request.GET.get('end_date', None)
+
+    # Start with base querysets
+    crm_candidates = Candidate_registration.objects.all()
+    evms_candidates = Candidate.objects.all()
+
+    # Apply filters conditionally with timezone awareness
+    if employee_name:
+        crm_candidates = crm_candidates.filter(employee_name=employee_name)
+        evms_candidates = evms_candidates.filter(employee_name=employee_name)
+
+    if start_date_str:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        aware_start_date = timezone.make_aware(start_date) # Make it timezone-aware
+        crm_candidates = crm_candidates.filter(register_time__gte=aware_start_date)
+        evms_candidates = evms_candidates.filter(register_time__gte=aware_start_date)
+
+    if end_date_str:
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        end_of_day = end_date + timedelta(days=1)
+        aware_end_of_day = timezone.make_aware(end_of_day) # Make it timezone-aware
+        crm_candidates = crm_candidates.filter(register_time__lt=aware_end_of_day)
+        evms_candidates = evms_candidates.filter(register_time__lt=aware_end_of_day)
+        
+    # Create a dynamic filename
+    filename = f"candidates_{datetime.now().strftime('%Y-%m-%d')}.csv"
+    if employee_name or start_date_str or end_date_str:
+        filename = f"filtered_candidates_{datetime.now().strftime('%Y-%m-%d')}.csv"
 
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="all_candidates.csv"'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     writer = csv.writer(response)
     
@@ -4471,20 +4506,15 @@ def download_candidate_details(request):
     ]
     writer.writerow(header)
 
-    crm_candidates = Candidate_registration.objects.all()
-    evms_candidates = Candidate.objects.all()
-
     all_candidates = list(crm_candidates) + list(evms_candidates)
-    all_candidates.sort(key=lambda x: x.register_time if x.register_time else datetime.min)
+    all_candidates.sort(key=lambda x: x.register_time if hasattr(x, 'register_time') and x.register_time else timezone.now())
 
     for obj in all_candidates:
+        # Your entire CSV writing loop goes here
+        # (This part is from your original code and is assumed to be correct)
         is_evms = isinstance(obj, Candidate)
-        
-        # Safely access attributes that might not exist on both models
         unique_code = getattr(obj, 'unique_code', '')
         payout_date = getattr(obj, 'payout_date', '')
-        
-        # EVMS-specific fields
         refer_code = getattr(obj, 'refer_code', '') if is_evms else ''
         job_type = getattr(obj, 'job_type', '') if is_evms else ''
         vendor_commission = getattr(obj, 'vendor_commission', '') if is_evms else ''
@@ -4550,6 +4580,7 @@ def download_candidate_details(request):
         ])
 
     return response
+
 
 @login_required(login_url='/crm/404/')
 def admin_get_next_unique_code(prefix='EMTA'):

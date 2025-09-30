@@ -17,10 +17,10 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
                             Add New Candidate
                         </a>
-                        <a href="{% url 'download_candidates' %}" class="btn btn-primary">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>
-                            Download Candidate Data
-                        </a>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#downloadFilterModal">
+    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24" 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>
+    Download Candidate Data
+</button>
                         <a href="{% url 'admin_candidate_bulk_upload' %}" class="btn btn-primary">
                              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-upload" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 9l5 -5l5 5" /><path d="M12 4l0 12" /></svg>
                             Bulk Upload Candidates
@@ -30,6 +30,109 @@
             </div>
         </div>
     </div>
+
+    <div class="modal modal-blur fade" id="downloadFilterModal" tabindex="-1" role="dialog" aria-labelledby="downloadModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="downloadModalLabel">Filter and Download Candidate Data</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{% url 'download_candidates' %}" method="GET">
+        <div class="modal-body">
+          <p class="text-muted">Select your criteria to download a customized report. Leave fields blank to include all.</p>
+          
+          <div class="mb-3">
+            <label class="form-label">Employee Name</label>
+            <select name="employee_name" class="form-select">
+              <option value="">All Employees</option>
+              {% for employee in employees %}
+                <option value="{{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})">
+                  {{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Start Date (Registration)</label>
+              <input type="date" name="start_date" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">End Date (Registration)</label>
+              <input type="date" name="end_date" class="form-control">
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>
+            Download Filtered Data
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="successModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-body text-center py-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-green icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M9 12l2 2l4 -4"></path></svg>
+        <h3>Download Started</h3>
+        <div class="text-muted">Your file is being downloaded.</div>
+      </div>
+      <div class="modal-footer">
+        <div class="w-100">
+            <a href="#" class="btn btn-primary w-100" data-bs-dismiss="modal">
+              Close
+            </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filterForm = document.querySelector('#downloadFilterModal form');
+    const filterModalEl = document.getElementById('downloadFilterModal');
+    const successModalEl = document.getElementById('successModal');
+
+    // Create Bootstrap Modal instances
+    const filterModal = new bootstrap.Modal(filterModalEl);
+    const successModal = new bootstrap.Modal(successModalEl);
+
+    filterForm.addEventListener('submit', function (event) {
+        // 1. Prevent the default form submission
+        event.preventDefault();
+
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams(formData).toString();
+        
+        // 2. The URL for downloading the data
+        const downloadUrl = filterForm.action + '?' + params;
+        
+        // 3. Manually trigger the download
+        const tempLink = document.createElement('a');
+        tempLink.href = downloadUrl;
+        tempLink.setAttribute('download', 'filtered_candidates.csv');
+        document.body.appendChild(tempLink);
+        tempLink.click();
+        document.body.removeChild(tempLink);
+
+        // 4. Close the filter modal
+        filterModal.hide();
+
+        // 5. Show the success modal
+        successModal.show();
+    });
+});
+</script>
 
     <div class="page-body">
         <div class="container-xl">
