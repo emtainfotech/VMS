@@ -854,6 +854,14 @@ class Candidate_registration(models.Model):
     invoice_amount = models.CharField(max_length=255, blank=True, null=True)
     invoice_remark = models.CharField(max_length=255, blank=True, null=True)
     invoice_attachment = models.FileField(upload_to='invoice_attachments/', null=True, blank=True)
+
+    bfsi_batch_date = models.DateField(blank=True, null=True)
+    bfsi_payment_status = models.CharField(max_length=255, blank=True, null=True)
+    bfsi_payment_date = models.DateField(blank=True, null=True)
+    bfsi_payment_remark = models.CharField(max_length=255, blank=True, null=True)
+    bfsi_payment_attachment = models.FileField(upload_to='bfsi_payment_attachments/', null=True, blank=True)
+    bfsi_candidature_status = models.CharField(max_length=255, blank=True, null=True)
+    
     created_by = models.ForeignKey('Employee', related_name='candidate_registration_created',
                                    on_delete=models.SET_NULL, null=True, blank=True)
     updated_by = models.ForeignKey('Employee', related_name='candidate_registration_updated',

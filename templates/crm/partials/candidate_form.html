@@ -1668,6 +1668,108 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
+<div class="modal modal-blur fade" id="modal-bfsi-data" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">BFSI Data</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" enctype="multipart/form-data" id="bfsiDataForm" novalidate>
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">BFSI Batch Date</label>
+              <input type="date" name="bfsi_batch_date" class="form-control" 
+                     value="{{ candidate.bfsi_batch_date|date:'Y-m-d' }}">
+              <div class="invalid-feedback">
+                Please select a valid date.
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">BFSI Payment Status</label>
+              <input type="text" name="bfsi_payment_status" class="form-control" 
+                     value="{{ candidate.bfsi_payment_status|default:'' }}"
+                     maxlength="255">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">BFSI Payment Date</label>
+              <input type="date" name="bfsi_payment_date" class="form-control" 
+                     value="{{ candidate.bfsi_payment_date|date:'Y-m-d' }}">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">BFSI Payment Remark</label>
+              <input type="text" name="bfsi_payment_remark" class="form-control" 
+                     value="{{ candidate.bfsi_payment_remark|default:'' }}"
+                     maxlength="255">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">BFSI Candidature Status</label>
+              <input type="text" name="bfsi_candidature_status" class="form-control" 
+                     value="{{ candidate.bfsi_candidature_status|default:'' }}"
+                     maxlength="255">
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">BFSI Payment Attachment</label>
+              <input type="file" name="bfsi_payment_attachment" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+               {% if candidate.bfsi_payment_attachment %}
+                <div class="mt-2">
+                  <small class="text-muted">Current file: 
+                    <a href="{{ candidate.bfsi_payment_attachment.url }}" target="_blank">View Attachment</a>
+                  </small>
+                </div>
+              {% endif %}
+            </div>
+
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="submitBfsiForm" class="btn btn-primary">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const bfsiForm = document.getElementById('bfsiDataForm');
+  const submitBfsiButton = document.getElementById('submitBfsiForm');
+
+  if (submitBfsiButton) {
+    submitBfsiButton.addEventListener('click', function() {
+      // Add a hidden input to identify the form submission
+      if (!bfsiForm.querySelector('input[name="bfsi_releted_data"]')) {
+          const hiddenInput = document.createElement('input');
+          hiddenInput.type = 'hidden';
+          hiddenInput.name = 'bfsi_releted_data';
+          hiddenInput.value = 'true';
+          bfsiForm.appendChild(hiddenInput);
+      }
+      
+      // Manually trigger form submission
+      bfsiForm.requestSubmit();
+    });
+  }
+
+  if (bfsiForm) {
+      bfsiForm.addEventListener('submit', function(event) {
+        if (!bfsiForm.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        bfsiForm.classList.add('was-validated');
+      }, false);
+  }
+});
+</script>
 
 <!-- cfbr  -->
  <!-- br  -->

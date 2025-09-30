@@ -503,8 +503,9 @@
                                                             <label class="form-label">Lead Status</label>
                                                             <select class="form-control form-select" name='lead_generate' >
                                                                 <option value="" disabled selected>Select Status</option>
+                                                                
                                                                 <option value="Hot" {% if candidate.lead_generate == "Hot" %}selected{% endif %}>
-                                                                    Hot <span class="text-muted">(Positive prospect but pending for Conversion for Interview scheduling)</span>
+                                                                    Hot <span class="text-muted">(Positive prospect)</span>
                                                                 </option>
                                                                 <option value="Cold" {% if candidate.lead_generate == "Cold" %}selected{% endif %}>
                                                                     Cold <span class="text-muted">(Not so interested)</span>
@@ -513,42 +514,76 @@
                                                                     Converted <span class="text-muted">(for Scheduling Interview)</span>
                                                                 </option>
                                                                 <option value="Not interested" {% if candidate.lead_generate == "Not interested" %}selected{% endif %}>
-                                                                    Not interested <span class="text-muted">(Looking for different Jobs/Salary Range - mention in Remarks)</span>
+                                                                    Not interested <span class="text-muted">(Looking for different Jobs/Salary Range)</span>
                                                                 </option>
                                                                 <option value="Connect later" {% if candidate.lead_generate == "Connect later" %}selected{% endif %}>
                                                                     Connect later <span class="text-muted">(mention Follow-up date and time)</span>
                                                                 </option>
                                                                 <option value="DND" {% if candidate.lead_generate == "DND" %}selected{% endif %}>
-                                                                    DND <span class="text-muted">(Candidate does not want to receive calls/messages)</span>
+                                                                    DND <span class="text-muted">(Do not disturb)</span>
                                                                 </option>
-                                                                <option value="Other" {% if candidate.lead_generate == "Other" %}selected{% endif %}>
-                                                                    Other <span class="text-muted">(mention in remarks)</span>
+                                                    
+                                                                <optgroup label="Lead for Direct Job">
+                                                                    <option value="Lead for Liability Direct Job - Sales officer / Sr. Sales officer" {% if candidate.lead_generate == "Lead for Liability Direct Job - Sales officer / Sr. Sales officer" %}selected{% endif %}>Liability - Sales officer / Sr. Sales officer</option>
+                                                                    <option value="Lead for Liability Direct Job - Operations" {% if candidate.lead_generate == "Lead for Liability Direct Job - Operations" %}selected{% endif %}>Liability - Operations</option>
+                                                                    <option value="Lead for Liability Direct Job - RM Liability" {% if candidate.lead_generate == "Lead for Liability Direct Job - RM Liability" %}selected{% endif %}>Liability - RM Liability</option>
+                                                                    <option value="Lead for Assets/Loans Direct Job - Sales officer / Sr. Sales officer" {% if candidate.lead_generate == "Lead for Assets/Loans Direct Job - Sales officer / Sr. Sales officer" %}selected{% endif %}>Assets/Loans - Sales officer / Sr. Sales officer</option>
+                                                                    <option value="Lead for Assets/Loans Direct Job - Operations" {% if candidate.lead_generate == "Lead for Assets/Loans Direct Job - Operations" %}selected{% endif %}>Assets/Loans - Operations</option>
+                                                                    <option value="Lead for Assets/Loans Direct Job - RM Liability" {% if candidate.lead_generate == "Lead for Assets/Loans Direct Job - RM Liability" %}selected{% endif %}>Assets/Loans - RM Liability</option>
+                                                                    <option value="Lead for Assets/Loans Direct Job - Credit CPA/Officer/Manager" {% if candidate.lead_generate == "Lead for Assets/Loans Direct Job - Credit CPA/Officer/Manager" %}selected{% endif %}>Assets/Loans - Credit CPA/Officer/Manager</option>
+                                                                    <option value="Lead for Insurance Direct Job - Sales officer / Sr. Sales officer" {% if candidate.lead_generate == "Lead for Insurance Direct Job - Sales officer / Sr. Sales officer" %}selected{% endif %}>Insurance - Sales officer / Sr. Sales officer</option>
+                                                                    <option value="Lead for Insurance Direct Job - Operations" {% if candidate.lead_generate == "Lead for Insurance Direct Job - Operations" %}selected{% endif %}>Insurance - Operations</option>
+                                                                    <option value="Lead for Insurance Direct Job - RM Liability" {% if candidate.lead_generate == "Lead for Insurance Direct Job - RM Liability" %}selected{% endif %}>Insurance - RM Liability</option>
+                                                                </optgroup>
+                                                    
+                                                                <optgroup label="Lead for Training Program">
+                                                                    <option value="Lead for Liability Training Program - Sales officer / Sr. Sales officer" {% if candidate.lead_generate == "Lead for Liability Training Program - Sales officer / Sr. Sales officer" %}selected{% endif %}>Liability - Sales officer / Sr. Sales officer</option>
+                                                                    <option value="Lead for Liability Training Program - Operations" {% if candidate.lead_generate == "Lead for Liability Training Program - Operations" %}selected{% endif %}>Liability - Operations</option>
+                                                                    <option value="Lead for Liability Training Program - RM Liability" {% if candidate.lead_generate == "Lead for Liability Training Program - RM Liability" %}selected{% endif %}>Liability - RM Liability</option>
+                                                                    <option value="Lead for Assets/Loans Training Program - Sales officer / Sr. Sales officer" {% if candidate.lead_generate == "Lead for Assets/Loans Training Program - Sales officer / Sr. Sales officer" %}selected{% endif %}>Assets/Loans - Sales officer / Sr. Sales officer</option>
+                                                                    <option value="Lead for Assets/Loans Training Program - Operations" {% if candidate.lead_generate == "Lead for Assets/Loans Training Program - Operations" %}selected{% endif %}>Assets/Loans - Operations</option>
+                                                                    <option value="Lead for Assets/Loans Training Program - RM Liability" {% if candidate.lead_generate == "Lead for Assets/Loans Training Program - RM Liability" %}selected{% endif %}>Assets/Loans - RM Liability</option>
+                                                                    <option value="Lead for Assets/Loans Training Program - Credit CPA/Officer/Manager" {% if candidate.lead_generate == "Lead for Assets/Loans Training Program - Credit CPA/Officer/Manager" %}selected{% endif %}>Assets/Loans - Credit CPA/Officer/Manager</option>
+                                                                    <option value="Lead for Insurance Training Program - Sales officer / Sr. Sales officer" {% if candidate.lead_generate == "Lead for Insurance Training Program - Sales officer / Sr. Sales officer" %}selected{% endif %}>Insurance - Sales officer / Sr. Sales officer</option>
+                                                                    <option value="Lead for Insurance Training Program - Operations" {% if candidate.lead_generate == "Lead for Insurance Training Program - Operations" %}selected{% endif %}>Insurance - Operations</option>
+                                                                    <option value="Lead for Insurance Training Program - RM Liability" {% if candidate.lead_generate == "Lead for Insurance Training Program - RM Liability" %}selected{% endif %}>Insurance - RM Liability</option>
+                                                                </optgroup>
+                                                                
+                                                                <optgroup label="Proceed for Direct Job">
+                                                                    <option value="Proceed for Liability Direct Job - Sales officer / Sr. Sales officer" {% if candidate.lead_generate == "Proceed for Liability Direct Job - Sales officer / Sr. Sales officer" %}selected{% endif %}>Liability - Sales officer / Sr. Sales officer</option>
+                                                                    <option value="Proceed for Liability Direct Job - Operations" {% if candidate.lead_generate == "Proceed for Liability Direct Job - Operations" %}selected{% endif %}>Liability - Operations</option>
+                                                                    <option value="Proceed for Liability Direct Job - RM Liability" {% if candidate.lead_generate == "Proceed for Liability Direct Job - RM Liability" %}selected{% endif %}>Liability - RM Liability</option>
+                                                                    <option value="Proceed for Assets/Loans Direct Job - Sales officer / Sr. Sales officer" {% if candidate.lead_generate == "Proceed for Assets/Loans Direct Job - Sales officer / Sr. Sales officer" %}selected{% endif %}>Assets/Loans - Sales officer / Sr. Sales officer</option>
+                                                                    <option value="Proceed for Assets/Loans Direct Job - Operations" {% if candidate.lead_generate == "Proceed for Assets/Loans Direct Job - Operations" %}selected{% endif %}>Assets/Loans - Operations</option>
+                                                                    <option value="Proceed for Assets/Loans Direct Job - RM Liability" {% if candidate.lead_generate == "Proceed for Assets/Loans Direct Job - RM Liability" %}selected{% endif %}>Assets/Loans - RM Liability</option>
+                                                                    <option value="Proceed for Assets/Loans Direct Job - Credit CPA/Officer/Manager" {% if candidate.lead_generate == "Proceed for Assets/Loans Direct Job - Credit CPA/Officer/Manager" %}selected{% endif %}>Assets/Loans - Credit CPA/Officer/Manager</option>
+                                                                    <option value="Proceed for Insurance Direct Job - Sales officer / Sr. Sales officer" {% if candidate.lead_generate == "Proceed for Insurance Direct Job - Sales officer / Sr. Sales officer" %}selected{% endif %}>Insurance - Sales officer / Sr. Sales officer</option>
+                                                                    <option value="Proceed for Insurance Direct Job - Operations" {% if candidate.lead_generate == "Proceed for Insurance Direct Job - Operations" %}selected{% endif %}>Insurance - Operations</option>
+                                                                    <option value="Proceed for Insurance Direct Job - RM Liability" {% if candidate.lead_generate == "Proceed for Insurance Direct Job - RM Liability" %}selected{% endif %}>Insurance - RM Liability</option>
+                                                                </optgroup>
+                                                    
+                                                                <optgroup label="Proceed for Training Program">
+                                                                    <option value="Proceed for Liability Training Program - Sales officer / Sr. Sales officer" {% if candidate.lead_generate == "Proceed for Liability Training Program - Sales officer / Sr. Sales officer" %}selected{% endif %}>Liability - Sales officer / Sr. Sales officer</option>
+                                                                    <option value="Proceed for Liability Training Program - Operations" {% if candidate.lead_generate == "Proceed for Liability Training Program - Operations" %}selected{% endif %}>Liability - Operations</option>
+                                                                    <option value="Proceed for Liability Training Program - RM Liability" {% if candidate.lead_generate == "Proceed for Liability Training Program - RM Liability" %}selected{% endif %}>Liability - RM Liability</option>
+                                                                    <option value="Proceed for Assets/Loans Training Program - Sales officer / Sr. Sales officer" {% if candidate.lead_generate == "Proceed for Assets/Loans Training Program - Sales officer / Sr. Sales officer" %}selected{% endif %}>Assets/Loans - Sales officer / Sr. Sales officer</option>
+                                                                    <option value="Proceed for Assets/Loans Training Program - Operations" {% if candidate.lead_generate == "Proceed for Assets/Loans Training Program - Operations" %}selected{% endif %}>Assets/Loans - Operations</option>
+                                                                    <option value="Proceed for Assets/Loans Training Program - RM Liability" {% if candidate.lead_generate == "Proceed for Assets/Loans Training Program - RM Liability" %}selected{% endif %}>Assets/Loans - RM Liability</option>
+                                                                    <option value="Proceed for Assets/Loans Training Program - Credit CPA/Officer/Manager" {% if candidate.lead_generate == "Proceed for Assets/Loans Training Program - Credit CPA/Officer/Manager" %}selected{% endif %}>Assets/Loans - Credit CPA/Officer/Manager</option>
+                                                                    <option value="Proceed for Insurance Training Program - Sales officer / Sr. Sales officer" {% if candidate.lead_generate == "Proceed for Insurance Training Program - Sales officer / Sr. Sales officer" %}selected{% endif %}>Insurance - Sales officer / Sr. Sales officer</option>
+                                                                    <option value="Proceed for Insurance Training Program - Operations" {% if candidate.lead_generate == "Proceed for Insurance Training Program - Operations" %}selected{% endif %}>Insurance - Operations</option>
+                                                                    <option value="Proceed for Insurance Training Program - RM Liability" {% if candidate.lead_generate == "Proceed for Insurance Training Program - RM Liability" %}selected{% endif %}>Insurance - RM Liability</option>
+                                                                </optgroup>
+                                                    
+                                                                <option value="Others" {% if candidate.lead_generate == "Others" %}selected{% endif %}>
+                                                                    Others <span class="text-muted">(Add Remark Option)</span>
                                                                 </option>
                                                             </select>
                                                             <div class="invalid-feedback">Please select lead generate status.</div>
                                                         </div>
                                                     </div>
-
-                                                    <div class="col-md-3">
-                                                      <div class="mb-3">
-                                                          <label class="form-label">Lead For</label>
-                                                          <select class="form-control form-select" name='bfsi_lead_for' >
-                                                              <option value="" disabled selected>Select Status</option>
-                                                              <option value="Training" {% if candidate.bfsi_lead_for == "Training" %}selected{% endif %}>
-                                                                  Training
-                                                              </option>
-                                                              <option value="Direct Jobs" {% if candidate.bfsi_lead_for == "Direct Jobs" %}selected{% endif %}>
-                                                                  Direct Jobs
-                                                              </option>
-                                                              <option value="Training and Jobs" {% if candidate.bfsi_lead_for == "Training and Jobs" %}selected{% endif %}>
-                                                                  Training and Jobs <span class="text-muted">(Both)</span>
-                                                              </option>
-                                                          </select>
-                                                          <div class="invalid-feedback">Please select lead generate status.</div>
-                                                      </div>
-                                                  </div>
                                                 
-                                                  <div class="col-md-4">
+                                                  <div class="col-md-3">
                                                         <div class="mb-3">
                                                             <label class="form-label">Next Follow-Up Date</label>
                                                             <input type="datetime-local" name='next_follow_up_date_time' class="form-control" 

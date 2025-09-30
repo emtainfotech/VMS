@@ -1,0 +1,50 @@
+<div class="card mt-4">
+    <div class="card-header">
+        <h3 class="card-title">{{ list_title }}</h3>
+        <div class="ms-auto">
+            <button class="btn btn-sm btn-close" id="close-details-table" aria-label="Close"></button>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table card-table table-vcenter text-nowrap">
+            <thead>
+                <tr>
+                    <th>Employee Name</th>
+                    <th>Candidate Name</th>
+                    <th>Date Added</th>
+                    <th>Lead Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for candidate in candidates %}
+                <tr>
+                    <td>
+                        {% if candidate.created_by and candidate.created_by.user %}
+                            {{ candidate.created_by.user.get_full_name|default:candidate.created_by.user.username }}
+                        {% else %}
+                            <span class="text-muted fst-italic">Unknown Employee</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ candidate.candidate_name }}</td>
+                    <td>{{ candidate.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        {% if candidate.lead_generate == 'Hot' or candidate.lead_generate == 'Converted' %}
+                            <span class="badge bg-warning-lt">{{ candidate.lead_generate }}</span>
+                        {% else %}
+                            {{ candidate.lead_generate|default:'-' }}
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'admin_candidate_profile' candidate.id %}" class="btn btn-sm btn-outline-primary">View Profile</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No candidates with resumes were added in this period.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

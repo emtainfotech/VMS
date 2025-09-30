@@ -770,6 +770,17 @@ def admin_candidate_profile(request, id):
                 messages.success(request, 'Interview deleted successfully!')
                 return redirect('admin_candidate_profile', id=id)
 
+            elif 'bfsi_releted_data' in request.POST:
+                candidate.bfsi_batch_date = request.POST.get('bfsi_batch_date') or None
+                candidate.bfsi_payment_status = request.POST.get('bfsi_payment_status')
+                candidate.bfsi_payment_date = request.POST.get('bfsi_payment_date') or None
+                candidate.bfsi_payment_remark = request.POST.get('bfsi_payment_remark')
+                candidate.bfsi_payment_attachment = request.FILES.get('bfsi_payment_attachment')
+                candidate.bfsi_candidature_status = request.POST.get('bfsi_candidature_status')
+                candidate.save()
+                messages.success(request, 'BFSI releted details updated successfully!')
+                return redirect('admin_candidate_profile', id=id)
+
             # Redirect after any POST request that doesn't fall into the above
             return redirect('admin_candidate_profile', id=id)
 
@@ -5034,7 +5045,7 @@ def _get_chart_data(queryset, start_date, end_date, filter_q=None):
 # == MANAGER DASHBOARD VIEWS
 # ===================================================================================
 @login_required(login_url='/crm/404/')
-def employee_calls_list(request):
+def admin_calls_list(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
     
@@ -5079,7 +5090,7 @@ def employee_calls_list(request):
         last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
         connected_calls=Count('candidateactivity', filter=base_activity_filter & connected_filter),
         not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~connected_filter),
-    ).filter(total_calls__gt=0).order_by('-total_calls')
+         ).filter(total_calls__gt=0).order_by('-total_calls')
     
     LEAD_STATUSES = ['Hot', 'Converted']
     lead_transition_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
@@ -5093,17 +5104,45 @@ def employee_calls_list(request):
         # This now calculates a simple count instead of a percentage
         hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
         stat.converted_leads_count = employee_activities.filter(hot_to_converted_filter).count()
+        # This now calculates a simple count of joined candidates for each employee
+        stat.joined_count = Candidate_registration.objects.filter(
+            updated_by=stat, 
+            joining_status__iexact='Joined', 
+            candidate_joining_date__range=[start_date, end_date]
+        ).count()
+
+        # This now correctly calculates the count of resumes added by this employee
+        stat.resumes_added = Candidate_registration.objects.filter(
+            created_by=stat,
+            created_at__date__range=[start_date, end_date],
+            candidate_resume__isnull=False
+        ).exclude(candidate_resume='').count()
 
     all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created', 'updated'], employee__isnull=False)
     selections_queryset = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date])
+    # New queryset for joined candidates
+    joined_queryset = Candidate_registration.objects.filter(
+        joining_status__iexact='Joined', 
+        candidate_joining_date__range=[start_date, end_date]
+    )
+     # Correctly query for total resumes added
+    resumes_queryset = Candidate_registration.objects.filter(
+        created_at__date__range=[start_date, end_date],
+        candidate_resume__isnull=False,
+        created_by__isnull=False
+    ).exclude(candidate_resume='')
 
     if apply_employee_filter:
         all_activities_queryset = all_activities_queryset.filter(employee_id__in=selected_employee_ids)
         selections_queryset = selections_queryset.filter(updated_by_id__in=selected_employee_ids)
-
+        joined_queryset = joined_queryset.filter(updated_by_id__in=selected_employee_ids)
+        resumes_queryset = resumes_queryset.filter(created_by_id__in=selected_employee_ids)
+        
     total_connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
     total_leads_generated_count = all_activities_queryset.filter(lead_transition_filter).annotate(date=TruncDate('timestamp')).values('candidate_id', 'date').distinct().count()
     total_selections_count = selections_queryset.count()
+    total_joined_count = joined_queryset.count() # Get total joined count
+    total_resumes_count = resumes_queryset.count()
     
     total_hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
     
@@ -5113,12 +5152,15 @@ def employee_calls_list(request):
         total_not_connected=Count('id', filter=~total_connected_filter & Q(action__in=['call_made', 'created'])),
         # This new aggregation gets the total converted leads count
         total_converted_leads=Count('id', filter=total_hot_to_converted_filter)
+        
     )
     
     total_stats = {
         **total_stats_agg, 
         'total_leads_generated': total_leads_generated_count, 
-        'total_selections': total_selections_count
+        'total_selections': total_selections_count,
+        'total_joined': total_joined_count,
+        'total_resumes_added': total_resumes_count
     }
     # --- END OF CHANGE ---
 
@@ -5209,6 +5251,34 @@ def get_filtered_activity_list(request):
     elif list_type == 'converted':
         list_title = "Hot to Converted Activities"
         activities = activities.filter(Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot'))
+    
+    # --- START OF CHANGE ---
+    elif list_type == 'joined':
+        list_title = "Joined Candidates"
+        candidates = Candidate_registration.objects.filter(
+            joining_status__iexact='Joined', 
+            candidate_joining_date__range=[start_date, end_date], 
+            updated_by__isnull=False
+        ).select_related('updated_by__user').order_by('-candidate_joining_date')
+        if apply_employee_filter:
+            candidates = candidates.filter(updated_by_id__in=selected_employee_ids)
+        context = {'candidates': candidates, 'list_title': list_title}
+        return render(request, 'crm/partials/joined_candidate_list_partial.html', context)
+    
+    elif list_type == 'resumes':
+        list_title = "Candidates with Resumes Added"
+        candidates = Candidate_registration.objects.filter(
+            created_at__date__range=[start_date, end_date],
+            candidate_resume__isnull=False,
+            created_by__isnull=False
+        ).exclude(candidate_resume='').select_related('created_by__user').order_by('-created_at')
+        
+        if apply_employee_filter:
+            candidates = candidates.filter(created_by_id__in=selected_employee_ids)
+            
+        context = {'candidates': candidates, 'list_title': list_title}
+        return render(request, 'crm/partials/resume_list_partial.html', context)
+    
     else: # 'total'
         activities = activities.filter(action__in=['call_made', 'created']).order_by('-timestamp')
     
@@ -5598,6 +5668,12 @@ def admin_bfsi_candidate_registration(request):
         other_department = request.POST.get('other_department')
         current_salary_type = request.POST.get('current_salary_type')
         expected_salary_type = request.POST.get('expected_salary_type')
+        bfsi_batch_date = request.POST.get('bfsi_batch_date')
+        bfsi_payment_status = request.POST.get('bfsi_payment_status')
+        bfsi_payment_date = request.POST.get('bfsi_payment_date')
+        bfsi_payment_remark = request.POST.get('bfsi_payment_remark')
+        bfsi_payment_attachment = request.FILES.get('bfsi_payment_attachment')
+        bfsi_candidature_status = request.POST.get('bfsi_candidature_status')
         
         # Save to database
         candidate = Candidate_registration.objects.create(
@@ -5636,7 +5712,13 @@ def admin_bfsi_candidate_registration(request):
             other_sector=other_sector,
             other_department=other_department,
             current_salary_type=current_salary_type,
-            expected_salary_type=expected_salary_type
+            expected_salary_type=expected_salary_type,
+            bfsi_batch_date=bfsi_batch_date,
+            bfsi_payment_status=bfsi_payment_status,
+            bfsi_payment_date=bfsi_payment_date,
+            bfsi_payment_remark=bfsi_payment_remark,
+            bfsi_payment_attachment=bfsi_payment_attachment,
+            bfsi_candidature_status=bfsi_candidature_status
         )
 
         # Create a CandidateActivity record

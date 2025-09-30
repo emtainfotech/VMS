@@ -927,6 +927,77 @@
     });
 </script>
 
+        <!-- BFSI Details Card -->
+        {% if candidate.calling_remark == "Shortlisted for Banking Counselling" %}
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center ">
+                    <h5 class="mb-0">BFSI Details</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-bfsi-data">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block detail-label">BFSI Batch Date</span>
+                                <span class="detail-value">{{ candidate.bfsi_batch_date|date:"M d, Y"|default:"-" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block detail-label">BFSI Payment Status</span>
+                                <span class="detail-value">{{ candidate.bfsi_payment_status|default:"-" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block detail-label">BFSI Payment Date</span>
+                                <span class="detail-value">{{ candidate.bfsi_payment_date|date:"M d, Y"|default:"-" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block detail-label">BFSI Payment Remark</span>
+                                <span class="detail-value">{{ candidate.bfsi_payment_remark|default:"-" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block detail-label">BFSI Payment Attachment</span>
+                                <span class="detail-value">
+                                    {% if candidate.bfsi_payment_attachment %}
+                                    <a href="{{candidate.bfsi_payment_attachment.url}}" target="_blank" class="text-primary">
+                                        <i class="bi bi-file-earmark-text"></i> View Attachment
+                                    </a>
+                                    {% else %}
+                                    <span class="empty-value">No Attachment</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span class="d-block detail-label">BFSI Candidature Status</span>
+                                <span class="detail-value">{{ candidate.bfsi_candidature_status|default:"-" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if candidate.selection_status == "Selected" %}
         <!-- Invoice Details Card -->
         <div class="col-lg-6">
             <div class="card h-100">
@@ -979,8 +1050,7 @@
                 </div>
             </div>
         </div>
-
-
+        {% endif %}
 
 <style>
   .activity-feed {
