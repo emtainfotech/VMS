@@ -5085,11 +5085,19 @@ def admin_calls_list(request):
     base_activity_filter = Q(candidateactivity__timestamp__date__range=[start_date, end_date], candidateactivity__action__in=['call_made', 'created'], candidateactivity__employee__isnull=False)
     connected_filter = Q(Q(candidateactivity__action='call_made', candidateactivity__changes__call_connection__new__iexact='Connected') | Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected'))
     
+    # --- START OF NEW LOGIC for Resumes ---
+    # This filter finds candidates created by an employee in the date range who have a resume file
+    resume_filter = Q(
+        candidate_registration_created__created_at__date__range=[start_date, end_date],
+        candidate_registration_created__candidate_resume__isnull=False
+    ) & ~Q(candidate_registration_created__candidate_resume='')
+
     employee_stats = employee_queryset.annotate(
         total_calls=Count('candidateactivity', filter=base_activity_filter),
         last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
         connected_calls=Count('candidateactivity', filter=base_activity_filter & connected_filter),
         not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~connected_filter),
+        resumes_added=Count('candidate_registration_created', filter=resume_filter)
          ).filter(total_calls__gt=0).order_by('-total_calls')
     
     LEAD_STATUSES = ['Hot', 'Converted']
@@ -5111,13 +5119,6 @@ def admin_calls_list(request):
             candidate_joining_date__range=[start_date, end_date]
         ).count()
 
-        # This now correctly calculates the count of resumes added by this employee
-        stat.resumes_added = Candidate_registration.objects.filter(
-            created_by=stat,
-            created_at__date__range=[start_date, end_date],
-            candidate_resume__isnull=False
-        ).exclude(candidate_resume='').count()
-
     all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created', 'updated'], employee__isnull=False)
     selections_queryset = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date])
     # New queryset for joined candidates
@@ -5125,8 +5126,9 @@ def admin_calls_list(request):
         joining_status__iexact='Joined', 
         candidate_joining_date__range=[start_date, end_date]
     )
-     # Correctly query for total resumes added
-    resumes_queryset = Candidate_registration.objects.filter(
+
+     # Get total resume count for the summary card
+    total_resumes_queryset = Candidate_registration.objects.filter(
         created_at__date__range=[start_date, end_date],
         candidate_resume__isnull=False,
         created_by__isnull=False
@@ -5136,13 +5138,13 @@ def admin_calls_list(request):
         all_activities_queryset = all_activities_queryset.filter(employee_id__in=selected_employee_ids)
         selections_queryset = selections_queryset.filter(updated_by_id__in=selected_employee_ids)
         joined_queryset = joined_queryset.filter(updated_by_id__in=selected_employee_ids)
-        resumes_queryset = resumes_queryset.filter(created_by_id__in=selected_employee_ids)
-        
+        total_resumes_queryset = total_resumes_queryset.filter(created_by_id__in=selected_employee_ids)
+
     total_connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
     total_leads_generated_count = all_activities_queryset.filter(lead_transition_filter).annotate(date=TruncDate('timestamp')).values('candidate_id', 'date').distinct().count()
     total_selections_count = selections_queryset.count()
     total_joined_count = joined_queryset.count() # Get total joined count
-    total_resumes_count = resumes_queryset.count()
+    total_resumes_count = total_resumes_queryset.count()
     
     total_hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
     
