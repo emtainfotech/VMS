@@ -1395,7 +1395,7 @@ def admin_candidate_list(request):
 
     candidates_reg_qs = Candidate_registration.objects.all()
     candidates_can_qs = Candidate.objects.all()
-    resume_count = Candidate_registration.objects.exclude(candidate_resume="").exclude(candidate_resume__isnull=True).count()
+    resume_count = Candidate_registration.objects.filter(candidate_resume__isnull=False).count()
 
     # --- Fetch all possible filter options for the dropdowns ---
     filter_options = {
@@ -5144,7 +5144,7 @@ def admin_calls_list(request):
 
         # This now correctly calculates the count of resumes added by this employee
         stat.resumes_added = Candidate_registration.objects.filter(
-            updated_by=stat,
+            Q(created_by=stat) | Q(updated_by=stat),
             created_at__date__range=[start_date, end_date],
             candidate_resume__isnull=False
         ).exclude(candidate_resume='').count()
@@ -5158,16 +5158,16 @@ def admin_calls_list(request):
     )
      # Correctly query for total resumes added
     resumes_queryset = Candidate_registration.objects.filter(
+        Q(created_by__isnull=False) | Q(updated_by__isnull=False),
         created_at__date__range=[start_date, end_date],
-        candidate_resume__isnull=False,
-        updated_by__isnull=False
+        candidate_resume__isnull=False
     ).exclude(candidate_resume='')
 
     if apply_employee_filter:
         all_activities_queryset = all_activities_queryset.filter(employee_id__in=selected_employee_ids)
         selections_queryset = selections_queryset.filter(updated_by_id__in=selected_employee_ids)
         joined_queryset = joined_queryset.filter(updated_by_id__in=selected_employee_ids)
-        resumes_queryset = resumes_queryset.filter(updated_by_id__in=selected_employee_ids)
+        resumes_queryset = resumes_queryset.filter(created_by_id__in=selected_employee_ids)
         
     total_connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
     total_leads_generated_count = all_activities_queryset.filter(lead_transition_filter).annotate(date=TruncDate('timestamp')).values('candidate_id', 'date').distinct().count()
@@ -5299,10 +5299,10 @@ def get_filtered_activity_list(request):
     elif list_type == 'resumes':
         list_title = "Candidates with Resumes Added"
         candidates = Candidate_registration.objects.filter(
+            Q(created_by__isnull=False) | Q(updated_by__isnull=False),
             created_at__date__range=[start_date, end_date],
             candidate_resume__isnull=False,
-            updated_by__isnull=False
-        ).exclude(candidate_resume='').select_related('updated_by__user').order_by('-created_at')
+        ).exclude(candidate_resume='').select_related('created_by__user').order_by('-created_at')
         
         if apply_employee_filter:
             candidates = candidates.filter(created_by_id__in=selected_employee_ids)
