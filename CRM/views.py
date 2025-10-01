@@ -1395,7 +1395,7 @@ def admin_candidate_list(request):
 
     candidates_reg_qs = Candidate_registration.objects.all()
     candidates_can_qs = Candidate.objects.all()
-    resume_count = Candidate_registration.objects.filter(candidate_resume__isnull=False).count()
+    resume_count = Candidate_registration.objects.exclude(candidate_resume="").exclude(candidate_resume__isnull=True).count()
 
     # --- Fetch all possible filter options for the dropdowns ---
     filter_options = {
@@ -5146,8 +5146,8 @@ def admin_calls_list(request):
         stat.resumes_added = Candidate_registration.objects.filter(
             created_by=stat,
             created_at__date__range=[start_date, end_date],
-            candidate_resume__isnull=False
-        ).exclude(candidate_resume='').count()
+        ).exclude(candidate_resume="").exclude(candidate_resume__isnull=True).count()
+
 
     all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created', 'updated'], employee__isnull=False)
     selections_queryset = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date])
@@ -5158,11 +5158,10 @@ def admin_calls_list(request):
     )
      # Correctly query for total resumes added
     resumes_queryset = Candidate_registration.objects.filter(
-        created_at__date__range=[start_date, end_date],
-        candidate_resume__isnull=False,
-        created_by__isnull=False
-    ).exclude(candidate_resume='')
+        created_at__date__range=[start_date, end_date]
+    ).exclude(candidate_resume="").exclude(candidate_resume__isnull=True)
 
+    
     if apply_employee_filter:
         all_activities_queryset = all_activities_queryset.filter(employee_id__in=selected_employee_ids)
         selections_queryset = selections_queryset.filter(updated_by_id__in=selected_employee_ids)
@@ -5299,10 +5298,10 @@ def get_filtered_activity_list(request):
     elif list_type == 'resumes':
         list_title = "Candidates with Resumes Added"
         candidates = Candidate_registration.objects.filter(
-            created_at__date__range=[start_date, end_date],
-            candidate_resume__isnull=False,
-            created_by__isnull=False
-        ).exclude(candidate_resume='').select_related('created_by__user').order_by('-created_at')
+            created_at__date__range=[start_date, end_date]
+        ).exclude(candidate_resume="").exclude(candidate_resume__isnull=True).order_by('-created_at')
+
+        # resume_count = Candidate_registration.objects.exclude(candidate_resume="").exclude(candidate_resume__isnull=True).count()
         
         if apply_employee_filter:
             candidates = candidates.filter(created_by_id__in=selected_employee_ids)
