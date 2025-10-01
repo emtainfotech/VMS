@@ -20,8 +20,8 @@
                 {% for candidate in candidates %}
                 <tr>
                     <td>
-                        {% if candidate.created_by and candidate.created_by.user %}
-                            {{ candidate.created_by.user.get_full_name|default:candidate.created_by.user.username }}
+                        {% if candidate.updated_by and candidate.updated_by.user %}
+                            {{ candidate.updated_by.first_name }} {{ candidate.updated_by.last_name }} ({{ candidate.updated_by.user.username }})
                         {% else %}
                             <span class="text-muted fst-italic">Unknown Employee</span>
                         {% endif %}
