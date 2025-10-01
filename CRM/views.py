@@ -1429,7 +1429,6 @@ def admin_candidate_list(request):
         'total_candidates_count': total_candidates_count,
         'filter_options': filter_options,
         'all_employees': all_employees, # Pass employees to the template
-        'resume_count': resume_count,
         'employees' : employees,
 
     }
