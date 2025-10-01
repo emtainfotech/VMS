@@ -1395,7 +1395,6 @@ def admin_candidate_list(request):
 
     candidates_reg_qs = Candidate_registration.objects.all()
     candidates_can_qs = Candidate.objects.all()
-    resume_count = Candidate_registration.objects.filter(candidate_resume__isnull=False).count()
 
     # --- Fetch all possible filter options for the dropdowns ---
     filter_options = {
