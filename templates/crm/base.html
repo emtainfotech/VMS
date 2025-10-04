@@ -347,6 +347,9 @@
                             <a class="dropdown-item {% if request.path == '/crm/selected-candidate-list/' %}active{% endif %}" href="{% url 'selected_candidate' %}">
                                 Selected
                             </a>
+                            <a class="dropdown-item {% if request.path == '/crm/interview-schedule-list/' %}active{% endif %}" href="{% url 'interview_schedule_list' %}">
+                                Interview Schedule
+                            </a>
                         </div>
                     </li>
 

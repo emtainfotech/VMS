@@ -589,6 +589,8 @@ def admin_candidate_profile(request, id):
                 candidate.other_preferred_location = request.POST.get('other_preferred_location')
                 candidate.other_sector = request.POST.get('other_sector')
                 candidate.other_department = request.POST.get('other_department')
+
+                candidate.admin_remark = request.POST.get('admin_remark')
                 
                 # Handle file uploads and clearing
                 if 'candidate_photo' in request.FILES:
@@ -608,6 +610,7 @@ def admin_candidate_profile(request, id):
 
                 messages.success(request, 'Candidate details updated successfully!')
                 return redirect('admin_candidate_profile', id=id)
+            
 
             # Handle invoice related data
             elif 'invoice_releted_data' in request.POST:
@@ -5929,3 +5932,34 @@ def check_mobile_number_duplicate_bfsi(request):
             return JsonResponse({'status': 'unique'}, status=200)
 
     return JsonResponse({'error': 'Mobile number is required'}, status=400)
+
+
+
+@login_required(login_url='/crm/404/')
+def interview_schedule_list(request):
+    """
+    Displays a list of all scheduled interviews with filters.
+    """
+    # Use select_related to optimize the query by fetching related objects in a single DB hit
+    interviews_qs = Candidate_Interview.objects.select_related(
+        'candidate', 
+        'created_by'
+    ).all()
+
+    # Get a list of employees who have scheduled interviews to populate the filter
+    employee_ids = interviews_qs.exclude(created_by__isnull=True)\
+                                .values_list('created_by_id', flat=True)\
+                                .distinct()
+    employees = Employee.objects.all()
+
+    # Get all possible statuses directly from the model choices
+    interview_statuses = Candidate_Interview.INTERVIEW_STATUS
+
+    context = {
+        'interviews': interviews_qs,
+        'employees': employees,
+        'interview_statuses': interview_statuses,
+        # The company and job position filters will be populated dynamically via JavaScript
+        # from the data present in the table for simplicity, as per your provided template.
+    }
+    return render(request, 'crm/interview_schedule_list.html', context)

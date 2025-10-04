@@ -1067,6 +1067,13 @@ function updateButtonText() {
               <textarea class="form-control" name="remark" maxlength="500">{{ candidate.remark }}</textarea>
               <div class="invalid-feedback">Please enter a remark (max 500 characters)</div>
             </div>
+
+            <!-- admin Remark -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Admin Remark <span class="text-danger">*</span></label>
+              <textarea class="form-control" name="admin_remark" maxlength="500">{{ candidate.admin_remark }}</textarea>
+              <div class="invalid-feedback">Please enter a remark (max 500 characters)</div>
+            </div>
           </div>
           
           <!-- Selection Record Section -->

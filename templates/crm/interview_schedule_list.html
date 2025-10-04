@@ -1,0 +1,358 @@
+{% extends 'crm/base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+  <div class="page-header d-print-none">
+    <div class="container-xl">
+      <div class="row g-2 align-items-center">
+        <div class="col">
+          <h2 class="page-title">Interview Schedule</h2>
+          <div class="text-muted mt-1">
+            <span id="total-interviews">{{ interviews|length }}</span> scheduled interviews
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div class="container-xl">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div class="col-12 col-md-4">
+              <input type="text" id="searchInput" class="form-control" placeholder="Search candidate, company...">
+          </div>
+          <div class="col-auto">
+              <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                  <svg xmlns="http://www.w.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5.5 5h13a1 1 0 0 1 .5 1.5l-5 5.5v7l-4 -3v-4l-5 -5.5a1 1 0 0 1 .5 -1.5"></path></svg>
+                  Filter
+              </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-vcenter table-hover table-nowrap" id="interviewsTable">
+            <thead>
+              <tr>
+                <th class="w-1">#</th>
+                <th>Candidate</th>
+                <th>Company & Position</th>
+                <th>Interview Date & Time</th>
+                <th>Status</th>
+                <th>Scheduled By</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for interview in interviews %}
+              <tr 
+                data-search="{{ interview.candidate.candidate_name|lower }} {{ interview.company_name|lower }} {{ interview.job_position|lower }}"
+                data-status="{{ interview.status|lower }}"
+                data-company="{{ interview.company_name|lower|default:'' }}"
+                data-position="{{ interview.job_position|lower|default:'' }}"
+                data-employee="{% if interview.created_by %}{{ interview.candidate.employee_name|lower }}{% endif %}"
+                data-interview-date="{{ interview.interview_date_time|date:'Y-m-d' }}"
+                
+                {# Data for View Details Modal #}
+                data-interview-id="{{ interview.id }}"
+                data-candidate-name="{{ interview.candidate.candidate_name }}"
+                data-candidate-contact="{{ interview.candidate.candidate_mobile_number }}"
+                data-candidate-email="{{ interview.candidate.candidate_email_address|default:'N/A' }}"
+                data-company-name="{{ interview.company_name }}"
+                data-job-position="{{ interview.job_position }}"
+                data-datetime="{{ interview.interview_date_time|date:'F d, Y, h:i A' }}"
+                data-status-display="{{ interview.get_status_display }}"
+                data-mode-display="{{ interview.get_interview_mode_display }}"
+                data-location="{{ interview.location|default:'N/A' }}"
+                data-interviewer-name="{{ interview.interviewer_name|default:'N/A' }}"
+                data-notes="{{ interview.notes|default:'No notes provided.'|linebreaksbr }}"
+                data-feedback="{{ interview.feedback|default:'No feedback yet.'|linebreaksbr }}"
+                data-created-by="{% if interview.created_by %}{{ interview.candidate.employee_name }}{% endif %}">
+                
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'admin_candidate_profile' interview.candidate.id %}" class="text-reset text-decoration-none">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                          {% if interview.candidate.candidate_photo %}
+                            <img src="{{ interview.candidate.candidate_photo.url }}" class="avatar avatar-md" alt="{{ interview.candidate.candidate_name }}">
+                          {% else %}
+                            <span class="avatar avatar-md bg-blue-lt">{{ interview.candidate.candidate_name|first|upper }}</span>
+                          {% endif %}
+                        </div>
+                        <div>
+                          <div class="font-weight-medium">{{ interview.candidate.candidate_name }}</div>
+                          <div class="text-muted small">{{ interview.candidate.candidate_mobile_number }}</div>
+                        </div>
+                    </div>
+                  </a>
+                </td>
+                <td>
+                  <div class="font-weight-medium">{{ interview.company_name }}</div>
+                  <div class="text-muted small">{{ interview.job_position }}</div>
+                </td>
+                <td>
+                  {% if interview.interview_date_time %}
+                    {{ interview.interview_date_time|date:"M d, Y" }}
+                    <div class="text-muted small">{{ interview.interview_date_time|date:"h:i A" }}</div>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge 
+                    {% if interview.status == 'scheduled' %}bg-primary-lt
+                    {% elif interview.status == 'completed' or interview.status == 'selected' %}bg-green-lt
+                    {% elif interview.status == 'cancelled' or interview.status == 'rejected' %}bg-red-lt
+                    {% elif interview.status == 'rescheduled' or interview.status == 'on_hold' %}bg-yellow-lt
+                    {% else %}bg-secondary-lt{% endif %}">
+                    {{ interview.get_status_display }}
+                  </span>
+                </td>
+                <td>
+                  {% if interview.created_by %}
+                    {{ interview.candidate.employee_name }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                    <a href="#" class="btn btn-sm btn-icon view-details-btn" title="View Details" data-bs-toggle="tooltip">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg>
+                    </a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="7" class="text-center text-muted">No interviews scheduled yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card-footer d-flex align-items-center">
+          <div class="pagination-info">
+            Showing <span id="showingFrom">1</span> to <span id="showingTo">{{ interviews|length }}</span> of <span id="totalCount">{{ interviews|length }}</span> interviews
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal modal-blur fade" id="filterModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Filter Interviews</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12 col-md-6"><label class="form-label">Status:</label><select id="statusFilter" multiple >{% for v, d in interview_statuses %}<option value="{{ v }}">{{ d }}</option>{% endfor %}</select></div>
+          <div class="col-12 col-md-6"><label class="form-label">Company:</label><select id="companyFilter" multiple></select></div>
+          <div class="col-12 col-md-6"><label class="form-label">Job Position:</label><select id="jobPositionFilter" multiple></select></div>
+          <div class="col-12 col-md-6"><label class="form-label">Scheduled By:</label><select id="employeeFilter" multiple>{% for e in employees %}<option value="{{ e.first_name|lower }} {{ e.last_name|lower }} ({{ e.user.username|lower }})">{{ e.first_name }} {{ e.last_name }} ({{ e.user.username }})</option>{% endfor %}</select></div>
+          <div class="col-12"><label class="form-label">Interview Date Range:</label><input type="text" id="interviewDateRangeFilter" class="form-control" placeholder="Select date range"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="clearFiltersBtn" class="btn btn-link me-auto">Clear All Filters</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="applyFiltersBtn" class="btn btn-primary">Apply Filters</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="viewDetailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewDetailsModalTitle">Interview Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="modal-details-content">
+        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">Close</button>
+        <a href="#" id="editInterviewBtn" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path><path d="M16 5l3 3"></path></svg>
+          Edit
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<style>
+  .table-responsive { max-height: calc(100vh - 350px); }
+  .table th { position: sticky; top: 0; background-color: #f8f9fa; z-index: 10; }
+  #modal-details-content dt { font-weight: 600; color: #596e83; }
+  #modal-details-content dd { margin-left: 0; }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+
+<script>
+    // Store Django URL template in a JS variable for the edit button
+    const editUrlTemplate = "{% url 'admin_interview_detail' 999 %}";
+
+document.addEventListener("DOMContentLoaded", function() {
+    // MODALS
+    const filterModal = new bootstrap.Modal(document.getElementById('filterModal'));
+    const viewDetailsModal = new bootstrap.Modal(document.getElementById('viewDetailsModal'));
+    const viewDetailsContent = document.getElementById('modal-details-content');
+    const viewDetailsTitle = document.getElementById('viewDetailsModalTitle');
+    const editInterviewBtn = document.getElementById('editInterviewBtn');
+
+    // TABLE
+    const interviewsTable = document.getElementById('interviewsTable');
+    if (!interviewsTable) return;
+    const tableBody = interviewsTable.tBodies[0];
+    const rows = Array.from(tableBody.rows);
+
+    // FILTERS
+    const searchInput = document.getElementById('searchInput');
+    const statusSelect = new TomSelect('#statusFilter', { plugins: ['remove_button'] });
+    const employeeSelect = new TomSelect('#employeeFilter', { plugins: ['remove_button'] });
+    const companySelect = new TomSelect('#companyFilter', { plugins: ['remove_button'], create: false });
+    const positionSelect = new TomSelect('#jobPositionFilter', { plugins: ['remove_button'], create: false });
+    const dateRangePicker = flatpickr("#interviewDateRangeFilter", { mode: "range", dateFormat: "Y-m-d" });
+
+    // Populate dynamic filters
+    const uniqueCompanies = [...new Set(rows.map(row => row.dataset.company).filter(Boolean))];
+    const uniquePositions = [...new Set(rows.map(row => row.dataset.position).filter(Boolean))];
+    companySelect.addOptions(uniqueCompanies.map(c => ({value: c, text: c.replace(/\b\w/g, l => l.toUpperCase())})));
+    positionSelect.addOptions(uniquePositions.map(p => ({value: p, text: p.replace(/\b\w/g, l => l.toUpperCase())})));
+
+    // COUNTERS
+    const counters = {
+        total: document.getElementById('total-interviews'),
+        showingFrom: document.getElementById('showingFrom'),
+        showingTo: document.getElementById('showingTo'),
+        totalCount: document.getElementById('totalCount'),
+    };
+    
+    // --- MAIN FILTER FUNCTION ---
+    function filterInterviews() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedStatuses = statusSelect.getValue();
+        const selectedCompanies = companySelect.getValue();
+        const selectedPositions = positionSelect.getValue();
+        const selectedEmployees = employeeSelect.getValue();
+        const selectedDates = dateRangePicker.selectedDates;
+        
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            const rowData = row.dataset;
+            
+            const matchesSearch = !searchTerm || rowData.search.includes(searchTerm);
+            const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(rowData.status);
+            const matchesCompany = selectedCompanies.length === 0 || selectedCompanies.includes(rowData.company);
+            const matchesPosition = selectedPositions.length === 0 || selectedPositions.includes(rowData.position);
+            const matchesEmployee = selectedEmployees.length === 0 || selectedEmployees.includes(rowData.employee);
+
+            let matchesDate = true;
+            if (selectedDates.length > 0 && rowData.interviewDate) {
+                const interviewDate = new Date(rowData.interviewDate);
+                interviewDate.setHours(0,0,0,0);
+                const startDate = selectedDates[0];
+                startDate.setHours(0,0,0,0);
+                if (selectedDates.length === 1) {
+                    matchesDate = interviewDate.getTime() === startDate.getTime();
+                } else {
+                    const endDate = selectedDates[1];
+                    endDate.setHours(0,0,0,0);
+                    matchesDate = interviewDate >= startDate && interviewDate <= endDate;
+                }
+            } else if (selectedDates.length > 0 && !rowData.interviewDate) {
+                matchesDate = false;
+            }
+
+            if (matchesSearch && matchesStatus && matchesCompany && matchesPosition && matchesEmployee && matchesDate) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        counters.total.textContent = visibleCount;
+        counters.showingFrom.textContent = visibleCount > 0 ? '1' : '0';
+        counters.showingTo.textContent = visibleCount;
+        counters.totalCount.textContent = visibleCount;
+    }
+
+    // --- EVENT LISTENERS ---
+    searchInput.addEventListener('input', filterInterviews);
+
+    document.getElementById('applyFiltersBtn').addEventListener('click', () => {
+        filterInterviews();
+        filterModal.hide();
+    });
+
+    document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+        statusSelect.clear(); companySelect.clear(); positionSelect.clear();
+        employeeSelect.clear(); dateRangePicker.clear();
+        filterInterviews();
+        filterModal.hide();
+    });
+    
+    // Event Listener for View Details Buttons (using event delegation)
+    tableBody.addEventListener('click', function(event) {
+        const viewButton = event.target.closest('.view-details-btn');
+        if (!viewButton) return;
+
+        event.preventDefault();
+        const row = viewButton.closest('tr');
+        const data = row.dataset;
+
+        // Populate modal title
+        viewDetailsTitle.textContent = `Details for ${data.candidateName}`;
+        
+        // Populate modal body
+        viewDetailsContent.innerHTML = `
+            <dl class="row">
+              <dt class="col-sm-3">Candidate</dt><dd class="col-sm-9">${data.candidateName}</dd>
+              <dt class="col-sm-3">Contact</dt><dd class="col-sm-9">${data.candidateContact}</dd>
+              <dt class="col-sm-3">Email</dt><dd class="col-sm-9">${data.candidateEmail}</dd>
+              <hr class="my-2">
+              <dt class="col-sm-3">Company</dt><dd class="col-sm-9">${data.companyName}</dd>
+              <dt class="col-sm-3">Position</dt><dd class="col-sm-9">${data.jobPosition}</dd>
+              <dt class="col-sm-3">Date & Time</dt><dd class="col-sm-9">${data.datetime}</dd>
+              <dt class="col-sm-3">Status</dt><dd class="col-sm-9"><span class="badge bg-primary-lt">${data.statusDisplay}</span></dd>
+              <hr class="my-2">
+              <dt class="col-sm-3">Mode</dt><dd class="col-sm-9">${data.modeDisplay}</dd>
+              <dt class="col-sm-3">Location</dt><dd class="col-sm-9">${data.location}</dd>
+              <dt class="col-sm-3">Interviewer</dt><dd class="col-sm-9">${data.interviewerName}</dd>
+              <dt class="col-sm-3">Scheduled By</dt><dd class="col-sm-9">${data.createdBy}</dd>
+              <hr class="my-2">
+              <dt class="col-sm-3">Notes</dt><dd class="col-sm-9">${data.notes}</dd>
+              <dt class="col-sm-3">Feedback</dt><dd class="col-sm-9">${data.feedback}</dd>
+            </dl>
+        `;
+
+        // Set the Edit button's URL
+        editInterviewBtn.href = editUrlTemplate.replace('999', data.interviewId);
+
+        // Show the modal
+        viewDetailsModal.show();
+    });
+
+    // --- INITIALIZATION ---
+    [...document.querySelectorAll('[data-bs-toggle="tooltip"]')]
+        .map(el => new bootstrap.Tooltip(el));
+
+    filterInterviews(); // Initial run
+});
+</script>
+{% endblock %}

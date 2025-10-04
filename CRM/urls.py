@@ -79,6 +79,7 @@ urlpatterns = [
     path('banking-counselling/', banking_counselling_view, name='manage_banking_counselling'),
     path('admin-bfsi-candidate-registration/',admin_bfsi_candidate_registration,name = 'admin_bfsi_candidate_registration'),
     path('check-mobile-number-bfsi/',check_mobile_number_duplicate_bfsi,name = 'check_mobile_number_duplicate_bfsi'),
+    path('interview-schedule/', interview_schedule_list, name='interview_schedule_list'),
 
 
     path('admin/', admin.site.urls),
