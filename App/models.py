@@ -996,11 +996,13 @@ class CandidateActivity(models.Model):
         ('interview_updated', 'Interview Updated'),
         ('interview_deleted', 'Interview Deleted'),
         ('invoice_updated', 'Invoice Updated'),
+        ('viewed', 'Viewed'),  # <-- ADD THIS ACTION
     ]
     
     candidate = models.ForeignKey(Candidate_registration, on_delete=models.CASCADE, related_name='activities')
+    # Assumes your 'Employee' model has a OneToOneField or ForeignKey to the User model named 'user'
     employee = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True)
-    action = models.CharField(max_length=50, choices=ACTION_CHOICES) # Increased max_length
+    action = models.CharField(max_length=50, choices=ACTION_CHOICES)
     timestamp = models.DateTimeField(default=timezone.now)
     changes = models.JSONField(default=dict)
     remark = models.TextField(blank=True, null=True)
@@ -1010,7 +1012,8 @@ class CandidateActivity(models.Model):
         verbose_name_plural = 'Candidate Activities'
 
     def __str__(self):
-        return f"{self.get_action_display()} by {self.employee} on {self.candidate}"
+        employee_str = self.employee.user.username if self.employee and self.employee.user else "System"
+        return f"{self.get_action_display()} by {employee_str} on {self.candidate.candidate_name}"
     
 
 class Candidate_chat(models.Model):

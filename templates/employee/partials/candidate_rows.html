@@ -109,8 +109,8 @@
             {% endif %}
         </div>
     </td>
-    <td class="text-muted" title="{{ candidate.register_time }}">
-        {{ candidate.register_time|date:"M d, Y" }}
+    <td class="text-muted" title="{{ candidate.register_time|date:'Y-m-d H:i:s' }}">
+        {{ candidate.register_time|date:"M d, Y H:i" }}
     </td>
     <td class="text-center actions-cell">
         <div class="btn-list d-flex justify-content-center flex-nowrap">

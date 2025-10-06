@@ -531,6 +531,33 @@ def admin_candidate_profile(request, id):
         )
         companies = Company_registration.objects.all().order_by('-id')
 
+        # Log admin view activity if the user is staff or superuser
+    if request.user.is_staff or request.user.is_superuser:
+        try:
+            # This assumes your Employee model is linked to the User model
+            # For example: employee = Employee.objects.get(user=request.user)
+            employee_instance = request.user.employee 
+        except Employee.DoesNotExist:
+            employee_instance = None
+
+        if employee_instance:
+            # Avoid creating duplicate 'viewed' logs on every page refresh
+            last_activity = candidate.activities.first()
+
+            # Check if the last activity was within the last 5 seconds (to prevent logging after a redirect)
+            is_recent_activity = last_activity and (timezone.now() - last_activity.timestamp < timedelta(seconds=5))
+
+            # Only log a 'viewed' action if there hasn't been a very recent activity
+            if not is_recent_activity:
+                # (Put your existing logic for creating a 'viewed' activity log here)
+                # For example:
+                CandidateActivity.objects.create(
+                    candidate=candidate,
+                    employee=logged_in_employee,
+                    action='viewed',
+                    remark=f"Profile viewed by admin: {request.user.username}"
+                )
+
         if request.method == 'POST':
             # Handle general candidate profile updates
             if 'submit_all' in request.POST:
@@ -1437,19 +1464,36 @@ def admin_candidate_list(request):
     }
     return render(request, 'crm/candidate-list.html', context)
 
+# your_app/views.py
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.urls import reverse
+from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.utils.text import slugify
+from itertools import chain
+
 @login_required(login_url='/crm/404/')
 def get_candidates_api(request):
     """
     API view to handle AJAX requests for fetching, filtering, and paginating candidates.
-    (This view remains unchanged).
+    This version is modified to include the latest admin activity for each candidate.
     """
     if not (request.user.is_staff or request.user.is_superuser):
         return JsonResponse({'error': 'Forbidden'}, status=403)
 
-    # --- Your existing filtering and pagination logic ---
-    candidates_reg_qs = Candidate_registration.objects.all()
+    # --- Queryset Optimization ---
+    # Use prefetch_related to efficiently load activities and related user data in one go.
+    # This is crucial for good performance.
+    candidates_reg_qs = Candidate_registration.objects.prefetch_related(
+        'activities__employee__user'
+    ).all()
+    
+    # Assuming the `Candidate` model does not have an 'activities' relationship
     candidates_can_qs = Candidate.objects.all()
 
+    # --- Filtering Logic (remains the same) ---
     search_term = request.GET.get('search', '').strip()
     date_from = request.GET.get('dateFrom')
     date_to = request.GET.get('dateTo')
@@ -1477,6 +1521,7 @@ def get_candidates_api(request):
     candidates_reg_qs = candidates_reg_qs.filter(q_filter)
     candidates_can_qs = candidates_can_qs.filter(q_filter)
 
+    # --- Sorting and Pagination (remains the same) ---
     filtered_candidates_list = sorted(
         list(chain(candidates_reg_qs, candidates_can_qs)),
         key=lambda x: x.register_time,
@@ -1491,12 +1536,33 @@ def get_candidates_api(request):
     except (EmptyPage, PageNotAnInteger):
         return JsonResponse({'candidates': [], 'has_next': False, 'total_count': 0})
 
+    # --- Data Serialization ---
     candidates_data = []
     for candidate in page_obj.object_list:
         model_type = 'registration' if isinstance(candidate, Candidate_registration) else 'candidate'
+        
+        # ▼▼▼ NEW: Logic to find the latest admin activity ▼▼▼
+        latest_admin_activity = None
+        # Only Candidate_registration objects have activities based on your models
+        if model_type == 'registration':
+            # Because of prefetch_related, this does NOT cause extra database queries.
+            # The list is already ordered by timestamp descending from the model's Meta.
+            activity_list = candidate.activities.all()
+            if activity_list:
+                latest_activity = activity_list[0]
+                # Check if the activity was performed by a staff/admin user
+                if latest_activity.employee and latest_activity.employee.user and latest_activity.employee.user.is_staff:
+                    latest_admin_activity = {
+                        'action': latest_activity.action,
+                        'admin_username': latest_activity.employee.user.username,
+                        'timestamp': latest_activity.timestamp.strftime('%b %d, %Y')
+                    }
+        # ▲▲▲ END of new logic ▲▲▲
+
         profile_url = reverse('admin_candidate_profile', args=[candidate.id])
         if candidate.lead_source == 'EVMS':
             profile_url = reverse('evms_candidate_profile', args=[candidate.id])
+
         candidates_data.append({
             'id': candidate.id,
             'model_type': model_type,
@@ -1524,6 +1590,7 @@ def get_candidates_api(request):
             'data_connection_status': slugify(candidate.call_connection or 'unknown'),
             'data_lead_source': slugify(candidate.lead_source or 'unknown'),
             'data_employee_name': slugify(candidate.employee_name or 'unassigned'),
+            'latest_admin_activity': latest_admin_activity,  # Add the new data to the response
         })
         
     return JsonResponse({
@@ -1531,6 +1598,7 @@ def get_candidates_api(request):
         'has_next': page_obj.has_next(),
         'total_count': paginator.count
     })
+
 
 # --- NEW VIEW FOR BULK ASSIGNMENT ---
 @login_required(login_url='/crm/404/')
