@@ -26,6 +26,28 @@
                     {% endif %} me-1"></i>
                 {{ candidate.call_connection }}
             </span>
+            {% with latest_activity=candidate.activities.first %}
+                                            {% if latest_activity and latest_activity.employee and latest_activity.employee.user.is_staff %}
+                                                <div class="mt-1">
+                                                    
+                                                    {# Check if the last action was an edit, update, or call #}
+                                                    {% if latest_activity.action == 'updated' or latest_activity.action == 'call_made' %}
+                                                        <span class="badge bg-orange-lt" title="Last updated by {{ latest_activity.employee.user.username }} on {{ latest_activity.timestamp|date:'M d, Y' }}">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" /></svg>
+                                                            Admin Edited
+                                                        </span>
+                                                    
+                                                    {# Otherwise, if the last action was just a view #}
+                                                    {% elif latest_activity.action == 'viewed' %}
+                                                        <span class="badge bg-purple-lt" title="Last viewed by {{ latest_activity.employee.user.username }} on {{ latest_activity.timestamp|date:'M d, Y' }}">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-eye-check" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /><path d="M15 19l2 2l4 -4" /></svg>
+                                                            Admin Viewed
+                                                        </span>
+                                                    {% endif %}
+
+                                                </div>
+                                            {% endif %}
+                                        {% endwith %}
         {% else %}
             <span class="badge bg-secondary px-3 py-1 rounded-pill">Unknown</span>
         {% endif %}
