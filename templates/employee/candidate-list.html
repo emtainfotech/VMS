@@ -28,7 +28,6 @@
             <div class="card">
                 <div class="card-header">
                     <div class="row align-items-center g-2 w-100">
-                        <!-- Search Input -->
                         <div class="col-12 col-md-4">
                             <div class="input-group">
                                 <span class="input-group-text">
@@ -37,11 +36,10 @@
                                 <input type="text" id="searchInput" class="form-control" placeholder="Search candidates..." aria-label="Search candidates">
                             </div>
                         </div>
-                        <!-- Filter Buttons -->
                         <div class="col-12 col-md-8 d-flex justify-content-md-end">
                             <div class="btn-list">
                                 <button id="clearAllFiltersBtn" class="btn btn-light" style="display: none;">
-                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-filter-off" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 3l18 18"></path><path d="M8.5 8.5c.337 -1.33 .944 -2.528 1.772 -3.5h3.456a1 1 0 0 1 .8 1.6l-2.4 2.9a1 1 0 0 0 0 1l.594 .742m2.053 2.566l2.353 2.942a1 1 0 0 1 -.8 1.6h-12a1 1 0 0 1 -.8 -1.6l2.4 -2.9a1 1 0 0 0 0 -1l-2.4 -2.9a1 1 0 0 1 .8 -1.6h2.31"></path></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-filter-off" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 3l18 18"></path><path d="M8.5 8.5c.337 -1.33 .944 -2.528 1.772 -3.5h3.456a1 1 0 0 1 .8 1.6l-2.4 2.9a1 1 0 0 0 0 1l.594 .742m2.053 2.566l2.353 2.942a1 1 0 0 1 -.8 1.6h-12a1 1 0 0 1 -.8 -1.6l2.4 -2.9a1 1 0 0 0 0 -1l-2.4 -2.9a1 1 0 0 1 .8 -1.6h2.31"></path></svg>
                                     Clear Filters
                                 </button>
                                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
@@ -53,27 +51,40 @@
                     </div>
                 </div>
 
-                <div class="table-responsive table-scrollable-body" style="max-height: 600px; overflow-y: auto;">
-                    <table class="table table-vcenter table-hover table-nowrap" id="candidatesTable">
-                        <thead>
-                            <tr>
-                                <th class="w-1">#</th>
-                                <th>Connection Status</th>
-                                <th>Candidate</th>
-                                <th>Contact</th>
-                                <th>Source</th>
-                                <th>Lead Status</th>
-                                <th>Experience</th>
-                                <th>Calling Remark</th>
-                                <th>Current Status</th>
-                                <th>Registered</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="candidates-tbody">
-                            {% include 'employee/partials/candidate_rows.html' %}
-                        </tbody>
-                    </table>
+                <div id="table-wrapper" style="position: relative;">
+                    
+                    <div id="update-toast" class="toast bg-success text-white" role="alert" aria-live="assertive" aria-atomic="true" style="position: absolute; top: 1rem; right: 1rem; z-index: 20;">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                                Table layout updated.
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive table-scrollable-body" style="max-height: 600px; overflow-y: auto;">
+                        <table class="table table-vcenter table-hover table-nowrap" id="candidatesTable">
+                            <thead>
+                                <tr>
+                                    <th data-key="hash" class="w-1">#</th>
+                                    <th data-key="connection_status">Connection Status</th>
+                                    <th data-key="candidate">Candidate</th>
+                                    <th data-key="contact">Contact</th>
+                                    <th data-key="source">Source</th>
+                                    <th data-key="lead_status">Lead Status</th>
+                                    <th data-key="experience">Experience</th>
+                                    <th data-key="calling_remark">Calling Remark</th>
+                                    <th data-key="current_status">Current Status</th>
+                                    <th data-key="registered">Registered</th>
+                                    <th data-key="actions" class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="candidates-tbody">
+                                {% include 'employee/partials/candidate_rows.html' %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 
                 <div id="loading-indicator" style="display: none; text-align: center; padding: 20px;">
@@ -84,7 +95,6 @@
     </div>
 </div>
 
-<!-- Filter Modal -->
 <div class="modal" id="filterModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -94,7 +104,6 @@
             </div>
             <div class="modal-body">
                 <div class="row g-3">
-                    <!-- Date Filters -->
                     <div class="col-md-6">
                         <label for="dateFrom" class="form-label">Date From</label>
                         <input type="date" id="dateFrom" class="form-control" title="From Date">
@@ -104,33 +113,21 @@
                         <input type="date" id="dateTo" class="form-control" title="To Date">
                     </div>
 
-                    <!-- Filter Panes -->
                     <div class="col-md-6 col-lg-3">
                         <label class="form-label">Connection Status</label>
-                        <div class="filter-options-pane" id="connectionStatusFilterOptions">
-                            <!-- Options will be populated by JS -->
-                        </div>
+                        <div class="filter-options-pane" id="connectionStatusFilterOptions"></div>
                     </div>
-                    
                     <div class="col-md-6 col-lg-3">
                         <label class="form-label">Lead Source</label>
-                        <div class="filter-options-pane" id="leadSourceFilterOptions">
-                            <!-- Options will be populated by JS -->
-                        </div>
+                        <div class="filter-options-pane" id="leadSourceFilterOptions"></div>
                     </div>
-                    
                     <div class="col-md-6 col-lg-3">
                         <label class="form-label">Lead Status</label>
-                        <div class="filter-options-pane" id="statusFilterOptions">
-                            <!-- Options will be populated by JS -->
-                        </div>
+                        <div class="filter-options-pane" id="statusFilterOptions"></div>
                     </div>
-
                     <div class="col-md-6 col-lg-3">
                         <label class="form-label">Calling Remark</label>
-                        <div class="filter-options-pane" id="callingRemarkFilterOptions">
-                            <!-- Options will be populated by JS -->
-                        </div>
+                        <div class="filter-options-pane" id="callingRemarkFilterOptions"></div>
                     </div>
                 </div>
             </div>
@@ -143,19 +140,41 @@
 </div>
 
 <style>
+    /* --- Your Existing Styles --- */
     .status-badge{display:inline-block;padding:.25rem .5rem;border-radius:50rem;font-size:.75rem;font-weight:600;line-height:1;text-align:center;white-space:nowrap;vertical-align:baseline}.status-hot{background-color:rgba(253,126,20,.1);color:#fd7e14}.status-converted{background-color:rgba(32,201,151,.1);color:#20c997}.status-cold{background-color:rgba(250,82,82,.1);color:#fa5252}.status-not-interested{background-color:rgba(108,117,125,.1);color:#6c757d}.status-connect-later{background-color:rgba(0,123,255,.1);color:#007bff}.status-dnd{background-color:rgba(220,53,69,.1);color:#dc3545}.status-other{background-color:rgba(102,16,242,.1);color:#6610f2}.avatar-container{width:40px;height:40px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center}@media (max-width:768px){.card-header .row>div{width:100%}.card-header .input-group{margin-bottom:1rem}}.table-responsive.table-scrollable-body{position:relative}#candidatesTable thead th{position:sticky;top:0;z-index:10;box-shadow:0 2px 2px -1px rgba(0,0,0,.1)}.filter-options-pane{position: relative; display: block; border: 1px solid #ddd; border-radius: 4px; padding: .75rem; max-height: 250px; overflow-y: auto; box-sizing:border-box;}.filter-options-pane .form-check{margin-bottom:.5rem;color:var(--tblr-body-color)}.filter-options-pane .form-check:last-child{margin-bottom:0}.filter-options-pane .form-check-label{margin-left:.5rem}.filter-options-pane .select-all-checkbox+.form-check-label{font-weight:700;color:var(--tblr-body-color)}.cursor-pointer{cursor:pointer}
+    
+    /* --- NEW STYLES FOR COLUMN RESIZING --- */
+    #candidatesTable {
+        table-layout: fixed;
+        width: 100%;
+    }
+    #candidatesTable th {
+        overflow: hidden; /* Prevents resizer from showing outside the header */
+    }
+    .resizer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 5px;
+        cursor: col-resize;
+        user-select: none;
+        height: 100%;
+        z-index: 11;
+    }
+    .resizer:hover,
+    .resizing {
+        border-right: 2px solid #007bff;
+    }
 </style>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    // --- STATE MANAGEMENT ---
+    // --- YOUR EXISTING SCRIPT FOR FILTERS AND INFINITE SCROLL ---
     let currentPage = 1;
     let hasNextPage = {{ page_obj.has_next|yesno:"true,false" }};
     let isLoading = false;
     let searchTimeout;
     const FILTERS_STORAGE_KEY = 'employeeCandidateFilters';
-
-    // --- DOM ELEMENTS ---
     const searchInput = document.getElementById('searchInput');
     const dateFromInput = document.getElementById('dateFrom');
     const dateToInput = document.getElementById('dateTo');
@@ -166,308 +185,126 @@ document.addEventListener("DOMContentLoaded", function () {
     const modalApplyBtn = document.getElementById('modalApplyFiltersBtn');
     const modalClearBtn = document.getElementById('modalClearFiltersBtn');
     const clearAllFiltersBtn = document.getElementById('clearAllFiltersBtn');
-    
-    // --- FILTER CONFIGURATION ---
     const filterConfigs = {
-        connectionStatus: {
-            pane: document.getElementById('connectionStatusFilterOptions'),
-            paramName: 'connection_status',
-            dataAttr: 'data-connection-status'
-        },
-        leadSource: {
-            pane: document.getElementById('leadSourceFilterOptions'),
-            paramName: 'lead_source',
-            dataAttr: 'data-lead-source'
-        },
-        status: {
-            pane: document.getElementById('statusFilterOptions'),
-            paramName: 'status',
-            dataAttr: 'data-status'
-        },
-        callingRemark: {
-            pane: document.getElementById('callingRemarkFilterOptions'),
-            paramName: 'calling_remark',
-            dataAttr: 'data-calling-remark'
-        }
+        connectionStatus: { pane: document.getElementById('connectionStatusFilterOptions'), paramName: 'connection_status', dataAttr: 'data-connection-status' },
+        leadSource: { pane: document.getElementById('leadSourceFilterOptions'), paramName: 'lead_source', dataAttr: 'data-lead-source' },
+        status: { pane: document.getElementById('statusFilterOptions'), paramName: 'status', dataAttr: 'data-status' },
+        callingRemark: { pane: document.getElementById('callingRemarkFilterOptions'), paramName: 'calling_remark', dataAttr: 'data-calling-remark' }
     };
 
-    /**
-     * Saves the current state of all filters to localStorage.
-     */
-    function saveFiltersToStorage() {
-        const filters = {
-            search: searchInput.value.trim(),
-            date_from: dateFromInput.value,
-            date_to: dateToInput.value,
-        };
-        for (const key in filterConfigs) {
-            const config = filterConfigs[key];
-            filters[config.paramName] = Array.from(config.pane.querySelectorAll('.filter-checkbox:checked')).map(cb => cb.value);
-        }
-        localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
-        updateClearAllButtonVisibility();
-    }
-
-    /**
-     * Loads filter state from localStorage and applies it to the input fields.
-     */
-    function loadFiltersFromStorage() {
-        const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
-
-        searchInput.value = savedFilters.search || '';
-        dateFromInput.value = savedFilters.date_from || '';
-        dateToInput.value = savedFilters.date_to || '';
-
-        for (const key in filterConfigs) {
-            const config = filterConfigs[key];
-            const values = savedFilters[config.paramName] || [];
-            if (values.length > 0) {
-                config.pane.querySelectorAll('.filter-checkbox').forEach(cb => {
-                    cb.checked = values.includes(cb.value);
-                });
-            }
-            updateSelectAllCheckbox(key);
-        }
-        updateClearAllButtonVisibility();
-    }
-    
-    /**
-     * Clears all filters, removes them from storage, and refreshes the data.
-     */
-    function clearAllFilters() {
-        localStorage.removeItem(FILTERS_STORAGE_KEY);
-        
-        searchInput.value = '';
-        dateFromInput.value = '';
-        dateToInput.value = '';
-        for (const key in filterConfigs) {
-            filterConfigs[key].pane.querySelectorAll('.filter-checkbox, .select-all-checkbox').forEach(cb => cb.checked = false);
-            updateSelectAllCheckbox(key);
-        }
-
-        updateClearAllButtonVisibility();
-        fetchCandidates(1, false);
-    }
-    
-    /**
-     * Shows or hides the "Clear All Filters" button based on whether any filters are active.
-     */
-    function updateClearAllButtonVisibility() {
-        const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
-        let isFilterApplied = Object.values(savedFilters).some(val => (Array.isArray(val) ? val.length > 0 : val) || (typeof val === 'string' && val.length > 0));
-        clearAllFiltersBtn.style.display = isFilterApplied ? 'inline-flex' : 'none';
-    }
-
-
-    /**
-     * Fetches candidates from the API based on current filters and page.
-     */
-    async function fetchCandidates(page = 1, append = false) {
-        if (isLoading) return;
-        isLoading = true;
-        if (!append) {
-             loadingIndicator.style.display = 'block';
-        }
-       
-        const savedFilters = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || '{}');
-        const params = new URLSearchParams();
-        params.append('page', page);
-        
-        if (savedFilters.search) params.append('search', savedFilters.search);
-        if (savedFilters.date_from) params.append('date_from', savedFilters.date_from);
-        if (savedFilters.date_to) params.append('date_to', savedFilters.date_to);
-
-        for (const key in filterConfigs) {
-            const config = filterConfigs[key];
-            const values = savedFilters[config.paramName] || [];
-            values.forEach(value => {
-                 params.append(`${config.paramName}[]`, value);
-            });
-        }
-
-        const apiUrl = `{% url 'filter_candidates_api' %}?${params.toString()}`;
-
-        try {
-            const response = await fetch(apiUrl);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-
-            if (append) {
-                tableBody.insertAdjacentHTML('beforeend', data.rows_html);
-            } else {
-                tableBody.innerHTML = data.rows_html;
-                totalCandidatesDisplay.textContent = data.total_count;
-                scrollContainer.scrollTop = 0;
-            }
-
-            updateFilterOptions();
-
-            hasNextPage = data.has_next;
-            currentPage = page;
-            reinitializeTooltips();
-        } catch (error) {
-            console.error("Failed to fetch candidates:", error);
-        } finally {
-            isLoading = false;
-            loadingIndicator.style.display = 'none';
-        }
-    }
-
-    /**
-     * Populates AND updates filter options by scraping data-* attributes from ALL current table rows.
-     */
-    function updateFilterOptions() {
-        const allRows = document.querySelectorAll('#candidatesTable tbody tr');
-        const uniqueValues = { 
-            connectionStatus: new Set(), 
-            leadSource: new Set(), 
-            status: new Set(),
-            callingRemark: new Set()
-        };
-
-        allRows.forEach(row => {
-            for (const key in filterConfigs) {
-                const value = row.getAttribute(filterConfigs[key].dataAttr);
-                if (value && value.trim() !== '' && value.trim() !== 'None') {
-                    uniqueValues[key].add(value);
-                }
-            }
-        });
-
-        const toTitleCase = str => str ? str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A';
-
-        for (const key in filterConfigs) {
-            const config = filterConfigs[key];
-            const savedChecked = new Set(Array.from(config.pane.querySelectorAll('.filter-checkbox:checked')).map(cb => cb.value));
-
-            const values = Array.from(uniqueValues[key]).sort();
-            
-            let optionsHTML = `
-                <div class="input-icon mb-2">
-                    <input type="text" class="form-control dropdown-search-input" placeholder="Search...">
-                </div>
+    // ... (All your existing functions like saveFiltersToStorage, fetchCandidates, etc. are here)
+    function saveFiltersToStorage(){const filters={search:searchInput.value.trim(),date_from:dateFromInput.value,date_to:dateToInput.value};for(const key in filterConfigs){const config=filterConfigs[key];filters[config.paramName]=Array.from(config.pane.querySelectorAll('.filter-checkbox:checked')).map(cb=>cb.value)}localStorage.setItem(FILTERS_STORAGE_KEY,JSON.stringify(filters));updateClearAllButtonVisibility()}
+    function loadFiltersFromStorage(){const savedFilters=JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY)||'{}');searchInput.value=savedFilters.search||'';dateFromInput.value=savedFilters.date_from||'';dateToInput.value=savedFilters.date_to||'';for(const key in filterConfigs){const config=filterConfigs[key];const values=savedFilters[config.paramName]||[];if(values.length>0){config.pane.querySelectorAll('.filter-checkbox').forEach(cb=>{cb.checked=values.includes(cb.value)})}updateSelectAllCheckbox(key)}updateClearAllButtonVisibility()}
+    function clearAllFilters(){localStorage.removeItem(FILTERS_STORAGE_KEY);searchInput.value='';dateFromInput.value='';dateToInput.value='';for(const key in filterConfigs){filterConfigs[key].pane.querySelectorAll('.filter-checkbox, .select-all-checkbox').forEach(cb=>cb.checked=false);updateSelectAllCheckbox(key)}updateClearAllButtonVisibility();fetchCandidates(1,false)}
+    function updateClearAllButtonVisibility(){const savedFilters=JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY)||'{}');let isFilterApplied=Object.values(savedFilters).some(val=>(Array.isArray(val)?val.length>0:val)||(typeof val==='string'&&val.length>0));clearAllFiltersBtn.style.display=isFilterApplied?'inline-flex':'none'}
+    async function fetchCandidates(page=1,append=false){if(isLoading)return;isLoading=true;if(!append){loadingIndicator.style.display='block'}const savedFilters=JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY)||'{}');const params=new URLSearchParams();params.append('page',page);if(savedFilters.search)params.append('search',savedFilters.search);if(savedFilters.date_from)params.append('date_from',savedFilters.date_from);if(savedFilters.date_to)params.append('date_to',savedFilters.date_to);for(const key in filterConfigs){const config=filterConfigs[key];const values=savedFilters[config.paramName]||[];values.forEach(value=>{params.append(`${config.paramName}[]`,value)})}const apiUrl=`{% url 'filter_candidates_api' %}?${params.toString()}`;try{const response=await fetch(apiUrl);if(!response.ok)throw new Error(`HTTP error! status: ${response.status}`);const data=await response.json();if(append){tableBody.insertAdjacentHTML('beforeend',data.rows_html)}else{tableBody.innerHTML=data.rows_html;totalCandidatesDisplay.textContent=data.total_count;scrollContainer.scrollTop=0}updateFilterOptions();hasNextPage=data.has_next;currentPage=page;reinitializeTooltips()}catch(error){console.error("Failed to fetch candidates:",error)}finally{isLoading=false;loadingIndicator.style.display='none'}}
+    function updateFilterOptions(){const allRows=document.querySelectorAll('#candidatesTable tbody tr');const uniqueValues={connectionStatus:new Set(),leadSource:new Set(),status:new Set(),callingRemark:new Set()};allRows.forEach(row=>{for(const key in filterConfigs){const value=row.getAttribute(filterConfigs[key].dataAttr);if(value&&value.trim()!==''&&value.trim()!=='None'){uniqueValues[key].add(value)}}});const toTitleCase=str=>str?str.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase()):'N/A';for(const key in filterConfigs){const config=filterConfigs[key];const savedChecked=new Set(Array.from(config.pane.querySelectorAll('.filter-checkbox:checked')).map(cb=>cb.value));const values=Array.from(uniqueValues[key]).sort();let optionsHTML=`
+            <div class="input-icon mb-2">
+                <input type="text" class="form-control dropdown-search-input" placeholder="Search...">
+            </div>
+            <label class="form-check cursor-pointer">
+                <input class="form-check-input select-all-checkbox" type="checkbox">
+                <span class="form-check-label font-weight-bold">Select All</span>
+            </label>
+        `;values.forEach(value=>{const isChecked=savedChecked.has(value)?'checked':'';optionsHTML+=`
                 <label class="form-check cursor-pointer">
-                    <input class="form-check-input select-all-checkbox" type="checkbox">
-                    <span class="form-check-label font-weight-bold">Select All</span>
-                </label>
-            `;
-            
-            values.forEach(value => {
-                const isChecked = savedChecked.has(value) ? 'checked' : '';
-                optionsHTML += `
-                    <label class="form-check cursor-pointer">
-                        <input class="form-check-input filter-checkbox" type="checkbox" value="${value}" ${isChecked}>
-                        <span class="form-check-label">${toTitleCase(value)}</span>
-                    </label>`;
-            });
-            config.pane.innerHTML = optionsHTML;
-            updateSelectAllCheckbox(key);
-        }
-    }
+                    <input class="form-check-input filter-checkbox" type="checkbox" value="${value}" ${isChecked}>
+                    <span class="form-check-label">${toTitleCase(value)}</span>
+                </label>`});config.pane.innerHTML=optionsHTML;updateSelectAllCheckbox(key)}}
+    function updateSelectAllCheckbox(key){const config=filterConfigs[key];if(!config||!config.pane)return;const checkboxes=config.pane.querySelectorAll('.filter-checkbox');const checkedCount=config.pane.querySelectorAll('.filter-checkbox:checked').length;const selectAll=config.pane.querySelector('.select-all-checkbox');if(!selectAll)return;if(checkedCount===0){selectAll.checked=false;selectAll.indeterminate=false}else if(checkedCount>0&&checkedCount===checkboxes.length){selectAll.checked=true;selectAll.indeterminate=false}else{selectAll.checked=false;selectAll.indeterminate=checkedCount>0}}
+    function reinitializeTooltips(){document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el=>{const instance=bootstrap.Tooltip.getInstance(el);if(instance)instance.dispose()});const tooltipTriggerList=[].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));tooltipTriggerList.map(function(tooltipTriggerEl){return new bootstrap.Tooltip(tooltipTriggerEl)})}
+    function initializeEventListeners(){searchInput.addEventListener('input',()=>{clearTimeout(searchTimeout);searchTimeout=setTimeout(()=>{saveFiltersToStorage();fetchCandidates(1,false)},500)});modalApplyBtn.addEventListener('click',()=>{saveFiltersToStorage();fetchCandidates(1,false)});modalClearBtn.addEventListener('click',()=>{dateFromInput.value='';dateToInput.value='';for(const key in filterConfigs){filterConfigs[key].pane.querySelectorAll('.filter-checkbox, .select-all-checkbox').forEach(cb=>cb.checked=false);updateSelectAllCheckbox(key)}});clearAllFiltersBtn.addEventListener('click',clearAllFilters);for(const key in filterConfigs){const config=filterConfigs[key];config.pane.addEventListener('change',e=>{if(e.target.matches('.filter-checkbox, .select-all-checkbox')){if(e.target.matches('.select-all-checkbox')){config.pane.querySelectorAll('.filter-checkbox').forEach(cb=>cb.checked=e.target.checked)}updateSelectAllCheckbox(key)}});config.pane.addEventListener('input',e=>{if(e.target.matches('.dropdown-search-input')){const searchTerm=e.target.value.toLowerCase();config.pane.querySelectorAll('.form-check').forEach(label=>{if(label.querySelector('.select-all-checkbox'))return;const text=label.textContent.toLowerCase();label.style.display=text.includes(searchTerm)?'':'none'})}})}scrollContainer.addEventListener('scroll',()=>{const{scrollTop,scrollHeight,clientHeight}=scrollContainer;if(scrollTop+clientHeight>=scrollHeight-250&&hasNextPage&&!isLoading){fetchCandidates(currentPage+1,true)}});tableBody.addEventListener('click',e=>{const row=e.target.closest('tr');if(!row||e.target.closest('a, button, input, select, .actions-cell'))return;const profileLink=row.querySelector('.profile-link');if(profileLink)window.location.href=profileLink.href})}
     
-    function updateSelectAllCheckbox(key) {
-        const config = filterConfigs[key];
-        if (!config || !config.pane) return;
-        const checkboxes = config.pane.querySelectorAll('.filter-checkbox');
-        const checkedCount = config.pane.querySelectorAll('.filter-checkbox:checked').length;
-        const selectAll = config.pane.querySelector('.select-all-checkbox');
-        
-        if (!selectAll) return;
-
-        if (checkedCount === 0) {
-            selectAll.checked = false;
-            selectAll.indeterminate = false;
-        } else if (checkedCount > 0 && checkedCount === checkboxes.length) {
-            selectAll.checked = true;
-            selectAll.indeterminate = false;
-        } else {
-            selectAll.checked = false;
-            selectAll.indeterminate = checkedCount > 0;
-        }
-    }
-
-    function reinitializeTooltips() {
-        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
-            const instance = bootstrap.Tooltip.getInstance(el);
-            if(instance) instance.dispose();
-        });
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-    }
-
-    /**
-     * Sets up all event listeners for the page.
-     */
-    function initializeEventListeners() {
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                saveFiltersToStorage();
-                fetchCandidates(1, false);
-            }, 500);
-        });
-
-        modalApplyBtn.addEventListener('click', () => {
-            saveFiltersToStorage();
-            fetchCandidates(1, false);
-        });
-        
-        modalClearBtn.addEventListener('click', () => {
-             dateFromInput.value = '';
-             dateToInput.value = '';
-             for (const key in filterConfigs) {
-                filterConfigs[key].pane.querySelectorAll('.filter-checkbox, .select-all-checkbox').forEach(cb => cb.checked = false);
-                updateSelectAllCheckbox(key);
-             }
-        });
-        
-        clearAllFiltersBtn.addEventListener('click', clearAllFilters);
-        
-        for (const key in filterConfigs) {
-            const config = filterConfigs[key];
-            config.pane.addEventListener('change', (e) => {
-                if (e.target.matches('.filter-checkbox, .select-all-checkbox')) {
-                    if (e.target.matches('.select-all-checkbox')) {
-                       config.pane.querySelectorAll('.filter-checkbox').forEach(cb => cb.checked = e.target.checked);
-                    }
-                    updateSelectAllCheckbox(key);
-                }
-            });
-            config.pane.addEventListener('input', (e) => {
-                if (e.target.matches('.dropdown-search-input')) {
-                    const searchTerm = e.target.value.toLowerCase();
-                    config.pane.querySelectorAll('.form-check').forEach(label => {
-                        if(label.querySelector('.select-all-checkbox')) return;
-                        const text = label.textContent.toLowerCase();
-                        label.style.display = text.includes(searchTerm) ? '' : 'none';
-                    });
-                }
-            });
-        }
-        
-        scrollContainer.addEventListener('scroll', () => {
-            const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
-            if (scrollTop + clientHeight >= scrollHeight - 250 && hasNextPage && !isLoading) {
-                fetchCandidates(currentPage + 1, true);
-            }
-        });
-
-        tableBody.addEventListener('click', (e) => {
-            const row = e.target.closest('tr');
-            if (!row || e.target.closest('a, button, input, select, .actions-cell')) return;
-            const profileLink = row.querySelector('.profile-link');
-            if (profileLink) window.location.href = profileLink.href;
-        });
-    }
-
     // --- INITIALIZATION ---
     updateFilterOptions(); 
     loadFiltersFromStorage();
     initializeEventListeners();
     fetchCandidates(1, false);
     reinitializeTooltips();
+
+
+    // --- NEW SCRIPT FOR COLUMN RESIZING ---
+    const table = document.getElementById('candidatesTable');
+    if (table) {
+        const resizerHeaders = table.querySelectorAll('thead th');
+        const resizerToastEl = document.getElementById('update-toast');
+        const resizerToast = new bootstrap.Toast(resizerToastEl, { delay: 2500 });
+        const resizerStorageKey = 'employeeCandidateTableWidths';
+
+        const loadColumnWidths = () => {
+            const savedWidths = localStorage.getItem(resizerStorageKey);
+            if (savedWidths) {
+                try {
+                    const widths = JSON.parse(savedWidths);
+                    resizerHeaders.forEach(header => {
+                        const key = header.getAttribute('data-key');
+                        if (key && widths[key]) {
+                            header.style.width = widths[key];
+                        }
+                    });
+                } catch (e) {
+                    console.error("Failed to parse column widths from localStorage", e);
+                    localStorage.removeItem(resizerStorageKey);
+                }
+            }
+        };
+
+        const saveColumnWidths = () => {
+            const widths = {};
+            resizerHeaders.forEach(header => {
+                const key = header.getAttribute('data-key');
+                if (key) {
+                    widths[key] = header.style.width;
+                }
+            });
+            localStorage.setItem(resizerStorageKey, JSON.stringify(widths));
+            resizerToast.show();
+        };
+
+        resizerHeaders.forEach((header) => {
+            const key = header.getAttribute('data-key');
+            if (!key || header === resizerHeaders[resizerHeaders.length - 1]) {
+                return;
+            }
+
+            const resizer = document.createElement('div');
+            resizer.className = 'resizer';
+            header.appendChild(resizer);
+
+            let startX, startWidth;
+
+            const onMouseMove = (e) => {
+                const newWidth = startWidth + (e.clientX - startX);
+                if (newWidth > 60) {
+                    header.style.width = `${newWidth}px`;
+                }
+            };
+
+            const onMouseUp = () => {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                resizer.classList.remove('resizing');
+                document.body.style.cursor = 'default';
+                saveColumnWidths();
+            };
+
+            resizer.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                startX = e.clientX;
+                startWidth = header.offsetWidth;
+                
+                resizer.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+                
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        });
+
+        loadColumnWidths();
+    }
 });
 </script>
 {% endblock content %}

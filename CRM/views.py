@@ -593,6 +593,7 @@ def admin_candidate_profile(request, id):
                 candidate.lead_generate = request.POST.get('lead_generate')
                 candidate.send_for_interview = request.POST.get('send_for_interview')
                 candidate.next_follow_up_date_time = request.POST.get('next_follow_up_date_time') or None
+                candidate.lead_for = request.POST.get('lead_for')
 
                 candidate.selection_status = request.POST.get('selection_status')
                 candidate.company_name = request.POST.get('company_name')

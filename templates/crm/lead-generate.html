@@ -243,6 +243,9 @@
                                 <td>
                                     <div class="status-badge status-{{ candidate.lead_generate|lower|slugify }}">
                                         {{ candidate.lead_generate }}
+                                        {% if candidate.lead_for %}
+                                        <span class="badge bg-blue-lt ms-1">{{ candidate.lead_for }}</span>
+                                        {% endif %}
                                     </div>
                                 </td>
                                 <td>

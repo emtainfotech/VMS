@@ -1029,6 +1029,12 @@ function updateButtonText() {
               <div class="invalid-feedback">Please select interview status</div>
             </div>
 
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Lead For <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="lead_for" value="{{ candidate.lead_for }}" maxlength="100">
+              <div class="invalid-feedback">Please specify the lead for</div>
+            </div>
+
             <!-- Next Follow-Up Date -->
             <div class="col-md-6 mb-3">
               <label class="form-label">Next Follow-Up Date <span class="text-danger">*</span></label>

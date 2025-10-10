@@ -186,7 +186,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <span class="d-block detail-label">Registered</span>
-                                        <span class="detail-value">{{ candidate.register_time|date:"M d, Y"|default:"-" }}</span>
+                                        <span class="detail-value">{{ candidate.register_time|date:"M d, Y H:i"|default:"-" }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -359,7 +359,7 @@
                                     {% endif %}
                                 </span>
                             </div>
-                            
+                           
                             <div class="mb-3">
                                 <span class="d-block detail-label">Interview Status</span>
                                 <span class="detail-value">
@@ -386,6 +386,14 @@
                                 <span class="detail-value">{{ candidate.remark|default:"-" }}</span>
                             </div>
                         </div>
+                        <div class="col-md-6">
+                        <div class="mb-3">
+                        <span class="d-block detail-label">Lead For</span>
+                        <span class="detail-value">
+                            {{ candidate.lead_for|default:"-" }}
+                        </span>
+                        </div>
+                    </div>
 
                         <div class="col-md-6">
                             <div class="mb-3">

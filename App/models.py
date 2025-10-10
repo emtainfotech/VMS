@@ -816,6 +816,7 @@ class Candidate_registration(models.Model):
     call_connection = models.CharField(max_length=255, blank=True, null=True)
     calling_remark = models.CharField(max_length=255, blank=True, null=True)
     lead_generate = models.CharField(max_length=255, blank=True, null=True)
+    lead_for = models.CharField(max_length=255, blank=True, null=True)
     send_for_interview = models.CharField(max_length=255, blank=True, null=True)
     next_follow_up_date_time = models.DateTimeField(blank=True, null=True)
 

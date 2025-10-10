@@ -375,7 +375,16 @@
                             {% endif %}
                         </span>
                     </div>
+
+                    <div class="mb-3">
+                        <span class="d-block detail-label">Lead For</span>
+                        <span class="detail-value">
+                            {{ candidate.lead_for|default:"-" }}
+                        </span>
+                    </div>
                 </div>
+
+
                 
                 <div class="col-md-6">
                     <div class="mb-3">
