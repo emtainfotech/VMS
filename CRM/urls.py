@@ -80,6 +80,12 @@ urlpatterns = [
     path('admin-bfsi-candidate-registration/',admin_bfsi_candidate_registration,name = 'admin_bfsi_candidate_registration'),
     path('check-mobile-number-bfsi/',check_mobile_number_duplicate_bfsi,name = 'check_mobile_number_duplicate_bfsi'),
     path('interview-schedule/', interview_schedule_list, name='interview_schedule_list'),
+    path('notifications/read/<int:notification_id>/', mark_notification_as_read, name='mark_notification_as_read'),
+    path('notifications/read-all/', mark_all_as_read, name='mark_all_as_read'),
+    path('notifications/history/', notification_history, name='notification_history'),
+    path('api/notifications/unread/', get_unread_notifications_api, name='api_unread_notifications'),
+    path('employee-daily-report/', employee_daily_report, name='employee_daily_report'),
+    path('ajax/get-daily-activities/', get_daily_activities_ajax, name='get_daily_activities_ajax'),
 
 
     path('admin/', admin.site.urls),

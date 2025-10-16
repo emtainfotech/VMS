@@ -25,7 +25,7 @@
                 {% elif item.type == 'activity' %}
                     {% with activity=item.data %}
                     <tr>
-                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.s_no }}</td>
                         <td>{{ activity.candidate.candidate_name }}</td>
                         <td>
                             {% if activity.action == 'call_made' %}

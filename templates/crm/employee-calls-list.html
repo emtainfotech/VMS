@@ -99,7 +99,7 @@
                 <div class="card-header"><h3 class="card-title">Employee Breakdown</h3></div>
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter text-nowrap table-striped table-hover">
-                        <thead><tr><th>Employee Name</th><th>Total Activities</th><th>Connected</th><th>Not Connected</th><th>Resumes</th><th>Leads</th><th>Converted</th><th>Selections</th><th>Joined</th><th>Last Activity</th></tr></thead>
+                        <thead><tr><th>Employee Name</th><th>Total Activities</th><th>Connected</th><th>Not Connected</th><th>Resumes</th><th>Leads</th><th>Converted</th><th>Selections</th><th>Joined</th><th>Last Activity</th><th>Actions</th></tr></thead>
                         <tbody>
                             {% for stat in employee_stats %}
                             <tr class="employee-row" data-employee-id="{{ stat.id }}" data-employee-name="{{ stat.first_name }} {{ stat.last_name }} ({{ stat.user.username }})" style="cursor: pointer;">
@@ -116,6 +116,11 @@
         <td class="last-activity-cell" data-timestamp="{% if stat.last_call_made %}{{ stat.last_call_made.isoformat }}{% endif %}">
             {% if stat.last_call_made %}{{ stat.last_call_made|date:"M d, Y H:i" }}{% else %}N/A{% endif %}
         </td>
+        <td>
+    <a href="{% url 'employee_daily_report' %}?employee={{ stat.id }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" class="btn btn-sm btn-outline-secondary">
+        Daily View
+    </a>
+</td>
         </tr>
                             <tr class="candidate-details-row" id="details-for-{{ stat.id }}" style="display: none;">
                                 <td colspan="12" class="p-0">

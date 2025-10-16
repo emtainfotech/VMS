@@ -11,6 +11,7 @@ from django.utils import timezone
 # from django.core.files.base import FieldFile
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.conf import settings # Use settings.AUTH_USER_MODEL
 
 
 # Helper function to get current user
@@ -644,27 +645,7 @@ class Announcement(models.Model):
     def __str__(self):
         return self.title
     
-class Notification(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE) # User who will receive the notification
-    notification_type = models.CharField(max_length=200)
-    message = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_read = models.BooleanField(default=False)
-    created_by = models.ForeignKey(User, related_name='notification_created', on_delete=models.SET_NULL, null=True, blank=True)
-    updated_by = models.ForeignKey(User, related_name='notification_updated', on_delete=models.SET_NULL, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
-        if user and not self.pk:
-            self.created_by = user
-        if user:
-            self.updated_by = user
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.notification_type} - {self.message}"
-    
+  
 class Award(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     award_type = models.CharField(max_length=255)
@@ -1133,6 +1114,44 @@ class Candidate_Interview(models.Model):
 
     def get_interview_datetime(self):
         return self.interview_date_time
+
+class Notification(models.Model):
+    NOTIFICATION_TYPES = [
+        ('selection', 'Selection'),
+        ('interview', 'Interview'),
+        ('follow_up', 'Follow Up'),
+        ('joining_date', 'Joining Date'),
+        ('admin_remark', 'Admin Remark'),
+        ('default', 'Default'),
+    ]
+    # The user who should receive the notification
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notifications'
+    )
+    # The candidate this notification is about
+    candidate = models.ForeignKey(
+        'Candidate_registration',
+        on_delete=models.CASCADE,
+        null=True, blank=True
+    )
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    notification_type = models.CharField( # <-- ADD THIS FIELD
+        max_length=20, 
+        choices=NOTIFICATION_TYPES, 
+        default='default'
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Notification"
+        verbose_name_plural = "Notifications"
+
+    def __str__(self):
+        return f"Notification for {self.recipient.username}: {self.message[:30]}..."
 
 class Company_registration(models.Model):
     handled_by = models.CharField(max_length=50, blank=True, null=True)

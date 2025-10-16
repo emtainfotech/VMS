@@ -1,0 +1,160 @@
+{% extends 'crm/base.html' %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.css" rel="stylesheet">
+<style>
+    .daily-row { cursor: pointer; }
+    .daily-row:hover { background-color: #f5f7fb; }
+    .daily-row.active { background-color: #e9f2ff !important; }
+    .ts-control {
+        padding: .5rem .75rem !important;
+        font-size: .875rem;
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">Daily Performance Report</h2>
+                    <div class="text-muted mt-1">
+                        Showing data for <strong>{{ employee.user.get_full_name|default:employee.user.username }}</strong>
+                    </div>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <a href="{% url 'admin_calls_list' %}" class="btn">
+                        Back to Main Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card card-body mb-4">
+                <form method="get" id="daily-filter-form">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-lg-3 col-md-12">
+                            <label class="form-label">Employee</label>
+                            <select name="employee" id="employee_filter">
+                                {% for emp in all_employees %}
+                                <option value="{{ emp.id }}" {% if emp.id == selected_employee_id %}selected{% endif %}>
+                                    {{ emp.user.get_full_name|default:emp.user.username }} ({{ emp.employee_id }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-4"><label class="form-label">Period</label><select name="period" id="period_filter" class="form-select"><option value="today" {% if period == 'today' %}selected{% endif %}>Today</option><option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option><option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option><option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option><option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom</option></select></div>
+                        <div class="col-lg-2 col-md-4"><label class="form-label">Start Date</label><input type="date" name="start_date" id="start_date_filter" class="form-control" value="{{ start_date|date:'Y-m-d' }}"></div>
+                        <div class="col-lg-2 col-md-4"><label class="form-label">End Date</label><input type="date" name="end_date" id="end_date_filter" class="form-control" value="{{ end_date|date:'Y-m-d' }}"></div>
+                        <div class="col-lg-3 col-md-12"><button type="submit" class="btn btn-primary w-100">Apply Filter</button></div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Total Activities</th>
+                                <th>Connected</th>
+                                <th>Not Connected</th>
+                                <th>Resumes Added</th>
+                                <th>Leads Generated</th>
+                                <th>Converted</th>
+                                <th>Selections</th>
+                                <th>Joined</th>
+                                <th>Last Activity Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day_stat in daily_performance %}
+                            <tr class="daily-row" data-date="{{ day_stat.date|date:'Y-m-d' }}">
+                                <td>{{ day_stat.date|date:"D, M d, Y" }}</td>
+                                <td><span class="badge bg-blue text-blue-fg">{{ day_stat.total_calls }}</span></td>
+                                <td><span class="badge bg-green text-green-fg">{{ day_stat.connected_calls }}</span></td>
+                                <td><span class="badge bg-red text-red-fg">{{ day_stat.not_connected_calls }}</span></td>
+                                <td><span class="badge bg-purple-lt">{{ day_stat.resumes_added }}</span></td>
+                                <td><span class="badge bg-warning text-warning-fg">{{ day_stat.leads_generated }}</span></td>
+                                <td><span class="badge" style="background-color: #e5dff6; color: #6f42c1;">{{ day_stat.converted_leads }}</span></td>
+                                <td><span class="badge bg-info text-info-fg">{{ day_stat.selections }}</span></td>
+                                <td><span class="badge bg-teal text-teal-fg">{{ day_stat.joined }}</span></td>
+                                <td>{% if day_stat.last_activity_time %}{{ day_stat.last_activity_time|date:"H:i" }}{% else %}N/A{% endif %}</td>
+                            </tr>
+                            <tr class="details-row" id="details-for-{{ day_stat.date|date:'Y-m-d' }}" style="display: none;">
+                                <td colspan="10" class="p-2 bg-light"></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center">No activity found for this employee in the selected period.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize TomSelect for the employee dropdown
+    new TomSelect('#employee_filter');
+
+    // Logic to disable date inputs unless 'Custom' is selected
+    const periodSelect = document.getElementById('period_filter');
+    const startDateInput = document.getElementById('start_date_filter');
+    const endDateInput = document.getElementById('end_date_filter');
+    function toggleDateInputs() {
+        const isCustom = periodSelect.value === 'custom';
+        startDateInput.disabled = !isCustom;
+        endDateInput.disabled = !isCustom;
+    }
+    periodSelect.addEventListener('change', toggleDateInputs);
+    toggleDateInputs(); // Run on page load
+
+    // Logic for clickable/expandable rows
+    document.querySelectorAll('.daily-row').forEach(row => {
+        row.addEventListener('click', async function() {
+            const date = this.dataset.date;
+            const detailsRow = document.getElementById(`details-for-${date}`);
+            const detailsCell = detailsRow.querySelector('td');
+            const isVisible = detailsRow.style.display === 'table-row';
+
+            // Hide all other detail rows
+            document.querySelectorAll('.details-row').forEach(r => r.style.display = 'none');
+            document.querySelectorAll('.daily-row').forEach(r => r.classList.remove('active'));
+
+            if (isVisible) {
+                // If it was already visible, just hide it
+                detailsRow.style.display = 'none';
+            } else {
+                // If it was hidden, show it and load the data
+                this.classList.add('active');
+                detailsRow.style.display = 'table-row';
+                detailsCell.innerHTML = '<div class="text-center p-4">Loading activities...</div>';
+
+                const employeeId = '{{ employee.id }}';
+                const url = `{% url 'get_daily_activities_ajax' %}?employee_id=${employeeId}&activity_date=${date}`;
+                
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const data = await response.json();
+                    detailsCell.innerHTML = data.html;
+                } catch (error) {
+                    console.error('Failed to load details:', error);
+                    detailsCell.innerHTML = '<div class="text-center p-4 text-danger">Failed to load details.</div>';
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

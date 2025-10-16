@@ -5387,6 +5387,8 @@ def get_filtered_activity_list(request):
     return render(request, 'crm/partials/activity_list_partial.html', context)
 
 
+# ... (keep all your existing imports and other views) ...
+
 @login_required(login_url='/crm/404/')
 def get_employee_candidates(request):
     if not (request.user.is_staff or request.user.is_superuser):
@@ -5409,39 +5411,42 @@ def get_employee_candidates(request):
             action__in=['call_made', 'created']
         ).select_related('candidate').order_by('-timestamp')
 
-        # --- NEW LOGIC TO PROCESS ACTIVITIES AND GAPS ---
+        # --- START OF FIX: Add a manual counter ---
         activities_for_template = []
         activities_list = list(employee_activities_queryset)
         
+        activity_counter = 1 # Initialize a manual counter
+        
         for i, activity in enumerate(activities_list):
-            # Add the actual activity to our new list
+            # Add the activity with its correct serial number
             activities_for_template.append({
                 'type': 'activity',
-                'data': activity
+                'data': activity,
+                's_no': activity_counter # Add the serial number here
             })
+            activity_counter += 1 # Increment the counter ONLY for activities
 
             # Check for a time gap between this activity and the next (older) one
             if i + 1 < len(activities_list):
                 next_activity = activities_list[i+1]
                 time_difference = activity.timestamp - next_activity.timestamp
                 
-                # If the gap is more than 15 minutes, insert a gap marker
                 if time_difference > timedelta(minutes=15):
                     hours, remainder = divmod(time_difference.total_seconds(), 3600)
                     minutes, _ = divmod(remainder, 60)
-                    hours, minutes = int(hours), int(minutes) # Convert to integers
+                    hours, minutes = int(hours), int(minutes)
                     
                     duration_str = "Gap of "
                     if hours > 0:
                         duration_str += f"{hours}h "
-                    if minutes > 0 or hours == 0: # Show minutes if > 0 or if hours is 0
+                    if minutes > 0 or hours == 0:
                         duration_str += f"{minutes}m"
                     
                     activities_for_template.append({
                         'type': 'gap',
                         'duration': duration_str.strip()
                     })
-        # --- END OF NEW LOGIC ---
+        # --- END OF FIX ---
         
         html_content = render_to_string(
             'crm/partials/candidate_list_partial.html',
@@ -5449,7 +5454,7 @@ def get_employee_candidates(request):
             {'processed_activities': activities_for_template, 'employee': employee}
         )
         
-        # NOTE: The chart and lead calculations below should still use the original, unprocessed queryset
+        # NOTE: The chart and lead calculations below remain the same
         activity_chart_labels, activity_chart_data = _get_chart_data(employee_activities_queryset, start_date, end_date)
         
         LEAD_STATUSES = ['Hot', 'Converted']
@@ -5473,6 +5478,7 @@ def get_employee_candidates(request):
         return JsonResponse({"error": "Invalid request."}, status=400)
 
         
+            
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from CRM.models import *
@@ -6032,3 +6038,194 @@ def interview_schedule_list(request):
         # from the data present in the table for simplicity, as per your provided template.
     }
     return render(request, 'crm/interview_schedule_list.html', context)
+
+from django.contrib.humanize.templatetags.humanize import naturaltime
+
+@login_required
+def notification_history(request):
+    all_notifications = Notification.objects.filter(recipient=request.user)
+    context = {'all_notifications': all_notifications}
+    return render(request, 'CRM/notification_history.html', context)
+
+@login_required
+def mark_all_as_read(request):
+    Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+
+@login_required
+def mark_notification_as_read(request, notification_id):
+    notification = get_object_or_404(Notification, id=notification_id, recipient=request.user)
+    if not notification.is_read:
+        notification.is_read = True
+        notification.save()
+    if notification.candidate and notification.candidate.id:
+        # IMPORTANT: Make sure your candidate detail URL is named 'admin_candidate_profile'
+        return redirect('admin_candidate_profile', id=notification.candidate.id) 
+    return redirect('notification_history')
+
+@login_required
+def get_unread_notifications_api(request):
+    notifications = Notification.objects.filter(
+        recipient=request.user, 
+        is_read=False
+    ).select_related('candidate').values(
+        'id', 
+        'message', 
+        'created_at',
+        'notification_type',
+        'candidate__candidate_name'
+    ).order_by('-created_at')
+
+    notifications_list = list(notifications)
+    for notif in notifications_list:
+        notif['timesince'] = naturaltime(notif['created_at'])
+
+    return JsonResponse({
+        'notifications': notifications_list,
+        'unread_count': len(notifications_list)
+    })
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
+from datetime import timedelta, datetime, date
+from django.db.models import Count, Max, Q
+from django.db.models.functions import TruncDate
+# from .models import Employee, CandidateActivity, Candidate_registration
+from collections import Counter
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def employee_daily_report(request):
+    """
+    Shows a day-by-day performance breakdown for a single employee
+    and allows filtering by employee and date.
+    """
+    today = timezone.now().date()
+    
+    # --- Read filters from GET parameters ---
+    period = request.GET.get('period', 'week') 
+    employee_id = request.GET.get('employee')
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+
+    if not employee_id:
+        # Redirect to the main dashboard if no employee is specified in the URL
+        return redirect('admin_calls_list')
+
+    # --- Determine date range from filters ---
+    if period == 'custom' and start_date_str and end_date_str:
+        start_date_obj = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        end_date_obj = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    elif period == 'week':
+        start_date_obj = today - timedelta(days=today.weekday())
+        end_date_obj = start_date_obj + timedelta(days=6)
+    elif period == 'month':
+        start_date_obj = today.replace(day=1)
+        end_date_obj = (start_date_obj.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+    elif period == 'year':
+        start_date_obj = today.replace(month=1, day=1)
+        end_date_obj = today.replace(month=12, day=31)
+    else: # Default to today
+        start_date_obj = end_date_obj = today
+        period = 'today'
+
+    employee = get_object_or_404(Employee, pk=employee_id)
+    all_employees = Employee.objects.all().order_by('first_name')
+    
+    # --- Fetch and process data (this logic remains the same) ---
+    activities = list(CandidateActivity.objects.filter(employee=employee, timestamp__date__range=[start_date_obj, end_date_obj], action__in=['call_made', 'created', 'updated']))
+    resumes_added_dates = list(Candidate_registration.objects.filter(created_by=employee, created_at__date__range=[start_date_obj, end_date_obj], candidate_resume__isnull=False).exclude(candidate_resume='').values_list('created_at__date', flat=True))
+    selection_dates = list(Candidate_registration.objects.filter(updated_by=employee, selection_status__iexact='Selected', selection_date__range=[start_date_obj, end_date_obj]).values_list('selection_date', flat=True))
+    joined_dates = list(Candidate_registration.objects.filter(updated_by=employee, joining_status__iexact='Joined', candidate_joining_date__range=[start_date_obj, end_date_obj]).values_list('candidate_joining_date', flat=True))
+    
+    resume_counts = Counter(resumes_added_dates)
+    selection_counts = Counter(selection_dates)
+    joined_counts = Counter(joined_dates)
+
+    daily_performance_data = []
+    current_date = start_date_obj
+    while current_date <= end_date_obj:
+        day_activities = [act for act in activities if act.timestamp.date() == current_date]
+        total_calls = sum(1 for act in day_activities if act.action in ['call_made', 'created'])
+        connected_calls = sum(1 for act in day_activities if ((act.action == 'call_made' and act.changes.get('call_connection', {}).get('new') == 'Connected') or (act.action == 'created' and hasattr(act, 'candidate') and act.candidate.call_connection == 'Connected')))
+        LEAD_STATUSES = ['Hot', 'Converted']
+        leads_generated = len({act.candidate_id for act in day_activities if ((act.action == 'call_made' and act.changes.get('lead_generate', {}).get('new') in LEAD_STATUSES and act.changes.get('lead_generate', {}).get('old') not in LEAD_STATUSES) or (act.action == 'created' and hasattr(act, 'candidate') and act.candidate.lead_generate in LEAD_STATUSES))})
+        converted_leads = len({act.candidate_id for act in day_activities if (act.action == 'call_made' and act.changes.get('lead_generate', {}).get('new') == 'Converted' and act.changes.get('lead_generate', {}).get('old') == 'Hot')})
+        last_activity_time = max(act.timestamp for act in day_activities) if day_activities else None
+
+        daily_performance_data.append({
+            'date': current_date, 'total_calls': total_calls, 'connected_calls': connected_calls,
+            'not_connected_calls': total_calls - connected_calls, 'resumes_added': resume_counts.get(current_date, 0),
+            'leads_generated': leads_generated, 'converted_leads': converted_leads,
+            'selections': selection_counts.get(current_date, 0), 'joined': joined_counts.get(current_date, 0),
+            'last_activity_time': last_activity_time,
+        })
+        current_date += timedelta(days=1)
+        
+    context = {
+        'employee': employee,
+        'all_employees': all_employees,
+        'daily_performance': daily_performance_data,
+        'start_date': start_date_obj,
+        'end_date': end_date_obj,
+        'period': period,
+        'selected_employee_id': int(employee_id),
+    }
+    
+    return render(request, 'crm/employee_daily_report.html', context)
+
+# ... (keep all your existing imports and other views) ...
+
+@login_required
+def get_daily_activities_ajax(request):
+    """
+    This AJAX view fetches the activities for a specific employee on a single day.
+    """
+    employee_id = request.GET.get('employee_id')
+    activity_date_str = request.GET.get('activity_date')
+
+    try:
+        employee = get_object_or_404(Employee, pk=employee_id)
+        activity_date = datetime.strptime(activity_date_str, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Invalid parameters'}, status=400)
+
+    daily_activities = CandidateActivity.objects.filter(
+        employee=employee,
+        timestamp__date=activity_date,
+        action__in=['call_made', 'created']
+    ).select_related('candidate').order_by('-timestamp')
+
+    # --- START OF FIX ---
+    # Process activities to find time gaps and add a correct serial number
+    activities_for_template = []
+    activities_list = list(daily_activities)
+    
+    activity_counter = 1 # Initialize a manual counter
+    
+    for i, activity in enumerate(activities_list):
+        # Add the activity with its correct serial number
+        activities_for_template.append({
+            'type': 'activity', 
+            'data': activity,
+            's_no': activity_counter # Add the serial number here
+        })
+        activity_counter += 1 # Increment the counter ONLY for activities
+
+        # Check for a time gap between this activity and the next one
+        if i + 1 < len(activities_list):
+            next_activity = activities_list[i+1]
+            time_difference = activity.timestamp - next_activity.timestamp
+            if time_difference > timedelta(minutes=15):
+                hours, remainder = divmod(time_difference.total_seconds(), 3600)
+                minutes, _ = divmod(remainder, 60)
+                duration_str = f"Gap of {int(hours)}h {int(minutes)}m" if int(hours) > 0 else f"Gap of {int(minutes)}m"
+                activities_for_template.append({'type': 'gap', 'duration': duration_str.strip()})
+    # --- END OF FIX ---
+
+    html = render_to_string(
+        'crm/partials/daily_activity_details.html',
+        {'processed_activities': activities_for_template}
+    )
+    return JsonResponse({'html': html})

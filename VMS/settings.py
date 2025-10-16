@@ -42,9 +42,10 @@ INSTALLED_APPS = [
     'App',
     'EVMS',
     'Employee',
-    'CRM',
+    # 'CRM',
     'EMTARESUME',
     'corsheaders',
+    'CRM.apps.CrmConfig'
 ]
 
 MIDDLEWARE = [
@@ -71,7 +72,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'EVMS.context_processors.notifications',
+                'CRM.context_processors.notifications',
             ],
         },
     },
@@ -149,10 +150,20 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'marketing.emta02@gmail.com'
+# EMAIL_HOST_PASSWORD = 'ggic rexw nrzb tlzm'  # Use the generated app password
+# DEFAULT_FROM_EMAIL = 'marketing.emta02@gmail.com'
+
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'marketing.emta02@gmail.com'
-EMAIL_HOST_PASSWORD = 'ggic rexw nrzb tlzm'  # Use the generated app password
-DEFAULT_FROM_EMAIL = 'marketing.emta02@gmail.com'
+EMAIL_HOST = 'smtp.hostinger.com'     # Hostinger SMTP server
+EMAIL_PORT = 465                      # SSL port
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False                 # Disable TLS when using SSL
+EMAIL_HOST_USER = 'evms@emta.co.in'   # Your Hostinger business email
+EMAIL_HOST_PASSWORD = 'Emtavms@0505'  # Replace with your actual Hostinger mailbox password
+DEFAULT_FROM_EMAIL = 'evms@emta.co.in'

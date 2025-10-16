@@ -1,0 +1,50 @@
+<div class="table-responsive border-top pt-2">
+    <table class="table table-vcenter table-sm">
+        <thead>
+            <tr>
+                <th>S.No</th>
+                <th>Candidate</th>
+                <th>Activity</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Lead Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in processed_activities %}
+                {% if item.type == 'activity' %}
+                <tr>
+                    <td>{{ item.s_no }}</td>
+                    <td>{{ item.data.candidate.candidate_name }}</td>
+                    <td><span class="badge bg-blue-lt">{{ item.data.get_action_display }}</span></td>
+                    <td>{{ item.data.timestamp|date:"H:i" }}</td>
+                    <td>
+                        {% with logged_status=item.data.changes.call_connection.new %}
+                            {% if item.data.action == 'call_made' and logged_status is not None %}
+                                {% if logged_status == 'Connected' %}<span class="badge bg-success me-1"></span> Connected{% else %}<span class="badge bg-danger me-1"></span> {{ logged_status }}{% endif %}
+                            {% else %}{% if item.data.candidate.call_connection == 'Connected' %}<span class="badge bg-success me-1"></span> Connected{% else %}<span class="badge bg-danger me-1"></span> {{ item.data.candidate.call_connection|default:'N/A' }}{% endif %}{% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>{{ item.data.changes.lead_generate.new|default:'N/A' }}</td>
+                    <td>
+                        <a href="{% url 'admin_candidate_profile' item.data.candidate.id %}" class="btn btn-sm btn-outline-secondary">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% elif item.type == 'gap' %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted small py-1">
+                        <em>- {{ item.duration }} -</em>
+                    </td>
+                </tr>
+                {% endif %}
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">No activities found for this day.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
