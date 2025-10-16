@@ -245,3 +245,4 @@ class TicketAdmin(admin.ModelAdmin):
     list_filter = ('ticket_status', 'ticket_priority', 'ticket_created_date')
 
 admin.site.register(CandidateActivity)
+admin.site.register(Notification)
