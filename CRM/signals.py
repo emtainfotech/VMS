@@ -4,8 +4,6 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 from App.models import Candidate_registration, Candidate_Interview, Notification, Employee
 
-
-# This helper function is still correct and does not need changes
 def get_recipients(candidate):
     """Helper function to get the assigned employee and all admins."""
     recipients = set()
@@ -18,7 +16,7 @@ def get_recipients(candidate):
 
 @receiver(pre_save, sender=Candidate_registration)
 def create_candidate_notifications(sender, instance, **kwargs):
-    """Create notifications by comparing old and new values before the save."""
+    """Create notifications by comparing old and new values, preventing duplicates."""
     if not instance.pk:
         return
 
@@ -43,27 +41,33 @@ def create_candidate_notifications(sender, instance, **kwargs):
         
     if message and recipients:
         for user in recipients:
-            Notification.objects.create(
+            # --- CHECK ADDED TO PREVENT DUPLICATES ---
+            if not Notification.objects.filter(
                 recipient=user,
                 candidate=instance,
-                message=message,
-                notification_type=notification_type
-            )
+                notification_type=notification_type,
+                is_read=False
+            ).exists():
+                Notification.objects.create(
+                    recipient=user,
+                    candidate=instance,
+                    message=message,
+                    notification_type=notification_type
+                )
 
 @receiver(post_save, sender=Candidate_Interview)
 def create_interview_notifications(sender, instance, created, **kwargs):
-    """
-    Create notifications related to Candidate_Interview updates.
-    """
+    """Create notifications for interviews, preventing duplicates."""
     recipients = get_recipients(instance.candidate)
     message = ""
+    notification_type = 'interview' # Set a consistent type for all interview events
 
     if created:
-        # 3. New interview scheduled
+        # New interview scheduled
         formatted_time = instance.interview_date_time.strftime('%d-%b-%Y %I:%M %p')
         message = f"New interview scheduled for {instance.candidate.candidate_name} on {formatted_time}."
     else:
-        # 4. Interview status changed
+        # Interview status changed
         try:
             old_instance = Candidate_Interview.objects.get(pk=instance.pk)
             if old_instance.status != instance.status:
@@ -73,8 +77,16 @@ def create_interview_notifications(sender, instance, created, **kwargs):
 
     if message:
         for user in recipients:
-            Notification.objects.create(
+            # --- CHECK ADDED TO PREVENT DUPLICATES ---
+            if not Notification.objects.filter(
                 recipient=user,
                 candidate=instance.candidate,
-                message=message
-            )
+                notification_type=notification_type,
+                is_read=False
+            ).exists():
+                Notification.objects.create(
+                    recipient=user,
+                    candidate=instance.candidate,
+                    message=message,
+                    notification_type=notification_type # Pass the type
+                )
