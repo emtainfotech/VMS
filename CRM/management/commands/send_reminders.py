@@ -26,7 +26,7 @@ class Command(BaseCommand):
                     notification_type='follow_up', 
                     is_read=False
                 ).exists():
-                    message = f"Follow-up scheduled today for {candidate.candidate_name}."
+                    message = f"Follow-up scheduled today for {candidate.candidate_name} at {candidate.next_follow_up_date_time.astimezone(ist).strftime('%I:%M %p')}."
                     Notification.objects.create(recipient=user, candidate=candidate, message=message, notification_type='follow_up')
         self.stdout.write(f"Processed {candidates_for_followup.count()} follow-up reminders.")
 
@@ -81,3 +81,5 @@ class Command(BaseCommand):
         self.stdout.write(f"Processed {interviews_today.count()} interview reminders.")
 
         self.stdout.write(self.style.SUCCESS('Successfully completed reminder checks for IST.'))
+
+        
