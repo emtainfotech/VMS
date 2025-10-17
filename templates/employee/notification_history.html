@@ -1,0 +1,45 @@
+{% extends 'crm/base.html' %} {% block title %}Notification History{% endblock %}
+
+{% block content %}
+<div class="container-xl">
+    <div class="page-header d-print-none">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    Notification History
+                </h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="list-group list-group-flush">
+            {% for notification in all_notifications %}
+                <a href="{% url 'employee_candidate_profile' notification.candidate.id %}" 
+                   class="list-group-item list-group-item-action {% if not notification.is_read %}list-group-item-info{% endif %}">
+                    
+                    <div class="d-flex w-100 justify-content-between">
+                        <p class="mb-1">{{ notification.message }}</p>
+                        <small class="text-muted">{{ notification.created_at|date:"d M Y, P" }}</small>
+                    </div>
+                    
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <small class="text-muted">
+                            {% if notification.candidate %}
+                                Regarding: {{ notification.candidate.candidate_name }}
+                            {% endif %}
+                        </small>
+                        {% if not notification.is_read %}
+                            <span class="badge bg-primary">Unread</span>
+                        {% endif %}
+                    </div>
+                </a>
+            {% empty %}
+                <div class="list-group-item">
+                    <p class="text-center text-muted">You have no notifications yet.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

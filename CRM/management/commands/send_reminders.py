@@ -4,6 +4,7 @@ from django.utils import timezone
 import pytz  # <-- Add this import
 from App.models import Candidate_registration, Candidate_Interview, Notification
 from CRM.signals import get_recipients
+
 class Command(BaseCommand):
     help = 'Sends scheduled notifications and reminders based on IST, without creating duplicates.'
 

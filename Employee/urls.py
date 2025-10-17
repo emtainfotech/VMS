@@ -80,7 +80,10 @@ urlpatterns = [
     path('ajax/get-employee-filtered-activity-list/', get_employee_filtered_activity_list, name='get_employee_filtered_activity_list'), 
     path('employee/tasks/', employee_task_dashboard, name='employee_task_dashboard'),
     path('tasks/<int:pk>/', task_detail_and_reassign, name='employee_task_detail'),
-    
+    path('notifications/read/<int:notification_id>/', employee_mark_notification_as_read, name='employee_mark_notification_as_read'),
+    path('notifications/read-all/', employee_mark_all_as_read, name='employee_mark_all_as_read'),
+    path('notifications/history/', employee_notification_history, name='employee_notification_history'),
+    path('api/notifications/unread/', employee_get_unread_notifications_api, name='employee_api_unread_notifications'),
 
     path('admin/', admin.site.urls),
 ]

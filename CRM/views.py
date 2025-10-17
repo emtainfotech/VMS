@@ -6045,7 +6045,7 @@ from django.contrib.humanize.templatetags.humanize import naturaltime
 def notification_history(request):
     all_notifications = Notification.objects.filter(recipient=request.user)
     context = {'all_notifications': all_notifications}
-    return render(request, 'CRM/notification_history.html', context)
+    return render(request, 'crm/notification_history.html', context)
 
 @login_required
 def mark_all_as_read(request):

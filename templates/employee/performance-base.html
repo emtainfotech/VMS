@@ -257,12 +257,12 @@
     <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card" style="width: 350px;">
         <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
             <h5 class="mb-0">Notifications</h5>
-            <a href="{% url 'mark_all_as_read' %}" class="small text-muted">Mark all as read</a>
+            <a href="{% url 'employee_mark_all_as_read' %}" class="small text-muted">Mark all as read</a>
         </div>
         
         <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;" id="notification-list">
             {% for notification in notifications %}
-            <a href="{% url 'mark_notification_as_read' notification.id %}" class="list-group-item list-group-item-action">
+            <a href="{% url 'employee_mark_notification_as_read' notification.id %}" class="list-group-item list-group-item-action">
                 <div class="d-flex">
                     <span class="avatar bg-blue-lt me-3">
                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4" /></svg>
@@ -287,7 +287,7 @@
         </div>
 
         <div class="border-top">
-            <a href="{% url 'notification_history' %}" class="dropdown-item text-center text-primary">
+            <a href="{% url 'employee_notification_history' %}" class="dropdown-item text-center text-primary">
                 View All Notifications
             </a>
         </div>
@@ -295,10 +295,11 @@
 </div>
 
 
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // --- Configuration ---
-        const notificationApiUrl = "{% url 'api_unread_notifications' %}";
+        const notificationApiUrl = "{% url 'employee_api_unread_notifications' %}";
         const pollingInterval = 15000; // Check for new notifications every 15 seconds
 
         // --- DOM Elements ---
@@ -352,7 +353,7 @@
                     const candidateName = notif.candidate__candidate_name ? `Candidate: ${notif.candidate__candidate_name}` : '';
                     
                     const notifHtml = `
-                        <a href="/crm/notifications/read/${notif.id}/" class="list-group-item list-group-item-action">
+                        <a href="/employee/notifications/read/${notif.id}/" class="list-group-item list-group-item-action">
                             <div class="d-flex">
                                 ${iconHtml}
                                 <div class="flex-fill">
@@ -411,6 +412,7 @@
         setInterval(fetchNotifications, pollingInterval);
     });
 </script>
+            
             
             </div>
             <div class="nav-item dropdown">

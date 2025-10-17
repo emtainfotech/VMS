@@ -5208,3 +5208,51 @@ def task_detail_and_reassign(request, pk):
     }
     return render(request, 'employee/task_detail.html', context)
 
+from django.contrib.humanize.templatetags.humanize import naturaltime
+
+
+def employee_notification_history(request):
+    recipient = Employee.objects.get(user=request.user)
+    all_notifications = Notification.objects.filter(recipient=recipient)
+    context = {'all_notifications': all_notifications}
+    return render(request, 'employee/notification_history.html', context)
+
+
+def employee_mark_all_as_read(request):
+    recipient = Employee.objects.get(user=request.user)
+    Notification.objects.filter(recipient=recipient, is_read=False).update(is_read=True)
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+
+def employee_mark_notification_as_read(request, notification_id):
+    recipient = Employee.objects.get(user=request.user)
+    notification = get_object_or_404(Notification, id=notification_id, recipient=recipient)
+    if not notification.is_read:
+        notification.is_read = True
+        notification.save()
+    if notification.candidate and notification.candidate.id:
+        # IMPORTANT: Make sure your candidate detail URL is named 'employee_candidate_profile'
+        return redirect('employee_candidate_profile', id=notification.candidate.id) 
+    return redirect('employee_notification_history')
+
+
+def employee_get_unread_notifications_api(request):
+    recipient = Employee.objects.get(user=request.user)
+    notifications = Notification.objects.filter(
+        recipient=recipient, 
+        is_read=False
+    ).select_related('candidate').values(
+        'id', 
+        'message', 
+        'created_at',
+        'notification_type',
+        'candidate__candidate_name'
+    ).order_by('-created_at')
+
+    notifications_list = list(notifications)
+    for notif in notifications_list:
+        notif['timesince'] = naturaltime(notif['created_at'])
+
+    return JsonResponse({
+        'notifications': notifications_list,
+        'unread_count': len(notifications_list)
+    })
