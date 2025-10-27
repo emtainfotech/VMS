@@ -5706,6 +5706,33 @@ def emta_co_in_contact_queries_view(request):
     return render(request, 'crm/emta_co_in_contact_queries.html', context)
 
 @login_required
+def delete_course_inquiry(request, id):
+    # Only allow POST requests for deletion
+    if request.method == 'POST':
+        inquiry = get_object_or_404(CourseInquiry, id=id)
+        inquiry.delete()
+
+        messages.success(request, "Course inquiry deleted successfully.")
+    # Redirect back to the list view, whether it was POST or not
+    return redirect('emta_co_in_course_application_view') # Use the name from your urls.py
+
+@login_required
+def delete_job_application(request, id):
+    if request.method == 'POST':
+        application = get_object_or_404(JobApplication, id=id)
+        application.delete()
+        messages.success(request, "Job application deleted successfully.")
+    return redirect('emta_co_in_job_application_view') # Use the name from your urls.py
+
+@login_required
+def delete_contact_query(request, id):
+    if request.method == 'POST':
+        query = get_object_or_404(ContactQuery, id=id)
+        query.delete()
+        messages.success(request, "Contact query deleted successfully.")
+    return redirect('emta_co_in_contact_queries_view') # Use the name from your urls.py
+
+@login_required
 def banking_counselling_view(request):
     candidates = Candidate_registration.objects.filter(
     calling_remark__in=[

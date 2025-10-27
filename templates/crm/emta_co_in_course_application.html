@@ -20,6 +20,7 @@
                                     <th>Course Interest</th>
                                     <th>Submitted On</th>
                                     <th>Message</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -34,6 +35,15 @@
                                     <td>{{ inquiry.course_interest|default:"-" }}</td>
                                     <td>{{ inquiry.submitted_at|date:"d M Y, h:i A" }}</td>
                                     <td>{{ inquiry.comment|truncatewords:10|default:"-" }}</td>
+                                    <td>
+                                        <button type="button" 
+                                                class="btn btn-danger btn-sm" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteConfirmationModal"
+                                                data-url="{% url 'delete_course_inquiry' inquiry.id %}">
+                                            Delete
+                                        </button>
+                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
@@ -49,4 +59,47 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">Confirm Deletion</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this item? This action cannot be undone.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        
+        <form id="deleteForm" method="POST" action=""> {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Get the modal by its ID
+var deleteModal = document.getElementById('deleteConfirmationModal');
+
+// Add an event listener for when the modal is about to be shown
+deleteModal.addEventListener('show.bs.modal', function (event) {
+  
+  // 'event.relatedTarget' is the button that triggered the modal
+  var button = event.relatedTarget;
+  
+  // Get the URL from the button's 'data-url' attribute
+  var deleteUrl = button.getAttribute('data-url');
+  
+  // Find the form inside the modal by its ID
+  var deleteForm = document.getElementById('deleteForm');
+  
+  // Set the form's 'action' attribute to the URL
+  deleteForm.setAttribute('action', deleteUrl);
+});
+</script>
 {% endblock %}

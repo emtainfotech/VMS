@@ -76,6 +76,10 @@ urlpatterns = [
     path('emta/job-applications/', emta_co_in_job_application_view, name='emta_co_in_job_application_view'),
     path('emta/course-inquiries/', emta_co_in_course_application_view, name='emta_co_in_course_application_view'),
     path('emta/contact-queries/', emta_co_in_contact_queries_view, name='emta_co_in_contact_queries_view'),
+    # --- NEW Delete View URLs ---
+    path('course-applications/delete/<int:id>/', delete_course_inquiry, name='delete_course_inquiry'),
+    path('job-applications/delete/<int:id>/', delete_job_application, name='delete_job_application'),
+    path('contact-queries/delete/<int:id>/', delete_contact_query, name='delete_contact_query'),
     path('banking-counselling/', banking_counselling_view, name='manage_banking_counselling'),
     path('admin-bfsi-candidate-registration/',admin_bfsi_candidate_registration,name = 'admin_bfsi_candidate_registration'),
     path('check-mobile-number-bfsi/',check_mobile_number_duplicate_bfsi,name = 'check_mobile_number_duplicate_bfsi'),

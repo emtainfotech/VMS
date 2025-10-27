@@ -5211,46 +5211,81 @@ def task_detail_and_reassign(request, pk):
 from django.contrib.humanize.templatetags.humanize import naturaltime
 
 
+
+
+@login_required
 def employee_notification_history(request):
-    recipient = Employee.objects.get(user=request.user)
-    all_notifications = Notification.objects.filter(recipient=recipient)
+    try:
+        # --- ADDED ERROR HANDLING ---
+        # Get the employee profile linked to the logged-in user
+        employee = Employee.objects.get(user=request.user)
+        all_notifications = Notification.objects.filter(recipient=employee)
+    except Employee.DoesNotExist:
+        # Gracefully handle non-employee users by showing no notifications
+        all_notifications = []
+        
     context = {'all_notifications': all_notifications}
     return render(request, 'employee/notification_history.html', context)
 
-
+@login_required
 def employee_mark_all_as_read(request):
-    recipient = Employee.objects.get(user=request.user)
-    Notification.objects.filter(recipient=recipient, is_read=False).update(is_read=True)
+    
+    try:
+        # --- ADDED ERROR HANDLING ---
+        employee = Employee.objects.get(user=request.user)
+        Notification.objects.filter(recipient=employee, is_read=False).update(is_read=True)
+    except Employee.DoesNotExist:
+        # If user is not an employee, do nothing.
+        pass
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
+@login_required
 def employee_mark_notification_as_read(request, notification_id):
-    recipient = Employee.objects.get(user=request.user)
-    notification = get_object_or_404(Notification, id=notification_id, recipient=recipient)
-    if not notification.is_read:
-        notification.is_read = True
-        notification.save()
-    if notification.candidate and notification.candidate.id:
-        # IMPORTANT: Make sure your candidate detail URL is named 'employee_candidate_profile'
-        return redirect('employee_candidate_profile', id=notification.candidate.id) 
+    try:
+        # First, get the employee profile for the logged-in user
+        employee = Employee.objects.get(user=request.user)
+        
+        # Now, find the notification by its ID, BUT also check that its
+        # related candidate is assigned to the current employee.
+        notification = get_object_or_404(
+            Notification, 
+            id=notification_id, 
+            candidate__assigned_to=employee 
+        )
+        
+        if not notification.is_read:
+            notification.is_read = True
+            notification.save()
+            
+        if notification.candidate and notification.candidate.id:
+            return redirect('employee_candidate_profile', id=notification.candidate.id)
+
+    except Employee.DoesNotExist:
+        # Handle cases where the user is not an employee
+        pass
+        
     return redirect('employee_notification_history')
 
-
+@login_required
 def employee_get_unread_notifications_api(request):
-    recipient = Employee.objects.get(user=request.user)
-    notifications = Notification.objects.filter(
-        recipient=recipient, 
-        is_read=False
-    ).select_related('candidate').values(
-        'id', 
-        'message', 
-        'created_at',
-        'notification_type',
-        'candidate__candidate_name'
-    ).order_by('-created_at')
+    notifications_list = []
+    try:
+        # --- ADDED ERROR HANDLING ---
+        employee = Employee.objects.get(user=request.user)
+        notifications = Notification.objects.filter(
+            recipient=employee, 
+            is_read=False
+        ).select_related('candidate').values(
+            'id', 'message', 'created_at', 'notification_type', 'candidate__candidate_name'
+        ).order_by('-created_at')
 
-    notifications_list = list(notifications)
-    for notif in notifications_list:
-        notif['timesince'] = naturaltime(notif['created_at'])
+        notifications_list = list(notifications)
+        for notif in notifications_list:
+            notif['timesince'] = naturaltime(notif['created_at'])
+            
+    except Employee.DoesNotExist:
+        # Return an empty list for non-employee users
+        notifications_list = []
 
     return JsonResponse({
         'notifications': notifications_list,

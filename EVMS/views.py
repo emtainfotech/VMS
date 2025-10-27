@@ -1394,59 +1394,149 @@ def refer_poster_vendor_view(request):
     poster = Referal_poster.objects.first()
     return render(request, 'evms/referal-poster.html', {'poster': poster})
 
+import re
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import JobApplication, CourseInquiry, ContactQuery # Make sure to import models
+
+def is_valid_email(email):
+    """Simple email regex validation."""
+    if not email:
+        return False
+    # Basic regex for email validation
+    regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(regex, email)
+
+def is_valid_phone(phone):
+    """Validates a 10-digit phone number, as per your HTML."""
+    if not phone:
+        return False
+    # Checks if it contains exactly 10 digits
+    regex = r'^\d{10}$'
+    return re.match(regex, phone)
 
 # EMTA.CO.IN - Job Application Submission View
-@csrf_exempt # Use this for simplicity in testing, but consider proper CSRF handling for production
+@csrf_exempt 
 def submit_application_view(request):
     if request.method == "POST":
+        # --- Validation Start ---
+        errors = []
+        
+        # Get data
+        first_name = request.POST.get('firstName')
+        last_name = request.POST.get('lastName')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        work_experience = request.POST.get('workExperience')
+        availability = request.POST.get('interviewAvailability')
+        resume = request.FILES.get('Resume')
+
+        # 1. Check required text fields (based on your HTML 'required' tags)
+        if not first_name:
+            errors.append('First Name is required.')
+        if not last_name:
+            errors.append('Last Name is required.')
+        if not work_experience:
+            errors.append('Work Experience is required.')
+        if not availability:
+            errors.append('Interview Availability is required.')
+
+        # 2. Check required file
+        if not resume:
+            errors.append('CV or Resume is required.')
+
+        # 3. Check formats
+        if not is_valid_email(email):
+            errors.append('Please enter a valid Email address.')
+        if not is_valid_phone(phone):
+            errors.append('Please enter a valid 10-digit Phone Number.')
+
+        # 4. If any errors, return the first one
+        if errors:
+            return JsonResponse({
+                'status': 'error',
+                'message': errors[0] # Return the first error found
+            }, status=400)
+        
+        # --- Validation End ---
+
+        # Try saving ONLY after validation passes
         try:
-            # Create a new JobApplication instance
             application = JobApplication(
-                first_name=request.POST.get('firstName'),
-                last_name=request.POST.get('lastName'),
-                email=request.POST.get('email'),
-                phone=request.POST.get('phone'),
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                phone=phone,
                 position_of_interest=request.POST.get('jobTitle'),
-                previous_experience=request.POST.get('workExperience'),
+                previous_experience=work_experience,
                 portfolio_url=request.POST.get('portfolio'),
-                interview_availability=request.POST.get('interviewAvailability'),
+                interview_availability=availability,
                 address=request.POST.get('address'),
-                resume=request.FILES.get('Resume') # Handle the uploaded file
+                resume=resume
             )
             application.save()
             
-            # Return a success response
             return JsonResponse({
                 'status': 'success',
                 'message': 'Your application has been submitted successfully!'
             }, status=201)
 
         except Exception as e:
-            # Return an error response if something goes wrong
+            # Catch database or other unexpected errors
             return JsonResponse({
                 'status': 'error',
-                'message': f'An error occurred: {str(e)}'
-            }, status=400)
+                'message': f'An server error occurred: {str(e)}'
+            }, status=500)
     
-    # If not a POST request, return an error
     return JsonResponse({
         'status': 'error',
         'message': 'Invalid request method. Please use POST.'
     }, status=405)
 
 
-
 @csrf_exempt
 def submit_course_inquiry_view(request):
     if request.method == "POST":
+        # --- Validation Start ---
+        errors = []
+        
+        # Get data
+        first_name = request.POST.get('firstName')
+        last_name = request.POST.get('lastName')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        course = request.POST.get('course')
+
+        # 1. Check required fields (assuming these are required)
+        if not first_name:
+            errors.append('First Name is required.')
+        if not last_name:
+            errors.append('Last Name is required.')
+        if not course:
+            errors.append('Course selection is required.')
+
+        # 2. Check formats
+        if not is_valid_email(email):
+            errors.append('Please enter a valid Email address.')
+        if not is_valid_phone(phone):
+            errors.append('Please enter a valid 10-digit Phone Number.')
+
+        # 3. If any errors, return
+        if errors:
+            return JsonResponse({
+                'status': 'error',
+                'message': errors[0]
+            }, status=400)
+        
+        # --- Validation End ---
+
         try:
             inquiry = CourseInquiry(
-                # CORRECTED: Changed keys to camelCase to match HTML form names
-                first_name=request.POST.get('firstName'),
-                last_name=request.POST.get('lastName'),
-                email=request.POST.get('email'),
-                phone=request.POST.get('phone'),
-                course_interest=request.POST.get('course'),
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                phone=phone,
+                course_interest=course,
                 address=request.POST.get('address'),
                 comment=request.POST.get('comment')
             )
@@ -1460,24 +1550,58 @@ def submit_course_inquiry_view(request):
         except Exception as e:
             return JsonResponse({
                 'status': 'error',
-                'message': f'An error occurred: {str(e)}'
-            }, status=400)
+                'message': f'An server error occurred: {str(e)}'
+            }, status=500)
     
     return JsonResponse({
         'status': 'error',
         'message': 'Invalid request method. Please use POST.'
     }, status=405)
 
+
 @csrf_exempt
 def submit_contact_query_view(request):
     if request.method == "POST":
+        # --- Validation Start ---
+        errors = []
+        
+        # Get data
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone') # Assuming phone is required
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+
+        # 1. Check required fields (assuming these are required)
+        if not name:
+            errors.append('Name is required.')
+        if not subject:
+            errors.append('Subject is required.')
+        if not message:
+            errors.append('Message is required.')
+
+        # 2. Check formats
+        if not is_valid_email(email):
+            errors.append('Please enter a valid Email address.')
+        if not is_valid_phone(phone):
+            errors.append('Please enter a valid 10-digit Phone Number.')
+
+        # 3. If any errors, return
+        if errors:
+            return JsonResponse({
+                'status': 'error',
+                'message': errors[0]
+            }, status=400)
+        
+        # --- Validation End ---
+
         try:
             query = ContactQuery(
-                name=request.POST.get('name'),
-                email=request.POST.get('email'),
-                phone=request.POST.get('phone'),
-                subject=request.POST.get('subject'),
-                message=request.POST.get('message'),
+                name=name,
+                email=email,
+                phone=phone,
+                subject=subject,
+                message=message,
             )
             query.save()
             
@@ -1489,8 +1613,7 @@ def submit_contact_query_view(request):
         except Exception as e:
             return JsonResponse({
                 'status': 'error',
-                'message': f'An error occurred: {str(e)}'
-            }, status=400)
+                'message': f'An server error occurred: {str(e)}'
+            }, status=500)
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
-
