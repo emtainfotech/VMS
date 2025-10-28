@@ -1152,6 +1152,7 @@ function updateButtonText() {
                 <option value="" disabled selected>Select Joining Status</option>
                 <option value="Joined" {% if candidate.joining_status == "Joined" %}selected{% endif %}>Joined</option>
                 <option value="Not Joined" {% if candidate.joining_status == "Not Joined" %}selected{% endif %}>Not Joined</option>
+                <option value="Joining Pending" {% if candidate.joining_status == "Joining Pending" %}selected{% endif %}>Joining Pending</option>
               </select>
             </div>
 
