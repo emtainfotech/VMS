@@ -815,10 +815,7 @@
                 <input type="date" name="selection_date" class="form-control" value="{{ candidate.selection_date|date:'Y-m-d' }}">
               </div>
 
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Selection Remark</label>
-                <input type="text" name="selection_remark" class="form-control" value="{{ candidate.selection_remark }}">
-              </div>
+              
 
               <div class="col-md-6 mb-3">
                 <label class="form-label">Joining Status</label>
@@ -827,6 +824,10 @@
                   <option value="Joined" {% if candidate.joining_status == "Joined" %}selected{% endif %}>Joined</option>
                   <option value="Not Joined" {% if candidate.joining_status == "Not Joined" %}selected{% endif %}>Not Joined</option>
                 </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Selection Remark</label>
+                <input type="text" name="selection_remark" class="form-control" value="{{ candidate.selection_remark }}">
               </div>
             </div>
 
