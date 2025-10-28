@@ -90,6 +90,7 @@ urlpatterns = [
     path('api/notifications/unread/', get_unread_notifications_api, name='api_unread_notifications'),
     path('employee-daily-report/', employee_daily_report, name='employee_daily_report'),
     path('ajax/get-daily-activities/', get_daily_activities_ajax, name='get_daily_activities_ajax'),
+    path('attendance/reports/', admin_attendance_report, name='admin_attendance_report'),
 
 
     path('admin/', admin.site.urls),

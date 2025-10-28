@@ -84,6 +84,14 @@ urlpatterns = [
     path('notifications/read-all/', employee_mark_all_as_read, name='employee_mark_all_as_read'),
     path('notifications/history/', employee_notification_history, name='employee_notification_history'),
     path('api/notifications/unread/', employee_get_unread_notifications_api, name='employee_api_unread_notifications'),
+    # --- Attendance URLs ---
+    path('attendance/status/', get_attendance_status, name='get_attendance_status'),
+    path('attendance/punch-in/', punch_in, name='punch_in'),
+    path('attendance/punch-out/', punch_out, name='punch_out'),
+    path('attendance/correct-punch/', correct_forgotten_punch, name='correct_forgotten_punch'),
+    
+    # --- Report URL ---
+    path('attendance/my-report/', employee_attendance_report, name='employee_attendance_report'),
 
     path('admin/', admin.site.urls),
 ]

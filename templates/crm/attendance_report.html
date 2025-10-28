@@ -1,0 +1,122 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+{% load attendance_filters %}
+{% block title %}Employee Attendance Report{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    Employee Attendance Report
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Filter Report</h3>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Employee</label>
+                        <select name="employee_id" class="form-select">
+                            <option value="">All Employees</option>
+                            {% for emp_user in all_employees %}
+                                <option value="{{ emp_user.id }}" {% if emp_user.id == selected_user_id %}selected{% endif %}>
+                                    {{ emp_user.employee.first_name }} {{ emp_user.employee.last_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">End Date</label>
+                        <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% for user_data in report_data %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title">
+                    {{ user_data.user.employee.first_name }} {{ user_data.user.employee.last_name }}
+                    <span class="text-secondary small ms-2">({{ user_data.user.employee.designation }})</span>
+                </h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>First Punch In</th>
+                            <th>Last Punch Out</th>
+                            <th>Total Time</th>
+                            <th>Total Worked</th>
+                            <th>Total Break</th>
+                            <th>Punches</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for day in user_data.daily_stats %}
+                        <tr>
+                            <td>{{ day.date|date:"D, M d, Y" }}</td>
+                            <td>
+                                {% if day.stats.is_open %}
+                                    <span class="badge bg-warning text-light">In Progress</span>
+                                {% elif day.stats.first_punch_in %}
+                                    <span class="badge bg-success text-light">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-secondary text-light">No Data</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ day.stats.first_punch_in|date:"H:i:s"|default:"--" }}</td>
+                            <td>{{ day.stats.last_punch_out|date:"H:i:s"|default:"--" }}</td>
+                            <td>{{ day.stats.total_time|format_timedelta|default:"--" }}</td>
+                            <td>{{ day.stats.total_worked|format_timedelta|default:"--" }}</td>
+                            <td>{{ day.stats.total_break|format_timedelta|default:"--" }}</td>
+                            <td>
+                                {% for punch in day.stats.punches.all %}
+                                    <span class="badge {% if punch.punch_type == 'IN' %}bg-green-lt{% else %}bg-red-lt{% endif %}">
+                                        {{ punch.get_punch_type_display }}: {{ punch.timestamp|date:"H:i" }}
+                                    </span>
+                                    {% if punch.reason %}({{ punch.reason }}){% endif %}
+                                    <br>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No attendance data found for this period.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% empty %}
+        <div class="card mt-3">
+            <div class="card-body text-center">
+                No data for selected filters.
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}

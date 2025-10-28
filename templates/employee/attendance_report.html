@@ -1,0 +1,96 @@
+{% extends 'employee/base.html' %} 
+{% load static %}
+{% load attendance_filters %}
+{% block title %}My Attendance Report{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    My Attendance Report
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Filter Report</h3>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">End Date</label>
+                        <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>First Punch In</th>
+                            <th>Last Punch Out</th>
+                            <th>Total Time (Req #3)</th>
+                            <th>Total Worked (Req #4)</th>
+                            <th>Total Break (Req #5)</th>
+                            <th>Punches</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for day in daily_stats %}
+                        <tr>
+                            <td>{{ day.date|date:"D, M d, Y" }}</td>
+                            <td>
+                                {% if day.stats.is_open %}
+                                    <span class="badge bg-warning text-light">In Progress</span>
+                                {% elif day.stats.first_punch_in %}
+                                    <span class="badge bg-success text-light">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-secondary text-light">No Data</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ day.stats.first_punch_in|date:"H:i:s"|default:"--" }}</td>
+                            <td>{{ day.stats.last_punch_out|date:"H:i:s"|default:"--" }}</td>
+                            <td>{{ day.stats.total_time|format_timedelta|default:"--" }}</td>
+                            <td>{{ day.stats.total_worked|format_timedelta|default:"--" }}</td>
+                            <td>{{ day.stats.total_break|format_timedelta|default:"--" }}</td>
+                            <td>
+                                {% for punch in day.stats.punches.all %}
+                                    <span class="badge {% if punch.punch_type == 'IN' %}bg-green-lt{% else %}bg-red-lt{% endif %}">
+                                        {{ punch.get_punch_type_display }}: {{ punch.timestamp|date:"H:i" }}
+                                    </span>
+                                    {% if punch.reason %}({{ punch.reason }}){% endif %}
+                                    <br>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No attendance data found for this period.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

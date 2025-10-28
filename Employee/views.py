@@ -5291,3 +5291,261 @@ def employee_get_unread_notifications_api(request):
         'notifications': notifications_list,
         'unread_count': len(notifications_list)
     })
+
+
+# ... (at the top, with other imports)
+import datetime as pio
+from django.utils import timezone
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.utils.dateparse import parse_datetime
+from django.db import transaction
+
+from .attendance_utils import calculate_daily_attendance # Import the helper
+
+
+@login_required
+def get_attendance_status(request):
+    """
+    API endpoint called by JavaScript to get the user's
+    current punch status and time worked today.
+    """
+    user = request.user
+    today = timezone.now().date()
+    
+    last_punch = AttendancePunch.objects.filter(user=user).order_by('timestamp').last()
+    
+    punches_today = AttendancePunch.objects.filter(
+        user=user, 
+        timestamp__date=today
+    ).order_by('timestamp') #
+    
+    status = "Punched Out"
+    total_worked_time = pio.timedelta(0)
+    
+    if last_punch and last_punch.punch_type == 'IN':
+        status = "Punched In"
+        # Req #7: Check for "forgot punch out"
+        if last_punch.timestamp.date() < today:
+            status = "FORGOT_PUNCH_OUT"
+            # Send info about the open punch
+            return JsonResponse({
+                'status': status,
+                'open_punch_time': last_punch.timestamp.isoformat(),
+                'open_punch_date': last_punch.timestamp.strftime("%Y-%m-%d"),
+                'total_worked_today_str': "00:00:00",
+            })
+    
+    # Calculate total worked time for today
+    start_time = None
+    for punch in punches_today:
+        if punch.punch_type == 'IN':
+            if start_time is None: # Only set on the first 'IN' of a pair
+                start_time = punch.timestamp
+        elif punch.punch_type == 'OUT' and start_time is not None:
+            total_worked_time += (punch.timestamp - start_time)
+            start_time = None # Reset for the next 'IN'
+            
+    # If currently punched in, add time from last punch-in to now
+    if status == "Punched In" and start_time is not None:
+            total_worked_time += (timezone.now() - start_time)
+
+    # Format timedelta to HH:MM:SS
+    total_seconds = int(total_worked_time.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+    total_worked_today_str = f"{hours:02}:{minutes:02}:{seconds:02}"
+
+    return JsonResponse({
+        'status': status, # "Punched In" or "Punched Out"
+        'total_worked_today_str': total_worked_today_str,
+    })
+
+
+@require_POST
+@login_required
+def punch_in(request):
+    """
+    API endpoint to create a 'Punch In' event.
+    """
+    user = request.user
+    now = timezone.now()
+    
+    last_punch = AttendancePunch.objects.filter(user=user).order_by('timestamp').last()
+    
+    # Req #7: Prevent Punch-In if last punch was also IN
+    if last_punch and last_punch.punch_type == 'IN':
+        return JsonResponse({
+            'success': False, 
+            'error': 'forgot_punch_out', 
+            'message': 'You forgot to punch out yesterday. Please correct your last punch.',
+            'last_punch_time': last_punch.timestamp.isoformat()
+        }, status=400)
+        
+    # Normal Punch In
+    AttendancePunch.objects.create(
+        user=user,
+        timestamp=now,
+        punch_type=AttendancePunch.PUNCH_IN
+    )
+    return JsonResponse({'success': True, 'status': 'Punched In', 'time': now.isoformat()})
+
+
+@require_POST
+@login_required
+def punch_out(request):
+    """
+    API endpoint to create a 'Punch Out' event.
+    Requires a 'reason' in the POST data (Req #2).
+    """
+    user = request.user
+    now = timezone.now()
+    reason = request.POST.get('reason', '') # Get reason from POST data
+
+    if not reason:
+            return JsonResponse({'success': False, 'error': 'reason_required', 'message': 'A reason is required to punch out.'}, status=400)
+
+    last_punch = AttendancePunch.objects.filter(user=user).order_by('timestamp').last()
+    
+    # Prevent Punch-Out if not punched in
+    if not last_punch or last_punch.punch_type == 'OUT':
+        return JsonResponse({
+            'success': False, 
+            'error': 'not_punched_in', 
+            'message': 'You are not punched in. Cannot punch out.'
+        }, status=400)
+        
+    # Normal Punch Out
+    AttendancePunch.objects.create(
+        user=user,
+        timestamp=now,
+        punch_type=AttendancePunch.PUNCH_OUT,
+        reason=reason
+    )
+    return JsonResponse({'success': True, 'status': 'Punched Out', 'time': now.isoformat()})
+
+
+@require_POST
+@login_required
+@transaction.atomic # Ensure this runs as a single database operation
+def correct_forgotten_punch(request):
+    """
+    API endpoint to handle the "Forgot Punch Out" correction form (Req #7).
+    It creates a back-dated 'Punch Out' record.
+    """
+    user = request.user
+    now = timezone.now()
+    
+    # Get form data
+    punch_out_date_str = request.POST.get('punch_out_date') # "YYYY-MM-DD"
+    punch_out_time_str = request.POST.get('punch_out_time') # "HH:MM"
+    reason = request.POST.get('reason')
+
+    if not punch_out_date_str or not punch_out_time_str or not reason:
+        return JsonResponse({'success': False, 'error': 'missing_data', 'message': 'Date, time, and reason are required.'}, status=400)
+
+    try:
+        # Combine date and time
+        dt_str = f"{punch_out_date_str}T{punch_out_time_str}"
+        corrected_timestamp = parse_datetime(dt_str)
+
+        if not corrected_timestamp:
+            raise ValueError("Invalid datetime format")
+
+        # Make the naive datetime timezone-aware using the project's current timezone
+        corrected_timestamp = timezone.make_aware(corrected_timestamp, timezone.get_current_timezone())
+
+    except Exception:
+        return JsonResponse({'success': False, 'error': 'invalid_format', 'message': 'Invalid datetime format. Use YYYY-MM-DD and HH:MM.'}, status=400)
+
+    last_punch = AttendancePunch.objects.filter(user=user).order_by('timestamp').last()
+    
+    # Final check: is the last punch still 'IN'?
+    if not last_punch or last_punch.punch_type == 'OUT':
+            return JsonResponse({'success': False, 'error': 'state_changed', 'message': 'Your punch state has changed. Please refresh.'}, status=400)
+
+    # Check: Corrected time must be *after* the last punch-in and *before* now.
+    if not (last_punch.timestamp < corrected_timestamp < now):
+        return JsonResponse({
+            'success': False, 
+            'error': 'invalid_time', 
+            'message': 'Corrected punch-out time must be after your last punch-in and before the current time.'
+        }, status=400)
+        
+    # All checks passed. Create the "corrected" punch-out record.
+    AttendancePunch.objects.create(
+        user=user,
+        timestamp=corrected_timestamp,
+        punch_type=AttendancePunch.PUNCH_OUT,
+        reason=f"[CORRECTION] {reason}"
+    )
+    
+    return JsonResponse({'success': True, 'message': 'Punch corrected. You can now punch in for today.'})
+
+
+# ... (at the top, with other imports)
+from django.shortcuts import render
+from django.utils.dateparse import parse_date
+
+@login_required
+def employee_attendance_report(request):
+    user = request.user
+    
+    # Get start/end dates from query params, default to last 7 days
+    end_date_str = request.GET.get('end_date', timezone.now().strftime('%Y-%m-%d'))
+    start_date_str = request.GET.get('start_date', (timezone.now() - pio.timedelta(days=7)).strftime('%Y-%m-%d'))
+    
+    end_date = parse_date(end_date_str)
+    start_date = parse_date(start_date_str)
+
+    # Get all punches in the date range
+    all_punches = AttendancePunch.objects.filter(
+        user=user,
+        timestamp__date__range=[start_date, end_date]
+    ).order_by('timestamp') # Order ASC for grouping
+    
+    # Group punches by day
+    punches_by_day = {}
+    for punch in all_punches:
+        date = punch.timestamp.date()
+        if date not in punches_by_day:
+            punches_by_day[date] = []
+        punches_by_day[date].append(punch)
+        
+    # Calculate stats for each day
+    daily_stats = []
+    # Iterate from start_date to end_date
+    current_date = start_date
+    while current_date <= end_date:
+        # Get punches for the day, but reverse them for the calculation function
+        punches_for_day = sorted(
+            punches_by_day.get(current_date, []), 
+            key=lambda p: p.timestamp, 
+            reverse=True
+        )
+        
+        # We need to pass a "queryset-like" object (with .all())
+        # A bit of a hack: use a list with an 'all' method
+        class PunchList:
+            def __init__(self, punches):
+                self._punches = punches
+            def all(self):
+                return self._punches
+            def __bool__(self):
+                return bool(self._punches)
+
+        stats = calculate_daily_attendance(PunchList(punches_for_day))
+        daily_stats.append({
+            'date': current_date,
+            'stats': stats,
+        })
+        current_date += pio.timedelta(days=1)
+
+    context = {
+        'daily_stats': sorted(daily_stats, key=lambda x: x['date'], reverse=True),
+        'start_date': start_date_str,
+        'end_date': end_date_str,
+    }
+    return render(request, 'employee/attendance_report.html', context)

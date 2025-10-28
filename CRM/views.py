@@ -6256,3 +6256,94 @@ def get_daily_activities_ajax(request):
         {'processed_activities': activities_for_template}
     )
     return JsonResponse({'html': html})
+
+
+from Employee.attendance_utils import calculate_daily_attendance 
+import datetime as ed
+
+def is_admin_or_manager(user):
+    # Implement your logic to check if user is admin/manager
+    # For now, we'll just check for staff status
+    return user.is_staff 
+
+@user_passes_test(is_admin_or_manager)
+def admin_attendance_report(request):
+    
+    # Get filters from query params
+    selected_user_id = request.GET.get('employee_id')
+    end_date_str = request.GET.get('end_date', timezone.now().strftime('%Y-%m-%d'))
+    start_date_str = request.GET.get('start_date', (timezone.now() - ed.timedelta(days=7)).strftime('%Y-%m-%d'))
+    
+    end_date = parse_date(end_date_str)
+    start_date = parse_date(start_date_str)
+
+    # Get all users who are employees for the dropdown
+    all_employees = User.objects.filter(employee__isnull=False).select_related('employee')
+    
+    # Base query
+    all_punches_query = AttendancePunch.objects.filter(
+        timestamp__date__range=[start_date, end_date]
+    ).select_related('user', 'user__employee').order_by('user', 'timestamp') # Order ASC for grouping
+
+    if selected_user_id:
+        all_punches_query = all_punches_query.filter(user__id=selected_user_id)
+        
+    # Group punches by user, then by day
+    punches_by_user_day = {}
+    for punch in all_punches_query:
+        user = punch.user
+        date = punch.timestamp.date()
+        if user.id not in punches_by_user_day:
+            punches_by_user_day[user.id] = {'user': user, 'days': {}}
+        if date not in punches_by_user_day[user.id]['days']:
+            punches_by_user_day[user.id]['days'][date] = []
+        punches_by_user_day[user.id]['days'][date].append(punch)
+
+    # Calculate stats
+    report_data = []
+    
+    # Determine which users to iterate over
+    users_to_process = all_employees
+    if selected_user_id:
+        users_to_process = all_employees.filter(id=selected_user_id)
+
+    # We need this hack again for the utility function
+    class PunchList:
+        def __init__(self, punches):
+            self._punches = punches
+        def all(self):
+            return self._punches
+        def __bool__(self):
+            return bool(self._punches)
+
+    for user in users_to_process:
+        user_daily_stats = []
+        user_punch_data = punches_by_user_day.get(user.id, {'days': {}})
+        
+        current_date = start_date
+        while current_date <= end_date:
+            punches_for_day = sorted(
+                user_punch_data['days'].get(current_date, []), 
+                key=lambda p: p.timestamp, 
+                reverse=True
+            )
+            stats = calculate_daily_attendance(PunchList(punches_for_day))
+            user_daily_stats.append({
+                'date': current_date,
+                'stats': stats,
+            })
+            current_date += ed.timedelta(days=1)
+
+        report_data.append({
+            'user': user,
+            'daily_stats': sorted(user_daily_stats, key=lambda x: x['date'], reverse=True)
+        })
+
+    context = {
+        'report_data': report_data,
+        'all_employees': all_employees,
+        'start_date': start_date_str,
+        'end_date': end_date_str,
+        'selected_user_id': int(selected_user_id) if selected_user_id else None,
+    }
+    return render(request, 'crm/attendance_report.html', context)

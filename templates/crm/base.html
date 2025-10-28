@@ -417,18 +417,341 @@
             
             </div>
             <div class="nav-item dropdown">
-              <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
-                <img class="avatar avatar-sm" src="{{user.employee.employee_photo.url}}" alt="{{user.username}}">
-                <div class="d-none d-xl-block ps-2">
-                  <div>{{user.username}}</div>
-                  <div class="mt-1 small text-secondary">{{user.employee.designation}}</div>
-                </div>
-              </a>
-              <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                <a href="{% url 'crm_admin_profile' user.id %}" class="dropdown-item">Profile</a>
-                <a href="{% url 'crm_admin_logout' %}" class="dropdown-item">Logout</a>
-              </div>
+    <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
+        <img class="avatar avatar-sm" src="{{user.employee.employee_photo.url}}" alt="{{user.username}}">
+        <div class="d-none d-xl-block ps-2">
+            <div>{{user.username}}</div>
+            <div class="mt-1 small text-secondary">{{user.employee.designation}}</div>
+        </div>
+    </a>
+    <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow" style="width: 250px;">
+        <div class="px-3 py-2 border-bottom">
+            <div class="fw-bold text-center" id="live-clock-time">--:--:--</div>
+            <div class="small text-secondary text-center" id="live-clock-date">----------</div>
+        </div>
+        
+        <div class="px-3 py-2 border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <span>Status:</span>
+                <span class="badge" id="punch-status-badge">Loading...</span>
             </div>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+                <span>Worked Today:</span>
+                <span class="fw-bold" id="worked-today-timer">00:00:00</span>
+            </div>
+        </div>
+
+        <div class="p-2">
+            <button class="btn w-100" id="punch-button">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" id="punch-spinner" style="display: none;"></span>
+                Loading...
+            </button>
+        </div>
+        
+        <div class="dropdown-divider"></div>
+        
+        <a href="{% url 'crm_admin_profile' user.id %}" class="dropdown-item">Profile</a>
+        <a href="{% url 'admin_attendance_report' %}" class="dropdown-item">Employees Attendance</a>
+        <a href="{% url 'crm_admin_logout' %}" class="dropdown-item">Logout</a>
+    </div>
+</div>
+
+<div class="modal fade" id="punchOutModal" tabindex="-1" aria-labelledby="punchOutModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+        <h5 class="modal-title" id="punchOutModalLabel">Punch Out</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+        <form id="punchOutForm">
+            <div class="mb-3">
+            <label for="punchOutReason" class="form-label">Reason for Punching Out:</label>
+            <select class="form-select" id="punchOutReason" required>
+                <option value="" selected disabled>Select a reason...</option>
+                <option value="End of Day">End of Day</option>
+                <option value="Lunch Break">Lunch Break</option>
+                <option value="Short Break">Short Break</option>
+                <option value="Meeting">Meeting</option>
+                <option value="Other">Other</option>
+            </select>
+            <textarea class="form-control mt-2" id="punchOutReasonOther" rows="2" placeholder="Please specify other reason" style="display:none;"></textarea>
+            </div>
+        </form>
+        </div>
+        <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="submitPunchOut">Confirm Punch Out</button>
+        </div>
+    </div>
+    </div>
+</div>
+
+<div class="modal fade" id="forgotPunchOutModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="forgotPunchOutModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+        <h5 class="modal-title" id="forgotPunchOutModalLabel">Attendance Correction Required</h5>
+        </div>
+        <div class="modal-body">
+        <p>You forgot to punch out on <strong id="forgotten-punch-date"></strong>. Your last punch-in was at <strong id="forgotten-punch-time"></strong>.</p>
+        <p>Please enter the actual time you punched out on that day to continue.</p>
+        <form id="forgotPunchOutForm">
+            <input type="hidden" id="forgotten-punch-date-input">
+            <div class="mb-3">
+                <label for="correctedPunchOutTime" class="form-label">Actual Punch-Out Time (24h format):</label>
+                <input type="time" class="form-control" id="correctedPunchOutTime" required>
+            </div>
+            <div class="mb-3">
+                <label for="correctedPunchOutReason" class="form-label">Reason for Correction:</label>
+                <textarea class="form-control" id="correctedPunchOutReason" rows="3" placeholder="e.g., Forgot to punch out, system error..." required></textarea>
+            </div>
+        </form>
+        </div>
+        <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="submitCorrection">Submit Correction</button>
+        </div>
+    </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if all elements exist before running
+    const clockTime = document.getElementById('live-clock-time');
+    if (!clockTime) return; // Don't run this script on pages without the dropdown (e.g., login)
+
+    // CSRF token for AJAX
+    const csrfToken = '{{ csrf_token }}';
+
+    // URLs (MUST define these in your urls.py)
+    const statusUrl = "{% url 'get_attendance_status' %}";
+    const punchInUrl = "{% url 'punch_in' %}";
+    const punchOutUrl = "{% url 'punch_out' %}";
+    const correctPunchUrl = "{% url 'correct_forgotten_punch' %}";
+
+    // Modals
+    const punchOutModal = new bootstrap.Modal(document.getElementById('punchOutModal'));
+    const forgotPunchOutModal = new bootstrap.Modal(document.getElementById('forgotPunchOutModal'));
+
+    // Dropdown elements
+    const clockDate = document.getElementById('live-clock-date');
+    const statusBadge = document.getElementById('punch-status-badge');
+    const workedTimer = document.getElementById('worked-today-timer');
+    const punchButton = document.getElementById('punch-button');
+    const punchSpinner = document.getElementById('punch-spinner');
+
+    // Modal Form Elements
+    const punchOutReasonSelect = document.getElementById('punchOutReason');
+    const punchOutReasonOther = document.getElementById('punchOutReasonOther');
+    const submitPunchOutBtn = document.getElementById('submitPunchOut');
+
+    const forgottenDateEl = document.getElementById('forgotten-punch-date');
+    const forgottenTimeEl = document.getElementById('forgotten-punch-time');
+    const forgottenDateInput = document.getElementById('forgotten-punch-date-input');
+    const correctedTimeInput = document.getElementById('correctedPunchOutTime');
+    const correctedReasonInput = document.getElementById('correctedPunchOutReason');
+    const submitCorrectionBtn = document.getElementById('submitCorrection');
+
+    let currentStatus = "Loading..."; // 'Punched In', 'Punched Out', 'FORGOT_PUNCH_OUT'
+    let workedTimeInterval;
+
+    // --- Live Clock ---
+    function updateClock() {
+        const now = new Date();
+        clockTime.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        clockDate.textContent = now.toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // --- Attendance Logic ---
+    async function fetchStatus() {
+        try {
+            const response = await fetch(statusUrl);
+            if (!response.ok) throw new Error("Network response was not ok");
+            const data = await response.json();
+            currentStatus = data.status;
+            updateUI(data);
+        } catch (error) {
+            console.error("Error fetching status:", error);
+            statusBadge.textContent = "Error";
+            statusBadge.className = "badge bg-danger";
+            punchButton.disabled = true;
+            punchButton.textContent = "Error";
+        }
+    }
+
+    function updateUI(data) {
+        punchButton.disabled = false;
+        punchSpinner.style.display = 'none';
+
+        if (data.status === 'Punched In') {
+            statusBadge.textContent = "Punched In";
+            statusBadge.className = "badge bg-success text-light";
+            punchButton.textContent = "Punch Out";
+            punchButton.className = "btn btn-danger w-100";
+            workedTimer.textContent = data.total_worked_today_str;
+            startWorkedTimer(data.total_worked_today_str);
+
+        } else if (data.status === 'Punched Out') {
+            statusBadge.textContent = "Punched Out";
+            statusBadge.className = "badge bg-secondary text-light";
+            punchButton.textContent = "Punch In";
+            punchButton.className = "btn btn-success w-100";
+            workedTimer.textContent = data.total_worked_today_str;
+            stopWorkedTimer();
+
+        } else if (data.status === 'FORGOT_PUNCH_OUT') {
+            statusBadge.textContent = "Correction Needed";
+            statusBadge.className = "badge bg-warning text-light";
+            punchButton.textContent = "Correct Punch";
+            punchButton.className = "btn btn-warning w-100";
+            stopWorkedTimer();
+            
+            const openPunchTime = new Date(data.open_punch_time);
+            forgottenDateEl.textContent = openPunchTime.toLocaleDateString();
+            forgottenTimeEl.textContent = openPunchTime.toLocaleTimeString();
+            forgottenDateInput.value = data.open_punch_date; // "YYYY-MM-DD"
+            forgotPunchOutModal.show();
+        }
+    }
+    
+    function startWorkedTimer(baseTimeStr) {
+        stopWorkedTimer(); // Clear any existing timer
+        let parts = baseTimeStr.split(':').map(Number);
+        if (parts.length !== 3) return;
+        let totalSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+
+        workedTimeInterval = setInterval(() => {
+            totalSeconds++;
+            let hours = Math.floor(totalSeconds / 3600);
+            let minutes = Math.floor((totalSeconds % 3600) / 60);
+            let seconds = totalSeconds % 60;
+            
+            workedTimer.textContent = 
+                `${String(hours).padStart(2, '0')}:` +
+                `${String(minutes).padStart(2, '0')}:` +
+                `${String(seconds).padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    function stopWorkedTimer() {
+        if (workedTimeInterval) {
+            clearInterval(workedTimeInterval);
+            workedTimeInterval = null;
+        }
+    }
+
+    // --- Event Listeners ---
+    punchButton.addEventListener('click', () => {
+        if (currentStatus === 'Punched Out') {
+            handlePunchIn();
+        } else if (currentStatus === 'Punched In') {
+            punchOutModal.show();
+        } else if (currentStatus === 'FORGOT_PUNCH_OUT') {
+            forgotPunchOutModal.show();
+        }
+    });
+
+    punchOutReasonSelect.addEventListener('change', () => {
+        punchOutReasonOther.style.display = (punchOutReasonSelect.value === 'Other') ? 'block' : 'none';
+        punchOutReasonOther.required = (punchOutReasonSelect.value === 'Other');
+    });
+
+    submitPunchOutBtn.addEventListener('click', () => {
+        let reason = punchOutReasonSelect.value;
+        if (reason === 'Other') {
+            reason = punchOutReasonOther.value;
+        }
+        if (!reason) { alert("Please select or provide a reason."); return; }
+        handlePunchOut(reason);
+    });
+
+    submitCorrectionBtn.addEventListener('click', () => {
+        const punchDate = forgottenDateInput.value;
+        const punchTime = correctedTimeInput.value;
+        const reason = correctedReasonInput.value;
+        if (!punchTime || !reason) { alert("Please fill in all fields."); return; }
+        handleCorrection(punchDate, punchTime, reason);
+    });
+
+    // --- AJAX Functions ---
+    async function handlePunchIn() {
+        setLoading(true, "Punching In...");
+        try {
+            const response = await fetch(punchInUrl, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            const data = await response.json();
+            if (response.ok) {
+                await fetchStatus(); // Refresh
+            } else {
+                alert(`Error: ${data.message}`);
+                if (data.error === 'forgot_punch_out') await fetchStatus();
+            }
+        } catch (error) { alert("An error occurred.");
+        } finally { setLoading(false); }
+    }
+
+    async function handlePunchOut(reason) {
+        setLoading(true, "Punching Out...");
+        const formData = new FormData();
+        formData.append('reason', reason);
+        try {
+            const response = await fetch(punchOutUrl, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken },
+                body: formData
+            });
+            const data = await response.json();
+            if (response.ok) {
+                punchOutModal.hide();
+                await fetchStatus(); // Refresh
+            } else { alert(`Error: ${data.message}`); }
+        } catch (error) { alert("An error occurred.");
+        } finally { setLoading(false); }
+    }
+
+    async function handleCorrection(punchDate, punchTime, reason) {
+        setLoading(true, "Submitting Correction...");
+        const formData = new FormData();
+        formData.append('punch_out_date', punchDate);
+        formData.append('punch_out_time', punchTime);
+        formData.append('reason', reason);
+        try {
+            const response = await fetch(correctPunchUrl, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken },
+                body: formData
+            });
+            const data = await response.json();
+            if (response.ok) {
+                alert(data.message);
+                forgotPunchOutModal.hide();
+                await fetchStatus(); // Refresh
+            } else { alert(`Error: ${data.message}`); }
+        } catch (error) { alert("An error occurred.");
+        } finally { setLoading(false); }
+    }
+
+    function setLoading(isLoading, text = "Loading...") {
+        if (isLoading) {
+            punchButton.disabled = true;
+            punchButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${text}`;
+        } else {
+            // The text will be set by updateUI
+            punchButton.disabled = false;
+        }
+    }
+
+    // Initial fetch
+    fetchStatus();
+    // Poll for updates every 5 minutes
+    setInterval(fetchStatus, 5 * 60 * 1000);
+});
+</script>
           </div>
         </div>
       </header>

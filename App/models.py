@@ -69,6 +69,48 @@ class Employee(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.employee_id})"
+    
+class AttendancePunch(models.Model):
+    """
+    Logs a single punch-in or punch-out event for a user.
+    """
+    PUNCH_IN = 'IN'
+    PUNCH_OUT = 'OUT'
+    PUNCH_TYPES = [
+        (PUNCH_IN, 'Punch In'),
+        (PUNCH_OUT, 'Punch Out'),
+    ]
+
+    # Link to the user, not the employee, as request.user is the User model
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='attendance_punches'
+    )
+    
+    # We use a non-auto-now timestamp so we can create
+    # back-dated corrections.
+    timestamp = models.DateTimeField(
+        default=timezone.now,
+        help_text="The actual time of the punch event."
+    )
+    
+    punch_type = models.CharField(max_length=3, choices=PUNCH_TYPES)
+    
+    reason = models.TextField(
+        blank=True, 
+        null=True, 
+        help_text="Reason for punching out (e.g., end of day, break) or for a correction."
+    )
+
+    class Meta:
+        ordering = ['-timestamp'] # Show newest punches first by default
+        indexes = [
+            models.Index(fields=['user', 'timestamp']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_punch_type_display()} at {self.timestamp}"
 
 # Renamed to avoid duplicacy and be more descriptive
 class EmployeeLoginRecord(models.Model):
