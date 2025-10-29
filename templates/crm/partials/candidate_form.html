@@ -1144,7 +1144,10 @@ function updateButtonText() {
               <input type="date" name="selection_date" class="form-control" value="{{ candidate.selection_date|date:'Y-m-d' }}">
             </div>
 
-            
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Expected Joining Date</label>
+              <input type="date" name="expected_joining_date" class="form-control" value="{{ candidate.expected_joining_date|date:'Y-m-d' }}">
+            </div>
 
             <div class="col-md-6 mb-3">
               <label class="form-label">Joining Status</label>

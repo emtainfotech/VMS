@@ -1404,6 +1404,7 @@ def employee_candidate_profile(request, id):
                 candidate.payout_date = request.POST.get('payout_date') or None
                 candidate.joining_status = request.POST.get('joining_status')
                 candidate.selection_remark = request.POST.get('selection_remark')
+                candidate.expected_joining_date = request.POST.get('expected_joining_date') or None
 
                 # "Other" fields
                 candidate.other_lead_source = request.POST.get('other_lead_source')

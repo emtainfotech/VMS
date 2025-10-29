@@ -858,6 +858,7 @@ class Candidate_registration(models.Model):
     emta_commission = models.CharField(max_length=255, blank=True, null=True)
     payout_date = models.DateField(blank=True, null=True)
     selection_remark = models.CharField(max_length=255, blank=True, null=True)
+    expected_joining_date = models.DateField(blank=True, null=True)
 
     other_lead_source = models.CharField(max_length=255, blank=True, null=True)
     other_qualification = models.CharField(max_length=255, blank=True, null=True)

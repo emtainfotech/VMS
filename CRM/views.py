@@ -605,6 +605,7 @@ def admin_candidate_profile(request, id):
                 candidate.payout_date = request.POST.get('payout_date') or None
                 candidate.joining_status = request.POST.get('joining_status')
                 candidate.selection_remark = request.POST.get('selection_remark')
+                candidate.expected_joining_date = request.POST.get('expected_joining_date') or None
 
                 candidate.other_lead_source = request.POST.get('other_lead_source')
                 candidate.other_qualification = request.POST.get('other_qualification')
@@ -1452,8 +1453,8 @@ def admin_candidate_list(request):
             candidate.model_type = 'candidate'
 
     # --- NEW: Fetch all employees for the assignment modal ---
-    all_employees = Employee.objects.all().order_by('first_name', 'last_name')
-    employees = Employee.objects.all().order_by('first_name', 'last_name')
+    all_employees = Employee.objects.all().order_by('first_name', 'last_name', 'employee_id')
+    employees = Employee.objects.all().order_by('first_name', 'last_name', 'employee_id')
 
     context = {
         'candidates': candidates_page.object_list,
@@ -1629,7 +1630,7 @@ def bulk_assign_candidates_api(request):
         updated_can_count = 0
 
         # Update both the new `assigned_to` ForeignKey and the old `employee_name` CharField
-        employee_full_name = f"{employee_instance.first_name} {employee_instance.last_name}"
+        employee_full_name = f"{employee_instance.first_name} {employee_instance.last_name} ({employee_instance.employee_id})"
 
         if reg_ids:
             updated_reg_count = Candidate_registration.objects.filter(pk__in=reg_ids).update(
