@@ -450,6 +450,10 @@
                                 <span class="detail-value">{{ candidate.selection_date|date:"M d, Y"|default:"-" }}</span>
                             </div>
                             
+                             <div class="mb-3">
+                                <span class="d-block detail-label">Expected Joining Date</span>
+                                <span class="detail-value">{{ candidate.expected_joining_date|date:"M d, Y"|default:"-" }}</span>
+                            </div>
                             <div class="mb-3">
                                 <span class="d-block detail-label">Joining Date</span>
                                 <span class="detail-value">{{ candidate.candidate_joining_date|date:"M d, Y"|default:"-" }}</span>
