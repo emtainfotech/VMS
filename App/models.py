@@ -1173,6 +1173,7 @@ class Notification(models.Model):
         on_delete=models.CASCADE,
         related_name='notifications'
     )
+
     # The candidate this notification is about
     candidate = models.ForeignKey(
         'Candidate_registration',

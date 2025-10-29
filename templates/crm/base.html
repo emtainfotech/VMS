@@ -416,7 +416,10 @@
 </script>
             
             </div>
-            <div class="nav-item dropdown">
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000">
+    </div>
+
+<div class="nav-item dropdown">
     <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
         <img class="avatar avatar-sm" src="{{user.employee.employee_photo.url}}" alt="{{user.username}}">
         <div class="d-none d-xl-block ps-2">
@@ -451,7 +454,7 @@
         <div class="dropdown-divider"></div>
         
         <a href="{% url 'crm_admin_profile' user.id %}" class="dropdown-item">Profile</a>
-        <a href="{% url 'admin_attendance_report' %}" class="dropdown-item">Employees Attendance</a>
+        <a href="{% url 'employee_attendance_report' %}" class="dropdown-item">My Attendance</a>
         <a href="{% url 'crm_admin_logout' %}" class="dropdown-item">Logout</a>
     </div>
 </div>
@@ -576,9 +579,10 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error("Error fetching status:", error);
             statusBadge.textContent = "Error";
-            statusBadge.className = "badge bg-danger";
+            statusBadge.className = "badge bg-danger text-light";
             punchButton.disabled = true;
             punchButton.textContent = "Error";
+            showToast("Error connecting to attendance server.", "danger");
         }
     }
 
@@ -604,7 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } else if (data.status === 'FORGOT_PUNCH_OUT') {
             statusBadge.textContent = "Correction Needed";
-            statusBadge.className = "badge bg-warning text-light";
+            statusBadge.className = "badge bg-warning";
             punchButton.textContent = "Correct Punch";
             punchButton.className = "btn btn-warning w-100";
             stopWorkedTimer();
@@ -643,6 +647,65 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // --- Toast Notification Function ---
+    function showToast(message, type = 'success') {
+        const toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) return;
+
+        const toastId = 'toast-' + Math.random().toString(36).substr(2, 9);
+        const toastColorClass = type === 'success' ? 'text-bg-success' : 'text-bg-danger';
+        
+        // Icon
+        const icon = type === 'success' 
+            ? '<svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>' 
+            : '<svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>';
+
+        const toastHTML = `
+            <div id="${toastId}" class="toast align-items-center ${toastColorClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center">
+                        ${icon}
+                        <div>${message}</div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+        
+        // Add an SVG sprite for the icons (if you don't have Bootstrap Icons loaded)
+        let svgSprite = document.getElementById('bootstrap-icon-sprite');
+        if (!svgSprite) {
+            svgSprite = document.createElement('div');
+            svgSprite.id = 'bootstrap-icon-sprite';
+            svgSprite.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+                    <symbol id="check-circle-fill" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                    </symbol>
+                    <symbol id="exclamation-triangle-fill" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                    </symbol>
+                </svg>
+            `;
+            document.body.appendChild(svgSprite);
+        }
+
+        // Create, append, and show the toast
+        const toastElement = document.createElement('div');
+        toastElement.innerHTML = toastHTML;
+        const toast = toastElement.firstElementChild;
+        
+        toastContainer.appendChild(toast);
+        
+        const bootstrapToast = new bootstrap.Toast(toast, { delay: 3000 }); // 3-second delay
+        bootstrapToast.show();
+        
+        // Remove the toast from the DOM after it's hidden
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    }
+
     // --- Event Listeners ---
     punchButton.addEventListener('click', () => {
         if (currentStatus === 'Punched Out') {
@@ -664,7 +727,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (reason === 'Other') {
             reason = punchOutReasonOther.value;
         }
-        if (!reason) { alert("Please select or provide a reason."); return; }
+        if (!reason) { 
+            showToast("Please select or provide a reason.", 'danger'); 
+            return; 
+        }
         handlePunchOut(reason);
     });
 
@@ -672,7 +738,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const punchDate = forgottenDateInput.value;
         const punchTime = correctedTimeInput.value;
         const reason = correctedReasonInput.value;
-        if (!punchTime || !reason) { alert("Please fill in all fields."); return; }
+        if (!punchTime || !reason) { 
+            showToast("Please fill in all fields.", 'danger'); 
+            return; 
+        }
         handleCorrection(punchDate, punchTime, reason);
     });
 
@@ -687,11 +756,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             if (response.ok) {
                 await fetchStatus(); // Refresh
+                showToast('Successfully Punched In!', 'success');
             } else {
-                alert(`Error: ${data.message}`);
+                showToast(data.message, 'danger');
                 if (data.error === 'forgot_punch_out') await fetchStatus();
             }
-        } catch (error) { alert("An error occurred.");
+        } catch (error) { 
+            console.error("Punch-in error:", error);
+            showToast("A network error occurred.", 'danger');
         } finally { setLoading(false); }
     }
 
@@ -709,8 +781,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 punchOutModal.hide();
                 await fetchStatus(); // Refresh
-            } else { alert(`Error: ${data.message}`); }
-        } catch (error) { alert("An error occurred.");
+                showToast('Successfully Punched Out!', 'success');
+            } else { 
+                showToast(data.message, 'danger'); 
+            }
+        } catch (error) { 
+            console.error("Punch-out error:", error);
+            showToast("A network error occurred.", 'danger');
         } finally { setLoading(false); }
     }
 
@@ -728,11 +805,15 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             const data = await response.json();
             if (response.ok) {
-                alert(data.message);
+                showToast(data.message, 'success');
                 forgotPunchOutModal.hide();
                 await fetchStatus(); // Refresh
-            } else { alert(`Error: ${data.message}`); }
-        } catch (error) { alert("An error occurred.");
+            } else { 
+                showToast(data.message, 'danger'); 
+            }
+        } catch (error) { 
+            console.error("Correction error:", error);
+            showToast("A network error occurred.", 'danger');
         } finally { setLoading(false); }
     }
 

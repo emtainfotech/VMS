@@ -5217,10 +5217,11 @@ from django.contrib.humanize.templatetags.humanize import naturaltime
 @login_required
 def employee_notification_history(request):
     try:
+        user = request.user
         # --- ADDED ERROR HANDLING ---
         # Get the employee profile linked to the logged-in user
         employee = Employee.objects.get(user=request.user)
-        all_notifications = Notification.objects.filter(recipient=employee)
+        all_notifications = Notification.objects.filter(recipient=user)
     except Employee.DoesNotExist:
         # Gracefully handle non-employee users by showing no notifications
         all_notifications = []
@@ -5233,8 +5234,8 @@ def employee_mark_all_as_read(request):
     
     try:
         # --- ADDED ERROR HANDLING ---
-        employee = Employee.objects.get(user=request.user)
-        Notification.objects.filter(recipient=employee, is_read=False).update(is_read=True)
+        user = request.user
+        Notification.objects.filter(recipient=user, is_read=False).update(is_read=True)
     except Employee.DoesNotExist:
         # If user is not an employee, do nothing.
         pass
@@ -5244,14 +5245,14 @@ def employee_mark_all_as_read(request):
 def employee_mark_notification_as_read(request, notification_id):
     try:
         # First, get the employee profile for the logged-in user
-        employee = Employee.objects.get(user=request.user)
+        user = request.user
         
         # Now, find the notification by its ID, BUT also check that its
         # related candidate is assigned to the current employee.
         notification = get_object_or_404(
             Notification, 
             id=notification_id, 
-            candidate__assigned_to=employee 
+            recipient=user
         )
         
         if not notification.is_read:
@@ -5271,10 +5272,9 @@ def employee_mark_notification_as_read(request, notification_id):
 def employee_get_unread_notifications_api(request):
     notifications_list = []
     try:
-        # --- ADDED ERROR HANDLING ---
-        employee = Employee.objects.get(user=request.user)
+        user = request.user
         notifications = Notification.objects.filter(
-            recipient=employee, 
+            recipient=user, 
             is_read=False
         ).select_related('candidate').values(
             'id', 'message', 'created_at', 'notification_type', 'candidate__candidate_name'
