@@ -228,7 +228,7 @@
                     <select class="form-select" id="employee-select">
                         <option value="">-- Select an Employee --</option>
                         {% for employee in all_employees %}
-                            <option value="{{ employee.id }}">{{ employee.first_name }} {{ employee.last_name }}</option>
+                            <option value="{{ employee.id }}">{{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})</option>
                         {% endfor %}
                     </select>
                 </div>
