@@ -1415,45 +1415,10 @@ def is_valid_phone(phone):
     regex = r'^\d{10}$'
     return re.match(regex, phone)
 
-def generate_captcha_view(request):
-    """
-    Generates a simple math CAPTCHA question and stores the
-    answer in the session.
-    """
-    try:
-        num1 = random.randint(1, 10)
-        num2 = random.randint(1, 10)
-        answer = num1 + num2
-        
-        # Store the correct answer in the session
-        request.session['captcha_answer'] = str(answer)
-        
-        question = f"What is {num1} + {num2}?"
-        
-        return JsonResponse({'status': 'success', 'question': question})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
 # EMTA.CO.IN - Job Application Submission View
 @csrf_exempt 
 def submit_application_view(request):
     if request.method == "POST":
-
-        # --- CAPTCHA Validation ---
-        user_captcha_answer = request.POST.get('captchaAnswer')
-        expected_captcha_answer = request.session.get('captcha_answer')
-
-        # Clear the session key immediately after retrieval (prevents re-use)
-        if 'captcha_answer' in request.session:
-            del request.session['captcha_answer']
-
-        if not user_captcha_answer or user_captcha_answer != expected_captcha_answer:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Invalid CAPTCHA. Please try again.'
-            }, status=400)
-        # --- End CAPTCHA Validation ---
-
         # --- Validation Start ---
         errors = []
         
@@ -1532,21 +1497,6 @@ def submit_application_view(request):
 @csrf_exempt
 def submit_course_inquiry_view(request):
     if request.method == "POST":
-
-        # --- CAPTCHA Validation ---
-        user_captcha_answer = request.POST.get('captchaAnswer')
-        expected_captcha_answer = request.session.get('captcha_answer')
-
-        if 'captcha_answer' in request.session:
-            del request.session['captcha_answer']
-
-        if not user_captcha_answer or user_captcha_answer != expected_captcha_answer:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Invalid CAPTCHA. Please try again.'
-            }, status=400)
-        # --- End CAPTCHA Validation ---
-
         # --- Validation Start ---
         errors = []
         
@@ -1612,21 +1562,6 @@ def submit_course_inquiry_view(request):
 @csrf_exempt
 def submit_contact_query_view(request):
     if request.method == "POST":
-
-        # --- CAPTCHA Validation ---
-        user_captcha_answer = request.POST.get('captchaAnswer')
-        expected_captcha_answer = request.session.get('captcha_answer')
-
-        if 'captcha_answer' in request.session:
-            del request.session['captcha_answer']
-
-        if not user_captcha_answer or user_captcha_answer != expected_captcha_answer:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Invalid CAPTCHA. Please try again.'
-            }, status=400)
-        # --- End CAPTCHA Validation ---
-        
         # --- Validation Start ---
         errors = []
         

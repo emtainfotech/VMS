@@ -31,11 +31,9 @@ urlpatterns = [
     path('resend-reset-otp/', resend_reset_otp, name='resend_reset_otp'),
     path('sitemap.xml/', sitemap_view, name='sitemap_view'),
     path('robots.txt/', robot_txt_view, name='robot_txt_view'),
-    path('api/submit-application/', submit_application_view, name='submit_application'),
-    path('api/submit-course-inquiry/', submit_course_inquiry_view, name='submit_course_inquiry_view'),
-    path('api/submit-contact-query/', submit_contact_query_view, name='submit_contact_query'),
-    # --- ADD THIS LINE ---
-    path('generate-captcha/', generate_captcha_view, name='generate_captcha'),
+    path('api/submit-applications/', submit_application_view, name='submit_application'),
+    path('api/submit-course-inquirys/', submit_course_inquiry_view, name='submit_course_inquiry_view'),
+    path('api/submit-contact-querys/', submit_contact_query_view, name='submit_contact_query'),
                
     
     path('admin/', admin.site.urls),
