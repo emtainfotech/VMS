@@ -240,6 +240,13 @@
                   <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
                 </svg>
               </a>
+              <a href="#offcanvas-settings" class="nav-link px-0 hide-theme-dark" data-bs-toggle="offcanvas" role="button" aria-controls="offcanvas-settings">
+  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+    <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
+    <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+  </svg>
+</a>
               <a href="?theme=light" class="nav-link px-0 hide-theme-light" title="Enable light mode" data-bs-toggle="tooltip" data-bs-placement="bottom">
                 <!-- Download SVG icon from http://tabler-icons.io/i/sun -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -837,6 +844,8 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       </header>
       <header class="navbar-expand-md sticky-top">
+
+        
     <div class="collapse navbar-collapse" id="navbar-menu">
         <div class="navbar">
             <div class="container-xl">
@@ -1207,5 +1216,255 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
 });
 
     </script>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvas-settings" aria-labelledby="offcanvas-settings-label">
+  <div class="offcanvas-header">
+    <h2 class="offcanvas-title" id="offcanvas-settings-label">Theme Settings</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="mb-4">
+      <label class="form-label">Color mode</label>
+      <p class="text-muted">Choose the color mode for your app.</p>
+      <div class="form-selectgroup">
+        <label class="form-selectgroup-item">
+          <input type="radio" name="theme-mode" value="light" class="form-selectgroup-input">
+          <span class="form-selectgroup-label">Light</span>
+        </label>
+        <label class="form-selectgroup-item">
+          <input type="radio" name="theme-mode" value="dark" class="form-selectgroup-input">
+          <span class="form-selectgroup-label">Dark</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label">Color scheme</label>
+      <p class="text-muted">The perfect color mode for your app.</p>
+      <div class="row g-2" id="theme-colors">
+        <div class="col-3">
+          <label class="form-colorinput">
+            <input name="theme-color" type="radio" value="blue" class="form-colorinput-input">
+            <span class="form-colorinput-color bg-blue"></span>
+          </label>
+        </div>
+        <div class="col-3">
+          <label class="form-colorinput">
+            <input name="theme-color" type="radio" value="azure" class="form-colorinput-input">
+            <span class="form-colorinput-color bg-azure"></span>
+          </label>
+        </div>
+        <div class="col-3">
+          <label class="form-colorinput">
+            <input name="theme-color" type="radio" value="indigo" class="form-colorinput-input">
+            <span class="form-colorinput-color bg-indigo"></span>
+          </label>
+        </div>
+        <div class="col-3">
+          <label class="form-colorinput">
+            <input name="theme-color" type="radio" value="purple" class="form-colorinput-input">
+            <span class="form-colorinput-color bg-purple"></span>
+          </label>
+        </div>
+        <div class="col-3">
+          <label class="form-colorinput">
+            <input name="theme-color" type="radio" value="pink" class="form-colorinput-input">
+            <span class="form-colorinput-color bg-pink"></span>
+          </label>
+        </div>
+        <div class="col-3">
+          <label class="form-colorinput">
+            <input name="theme-color" type="radio" value="red" class="form-colorinput-input">
+            <span class="form-colorinput-color bg-red"></span>
+          </label>
+        </div>
+        <div class="col-3">
+          <label class="form-colorinput">
+            <input name="theme-color" type="radio" value="orange" class="form-colorinput-input">
+            <span class="form-colorinput-color bg-orange"></span>
+          </label>
+        </div>
+        <div class="col-3">
+          <label class="form-colorinput">
+            <input name="theme-color" type="radio" value="yellow" class="form-colorinput-input">
+            <span class="form-colorinput-color bg-yellow"></span>
+          </label>
+        </div>
+        <div class="col-3">
+          <label class="form-colorinput">
+            <input name="theme-color" type="radio" value="lime" class="form-colorinput-input">
+            <span class="form-colorinput-color bg-lime"></span>
+          </label>
+        </div>
+        <div class="col-3">
+          <label class="form-colorinput">
+            <input name="theme-color" type="radio" value="green" class="form-colorinput-input">
+            <span class="form-colorinput-color bg-green"></span>
+          </label>
+        </div>
+        <div class="col-3">
+          <label class="form-colorinput">
+            <input name="theme-color" type="radio" value="teal" class="form-colorinput-input">
+            <span class="form-colorinput-color bg-teal"></span>
+          </label>
+        </div>
+        <div class="col-3">
+          <label class="form-colorinput">
+            <input name="theme-color" type="radio" value="cyan" class="form-colorinput-input">
+            <span class="form-colorinput-color bg-cyan"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label">Font family</label>
+      <p class="text-muted">Choose the font family that fits your app.</p>
+      <div class="form-selectgroup">
+        <label class="form-selectgroup-item">
+          <input type="radio" name="theme-font" value="default" class="form-selectgroup-input">
+          <span class="form-selectgroup-label">Default</span>
+        </label>
+        <label class="form-selectgroup-item">
+          <input type="radio" name="theme-font" value="simple" class="form-selectgroup-input">
+          <span class="form-selectgroup-label">Simple (Arial)</span>
+        </label>
+        <label class="form-selectgroup-item">
+          <input type="radio" name="theme-font" value="readable" class="form-selectgroup-input">
+          <span class="form-selectgroup-label">Readable (Verdana)</span>
+        </label>
+        <label class="form-selectgroup-item">
+          <input type="radio" name="theme-font" value="serif" class="form-selectgroup-input">
+          <span class="form-selectgroup-label">Serif</span>
+        </label>
+        <label class="form-selectgroup-item">
+          <input type="radio" name="theme-font" value="monospace" class="form-selectgroup-input">
+          <span class="form-selectgroup-label">Monospace</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label">Theme base</label>
+      <p class="text-muted">Choose the gray shade for your app.</p>
+      <div class="form-selectgroup">
+        <label class="form-selectgroup-item">
+          <input type="radio" name="theme-base" value="default" class="form-selectgroup-input">
+          <span class="form-selectgroup-label">Slate</span>
+        </label>
+        <label class="form-selectgroup-item">
+          <input type="radio" name="theme-base" value="gray" class="form-selectgroup-input">
+          <span class="form-selectgroup-label">Gray</span>
+        </label>
+        <label class="form-selectgroup-item">
+          <input type="radio" name="theme-base" value="zinc" class="form-selectgroup-input">
+          <span class="form-selectgroup-label">Zinc</span>
+        </label>
+        <label class="form-selectgroup-item">
+          <input type="radio" name="theme-base" value="neutral" class="form-selectgroup-input">
+          <span class="form-selectgroup-label">Neutral</span>
+        </label>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const root = document.documentElement;
+
+    // --- 1. DEFINE MAPS ---
+    
+    // Maps color names to their Hex and RGB values from your tabler.css
+    const colorMap = {
+      "blue":   { hex: "#0054a6", rgb: "0, 84, 166" },
+      "azure":  { hex: "#4299e1", rgb: "66, 153, 225" },
+      "indigo": { hex: "#4263eb", rgb: "66, 99, 235" },
+      "purple": { hex: "#ae3ec9", rgb: "174, 62, 201" },
+      "pink":   { hex: "#d6336c", rgb: "214, 51, 108" },
+      "red":    { hex: "#d63939", rgb: "214, 57, 57" },
+      "orange": { hex: "#f76707", rgb: "247, 103, 7" },
+      "yellow": { hex: "#f59f00", rgb: "245, 159, 0" },
+      "lime":   { hex: "#74b816", rgb: "116, 184, 22" },
+      "green":  { hex: "#2fb344", rgb: "47, 179, 68" },
+      "teal":   { hex: "#0ca678", rgb: "12, 166, 120" },
+      "cyan":   { hex: "#17a2b8", rgb: "23, 162, 184" }
+    };
+
+    // Maps font names to their CSS font-family stack
+    const fontMap = {
+      "default": "-apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif",
+      "simple": "Arial, 'Helvetica Neue', Helvetica, sans-serif",
+      "readable": "Verdana, Geneva, sans-serif",
+      "serif": "Georgia, 'Times New Roman', Times, serif",
+      "monospace": "Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+    };
+
+    // --- 2. APPLY SAVED SETTINGS ON PAGE LOAD ---
+
+    const savedSettings = {
+      mode: localStorage.getItem("theme-mode") || "light",
+      color: localStorage.getItem("theme-color") || "blue",
+      font: localStorage.getItem("theme-font") || "default",
+    };
+
+    // Apply Color Mode (this was correct)
+    root.setAttribute("data-bs-theme", savedSettings.mode);
+    const modeInput = document.querySelector(`input[name='theme-mode'][value='${savedSettings.mode}']`);
+    if (modeInput) modeInput.checked = true;
+
+    // Apply Color Scheme (NEW LOGIC)
+    if (colorMap[savedSettings.color]) {
+      root.style.setProperty("--tblr-primary", colorMap[savedSettings.color].hex);
+      root.style.setProperty("--tblr-primary-rgb", colorMap[savedSettings.color].rgb);
+    }
+    const colorInput = document.querySelector(`input[name='theme-color'][value='${savedSettings.color}']`);
+    if (colorInput) colorInput.checked = true;
+    
+    // Apply Font Family (NEW LOGIC)
+    if (fontMap[savedSettings.font]) {
+      root.style.setProperty("--tblr-font-sans-serif", fontMap[savedSettings.font]);
+    }
+    const fontInput = document.querySelector(`input[name='theme-font'][value='${savedSettings.font}']`);
+    if (fontInput) fontInput.checked = true;
+
+
+    // --- 3. ADD EVENT LISTENERS ---
+
+    // Color Mode Listener (Unchanged)
+    document.querySelectorAll("input[name='theme-mode']").forEach(input => {
+      input.addEventListener("change", function() {
+        const mode = this.value;
+        root.setAttribute("data-bs-theme", mode);
+        localStorage.setItem("theme-mode", mode);
+      });
+    });
+
+    // Color Scheme Listener (UPDATED)
+    document.querySelectorAll("input[name='theme-color']").forEach(input => {
+      input.addEventListener("change", function() {
+        const colorName = this.value;
+        if (colorMap[colorName]) {
+          root.style.setProperty("--tblr-primary", colorMap[colorName].hex);
+          root.style.setProperty("--tblr-primary-rgb", colorMap[colorName].rgb);
+          localStorage.setItem("theme-color", colorName);
+        }
+      });
+    });
+
+    // Font Family Listener (UPDATED)
+    document.querySelectorAll("input[name='theme-font']").forEach(input => {
+      input.addEventListener("change", function() {
+        const fontName = this.value;
+        if (fontMap[fontName]) {
+          root.style.setProperty("--tblr-font-sans-serif", fontMap[fontName]);
+          localStorage.setItem("theme-font", fontName);
+        }
+      });
+    });
+
+  });
+</script>
   </body>
 </html>
