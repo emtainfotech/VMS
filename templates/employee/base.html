@@ -240,7 +240,7 @@
                   <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
                 </svg>
               </a>
-              <a href="#offcanvas-settings" class="nav-link px-0 hide-theme-dark" data-bs-toggle="offcanvas" role="button" aria-controls="offcanvas-settings">
+              <a href="#offcanvas-settings" class="nav-link px-0" data-bs-toggle="offcanvas" role="button" aria-controls="offcanvas-settings">
   <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
     <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
@@ -1849,6 +1849,20 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
       </div>
     </div>
 
+    <div class="mb-4">
+      <label class="form-label d-flex justify-content-between">
+        Border Radius
+        <span class="text-muted" id="radius-value-display">4px</span>
+      </label>
+      <p class="text-muted">Adjust the roundness of components.</p>
+      <input type="range" class="form-range" 
+             name="theme-radius" 
+             id="theme-radius-slider"
+             min="0" 
+             max="24" 
+             step="1">
+    </div>
+
   </div>
 </div>
 
@@ -1883,20 +1897,49 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
       "monospace": "Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
     };
 
+    // --- NEW: BORDER RADIUS LOGIC ---
+    const radiusDisplay = document.getElementById("radius-value-display");
+    const radiusSlider = document.getElementById("theme-radius-slider");
+    const defaultRadius = 4; // Tabler's default
+
+    // Helper function to apply all radius sizes
+    function applyRadius(baseValue) {
+      const base = Math.round(baseValue);
+      
+      // Calculate proportional sizes
+      const sm = Math.round(base * 0.5);
+      const lg = Math.round(base * 2);
+      const xl = Math.round(base * 4);
+      const xxl = Math.round(base * 8);
+
+      root.style.setProperty("--tblr-border-radius", `${base}px`);
+      root.style.setProperty("--tblr-border-radius-sm", `${sm}px`);
+      root.style.setProperty("--tblr-border-radius-lg", `${lg}px`);
+      root.style.setProperty("--tblr-border-radius-xl", `${xl}px`);
+      root.style.setProperty("--tblr-border-radius-xxl", `${xxl}px`);
+      
+      // Update the text display
+      if (radiusDisplay) {
+        radiusDisplay.textContent = `${base}px`;
+      }
+    }
+
+
     // --- 2. APPLY SAVED SETTINGS ON PAGE LOAD ---
 
     const savedSettings = {
       mode: localStorage.getItem("theme-mode") || "light",
       color: localStorage.getItem("theme-color") || "blue",
       font: localStorage.getItem("theme-font") || "default",
+      radius: localStorage.getItem("theme-radius") || defaultRadius, // NEW
     };
 
-    // Apply Color Mode (this was correct)
+    // Apply Color Mode
     root.setAttribute("data-bs-theme", savedSettings.mode);
     const modeInput = document.querySelector(`input[name='theme-mode'][value='${savedSettings.mode}']`);
     if (modeInput) modeInput.checked = true;
 
-    // Apply Color Scheme (NEW LOGIC)
+    // Apply Color Scheme
     if (colorMap[savedSettings.color]) {
       root.style.setProperty("--tblr-primary", colorMap[savedSettings.color].hex);
       root.style.setProperty("--tblr-primary-rgb", colorMap[savedSettings.color].rgb);
@@ -1904,17 +1947,23 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
     const colorInput = document.querySelector(`input[name='theme-color'][value='${savedSettings.color}']`);
     if (colorInput) colorInput.checked = true;
     
-    // Apply Font Family (NEW LOGIC)
+    // Apply Font Family
     if (fontMap[savedSettings.font]) {
       root.style.setProperty("--tblr-font-sans-serif", fontMap[savedSettings.font]);
     }
     const fontInput = document.querySelector(`input[name='theme-font'][value='${savedSettings.font}']`);
     if (fontInput) fontInput.checked = true;
 
+    // --- NEW: Apply Border Radius ---
+    applyRadius(savedSettings.radius); // Use the helper
+    if (radiusSlider) {
+      radiusSlider.value = savedSettings.radius; // Set slider position
+    }
+
 
     // --- 3. ADD EVENT LISTENERS ---
 
-    // Color Mode Listener (Unchanged)
+    // Color Mode Listener
     document.querySelectorAll("input[name='theme-mode']").forEach(input => {
       input.addEventListener("change", function() {
         const mode = this.value;
@@ -1923,7 +1972,7 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
       });
     });
 
-    // Color Scheme Listener (UPDATED)
+    // Color Scheme Listener
     document.querySelectorAll("input[name='theme-color']").forEach(input => {
       input.addEventListener("change", function() {
         const colorName = this.value;
@@ -1935,7 +1984,7 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
       });
     });
 
-    // Font Family Listener (UPDATED)
+    // Font Family Listener
     document.querySelectorAll("input[name='theme-font']").forEach(input => {
       input.addEventListener("change", function() {
         const fontName = this.value;
@@ -1945,6 +1994,19 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
         }
       });
     });
+    
+    // --- NEW: Border Radius Listener ---
+    if (radiusSlider) {
+      // 'input' event fires live as you drag
+      radiusSlider.addEventListener("input", function() {
+        applyRadius(this.value);
+      });
+      
+      // 'change' event fires when you let go
+      radiusSlider.addEventListener("change", function() {
+        localStorage.setItem("theme-radius", this.value);
+      });
+    }
 
   });
 </script>

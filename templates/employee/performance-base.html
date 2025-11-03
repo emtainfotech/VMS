@@ -248,58 +248,58 @@
                   <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
                 </svg>
               </a>
-              <a href="#offcanvas-settings" class="nav-link px-0 hide-theme-dark" data-bs-toggle="offcanvas" role="button" aria-controls="offcanvas-settings">
-  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-    <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
-    <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
-  </svg>
-</a>
+              <a href="#offcanvas-settings" class="nav-link px-0" data-bs-toggle="offcanvas" role="button" aria-controls="offcanvas-settings">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                  <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
+                  <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+                </svg>
+              </a>
            <div class="nav-item dropdown d-none d-md-flex me-3">
-    <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show notifications">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" /><path d="M9 17v1a3 3 0 0 0 6 0v-1" /></svg>
-        <span class="badge bg-red" id="notification-count-badge" style="display: {% if notifications.count > 0 %}inline-block{% else %}none{% endif %};">{{ notifications.count }}</span>
-    </a>
+            <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show notifications">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" /><path d="M9 17v1a3 3 0 0 0 6 0v-1" /></svg>
+                <span class="badge bg-red" id="notification-count-badge" style="display: {% if notifications.count > 0 %}inline-block{% else %}none{% endif %};">{{ notifications.count }}</span>
+            </a>
     
-    <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card" style="width: 350px;">
-        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
-            <h5 class="mb-0">Notifications</h5>
-            <a href="{% url 'employee_mark_all_as_read' %}" class="small text-muted">Mark all as read</a>
-        </div>
-        
-        <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;" id="notification-list">
-            {% for notification in notifications %}
-            <a href="{% url 'employee_mark_notification_as_read' notification.id %}" class="list-group-item list-group-item-action">
-                <div class="d-flex">
-                    <span class="avatar bg-blue-lt me-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4" /></svg>
-                    </span>
-                    <div class="flex-fill">
-                        <div class="fw-bold">{{ notification.message }}</div>
-                        <div class="text-muted small">Candidate: {{ notification.candidate.candidate_name }}</div>
-                    </div>
-                    <div class="text-nowrap text-muted text-end">
-                        <div class="small">{{ notification.created_at|timesince }} ago</div>
-                        {% if not notification.is_read %}
-                        <span class="badge badge-dot bg-green mt-1"></span>
-                        {% endif %}
-                    </div>
+            <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card" style="width: 350px;">
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                    <h5 class="mb-0">Notifications</h5>
+                    <a href="{% url 'employee_mark_all_as_read' %}" class="small text-muted">Mark all as read</a>
                 </div>
-            </a>
-            {% empty %}
-            <div class="p-4 text-center text-muted" id="notification-empty-state">
-                You're all caught up!
-            </div>
-            {% endfor %}
-        </div>
+                
+                <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;" id="notification-list">
+                    {% for notification in notifications %}
+                    <a href="{% url 'employee_mark_notification_as_read' notification.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex">
+                            <span class="avatar bg-blue-lt me-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4" /></svg>
+                            </span>
+                            <div class="flex-fill">
+                                <div class="fw-bold">{{ notification.message }}</div>
+                                <div class="text-muted small">Candidate: {{ notification.candidate.candidate_name }}</div>
+                            </div>
+                            <div class="text-nowrap text-muted text-end">
+                                <div class="small">{{ notification.created_at|timesince }} ago</div>
+                                {% if not notification.is_read %}
+                                <span class="badge badge-dot bg-green mt-1"></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="p-4 text-center text-muted" id="notification-empty-state">
+                        You're all caught up!
+                    </div>
+                    {% endfor %}
+                </div>
 
-        <div class="border-top">
-            <a href="{% url 'employee_notification_history' %}" class="dropdown-item text-center text-primary">
-                View All Notifications
-            </a>
+                <div class="border-top">
+                    <a href="{% url 'employee_notification_history' %}" class="dropdown-item text-center text-primary">
+                        View All Notifications
+                    </a>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
 
 
@@ -1137,7 +1137,8 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
 
     </script>
 
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvas-settings" aria-labelledby="offcanvas-settings-label">
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvas-settings" aria-labelledby="offcanvas-settings-label">
   <div class="offcanvas-header">
     <h2 class="offcanvas-title" id="offcanvas-settings-label">Theme Settings</h2>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -1287,6 +1288,20 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
       </div>
     </div>
 
+    <div class="mb-4">
+      <label class="form-label d-flex justify-content-between">
+        Border Radius
+        <span class="text-muted" id="radius-value-display">4px</span>
+      </label>
+      <p class="text-muted">Adjust the roundness of components.</p>
+      <input type="range" class="form-range" 
+             name="theme-radius" 
+             id="theme-radius-slider"
+             min="0" 
+             max="24" 
+             step="1">
+    </div>
+
   </div>
 </div>
 
@@ -1321,20 +1336,49 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
       "monospace": "Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
     };
 
+    // --- NEW: BORDER RADIUS LOGIC ---
+    const radiusDisplay = document.getElementById("radius-value-display");
+    const radiusSlider = document.getElementById("theme-radius-slider");
+    const defaultRadius = 4; // Tabler's default
+
+    // Helper function to apply all radius sizes
+    function applyRadius(baseValue) {
+      const base = Math.round(baseValue);
+      
+      // Calculate proportional sizes
+      const sm = Math.round(base * 0.5);
+      const lg = Math.round(base * 2);
+      const xl = Math.round(base * 4);
+      const xxl = Math.round(base * 8);
+
+      root.style.setProperty("--tblr-border-radius", `${base}px`);
+      root.style.setProperty("--tblr-border-radius-sm", `${sm}px`);
+      root.style.setProperty("--tblr-border-radius-lg", `${lg}px`);
+      root.style.setProperty("--tblr-border-radius-xl", `${xl}px`);
+      root.style.setProperty("--tblr-border-radius-xxl", `${xxl}px`);
+      
+      // Update the text display
+      if (radiusDisplay) {
+        radiusDisplay.textContent = `${base}px`;
+      }
+    }
+
+
     // --- 2. APPLY SAVED SETTINGS ON PAGE LOAD ---
 
     const savedSettings = {
       mode: localStorage.getItem("theme-mode") || "light",
       color: localStorage.getItem("theme-color") || "blue",
       font: localStorage.getItem("theme-font") || "default",
+      radius: localStorage.getItem("theme-radius") || defaultRadius, // NEW
     };
 
-    // Apply Color Mode (this was correct)
+    // Apply Color Mode
     root.setAttribute("data-bs-theme", savedSettings.mode);
     const modeInput = document.querySelector(`input[name='theme-mode'][value='${savedSettings.mode}']`);
     if (modeInput) modeInput.checked = true;
 
-    // Apply Color Scheme (NEW LOGIC)
+    // Apply Color Scheme
     if (colorMap[savedSettings.color]) {
       root.style.setProperty("--tblr-primary", colorMap[savedSettings.color].hex);
       root.style.setProperty("--tblr-primary-rgb", colorMap[savedSettings.color].rgb);
@@ -1342,17 +1386,23 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
     const colorInput = document.querySelector(`input[name='theme-color'][value='${savedSettings.color}']`);
     if (colorInput) colorInput.checked = true;
     
-    // Apply Font Family (NEW LOGIC)
+    // Apply Font Family
     if (fontMap[savedSettings.font]) {
       root.style.setProperty("--tblr-font-sans-serif", fontMap[savedSettings.font]);
     }
     const fontInput = document.querySelector(`input[name='theme-font'][value='${savedSettings.font}']`);
     if (fontInput) fontInput.checked = true;
 
+    // --- NEW: Apply Border Radius ---
+    applyRadius(savedSettings.radius); // Use the helper
+    if (radiusSlider) {
+      radiusSlider.value = savedSettings.radius; // Set slider position
+    }
+
 
     // --- 3. ADD EVENT LISTENERS ---
 
-    // Color Mode Listener (Unchanged)
+    // Color Mode Listener
     document.querySelectorAll("input[name='theme-mode']").forEach(input => {
       input.addEventListener("change", function() {
         const mode = this.value;
@@ -1361,7 +1411,7 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
       });
     });
 
-    // Color Scheme Listener (UPDATED)
+    // Color Scheme Listener
     document.querySelectorAll("input[name='theme-color']").forEach(input => {
       input.addEventListener("change", function() {
         const colorName = this.value;
@@ -1373,7 +1423,7 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
       });
     });
 
-    // Font Family Listener (UPDATED)
+    // Font Family Listener
     document.querySelectorAll("input[name='theme-font']").forEach(input => {
       input.addEventListener("change", function() {
         const fontName = this.value;
@@ -1383,6 +1433,19 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
         }
       });
     });
+    
+    // --- NEW: Border Radius Listener ---
+    if (radiusSlider) {
+      // 'input' event fires live as you drag
+      radiusSlider.addEventListener("input", function() {
+        applyRadius(this.value);
+      });
+      
+      // 'change' event fires when you let go
+      radiusSlider.addEventListener("change", function() {
+        localStorage.setItem("theme-radius", this.value);
+      });
+    }
 
   });
 </script>
