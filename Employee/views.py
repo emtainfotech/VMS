@@ -5769,23 +5769,23 @@ def check_new_mail_ajax(request):
 # elif 'submit_mail_ids' in request.POST:
 #     email_address = request.POST.get('email_address')
 #     email_password = request.POST.get('email_password')
-#     
+    
 #     if not email_address or not email_password:
 #         messages.error(request, "Email Address and Password are required.")
 #         return redirect('your_profile_url_name', id=employee.id)
-# 
+
 #     if EmployeeEmailAccount.objects.filter(email_address=email_address).exists():
 #         messages.error(request, f"The email address {email_address} is already in use.")
 #         return redirect('your_profile_url_name', id=employee.id)
-#     
+    
 #     is_first_account = not employee.email_accounts.exists()
-# 
+
 #     EmployeeEmailAccount.objects.create(
 #         employee=employee,
 #         email_address=email_address,
 #         email_password=email_password, # The model encrypts this on save
 #         is_active=is_first_account
 #     )
-#     
+    
 #     messages.success(request, f"Email account {email_address} added successfully!")
 #     return redirect('your_profile_url_name', id=employee.id)
