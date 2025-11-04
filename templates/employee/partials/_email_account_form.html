@@ -1,0 +1,978 @@
+{% extends 'employee/performance-base.html' %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Mailbox</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://cdn.tiny.cloud/1/99wc8va6iteitgx943ldvsjv7sr74ui1crnvr9k0rxfqlewq/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+    <style>
+        :root {
+            --bs-border-color-translucent: rgba(0, 0, 0, 0.08);
+            --bs-body-font-family: "Verdana", "Arial", sans-serif;
+            --bs-body-font-size: 0.9rem;
+        }
+        body { 
+            background-color: #f8f9fa; 
+            font-family: var(--bs-body-font-family);
+            font-size: var(--bs-body-font-size);
+            overflow: hidden; 
+        }
+        .mailbox-wrapper { 
+            display: flex; 
+            height: 100vh; /* Full screen height */
+            overflow: hidden; 
+        }
+        
+        /* --- UPDATED: Sidebar styles --- */
+        .mailbox-sidebar { 
+            flex: 0 0 240px; 
+            background: #fff; 
+            border-right: 1px solid var(--bs-border-color-translucent); 
+            padding: 1rem; 
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* NEW: Styles for the account switcher at bottom of sidebar */
+        .sidebar-account-switcher {
+            margin-top: auto; /* Pushes this div to the bottom */
+            border-top: 1px solid var(--bs-border-color-translucent);
+            padding-top: 1rem;
+        }
+        .sidebar-account-switcher .dropdown-toggle {
+            display: flex;
+            align-items: center;
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #ddd;
+            background-color: #f8f9fa;
+        }
+        .sidebar-account-switcher .dropdown-toggle i {
+            margin-right: 0.75rem;
+            font-size: 1.2rem;
+            color: #444;
+        }
+        .sidebar-account-switcher .dropdown-toggle span {
+            flex: 1;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* NEW: Floating Action Button (FAB) for Compose */
+        .fab-compose-button {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1040;
+            transition: all 0.2s ease-in-out;
+        }
+        .fab-compose-button:hover {
+            background-color: #0b5ed7;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+            transform: scale(1.05);
+        }
+        
+        /* PANE VISIBILITY LOGIC */
+        .mailbox-list-pane {
+            flex: 1;
+            background: #fff;
+            overflow-y: auto;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .mailbox-content-pane {
+            flex: 1;
+            background: #fff;
+            height: 100%;
+            display: none; 
+            flex-direction: column; 
+        }
+        .mailbox-wrapper.is-viewing-email .mailbox-list-pane {
+            display: none;
+        }
+        .mailbox-wrapper.is-viewing-email .mailbox-content-pane {
+            display: flex;
+        }
+
+        /* Search Bar Style */
+        .email-list-search {
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid var(--bs-border-color-translucent);
+            background-color: #f8f9fa;
+        }
+        .email-list-search .form-control {
+            border-radius: 2rem;
+            background-color: #fff;
+        }
+        .email-list-search-results {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid var(--bs-border-color-translucent);
+        }
+        
+        /* GMAIL-STYLE LIST */
+        .email-list-group { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0;
+            flex: 1; 
+            overflow-y: auto; 
+        }
+        .email-list-header {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #666;
+            padding: 1rem 1.5rem 0.5rem;
+            text-transform: uppercase;
+        }
+        .email-item {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem 1.5rem;
+            border-bottom: 1px solid var(--bs-border-color-translucent);
+            cursor: pointer;
+            gap: 0.5rem;
+            position: relative;
+        }
+        .email-item:hover { 
+            background-color: #f7f7f7; 
+            box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+            z-index: 2;
+        }
+        .email-item.active { background-color: #e3f2fd; }
+        .email-item.unread .email-item-from,
+        .email-item.unread .email-item-subject {
+            font-weight: 600;
+            color: #000;
+        }
+        .email-item.unread .email-item-date {
+            font-weight: 600;
+            color: #0d6efd;
+        }
+        .email-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #6c757d;
+        }
+        .email-item-actions .form-check-input {
+             margin: 0;
+             flex-shrink: 0;
+        }
+        .email-item-star { 
+            color: #ccc; 
+            font-size: 1.1rem;
+            padding: 0 0.25rem;
+        }
+        .email-item-star.starred { color: #f39c12; }
+        
+        /* UPDATED: Sender styles (no avatar) */
+        .email-item-from {
+            font-weight: 600; /* Bolder sender */
+            color: #202124;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-basis: 200px; /* Give it a bit more space */
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .email-item-content {
+            flex-grow: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .email-item-subject {
+            color: #202124; /* Darker text */
+            font-weight: 500; /* Bold subject */
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            flex-shrink: 1;
+        }
+        .email-item-snippet {
+            color: #5f6368; /* Gmail's snippet color */
+            margin-left: 0.5rem;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            flex-shrink: 100;
+        }
+        .email-item-tags {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: 1rem;
+            flex-shrink: 0;
+        }
+        .email-item-tag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            background-color: #eee;
+            border: 1px solid #ddd;
+            white-space: nowrap;
+        }
+        /* NEW: Attachment Tag Style */
+        .email-item-tag.tag-attachment {
+            background-color: #f0f3f6;
+            border: 1px solid #dee2e6;
+            color: #343a40;
+            font-size: 0.8rem;
+        }
+        .email-item-tag.tag-attachment i {
+            margin-right: 0.35rem;
+        }
+        
+        .email-item-tag.tag-winter { background-color: #e3f2fd; border-color: #bde0fe; }
+        .email-item-tag.tag-coffee { background-color: #f3e5f5; border-color: #e1bee7; }
+        .email-item-tag.tag-syllabus { background-color: #fff8e1; border-color: #ffecb3; }
+        
+        .email-item-date {
+            font-size: 0.8rem;
+            color: #5f6368; /* Updated color */
+            margin-left: auto; /* Push to the right */
+            flex-shrink: 0;
+            padding-left: 1rem; 
+            width: 70px; /* Wider date column */
+            text-align: right;
+        }
+        
+        .email-item-hover-actions {
+            display: none;
+            position: absolute;
+            right: 0px;
+            top: 0;
+            bottom: 0;
+            align-items: center;
+            background: linear-gradient(to left, #f7f7f7 80%, rgba(247,247,f7,0) 100%);
+            gap: 1.25rem;
+            padding-left: 3rem;
+            padding-right: 1.5rem;
+        }
+        .email-item:hover .email-item-hover-actions { display: flex; }
+        .email-item:hover .email-item-date,
+        .email-item:hover .email-item-tags {
+             display: none; 
+        }
+        .email-item-hover-actions i {
+            color: #555;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .email-item-hover-actions i:hover { color: #000; }
+        
+        
+        /* GMAIL CONTENT VIEW STYLES */
+        .email-view-header {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid var(--bs-border-color-translucent);
+            gap: 1.5rem;
+            flex-shrink: 0;
+        }
+        .email-view-header-actions { display: flex; gap: 1.5rem; }
+        .email-view-header-pagination { 
+            margin-left: auto; 
+            font-size: 0.85rem; 
+            color: #555; 
+        }
+        .email-view-header .icon-btn { 
+            color: #555; 
+            cursor: pointer; 
+            font-size: 1.1rem;
+            padding: 0.25rem;
+        }
+        .email-view-header .icon-btn:hover { color: #000; }
+        .email-view-body-wrapper {
+            overflow-y: auto;
+            flex: 1;
+            padding: 1.5rem 2.5rem;
+        }
+        .email-view-subject {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            color: #222;
+        }
+        .email-view-sender-info {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .email-view-sender-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .email-view-sender-details { flex: 1; }
+        .email-view-sender-name { font-weight: 600; color: #333; }
+        .email-view-sender-to { font-size: 0.85rem; color: #666; }
+        .email-view-date-actions {
+            margin-left: auto;
+            font-size: 0.85rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-shrink: 0;
+        }
+        .email-view-date-actions .icon-btn { 
+            color: #555; 
+            cursor: pointer; 
+            font-size: 1.1rem;
+            padding: 0.25rem;
+        }
+        .email-view-date-actions .icon-btn:hover { color: #000; }
+        .email-view-date-actions .icon-btn.starred { color: #f39c12; }
+        .email-view-body {
+            margin-top: 2rem;
+            line-height: 1.7;
+            font-size: 0.95rem;
+            color: #333;
+        }
+        .email-view-footer-actions {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 1rem;
+        }
+        .email-view-footer-actions .btn {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            font-weight: 600;
+            color: #333;
+            border-radius: 1.5rem;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.9rem;
+        }
+        .email-view-footer-actions .btn:hover { background-color: #f1f3f4; }
+        .alert-messages { position: fixed; top: 1rem; right: 1rem; z-index: 1050; min-width: 300px; }
+        .attachment-list { margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1rem; }
+        .attachment-item { display: inline-flex; align-items: center; background-color: #f0f3f6; border: 1px solid #dee2e6; border-radius: 0.25rem; padding: 0.5rem 0.75rem; margin: 0.25rem; font-size: 0.85rem; color: #343a40; text-decoration: none; }
+        .attachment-item:hover { background-color: #e9ecef; }
+        .attachment-item i { margin-right: 0.5rem; color: #6c757d; }
+        #attachment-list-container {
+            padding: 0.5rem 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .attachment-preview-item {
+            font-size: 0.8rem;
+            background: #f0f3f6;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .nav-link { font-size: 0.95rem; color: #333; }
+        .nav-link i { margin-right: 12px; width: 20px; text-align: center; }
+        .nav-link.active { font-weight: 600; color: #0d6efd; background-color: #e6f3ff; border-radius: 5px; }
+
+    </style>
+</head>
+<body>
+
+    <!-- TOP NAVBAR IS REMOVED -->
+
+    <div class="alert-messages">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main wrapper -->
+    <div class="mailbox-wrapper" id="mailbox-wrapper">
+        
+        <!-- SIDEBAR (Updated) -->
+        <aside class="mailbox-sidebar">
+            
+            <!-- Nav links (now at the top) -->
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item">
+                    <a class="nav-link d-flex justify-content-between align-items-center {% if current_mailbox.lower == 'inbox' %}active{% endif %}" 
+                       href="{% if active_account %}{% url 'mailbox' %}?account_id={{ active_account.id }}&folder=Inbox{% else %}#{% endif %}">
+                        <span><i class="fa-solid fa-inbox"></i> Inbox</span>
+                        <span class="badge bg-primary ms-auto text-white" id="inbox-unread-count" {% if initial_unread_count == 0 %}style="display: none;"{% endif %}>
+                            {{ initial_unread_count }}
+                        </span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if current_mailbox.lower == 'sent' %}active{% endif %}" 
+                       href="{% if active_account %}{% url 'mailbox' %}?account_id={{ active_account.id }}&folder=Sent{% else %}#{% endif %}">
+                        <i class="fa-solid fa-paper-plane"></i> Sent
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if current_mailbox.lower == 'trash' %}active{% endif %}" 
+                       href="{% if active_account %}{% url 'mailbox' %}?account_id={{ active_account.id }}&folder=Trash{% else %}#{% endif %}">
+                        <i class="fa-solid fa-trash"></i> Trash
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- NEW: Account Switcher (at the bottom) -->
+            <div class="sidebar-account-switcher">
+            {% if active_account %}
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary w-100 dropdown-toggle" type="button" id="accountSwitcher" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <span>{{ active_account.email_address }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountSwitcher">
+                        {% for account in all_accounts %}
+                            <li>
+                                <a class="dropdown-item {% if account.is_active %}active{% endif %}" href="{% url 'mailbox' %}?account_id={{ account.id }}&folder={{ current_mailbox }}">
+                                    {{ account.email_address }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                        <li><hr class="dropdown-divider"></li>
+                    </ul>
+                </div>
+            {% endif %}
+            </div>
+            
+        </aside>
+
+        <!-- PANE 1: Email List (Updated) -->
+        <section class="mailbox-list-pane" id="mailbox-list-pane">
+            
+            <!-- NEW: Search Bar -->
+            <div class="email-list-search">
+                <form method="GET" action="{% url 'mailbox' %}">
+                    {% if active_account %}
+                    <input type="hidden" name="account_id" value="{{ active_account.id }}">
+                    {% endif %}
+                    <input type="hidden" name="folder" value="{{ current_mailbox }}">
+                    <input type="search" class="form-control" name="q" value="{{ search_query|default:'' }}" placeholder="Search mail">
+                </form>
+            </div>
+            
+            {% if search_query %}
+            <div class="email-list-search-results">
+                Search results for: "{{ search_query }}"
+            </div>
+            {% endif %}
+
+            <ul class="email-list-group">
+                {% if not all_emails and not unread_emails and not read_emails and not starred_emails %}
+                    <li class="text-center p-5 text-muted">
+                        <i class="fa-solid fa-inbox fa-3x mb-3"></i>
+                        <p>
+                            {% if search_query %}
+                                No results found.
+                            {% else %}
+                                Your {{ current_mailbox }} folder is empty.
+                            {% endif %}
+                        </p>
+                    </li>
+                {% else %}
+                
+                    <!-- UPDATED LIST LOGIC: This now works for all folders -->
+                    {% if unread_emails %}
+                        <li class="email-list-header">Unread</li>
+                        {% for email in unread_emails %}
+                            {% include "employee/partials/_email_item.html" with email=email %}
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if starred_emails %}
+                        <li class="email-list-header">Starred</li>
+                        {% for email in starred_emails %}
+                             {% include "employee/partials/_email_item.html" with email=email %}
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if read_emails %}
+                        {% if current_mailbox.lower == 'inbox' and not search_query %}
+                            <li class="email-list-header">Everything else</li>
+                        {% endif %}
+                        {% for email in read_emails %}
+                            {% include "employee/partials/_email_item.html" with email=email %}
+                        {% endfor %}
+                    {% endif %}
+                
+                {% endif %}
+            </ul>
+        </section>
+
+        <!-- PANE 2: Email Content (Hidden by default) -->
+        <main class="mailbox-content-pane" id="email-content-pane">
+            <!-- Content is injected here by loadEmailContent() -->
+        </main>
+        
+        <!-- NEW: Floating Compose Button -->
+        <button class="fab-compose-button" data-bs-toggle="modal" data-bs-target="#composeModal" {% if not active_account %}disabled{% endif %} id="main-compose-button" title="Compose">
+            <i class="fa-solid fa-pencil"></i>
+        </button>
+        
+    </div>
+
+    <!-- Compose Modal (No changes) -->
+    <div class="modal fade" id="composeModal" tabindex="-1" aria-labelledby="composeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'mailbox' %}" id="composeForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="send_mail">
+                    <input type="hidden" name="account_id" value="{{ active_account.id }}">
+                    
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="composeModalLabel">New Message</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <label class="form-label text-muted small">From:</label>
+                            <input type="text" class_="form-control-plaintext form-control-sm" id="composeFrom" value="{{ active_account.email_address }}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="composeTo" class="form-label">To:</label>
+                            <input type="email" class="form-control" name="to_email" id="composeTo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="composeSubject" class="form-label">Subject:</label>
+                            <input type="text" class="form-control" name="subject" id="composeSubject" required>
+                        </div>
+                        
+                        <textarea name="body" id="composeBody"></textarea>
+                        
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between">
+                        <div>
+                            <label for="attachmentsInput" class="btn btn-outline-secondary">
+                                <i class="fa-solid fa-paperclip me-2"></i> Attach files
+                            </label>
+                            <input type="file" name="attachments" id="attachmentsInput" multiple style="display: none;">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-paper-plane me-2"></i> Send
+                        </button>
+                    </div>
+                    <div id="attachment-list-container" class="modal-body pt-0" style="border-top: 1px solid #eee;">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 
+      REMINDER:
+      The bootstrap.bundle.min.js script MUST be in your performance-base.html
+      to fix your dropdowns.
+    -->
+
+    <script>
+        const csrftoken = '{{ csrf_token }}';
+        let currentEmailDetails = null; 
+        
+        tinymce.init({
+            selector: '#composeBody',
+            plugins: 'autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
+            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | link image | table',
+            height: 400,
+            menubar: false,
+            setup: function (editor) {
+                editor.on('init', function () {
+                    if (window.replyData) {
+                        editor.setContent(window.replyData);
+                        window.replyData = null; 
+                    }
+                });
+            }
+        });
+
+        function showEmailList() {
+            document.getElementById('mailbox-wrapper').classList.remove('is-viewing-email');
+            document.querySelectorAll('.email-item').forEach(item => item.classList.remove('active'));
+            const contentPane = document.getElementById('email-content-pane');
+            contentPane.innerHTML = ''; 
+        }
+
+        function formatEmailDate(dateString) {
+            if (!dateString) return "";
+            try {
+                const date = new Date(dateString);
+                const now = new Date();
+                if (date.toDateString() === now.toDateString()) {
+                    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+                }
+                if (date.getFullYear() === now.getFullYear()) {
+                     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                }
+                return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+            } catch(e) {
+                return dateString.split(' (')[0];
+            }
+        }
+        
+        async function loadEmailContent(element, accountId, emailId) {
+            document.querySelectorAll('.email-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+            if (element.classList.contains('unread')) {
+                element.classList.remove('unread');
+                const badge = document.getElementById('inbox-unread-count');
+                let count = parseInt(badge.innerText, 10);
+                if (count > 1) badge.innerText = count - 1;
+                else {
+                    badge.style.display = 'none';
+                    badge.innerText = '0';
+                }
+                currentUnreadCount = count - 1;
+            }
+
+            const wrapper = document.getElementById('mailbox-wrapper');
+            wrapper.classList.add('is-viewing-email');
+            const contentPane = document.getElementById('email-content-pane');
+            
+            contentPane.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%;"><div class="spinner-border text-primary" role="status"></div></div>`;
+
+            try {
+                const folder = "{{ current_mailbox }}";
+                const response = await fetch(`/employee/mailbox/email/${accountId}/${emailId}/?folder=${folder}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const emailDetails = await response.json();
+                currentEmailDetails = emailDetails; 
+                currentEmailDetails.accountId = accountId; 
+                
+                let emailBody = emailDetails.html_body || emailDetails.text_body.replace(/\n/g, '<br>') || 'No content found.';
+                
+                let attachmentsHtml = '';
+                if (emailDetails.attachments && emailDetails.attachments.length > 0) {
+                    attachmentsHtml = `
+                        <div class="attachment-list">
+                            <h6 class="mb-2">Attachments</h6>
+                            <div class="d-flex flex-wrap">
+                                ${emailDetails.attachments.map(att => `
+                                    <a href="/employee/mailbox/attachment/${accountId}/${emailId}/${encodeURIComponent(att.filename)}/?folder=${folder}" class="attachment-item">
+                                        <i class="fa-solid fa-paperclip"></i>
+                                        <span>${att.filename} (${(att.size / 1024).toFixed(1)} KB)</span>
+                                    </a>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const starClass = emailDetails.is_flagged ? 'fa-solid fa-star starred' : 'fa-regular fa-star';
+
+                contentPane.innerHTML = `
+                    <div class="email-view-header">
+                        <i class="fa-solid fa-arrow-left icon-btn" onclick="showEmailList()" title="Back to Inbox"></i>
+                        <div class="email-view-header-actions">
+                            <i class="fa-solid fa-box-archive icon-btn" title="Archive"></i>
+                            <i class="fa-solid fa-trash icon-btn" title="Delete" 
+                               onclick="handleDeleteEmail(event, this, '${accountId}', '${emailId}')"></i>
+                            <i class="fa-solid fa-ellipsis-vertical icon-btn" title="More"></i>
+                        </div>
+                        <div class="email-view-header-pagination">
+                            <i class="fa-solid fa-chevron-left icon-btn" style="margin-left: 1.5rem;"></i>
+                            <i class="fa-solid fa-chevron-right icon-btn" style="margin-left: 1rem;"></i>
+                        </div>
+                    </div>
+                    <div class="email-view-body-wrapper">
+                        <h2 class="email-view-subject">
+                            ${emailDetails.subject || '(no subject)'} 
+                            <span class="badge bg-light text-dark border" style="font-size: 0.8rem; vertical-align: middle; margin-left: 8px;">
+                                {{ current_mailbox }}
+                            </span>
+                        </h2>
+                        <div class="email-view-sender-info">
+                            <div class="email-view-sender-avatar">
+                                ${emailDetails.from ? emailDetails.from[0].toUpperCase() : 'N'}
+                            </div>
+                            <div class="email-view-sender-details">
+                                <span class="email-view-sender-name">${emailDetails.from || 'N/A'}</span>
+                                <div class="email-view-sender-to">to me <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem; cursor: pointer; margin-left: 4px;"></i></div>
+                            </div>
+                            <div class="email-view-date-actions">
+                                <span>${formatEmailDate(emailDetails.date)} (${emailDetails.date_relative || '...'})</span>
+                                <i class="${starClass} icon-btn" 
+                                   id="email-view-star-btn"
+                                   onclick="toggleStar(event, this, '${accountId}', '${emailId}')"></i>
+                                <i class="fa-solid fa-reply icon-btn" title="Reply" onclick="handleReply()"></i>
+                                <i class="fa-solid fa-ellipsis-vertical icon-btn" title="More"></i>
+                            </div>
+                        </div>
+                        <div class="email-view-body">
+                            ${emailBody}
+                            ${attachmentsHtml}
+                        </div>
+                        <div class="email-view-footer-actions">
+                            <button class="btn" id="footer-reply-btn">
+                                <i class="fa-solid fa-reply me-2"></i> Reply
+                            </button>
+                            <button class="btn" id="footer-forward-btn">
+                                <i class="fa-solid fa-share me-2"></i> Forward
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('footer-reply-btn').addEventListener('click', handleReply);
+                document.getElementById('footer-forward-btn').addEventListener('click', handleForward);
+
+            } catch (error) {
+                console.error('Error loading email content:', error);
+                contentPane.innerHTML = `<div class="email-content-placeholder text-danger">
+                                            <i class="fa-solid fa-exclamation-triangle"></i>
+                                            <p>Failed to load email content.</p>
+                                            <button class="btn btn-outline-primary" onclick="showEmailList()">Back</button>
+                                         </div>`;
+            }
+        }
+        
+        function handleReply() {
+            if (!currentEmailDetails) return;
+            const modal = new bootstrap.Modal(document.getElementById('composeModal'));
+            const replyBody = `
+                <br><br><p>--- On ${formatEmailDate(currentEmailDetails.date)}, ${currentEmailDetails.from} wrote: ---</p>
+                <blockquote style="border-left: 2px solid #ccc; padding-left: 10px; margin-left: 5px; color: #666;">
+                    ${currentEmailDetails.html_body || currentEmailDetails.text_body.replace(/\n/g, '<br>')}
+                </blockquote>`;
+            document.getElementById('composeTo').value = currentEmailDetails.from_address_only;
+            document.getElementById('composeSubject').value = currentEmailDetails.reply_subject;
+            const editor = tinymce.get('composeBody');
+            if (editor) editor.setContent(replyBody); else window.replyData = replyBody;
+            document.getElementById('attachment-list-container').innerHTML = '';
+            document.getElementById('attachmentsInput').value = null;
+            modal.show();
+        }
+        function handleForward() {
+            if (!currentEmailDetails) return;
+            const modal = new bootstrap.Modal(document.getElementById('composeModal'));
+            const forwardBody = `
+                <br><br><p>--- Forwarded message ---</p>
+                <p><strong>From:</strong> ${currentEmailDetails.from}</p>
+                <p><strong>Date:</strong> ${formatEmailDate(currentEmailDetails.date)}</p>
+                <p><strong>Subject:</strong> ${currentEmailDetails.subject}</p>
+                <p><strong>To:</strong> ${currentEmailDetails.to}</p>
+                <hr>
+                ${currentEmailDetails.html_body || currentEmailDetails.text_body.replace(/\n/g, '<br>')}
+            `;
+            document.getElementById('composeTo').value = '';
+            document.getElementById('composeSubject').value = "Fwd: " + currentEmailDetails.subject;
+            const editor = tinymce.get('composeBody');
+            if (editor) editor.setContent(forwardBody); else window.replyData = forwardBody;
+            document.getElementById('attachment-list-container').innerHTML = '';
+            document.getElementById('attachmentsInput').value = null;
+            modal.show();
+        }
+        document.getElementById('main-compose-button').addEventListener('click', () => {
+            document.getElementById('composeTo').value = '';
+            document.getElementById('composeSubject').value = '';
+            const editor = tinymce.get('composeBody');
+            if (editor) editor.setContent('');
+            document.getElementById('attachment-list-container').innerHTML = '';
+            document.getElementById('attachmentsInput').value = null;
+        });
+        document.getElementById('attachmentsInput').addEventListener('change', function() {
+            const container = document.getElementById('attachment-list-container');
+            container.innerHTML = ''; 
+            if (this.files.length > 0) {
+                Array.from(this.files).forEach(file => {
+                    const fileSize = (file.size / 1024).toFixed(1);
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="attachment-preview-item">
+                            <i class="fa-solid fa-file"></i>
+                            <span>${file.name} (${fileSize} KB)</span>
+                        </div>
+                    `);
+                });
+            }
+        });
+        
+        async function toggleStar(event, element, accountId, emailId) {
+            event.stopPropagation(); 
+            const isStarred = element.classList.contains('starred');
+            const newStarredState = !isStarred; 
+            
+            element.classList.toggle('starred', newStarredState);
+            element.classList.toggle('fa-regular', !newStarredState);
+            element.classList.toggle('fa-solid', newStarredState);  
+            
+            const listItemStar = document.querySelector(`.email-item[data-email-id="${emailId}"] .email-item-star`);
+            if (listItemStar) {
+                listItemStar.classList.toggle('starred', newStarredState);
+                listItemStar.classList.toggle('fa-regular', !newStarredState);
+                listItemStar.classList.toggle('fa-solid', newStarredState);  
+            }
+            
+            try {
+                const response = await fetch("{% url 'toggle_star_ajax' %}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+                    body: JSON.stringify({
+                        account_id: accountId,
+                        email_id: emailId,
+                        is_flagged: newStarredState,
+                        folder: "{{ current_mailbox }}"
+                    })
+                });
+                if (!response.ok) throw new Error("Failed to update star on server.");
+            } catch (error) {
+                console.error("Error starring email:", error);
+                element.classList.toggle('starred', isStarred); 
+                element.classList.toggle('fa-regular', !isStarred);
+                element.classList.toggle('fa-solid', isStarred);   
+                if (listItemStar) {
+                    listItemStar.classList.toggle('starred', isStarred); 
+                    listItemStar.classList.toggle('fa-regular', !isStarred);
+                    listItemStar.classList.toggle('fa-solid', isStarred);  
+                }
+                alert("Could not update star. Please try again.");
+            }
+        }
+
+        async function handleDeleteEmail(event, element, accountId, emailId) {
+            event.stopPropagation();
+            
+            if (!confirm("Are you sure you want to move this email to the trash?")) {
+                return;
+            }
+
+            const emailItem = element.closest('.email-item');
+            const listItem = emailItem || document.querySelector(`.email-item[data-email-id="${emailId}"]`);
+            
+            try {
+                const response = await fetch("{% url 'delete_email_ajax' %}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+                    body: JSON.stringify({
+                        account_id: accountId,
+                        email_id: emailId,
+                        folder: "{{ current_mailbox }}"
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to delete email on server.");
+                }
+
+                if (listItem) {
+                    listItem.style.display = 'none'; 
+                }
+                
+                if (document.getElementById('mailbox-wrapper').classList.contains('is-viewing-email')) {
+                    showEmailList();
+                }
+
+            } catch (error) {
+                console.error("Error deleting email:", error);
+                alert("Could not delete email. Please try again.");
+            }
+        }
+        
+        let currentUnreadCount = {{ initial_unread_count|default:0 }};
+        const activeAccountId = "{{ active_account.id }}";
+        
+        async function checkNewMail() {
+            if (!activeAccountId) return; 
+            try {
+                const response = await fetch("{% url 'check_new_mail_ajax' %}");
+                if (!response.ok) { console.warn("Mail poll failed:", response.status); return; }
+                const data = await response.json();
+                if (data.account_id != activeAccountId) return; 
+                const newUnreadCount = data.unread_count;
+                const badge = document.getElementById('inbox-unread-count');
+                if (newUnreadCount > currentUnreadCount) {
+                    showMailNotification(newUnreadCount - currentUnreadCount);
+                    badge.innerText = newUnreadCount;
+                    badge.style.display = 'block';
+                } else if (newUnreadCount == 0) {
+                    badge.style.display = 'none';
+                    badge.innerText = '0';
+                } else {
+                    badge.innerText = newUnreadCount;
+                }
+                currentUnreadCount = newUnreadCount;
+            } catch (error) {
+                console.error("Error during mail polling:", error);
+            }
+        }
+        const toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        toastContainer.style.zIndex = 1100;
+        document.body.appendChild(toastContainer);
+        function showMailNotification(newMailAmount) {
+            const toastId = 'toast-' + Date.now();
+            const toastHtml = `
+                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" id="${toastId}">
+                    <div class="toast-header">
+                        <i class="fa-solid fa-envelope-open-text me-2 text-primary"></i>
+                        <strong class="me-auto">New Mail</strong>
+                        <small>Just now</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        You have ${newMailAmount} new unread email(s).
+                        <a href="{% url 'mailbox' %}" class="btn btn-sm btn-outline-primary mt-2">Refresh Inbox</a>
+                    </div>
+                </div>
+            `;
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+            toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
+        }
+        if (activeAccountId) {
+            setTimeout(() => {
+                checkNewMail();
+                setInterval(checkNewMail, 30000); // Poll every 30 seconds
+            }, 5000);
+        }
+    </script>
+    </body>
+</html>
+
+{% endblock %}
+

@@ -660,7 +660,54 @@ def employee_details_view(request, id):
                 bank_details.save()
 
                 messages.success(request, 'Bank details updated successfully!')
+            
+            elif 'submit_mail_ids' in request.POST:
+                # --- Get data from the form ---
+                email_address = request.POST.get('email_address')
+                account_type = request.POST.get('account_type')
+                email_password = request.POST.get('email_password')
                 
+                # --- Basic Validation ---
+                if not email_address or not account_type:
+                    messages.error(request, "Email Address and Account Type are required.")
+                    # You might need to adjust this redirect
+                    return redirect('employee-details', id=employee.id) 
+
+                # --- Handle Gmail ---
+                # This form is for password-based accounts. Gmail needs OAuth.
+                if account_type == EmployeeEmailAccount.AccountType.GMAIL:
+                    messages.warning(request, "Gmail accounts cannot be added manually. Please go to the Mailbox page and use the 'Connect Gmail Account' button.")
+                    return redirect('employee-details', id=employee.id)
+
+                # --- Handle Hostinger / Other (Password-based) ---
+                if account_type == EmployeeEmailAccount.AccountType.HOSTINGER or account_type == EmployeeEmailAccount.AccountType.OTHER:
+                    # Password is required for these types
+                    if not email_password:
+                        messages.error(request, f"A password is required for {account_type} accounts.")
+                        return redirect('employee-details', id=employee.id)
+                    
+                    # Check if this email is already registered (since it's unique)
+                    if EmployeeEmailAccount.objects.filter(email_address=email_address).exists():
+                        messages.error(request, f"The email address {email_address} is already in use by another user.")
+                        return redirect('employee-details', id=employee.id)
+                    
+                    # Check if this is the employee's first email account
+                    # The employee.email_accounts is the related_name from the model
+                    is_first_account = not employee.email_accounts.exists()
+
+                    # Create the new email account
+                    EmployeeEmailAccount.objects.create(
+                        employee=employee,  # 'employee' object from the outer view
+                        email_address=email_address,
+                        account_type=account_type,
+                        email_password=email_password, # The model encrypts this on save
+                        is_active=is_first_account # Make the first account active by default
+                    )
+                    
+                    messages.success(request, f"Email account {email_address} added successfully!")
+
+                else:
+                    messages.error(request, "Invalid account type submitted.")
                 
 
             return redirect('employee-details', id=employee.id)  # Adjust 'employee-details' to your URL name

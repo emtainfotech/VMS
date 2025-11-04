@@ -288,6 +288,150 @@
         </div>
       </div>
 
+      <div class="col-lg-6">
+    <div class="card p-4 h-100">
+        <div class="card-body position-relative">
+            <h5 class="card-title">Email Accounts</h5>
+            {% comment %}
+                Use 'employee.email_accounts.all' (the related_name from the model) 
+                or pass 'email_accounts' from the view context.
+            {% endcomment %}
+            {% if employee.email_accounts.all %}
+                <div class="row">
+                    {% for account in employee.email_accounts.all %}
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1">
+                            <span class="info-label">{{ account.email_address }}</span>
+                            <span class="info-value d-block">
+                                {% if account.account_type == 'gmail' %}
+                                    <span class="badge bg-danger-lt">{{ account.get_account_type_display }}</span>
+                                {% elif account.account_type == 'hostinger' %}
+                                    <span class="badge bg-primary-lt">{{ account.get_account_type_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-lt">{{ account.get_account_type_display }}</span>
+                                {% endif %}
+                            </span>
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No email accounts added yet</p>
+            {% endif %}
+        </div>
+        <span class="edit-icon">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#modal-email-account" title="Add Email Account">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg>
+            </a>
+        </span>
+    </div>
+</div>
+
+{% comment %}Email Account Modal{% endcomment %}
+<div class="modal modal-blur fade" id="modal-email-account" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Email Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="emailAccountForm" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="alert alert-warning" id="gmailWarningContainer" style="display: none;" role="alert">
+                        Gmail accounts cannot be added manually. Please go to the 
+                        <a href="{% url 'mailbox' %}" class="alert-link">Mailbox page</a> 
+                        and use the 'Connect Gmail Account' button.
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" name="email_address" class="form-control" required>
+                            <div class="invalid-feedback">Please enter a valid email address.</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Account Type <span class="text-danger">*</span></label>
+                            <select class="form-select" name="account_type" id="emailAccountTypeSelect" required>
+                                <option value="">Select Document Type</option>
+                                <option value="hostinger">Hostinger</option>
+                                <option value="gmail">Gmail</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <div class="invalid-feedback">Please select an account type.</div>
+                        </div>
+                    </div>
+
+                    <div class="row" id="emailPasswordContainer" style="display: none;">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email Password <span class="text-danger">*</span></label>
+                            <input type="password" name="email_password" id="emailPasswordInput" class="form-control">
+                            <div class="form-text">Your password will be stored securely encrypted.</div>
+                            <div class="invalid-feedback">Password is required for this account type.</div>
+                        </div>
+                    </div>
+
+                    <script>
+                        // Wrap in DOMContentLoaded to ensure elements are loaded
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Select elements *within* this modal's scope if possible, 
+                            // but IDs are unique so this is safe.
+                            const accountTypeSelect = document.getElementById('emailAccountTypeSelect');
+                            const passwordContainer = document.getElementById('emailPasswordContainer');
+                            const passwordInput = document.getElementById('emailPasswordInput');
+                            const gmailWarning = document.getElementById('gmailWarningContainer');
+                            
+                            // Find the form this script is inside of
+                            const emailForm = document.getElementById('emailAccountForm');
+                            const submitButton = emailForm.querySelector('button[name="submit_mail_ids"]');
+
+                            if (accountTypeSelect) {
+                                accountTypeSelect.addEventListener('change', function() {
+                                    const selectedType = this.value;
+                                    
+                                    if (selectedType === 'hostinger' || selectedType === 'other') {
+                                        // Show password field
+                                        passwordContainer.style.display = 'block';
+                                        passwordInput.required = true;
+                                        // Hide warning
+                                        gmailWarning.style.display = 'none';
+                                        // Enable submit
+                                        if (submitButton) submitButton.disabled = false;
+
+                                    } else if (selectedType === 'gmail') {
+                                        // Hide password field
+                                        passwordContainer.style.display = 'none';
+                                        passwordInput.required = false;
+                                        // Show warning
+                                        gmailWarning.style.display = 'block';
+                                        // Disable submit
+                                        if (submitButton) submitButton.disabled = true;
+
+                                    } else {
+                                        // Hide all optional fields
+                                        passwordContainer.style.display = 'none';
+                                        passwordInput.required = false;
+                                        gmailWarning.style.display = 'none';
+                                        // Enable submit (for "Select..." but it will fail validation)
+                                        if (submitButton) submitButton.disabled = false;
+                                    }
+                                });
+                            }
+                        });
+                    </script>
+                    
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" name="submit_mail_ids" class="btn btn-primary" form="emailAccountForm">Save Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+
       <!-- Education Details Card -->
       <div class="col-lg-12">
         <div class="card p-4">

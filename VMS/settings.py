@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     # 'CRM',
     'EMTARESUME',
     'corsheaders',
-    'CRM.apps.CrmConfig'
+    'CRM.apps.CrmConfig',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -167,3 +168,23 @@ EMAIL_USE_TLS = False                 # Disable TLS when using SSL
 EMAIL_HOST_USER = 'evms@emta.co.in'   # Your Hostinger business email
 EMAIL_HOST_PASSWORD = 'Emtavms@0505'  # Replace with your actual Hostinger mailbox password
 DEFAULT_FROM_EMAIL = 'evms@emta.co.in'
+
+
+# Add your new encryption key below it
+FIELD_ENCRYPTION_KEY = 'OE_90kwIpFrnD4im9VoimZJk3hUkKN6H028cc8pr_18='
+
+ASGI_APPLICATION = 'VMS.asgi.application'
+
+# Channels Layer configuration (using Redis as an example)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)], # Or your Redis server address
+        },
+    },
+}
+
+# For Celery (if using)
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0' # Or RabbitMQ
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'

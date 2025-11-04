@@ -1,0 +1,71 @@
+{% comment %}
+<!--
+=================================================================
+== NEW content for employee/partials/_email_item.html
+== - Removed Avatar logic
+== - Added Attachment "Tag"
+=================================================================
+-->
+{% endcomment %}
+
+<li class="email-item {% if not email.is_seen %}unread{% endif %}" 
+    data-email-id="{{ email.id }}"
+    onclick="loadEmailContent(this, '{{ active_account.id }}', '{{ email.id }}')">
+    
+    <!-- Checkbox and Star -->
+    <div class="email-item-actions">
+        <input type="checkbox" class="form-check-input" onclick="event.stopPropagation();">
+        
+        <i class="{% if email.is_flagged %}fa-solid fa-star starred{% else %}fa-regular fa-star{% endif %} email-item-star" 
+           onclick="toggleStar(event, this, '{{ active_account.id }}', '{{ email.id }}')"></i>
+    </div>
+
+    <!-- Sender Name (No Avatar) -->
+    <div class="email-item-from">
+        <span>{{ email.from|truncatechars:25 }}</span>
+    </div>
+
+    <!-- Subject, Snippet, and Tags -->
+    <div class="email-item-content">
+        <span class="email-item-subject">{{ email.subject|default:"(no subject)" }}</span>
+        
+        {% if email.snippet %} 
+        <span class="email-item-snippet"> - {{ email.snippet|truncatechars:80 }}</span>
+        {% endif %}
+        
+        <div class="email-item-tags">
+            <!-- NEW: Attachment Tag -->
+            {% if email.has_attachments %}
+            <span class="email-item-tag tag-attachment">
+                <i class="fa-solid fa-paperclip"></i> Attachment
+            </span>
+            {% endif %}
+
+            <!-- Example Tags (from image) -->
+            {% if email.from == 'Unsplash Team' %}
+                <span class="email-item-tag tag-winter">Winter</span>
+                <span class="email-item-tag tag-coffee">Coffee</span>
+            {% endif %}
+            {% if email.from == 'Coursera' %}
+                 <span class="email-item-tag tag-syllabus">syllabus</span>
+            {% endif %}
+             {% if email.from == 'Tony Stark' %}
+                 <span class="email-item-tag" style="background-color: #e6f3ff; border-color: #b3d9ff;">Endgame schedule</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Date (hides on hover) -->
+    <div class="email-item-date">
+       {{ email.date|date:"M d" }}
+    </div>
+    
+    <!-- Hover Actions (appears on hover) -->
+    <div class="email-item-hover-actions">
+        <i class="fa-solid fa-box-archive" title="Archive"></i>
+        <i class="fa-solid fa-trash" title="Delete" 
+           onclick="handleDeleteEmail(event, this, '{{ active_account.id }}', '{{ email.id }}')"></i>
+        <i class="fa-solid fa-envelope-open" title="Mark as read"></i>
+        <i class="fa-solid fa-clock" title="Snooze"></i>
+    </div>
+</li>

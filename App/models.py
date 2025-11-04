@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings # Use settings.AUTH_USER_MODEL
+from encrypted_model_fields.fields import EncryptedCharField
 
 
 # Helper function to get current user
@@ -70,6 +71,38 @@ class Employee(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.employee_id})"
     
+
+#
+# --- THIS IS THE NEW MODEL YOU MUST ADD ---
+#
+class EmployeeEmailAccount(models.Model):
+    """
+    Holds the credentials for a single IMAP/SMTP email account (e.g., Hostinger)
+    linked to an employee.
+    """
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='email_accounts')
+    email_address = models.EmailField(max_length=254, unique=True)
+    
+    # Stores the IMAP/SMTP password, securely encrypted
+    email_password = EncryptedCharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Password for the email account (encrypted)."
+    )
+
+    # Tracks which account the user is currently "switched" to
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.employee.user.username} - {self.email_address}"
+
+    def save(self, *args, **kwargs):
+        # Ensure only one account is active at a time for an employee
+        if self.is_active:
+            EmployeeEmailAccount.objects.filter(employee=self.employee).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+
 class AttendancePunch(models.Model):
     """
     Logs a single punch-in or punch-out event for a user.

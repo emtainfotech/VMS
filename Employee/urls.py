@@ -5,6 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
 
+
 urlpatterns = [
     path('', employee_login, name='employee_login'),
     path('login/', employee_login, name='employee_login'),
@@ -95,6 +96,22 @@ urlpatterns = [
     
     # --- Report URL ---
     path('attendance/my-report/', employee_attendance_report, name='employee_attendance_report'),
+    path('mailbox/', mailbox_view, name='mailbox'),
+
+# 2. AJAX: Fetch a single email's content
+    path('mailbox/email/<int:account_id>/<str:email_id>/', fetch_email_content_ajax, name='fetch_email_content_ajax'),
+
+    # 3. Download an attachment
+    path('mailbox/attachment/<int:account_id>/<str:email_id>/<path:filename>/', download_attachment, name='download_attachment'),
+
+    # 4. AJAX: Toggle the star/flag on an email
+    path('mailbox/toggle_star/', toggle_star_ajax, name='toggle_star_ajax'),
+
+    # 5. AJAX: NEW - Delete an email (move to trash)
+    path('mailbox/delete/', delete_email_ajax, name='delete_email_ajax'),
+
+    # 6. AJAX: Check for new mail (for polling)
+    path('mailbox/check_new_mail/', check_new_mail_ajax, name='check_new_mail_ajax'),
 
     path('admin/', admin.site.urls),
 ]
