@@ -25,26 +25,24 @@
         }
         .mailbox-wrapper { 
             display: flex; 
-            /* MODIFIED: Height now calc(100vh) because top navbar is gone */
             height: 100vh; 
             overflow: hidden; 
         }
         
-        /* --- UPDATED: Sidebar styles --- */
+        /* --- Sidebar styles --- */
         .mailbox-sidebar { 
             flex: 0 0 240px; 
             background: #fff; 
             border-right: 1px solid var(--bs-border-color-translucent); 
             padding: 1rem; 
             height: 100%;
-            /* NEW: Use flex to push account switcher to bottom */
             display: flex;
             flex-direction: column;
         }
         
-        /* NEW: Styles for the account switcher at bottom of sidebar */
+        /* Account switcher at bottom of sidebar */
         .sidebar-account-switcher {
-            margin-top: auto; /* Pushes this div to the bottom */
+            margin-top: auto; 
             border-top: 1px solid var(--bs-border-color-translucent);
             padding-top: 1rem;
         }
@@ -70,7 +68,7 @@
             text-overflow: ellipsis;
         }
         
-        /* --- NEW: Floating Action Button (FAB) for Compose --- */
+        /* Floating Action Button (FAB) for Compose */
         .fab-compose-button {
             position: fixed;
             bottom: 2rem;
@@ -86,7 +84,7 @@
             justify-content: center;
             font-size: 1.5rem;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            z-index: 1040; /* Below modals (1050) but above content */
+            z-index: 1040; 
             transition: all 0.2s ease-in-out;
         }
         .fab-compose-button:hover {
@@ -150,7 +148,6 @@
             padding: 1rem 1.5rem 0.5rem;
             text-transform: uppercase;
         }
-        /* ... (all other .email-item styles are unchanged) ... */
         .email-item {
             display: flex;
             align-items: center;
@@ -191,47 +188,20 @@
             padding: 0 0.25rem;
         }
         .email-item-star.starred { color: #f39c12; }
+        
+        /* Sender styles (no avatar) */
         .email-item-from {
-            font-weight: 500;
-            color: #333;
+            font-weight: 600; 
+            color: #202124;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            flex-basis: 180px;
+            flex-basis: 200px; 
             flex-shrink: 0;
-            padding-right: 0.5rem;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
         }
-        .email-item-avatar-img {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .email-item-avatar-icon {
-            width: 24px;
-            height: 24px;
-            flex-shrink: 0;
-            font-size: 1.2rem;
-            text-align: center;
-            color: #555;
-        }
-        .email-item-avatar-letter {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            background-color: #9a9a9a; 
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
-            font-weight: 600;
-            line-height: 1; 
-        }
+        
         .email-item-content {
             flex-grow: 1;
             min-width: 0;
@@ -241,15 +211,15 @@
             overflow: hidden;
         }
         .email-item-subject {
-            color: #555;
-            font-weight: 500;
+            color: #202124; 
+            font-weight: 500; 
             text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
             flex-shrink: 1;
         }
         .email-item-snippet {
-            color: #777;
+            color: #5f6368; 
             margin-left: 0.5rem;
             text-overflow: ellipsis;
             overflow: hidden;
@@ -270,26 +240,24 @@
             border: 1px solid #ddd;
             white-space: nowrap;
         }
-        .email-item-tag.tag-winter { background-color: #e3f2fd; border-color: #bde0fe; }
-        .email-item-tag.tag-coffee { background-color: #f3e5f5; border-color: #e1bee7; }
-        .email-item-tag.tag-syllabus { background-color: #fff8e1; border-color: #ffecb3; }
-        
-        .email-item-attachment-icon {
-            color: #5f6368;
-            font-size: 0.9rem;
-            margin-left: auto; 
-            padding-left: 0.75rem; 
-            padding-right: 0.75rem; 
-            flex-shrink: 0;
+        /* Attachment Tag Style */
+        .email-item-tag.tag-attachment {
+            background-color: #f0f3f6;
+            border: 1px solid #dee2e6;
+            color: #343a40;
+            font-size: 0.8rem;
+        }
+        .email-item-tag.tag-attachment i {
+            margin-right: 0.35rem;
         }
         
         .email-item-date {
             font-size: 0.8rem;
-            color: #888;
-            margin-left: 0; 
+            color: #5f6368; 
+            margin-left: auto; 
             flex-shrink: 0;
-            padding-left: 0; 
-            width: 50px; 
+            padding-left: 1rem; 
+            width: 70px; 
             text-align: right;
         }
         
@@ -307,8 +275,7 @@
         }
         .email-item:hover .email-item-hover-actions { display: flex; }
         .email-item:hover .email-item-date,
-        .email-item:hover .email-item-tags,
-        .email-item:hover .email-item-attachment-icon {
+        .email-item:hover .email-item-tags {
              display: none; 
         }
         .email-item-hover-actions i {
@@ -319,7 +286,7 @@
         .email-item-hover-actions i:hover { color: #000; }
         
         
-        /* GMAIL CONTENT VIEW STYLES (No changes) */
+        /* GMAIL CONTENT VIEW STYLES */
         .email-view-header {
             display: flex;
             align-items: center;
@@ -440,9 +407,6 @@
     </style>
 </head>
 <body>
-
-    <!-- TOP NAVBAR IS REMOVED -->
-
     <div class="alert-messages">
         {% if messages %}
             {% for message in messages %}
@@ -454,21 +418,16 @@
         {% endif %}
     </div>
 
-    <!-- Main wrapper -->
     <div class="mailbox-wrapper" id="mailbox-wrapper">
         
-        <!-- SIDEBAR (Updated) -->
         <aside class="mailbox-sidebar">
             
-            <!-- Compose button is REMOVED from here -->
-            
-            <!-- Nav links (now at the top) -->
             <ul class="nav flex-column mt-3">
                 <li class="nav-item">
                     <a class="nav-link d-flex justify-content-between align-items-center {% if current_mailbox.lower == 'inbox' %}active{% endif %}" 
                        href="{% if active_account %}{% url 'mailbox' %}?account_id={{ active_account.id }}&folder=Inbox{% else %}#{% endif %}">
                         <span><i class="fa-solid fa-inbox"></i> Inbox</span>
-                        <span class="badge bg-primary ms-auto" id="inbox-unread-count" {% if initial_unread_count == 0 %}style="display: none;"{% endif %}>
+                        <span class="badge bg-primary ms-auto text-light" id="inbox-unread-count" {% if initial_unread_count == 0 %}style="display: none;"{% endif %}>
                             {{ initial_unread_count }}
                         </span>
                     </a>
@@ -485,52 +444,33 @@
                         <i class="fa-solid fa-trash"></i> Trash
                     </a>
                 </li>
-            </ul>
-
-            <ul class="nav flex-column mt-3">
-                <!-- <li class="nav-item">
-                    <a class="nav-link {% if current_mailbox.lower == 'drafts' %}active{% endif %}" 
-                       href="{% if active_account %}{% url 'mailbox' %}?account_id={{ active_account.id }}&folder=Drafts{% else %}#{% endif %}">
-                        <i class="fa-solid fa-file-alt"></i> Drafts
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if current_mailbox.lower == 'spam' %}active{% endif %}" 
-                       href="{% if active_account %}{% url 'mailbox' %}?account_id={{ active_account.id }}&folder=Spam{% else %}#{% endif %}">
-                        <i class="fa-solid fa-exclamation-triangle"></i> Spam
-                    </a>
-                </li> -->
-
-                <!-- NEW: Account Switcher (at the bottom) -->
-            <div class="sidebar-account-switcher">
-            {% if active_account %}
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary w-100 dropdown-toggle" type="button" id="accountSwitcher" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fa-solid fa-user-shield"></i>
-                        <span>{{ active_account.email_address }}</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountSwitcher">
-                        {% for account in all_accounts %}
-                            <li>
-                                <a class="dropdown-item {% if account.is_active %}active{% endif %}" href="{% url 'mailbox' %}?account_id={{ account.id }}&folder={{ current_mailbox }}">
-                                    {{ account.email_address }}
-                                </a>
-                            </li>
-                        {% endfor %}
-                        <li><hr class="dropdown-divider"></li>
-                    </ul>
+                <div class="sidebar-account-switcher">
+                {% if active_account %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary w-100 dropdown-toggle" type="button" id="accountSwitcher" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-user-shield"></i>
+                            <span>{{ active_account.email_address }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountSwitcher">
+                            {% for account in all_accounts %}
+                                <li>
+                                    <a class="dropdown-item {% if account.is_active %}active{% endif %}" href="{% url 'mailbox' %}?account_id={{ account.id }}&folder={{ current_mailbox }}">
+                                        {{ account.email_address }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                            <li><hr class="dropdown-divider"></li>
+                        </ul>
+                    </div>
+                {% endif %}
                 </div>
-            {% endif %}
-            </div>
             </ul>
-
             
             
         </aside>
 
-        <!-- (Mail list pane - no changes) -->
         <section class="mailbox-list-pane" id="mailbox-list-pane">
-            <!-- Search Bar -->
+            
             <div class="email-list-search">
                 <form method="GET" action="{% url 'mailbox' %}">
                     {% if active_account %}
@@ -540,12 +480,13 @@
                     <input type="search" class="form-control" name="q" value="{{ search_query|default:'' }}" placeholder="Search mail">
                 </form>
             </div>
+            
             {% if search_query %}
             <div class="email-list-search-results">
                 Search results for: "{{ search_query }}"
             </div>
             {% endif %}
-            <!-- Email List -->
+
             <ul class="email-list-group">
                 {% if not all_emails and not unread_emails and not read_emails and not starred_emails %}
                     <li class="text-center p-5 text-muted">
@@ -583,12 +524,9 @@
             </ul>
         </section>
 
-        <!-- (Mail content pane - no changes) -->
         <main class="mailbox-content-pane" id="email-content-pane">
-            <!-- Content is injected here by loadEmailContent() -->
-        </main>
+            </main>
         
-        <!-- NEW: Floating Compose Button -->
         <button class="fab-compose-button" data-bs-toggle="modal" data-bs-target="#composeModal" {% if not active_account %}disabled{% endif %} id="main-compose-button" title="Compose">
             <i class="fa-solid fa-pencil"></i>
         </button>
@@ -622,6 +560,7 @@
                         </div>
                         
                         <textarea name="body" id="composeBody"></textarea>
+                        
                     </div>
                     <div class="modal-footer d-flex justify-content-between">
                         <div>
@@ -641,17 +580,11 @@
         </div>
     </div>
 
-    <!-- 
-      REMINDER:
-      The bootstrap.bundle.min.js script has been MOVED to performance-base.html
-      to fix your dropdowns.
-    -->
-
     <script>
-        // --- (All JavaScript is unchanged from the previous version) ---
         const csrftoken = '{{ csrf_token }}';
         let currentEmailDetails = null; 
         
+        // This is the correct TinyMCE init, targeting id="composeBody"
         tinymce.init({
             selector: '#composeBody',
             plugins: 'autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
@@ -660,6 +593,7 @@
             menubar: false,
             setup: function (editor) {
                 editor.on('init', function () {
+                    // This handles pre-filling the editor for Reply/Forward
                     if (window.replyData) {
                         editor.setContent(window.replyData);
                         window.replyData = null; 
@@ -667,6 +601,8 @@
                 });
             }
         });
+
+        // --- All other JavaScript functions ---
 
         function showEmailList() {
             document.getElementById('mailbox-wrapper').classList.remove('is-viewing-email');
@@ -825,6 +761,8 @@
             document.getElementById('attachmentsInput').value = null;
             modal.show();
         }
+
+        // This is the Forward function you asked for
         function handleForward() {
             if (!currentEmailDetails) return;
             const modal = new bootstrap.Modal(document.getElementById('composeModal'));
@@ -845,6 +783,7 @@
             document.getElementById('attachmentsInput').value = null;
             modal.show();
         }
+
         document.getElementById('main-compose-button').addEventListener('click', () => {
             document.getElementById('composeTo').value = '';
             document.getElementById('composeSubject').value = '';
@@ -853,6 +792,7 @@
             document.getElementById('attachment-list-container').innerHTML = '';
             document.getElementById('attachmentsInput').value = null;
         });
+
         document.getElementById('attachmentsInput').addEventListener('change', function() {
             const container = document.getElementById('attachment-list-container');
             container.innerHTML = ''; 
@@ -899,7 +839,6 @@
                 if (!response.ok) throw new Error("Failed to update star on server.");
             } catch (error) {
                 console.error("Error starring email:", error);
-                // Revert UI on failure
                 element.classList.toggle('starred', isStarred); 
                 element.classList.toggle('fa-regular', !isStarred);
                 element.classList.toggle('fa-solid', isStarred);   
@@ -1011,6 +950,7 @@
             }, 5000);
         }
     </script>
+    
     </body>
 </html>
 

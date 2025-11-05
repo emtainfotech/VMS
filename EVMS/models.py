@@ -376,19 +376,6 @@ class EVMS_Candidate_Interview(models.Model):
     def get_interview_datetime(self):
         return self.interview_date_time
 
-
-        
-        
-class Notification(models.Model):
-    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='notifications')
-    message = models.CharField(max_length=255)
-    is_read = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, null=True, blank=True)
-    url = models.CharField(max_length=255, blank=True, null=True)
-
-    class Meta:
-        ordering = ['-created_at']
         
 class Referal_poster(models.Model) :
     referal_image = models.FileField(upload_to='referal_poster/', null=True, blank=True)

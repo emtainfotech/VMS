@@ -1346,29 +1346,29 @@ def generate_vendor_invoice(request, candidate_id):
     
     return HttpResponse("Error generating PDF", status=500)
 
-def notifications(request):
-    if request.user.is_authenticated and hasattr(request.user, 'vendor'):
-        return {
-            'notifications': request.user.vendor.notifications.filter(is_read=False)[:10],
-            'unread_count': request.user.vendor.notifications.filter(is_read=False).count()
-        }
-    return {'notifications': [], 'unread_count': 0}
+# def notifications(request):
+#     if request.user.is_authenticated and hasattr(request.user, 'vendor'):
+#         return {
+#             'notifications': request.user.vendor.notifications.filter(is_read=False)[:10],
+#             'unread_count': request.user.vendor.notifications.filter(is_read=False).count()
+#         }
+#     return {'notifications': [], 'unread_count': 0}
 
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Notification
+# from .models import Notification
 
-@login_required
-def mark_notification_read(request, pk):
-    notification = get_object_or_404(Notification, pk=pk, vendor=request.user.vendor)
-    notification.is_read = True
-    notification.save()
-    return redirect(notification.url if notification.url else 'dashboard')
+# @login_required
+# def mark_notification_read(request, pk):
+#     notification = get_object_or_404(Notification, pk=pk, vendor=request.user.vendor)
+#     notification.is_read = True
+#     notification.save()
+#     return redirect(notification.url if notification.url else 'dashboard')
 
-@login_required
-def mark_all_notifications_read(request):
-    request.user.vendor.notifications.filter(is_read=False).update(is_read=True)
-    return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
+# @login_required
+# def mark_all_notifications_read(request):
+#     request.user.vendor.notifications.filter(is_read=False).update(is_read=True)
+#     return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
 
 def refer_poster_vendor_view(request):

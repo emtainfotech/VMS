@@ -5551,7 +5551,6 @@ def employee_attendance_report(request):
     }
     return render(request, 'employee/attendance_report.html', context)
 
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
@@ -5568,7 +5567,8 @@ from .email_utils import (
     get_unread_email_count, append_to_sent_folder, toggle_email_flag,
     move_email_to_trash
 )
-from App.models import Employee, EmployeeEmailAccount # Make sure to import your models
+# Make sure to import your models
+from App.models import Employee, EmployeeEmailAccount 
 
 @login_required
 def mailbox_view(request):
@@ -5576,9 +5576,9 @@ def mailbox_view(request):
         employee = request.user.employee
     except Employee.DoesNotExist:
         messages.error(request, "Employee profile not found.")
-        return redirect('dashboard') 
+        return redirect('dashboard') # Redirect to your dashboard
 
-    # --- (POST request for sending mail - No changes) ---
+    # --- (POST request for sending mail) ---
     if request.method == "POST" and request.POST.get('action') == 'send_mail':
         account_id = request.POST.get('account_id')
         to_email = request.POST.get('to_email')
@@ -5591,19 +5591,22 @@ def mailbox_view(request):
             if success:
                 messages.success(request, f"Email sent successfully from {account.email_address}!")
                 if raw_message:
+                    # This will now work correctly
                     append_to_sent_folder(account, raw_message)
             else:
                 messages.error(request, f"Failed to send email from {account.email_address}.")
         except EmployeeEmailAccount.DoesNotExist:
             messages.error(request, "Could not find the email account to send from.")
-        return redirect(f"{reverse('mailbox')}?folder=Sent")
+        
+        # Redirect to the Sent folder to see the new mail
+        return redirect(f"{reverse('mailbox')}?account_id={account_id}&folder=Sent")
 
-    # --- (GET request for viewing mail - Updated) ---
+    # --- (GET request for viewing mail) ---
     all_accounts = employee.email_accounts.all()
     if not all_accounts.exists():
         return render(request, 'employee/mailbox.html', {'all_accounts': [], 'all_emails': [], 'active_account': None})
 
-    # --- (Account switching logic - No changes) ---
+    # Account switching logic
     active_account = None
     requested_account_id = request.GET.get('account_id')
     if requested_account_id:
@@ -5616,19 +5619,14 @@ def mailbox_view(request):
     if not active_account:
         active_account = all_accounts.first()
     
-    # Update active status
     if not active_account.is_active:
         active_account.is_active = True
-        active_account.save() # This save() triggers the logic in your model
+        active_account.save()
     
     current_mailbox = request.GET.get('folder', 'Inbox') 
-    
-    # --- NEW: Get search query ---
     search_query = request.GET.get('q', None)
-    
     initial_unread_count = 0
     
-    # --- UPDATED: Pass search_query to fetch function ---
     emails = fetch_hostinger_inbox(
         active_account, 
         readonly=False, 
@@ -5639,19 +5637,18 @@ def mailbox_view(request):
     if current_mailbox.lower() == 'inbox':
          initial_unread_count = get_unread_email_count(active_account, mailbox='Inbox')
     
-    # --- UPDATED: Logic to display emails ---
-    # This now correctly handles Inbox vs. other folders (Sent, Trash, Search)
+    # Logic to display emails
     unread_emails = []
     starred_emails = []
     read_emails = []
 
     if current_mailbox.lower() == 'inbox' and not search_query:
-        # Only split into sections if we are in the Inbox and NOT searching
+        # Split into sections only for Inbox
         unread_emails = [e for e in emails if not e['is_seen'] and not e['is_flagged']]
         starred_emails = [e for e in emails if e['is_flagged']]
         read_emails = [e for e in emails if e['is_seen'] and not e['is_flagged']]
     else:
-        # For Sent, Trash, or Search Results, just show all emails in one list
+        # For Sent, Trash, or Search Results, show all in one list
         read_emails = emails
 
     context = {
@@ -5659,7 +5656,7 @@ def mailbox_view(request):
         'active_account': active_account,
         'current_mailbox': current_mailbox,
         'initial_unread_count': initial_unread_count,
-        'search_query': search_query, # <-- NEW
+        'search_query': search_query,
         'unread_emails': unread_emails,
         'starred_emails': starred_emails,
         'read_emails': read_emails,
@@ -5667,7 +5664,6 @@ def mailbox_view(request):
     }
     return render(request, 'employee/mailbox.html', context)
 
-# --- UPDATED: Now gets and uses the 'folder' ---
 @require_POST
 @login_required
 def toggle_star_ajax(request):
@@ -5676,12 +5672,11 @@ def toggle_star_ajax(request):
         account_id = data.get('account_id')
         email_id = data.get('email_id')
         is_flagged = data.get('is_flagged')
-        folder = data.get('folder', 'Inbox') # <-- NEW
+        folder = data.get('folder', 'Inbox') # Get current folder
         
         employee = request.user.employee
         account = EmployeeEmailAccount.objects.get(id=account_id, employee=employee)
         
-        # --- UPDATED: Pass the folder ---
         success = toggle_email_flag(account, email_id, is_flagged, mailbox=folder.capitalize())
         
         if success:
@@ -5692,7 +5687,6 @@ def toggle_star_ajax(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
-# --- (delete_email_ajax - No changes needed, it already accepts 'folder') ---
 @require_POST
 @login_required
 def delete_email_ajax(request):
@@ -5714,7 +5708,6 @@ def delete_email_ajax(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
-# --- (fetch_email_content_ajax, download_attachment, check_new_mail_ajax - No changes) ---
 @login_required
 def fetch_email_content_ajax(request, account_id, email_id):
     try:
@@ -5762,30 +5755,3 @@ def check_new_mail_ajax(request):
         'unread_count': unread_count,
         'account_id': account.id
     })
-
-# --- (Employee Profile View Snippet) ---
-# Remember to add this logic to your employee profile page view
-#
-# elif 'submit_mail_ids' in request.POST:
-#     email_address = request.POST.get('email_address')
-#     email_password = request.POST.get('email_password')
-    
-#     if not email_address or not email_password:
-#         messages.error(request, "Email Address and Password are required.")
-#         return redirect('your_profile_url_name', id=employee.id)
-
-#     if EmployeeEmailAccount.objects.filter(email_address=email_address).exists():
-#         messages.error(request, f"The email address {email_address} is already in use.")
-#         return redirect('your_profile_url_name', id=employee.id)
-    
-#     is_first_account = not employee.email_accounts.exists()
-
-#     EmployeeEmailAccount.objects.create(
-#         employee=employee,
-#         email_address=email_address,
-#         email_password=email_password, # The model encrypts this on save
-#         is_active=is_first_account
-#     )
-    
-#     messages.success(request, f"Email account {email_address} added successfully!")
-#     return redirect('your_profile_url_name', id=employee.id)

@@ -7,12 +7,12 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
-from App.models import EmployeeEmailAccount
+from App.models import EmployeeEmailAccount # Make sure this import is correct
 import base64
 import os
 import time
 
-# --- (Constants and helper functions: decode_email_header, get_email_body_and_attachments - No changes) ---
+# --- HOSTINGER / OTHER (IMAP) ---
 HOSTINGER_IMAP_HOST = 'imap.hostinger.com'
 HOSTINGER_IMAP_PORT = 993
 HOSTINGER_SMTP_HOST = 'smtp.hostinger.com'
@@ -73,7 +73,6 @@ def get_email_body_and_attachments(msg):
     
     return html_body, text_body, attachments
 
-# --- UPDATED: Added search_query parameter ---
 def fetch_hostinger_inbox(account: EmployeeEmailAccount, readonly=False, limit=50, mailbox='inbox', search_query=None):
     email_address = account.email_address
     password = account.email_password
@@ -84,14 +83,12 @@ def fetch_hostinger_inbox(account: EmployeeEmailAccount, readonly=False, limit=5
         mail.login(email_address, password)
         mail.select(mailbox, readonly=readonly)
         
-        # --- NEW: Use search query if provided ---
         if search_query:
             # (TEXT "query") searches headers and body.
             search_criteria = f'(TEXT "{search_query}")'
             status, messages = mail.search(None, search_criteria)
         else:
             status, messages = mail.search(None, 'ALL')
-        # --- End search logic ---
             
         if status != 'OK':
             mail.logout()
@@ -137,7 +134,6 @@ def fetch_hostinger_inbox(account: EmployeeEmailAccount, readonly=False, limit=5
         print(f"Error fetching email for {email_address}: {e}")
         return []
 
-# --- (get_email_details - No changes) ---
 def get_email_details(account: EmployeeEmailAccount, email_id: str, mailbox='inbox'):
     email_address = account.email_address
     password = account.email_password
@@ -168,7 +164,10 @@ def get_email_details(account: EmployeeEmailAccount, email_id: str, mailbox='inb
 
                 html_body, text_body, attachments = get_email_body_and_attachments(msg)
                 
-                mail.store(email_id, '+FLAGS', '\\Seen')
+                # Mark as 'Seen' on the server
+                if mailbox.lower() == 'inbox': # Only mark as seen if it's in the inbox
+                    mail.store(email_id, '+FLAGS', '\\Seen')
+                
                 mail.logout()
                 
                 return {
@@ -189,12 +188,11 @@ def get_email_details(account: EmployeeEmailAccount, email_id: str, mailbox='inb
         print(f"Error fetching full email details: {e}")
         return None
 
-# --- UPDATED: Added mailbox parameter. No longer hard-coded to 'inbox' ---
 def toggle_email_flag(account: EmployeeEmailAccount, email_id: str, is_flagged: bool, mailbox='inbox'):
     try:
         mail = imaplib.IMAP4_SSL(HOSTINGER_IMAP_HOST, HOSTINGER_IMAP_PORT)
         mail.login(account.email_address, account.email_password)
-        mail.select(mailbox) # <-- USES PARAMETER
+        mail.select(mailbox) 
         
         if is_flagged:
             mail.store(email_id, '+FLAGS', '\\Flagged')
@@ -207,31 +205,20 @@ def toggle_email_flag(account: EmployeeEmailAccount, email_id: str, is_flagged: 
         print(f"Error toggling flag for {email_id}: {e}")
         return False
 
-# --- UPDATED: Selects source mailbox correctly ---
 def move_email_to_trash(account: EmployeeEmailAccount, email_id: str, mailbox='inbox'):
     try:
         mail = imaplib.IMAP4_SSL(HOSTINGER_IMAP_HOST, HOSTINGER_IMAP_PORT)
         mail.login(account.email_address, account.email_password)
-        
-        # Select the source mailbox
-        mail.select(mailbox) # <-- USES PARAMETER
-        
-        # Copy the email to the 'Trash' folder
+        mail.select(mailbox) 
         mail.copy(email_id, 'Trash')
-        
-        # Add the \Deleted flag in the source mailbox
         mail.store(email_id, '+FLAGS', '\\Deleted')
-        
-        # Expunge to permanently delete from the source mailbox
         mail.expunge()
-        
         mail.logout()
         return True
     except Exception as e:
         print(f"Error moving email to trash: {e}")
         return False
 
-# --- (send_hostinger_email & append_to_sent_folder - No changes) ---
 def send_hostinger_email(account: EmployeeEmailAccount, to_email, subject, html_body, attachments=None):
     sender_email = account.email_address
     sender_password = account.email_password
@@ -263,25 +250,41 @@ def send_hostinger_email(account: EmployeeEmailAccount, to_email, subject, html_
         print(f"Error sending email for {sender_email}: {e}")
         return (False, None)
 
+# --- THIS IS THE CORRECTED FUNCTION ---
 def append_to_sent_folder(account: EmployeeEmailAccount, raw_message_string: str):
     try:
         mail = imaplib.IMAP4_SSL(HOSTINGER_IMAP_HOST, HOSTINGER_IMAP_PORT)
         mail.login(account.email_address, account.email_password)
-        mail.select('Sent') 
-        mail.append(
-            'Sent',
-            '\\Seen',
-            imaplib.Time2Internaldate(time.time()),
-            raw_message_string.encode('utf-8')
-        )
-        print(f"Successfully appended sent mail to 'Sent' folder for {account.email_address}")
+        
+        # We do not need mail.select(). We just append.
+        # We will try 'Sent' first, as it's the most common.
+        try:
+            mail.append(
+                'Sent',
+                '\\Seen',
+                imaplib.Time2Internaldate(time.time()),
+                raw_message_string.encode('utf-8')
+            )
+            print(f"Successfully appended sent mail to 'Sent' folder for {account.email_address}")
+        
+        except Exception as e:
+            # If 'Sent' fails, print the error and try 'Sent Items'
+            print(f"Could not append to 'Sent' folder (Error: {e}). Trying 'Sent Items'...")
+            mail.append(
+                'Sent Items',
+                '\\Seen',
+                imaplib.Time2Internaldate(time.time()),
+                raw_message_string.encode('utf-8')
+            )
+            print(f"Successfully appended sent mail to 'Sent Items' folder for {account.email_address}")
+
         mail.logout()
         return True
     except Exception as e:
-        print(f"Error appending to 'Sent' folder: {e}")
+        # This will catch login errors or if both 'Sent' and 'Sent Items' fail
+        print(f"CRITICAL Error appending to 'Sent' folder: {e}")
         return False
 
-# --- (get_unread_email_count & Gmail placeholders - No changes) ---
 def get_unread_email_count(account: EmployeeEmailAccount, mailbox='inbox'):
     try:
         mail = imaplib.IMAP4_SSL(HOSTINGER_IMAP_HOST, HOSTINGER_IMAP_PORT)
@@ -297,8 +300,7 @@ def get_unread_email_count(account: EmployeeEmailAccount, mailbox='inbox'):
     except Exception as e:
         print(f"Error getting unread count: {e}")
         return 0
-    
-    
+
 def get_gmail_unread_count(account: EmployeeEmailAccount, mailbox='inbox'):
     print("Gmail unread count logic goes here.")
     return 0
