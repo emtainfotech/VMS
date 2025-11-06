@@ -257,54 +257,6 @@
   </svg>
 </a>
 
-<div class="nav-item dropdown d-none d-md-flex me-3">
-    <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show notifications">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" /><path d="M9 17v1a3 3 0 0 0 6 0v-1" /></svg>
-        <span class="badge bg-red" id="notification-count-badge" style="display: {% if notifications.count > 0 %}inline-block{% else %}none{% endif %};">{{ notifications.count }}</span>
-    </a>
-    
-    <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card" style="width: 350px;">
-        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
-            <h5 class="mb-0">Notifications</h5>
-            <a href="{% url 'mark_all_as_read' %}" class="small text-muted">Mark all as read</a>
-        </div>
-        
-        <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;" id="notification-list">
-            {% for notification in notifications %}
-            <a href="{% url 'mark_notification_as_read' notification.id %}" class="list-group-item list-group-item-action">
-                <div class="d-flex">
-                    <span class="avatar bg-blue-lt me-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4" /></svg>
-                    </span>
-                    <div class="flex-fill">
-                        <div class="fw-bold">{{ notification.message }}</div>
-                        <div class="text-muted small">Candidate: {{ notification.candidate.candidate_name }}</div>
-                    </div>
-                    <div class="text-nowrap text-muted text-end">
-                        <div class="small">{{ notification.created_at|timesince }} ago</div>
-                        {% if not notification.is_read %}
-                        <span class="badge badge-dot bg-green mt-1"></span>
-                        {% endif %}
-                    </div>
-                </div>
-            </a>
-            {% empty %}
-            <div class="p-4 text-center text-muted" id="notification-empty-state">
-                You're all caught up!
-            </div>
-            {% endfor %}
-        </div>
-
-        <div class="border-top">
-            <a href="{% url 'notification_history' %}" class="dropdown-item text-center text-primary">
-                View All Notifications
-            </a>
-        </div>
-    </div>
-</div>
-
-
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // --- Configuration ---
@@ -316,43 +268,32 @@
         const notificationList = document.getElementById('notification-list');
         
         // --- Sound Asset ---
-        // It's best practice to host your own sound file in your static directory.
         const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
         // --- Initial State ---
         let currentNotificationCount = {{ notifications.count|default:0 }};
 
         // =================================================================
-        //                       HELPER FUNCTIONS
+        //                 HELPER FUNCTIONS (Your originals)
         // =================================================================
 
-        /**
-         * Returns the correct SVG icon HTML based on the notification type.
-         * @param {string} type - The notification_type from the API.
-         * @returns {string} - The HTML string for the icon.
-         */
         function getIconForType(type) {
+            // [Your existing getIconForType function... no changes needed]
             const icons = {
                 'selection': `<span class="avatar bg-green-lt me-3"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg></span>`,
                 'interview': `<span class="avatar bg-yellow-lt me-3"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11.5 21h-5.5a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M19 16l-2 3h4l-2 3" /></svg></span>`,
                 'follow_up': `<span class="avatar bg-orange-lt me-3"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M12 12l0 5" /><path d="M12 12l3.5 -2" /></svg></span>`,
                 'default': `<span class="avatar bg-blue-lt me-3"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4" /></svg></span>`
             };
-            
-            // Map other notification types to existing icons
             icons['joining_date'] = icons['selection'];
             icons['admin_remark'] = icons['default'];
             icons['invoice_due'] = icons['interview'];
             icons['interview_reminder'] = icons['interview'];
-            
             return icons[type] || icons['default'];
         }
 
-        /**
-         * Clears and redraws the notification list in the dropdown.
-         * @param {Array} notifications - An array of notification objects from the API.
-         */
         function updateNotificationUI(notifications) {
+            // [Your existing updateNotificationUI function... no changes needed]
             notificationList.innerHTML = ''; 
             if (notifications.length === 0) {
                 notificationList.innerHTML = `<div class="p-4 text-center text-muted" id="notification-empty-state">You're all caught up!</div>`;
@@ -360,7 +301,6 @@
                 notifications.forEach(notif => {
                     const iconHtml = getIconForType(notif.notification_type);
                     const candidateName = notif.candidate__candidate_name ? `Candidate: ${notif.candidate__candidate_name}` : '';
-                    
                     const notifHtml = `
                         <a href="/crm/notifications/read/${notif.id}/" class="list-group-item list-group-item-action">
                             <div class="d-flex">
@@ -380,17 +320,78 @@
             }
         }
         
-        /**
-         * Updates the visibility and text of the notification count badge.
-         * @param {number} count - The number of unread notifications.
-         */
         function updateBadge(count) {
+            // [Your existing updateBadge function... no changes needed]
             badge.textContent = count;
             badge.style.display = count > 0 ? 'inline-block' : 'none';
         }
 
         // =================================================================
-        //                         CORE LOGIC
+        //           --- ADDED --- DESKTOP NOTIFICATION FUNCTIONS
+        // =================================================================
+
+        /**
+         * Asks the user for permission to show desktop notifications.
+         */
+        function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                console.warn('This browser does not support desktop notifications.');
+                return;
+            }
+
+            // Check if permission is already granted or denied
+            if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        console.log('Desktop notification permission granted.');
+                    } else {
+                        console.log('Desktop notification permission denied.');
+                    }
+                });
+            }
+        }
+
+        /**
+         * Shows a single desktop notification.
+         * @param {object} notif - The notification object from your API.
+         */
+        function showDesktopNotification(notif) {
+            if (Notification.permission !== 'granted') {
+                return; // Permission not granted
+            }
+
+            const title = 'New CRM Notification';
+            const candidateName = notif.candidate__candidate_name ? `(${notif.candidate__candidate_name})` : '';
+            const body = `${notif.message} ${candidateName}`;
+            
+            // --- IMPORTANT ---
+            // You must change this icon path to a valid path in your static files
+            // For example: '/static/images/emta-logo.png'
+            const icon = '/static/images/notification-icon.png'; 
+
+            // Construct the full, absolute URL for the notification link
+            const notificationUrl = `${window.location.origin}/crm/notifications/read/${notif.id}/`;
+
+            const options = {
+                body: body,
+                icon: icon,
+                data: {
+                    url: notificationUrl // Store the URL to open on click
+                }
+            };
+
+            const notification = new Notification(title, options);
+
+            // Handle the click event on the notification
+            notification.onclick = (event) => {
+                const url = event.target.data.url;
+                window.open(url, '_blank'); // Open the link in a new tab
+                event.target.close(); // Close the notification
+            };
+        }
+
+        // =================================================================
+        //                 CORE LOGIC (MODIFIED)
         // =================================================================
 
         /**
@@ -400,12 +401,30 @@
             fetch(notificationApiUrl)
                 .then(response => response.json())
                 .then(data => {
+                    
+                    // --- MODIFIED ---
                     // Check if new notifications have arrived since the last check
                     if (data.unread_count > 0 && data.unread_count > currentNotificationCount) {
+                        
+                        // Play sound and update dropdown UI (your existing logic)
                         notificationSound.play().catch(error => console.log("User interaction needed to play sound."));
                         updateNotificationUI(data.notifications);
+
+                        // --- ADDED ---
+                        // Calculate how many notifications are new and show them
+                        const newNotificationCount = data.unread_count - currentNotificationCount;
+                        
+                        // Get only the *newest* notifications (assumes API returns newest first)
+                        const newNotifications = data.notifications.slice(0, newNotificationCount);
+                        
+                        // Show a desktop notification for each new one
+                        newNotifications.forEach(notif => {
+                            showDesktopNotification(notif);
+                        });
                     }
-                    
+                    // --- END MODIFICATION ---
+
+                    // Update the count for the next poll
                     currentNotificationCount = data.unread_count; 
                     updateBadge(data.unread_count);
                     
@@ -416,6 +435,10 @@
                 })
                 .catch(error => console.error('Error fetching notifications:', error));
         }
+        
+        // --- ADDED ---
+        // Request permission as soon as the page loads
+        requestNotificationPermission();
 
         // Start the process: check for notifications every `pollingInterval` milliseconds.
         setInterval(fetchNotifications, pollingInterval);
