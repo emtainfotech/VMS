@@ -963,8 +963,10 @@ function updateButtonText() {
               <select class="form-select" name="call_connection" id="callConnection" required>
                 <option value="" disabled selected>Select Status</option>
                 <option value="Connected" {% if candidate.call_connection == "Connected" %}selected{% endif %}>Connected</option>
-                <option value="Not Reachable" {% if candidate.call_connection == "Not Reachable" %}selected{% endif %}>Not Reachable</option>
+                <option value="Not Connected" {% if candidate.call_connection == "Not Connected" %}selected{% endif %}>Not Connected</option>
+                <option value="RNR" {% if candidate.call_connection == "RNR" %}selected{% endif %}>RNR</option>
                 <option value="Busy" {% if candidate.call_connection == "Busy" %}selected{% endif %}>Busy</option>
+                <option value="Not Reachable" {% if candidate.call_connection == "Not Reachable" %}selected{% endif %}>Not Reachable</option>
                 <option value="Wrong Number" {% if candidate.call_connection == "Wrong Number" %}selected{% endif %}>Wrong Number</option>
                 <option value="Other" {% if candidate.call_connection == "Other" %}selected{% endif %}>Other</option>
               </select>
@@ -1062,10 +1064,11 @@ function updateButtonText() {
                   <option value="Not Comfortable with SPDC Submission" {% if candidate.calling_remark == "Not Comfortable with SPDC Submission" %}selected{% endif %}>Not Comfortable with SPDC Submission</option>
                   <option value="RNR" {% if candidate.calling_remark == "RNR" %}selected{% endif %}>RNR</option>
                   <option value="Switch Off" {% if candidate.calling_remark == "Switch Off" %}selected{% endif %}>Switch Off</option>
-                  <option value="Not Intrested" {% if candidate.calling_remark == "Not Intrested" %}selected{% endif %}>Not Intrested</option>
+                  <option value="Not Interested" {% if candidate.calling_remark == "Not Interested" %}selected{% endif %}>Not Interested</option>
                   <option value="Sharing Resume" {% if candidate.calling_remark == "Sharing Resume" %}selected{% endif %}>Sharing Resume</option>
                   <option value="Hold" {% if candidate.calling_remark == "Hold" %}selected{% endif %}>Hold</option>
-                  <option value="Not Eligeble" {% if candidate.calling_remark == "Not Eligeble" %}selected{% endif %}>Not Eligeble</option>
+                  <option value="Not Looking for Job" {% if candidate.calling_remark == "Not Looking for Job" %}selected{% endif %}>Not Looking for Job</option>
+                  <option value="Not Eligible" {% if candidate.calling_remark == "Not Eligible" %}selected{% endif %}>Not Eligible</option>
                   <option value="Call Back" {% if candidate.calling_remark == "Call Back" %}selected{% endif %}>Call Back</option>
                   <option value="Coming Tomorrow" {% if candidate.calling_remark == "Coming Tomorrow" %}selected{% endif %}>Coming Tomorrow</option>
                   <option value="Busy" {% if candidate.calling_remark == "Busy" %}selected{% endif %}>Busy</option>
