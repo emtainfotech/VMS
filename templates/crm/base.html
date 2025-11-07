@@ -260,39 +260,23 @@
 <div class="nav-item dropdown d-none d-md-flex me-3">
     <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show notifications">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" /><path d="M9 17v1a3 3 0 0 0 6 0v-1" /></svg>
+        
         <span class="badge bg-red" id="notification-count-badge" style="display: {% if notifications.count > 0 %}inline-block{% else %}none{% endif %};">{{ notifications.count }}</span>
     </a>
     
     <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card" style="width: 350px;">
         <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
             <h5 class="mb-0">Notifications</h5>
-            <a href="{% url 'mark_all_as_read' %}" class="small text-muted">Mark all as read</a>
+            
+            <a href="{% url 'mark_all_as_read' %}" class="small text-muted" id="mark-all-read-btn">Mark all as read</a>
         </div>
         
         <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;" id="notification-list">
-            {% for notification in notifications %}
-            <a href="{% url 'mark_notification_as_read' notification.id %}" class="list-group-item list-group-item-action">
-                <div class="d-flex">
-                    <span class="avatar bg-blue-lt me-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4" /></svg>
-                    </span>
-                    <div class="flex-fill">
-                        <div class="fw-bold">{{ notification.message }}</div>
-                        <div class="text-muted small">Candidate: {{ notification.candidate.candidate_name }}</div>
-                    </div>
-                    <div class="text-nowrap text-muted text-end">
-                        <div class="small">{{ notification.created_at|timesince }} ago</div>
-                        {% if not notification.is_read %}
-                        <span class="badge badge-dot bg-green mt-1"></span>
-                        {% endif %}
-                    </div>
-                </div>
-            </a>
-            {% empty %}
+            
             <div class="p-4 text-center text-muted" id="notification-empty-state">
-                You're all caught up!
+                Loading notifications...
             </div>
-            {% endfor %}
+
         </div>
 
         <div class="border-top">
@@ -303,63 +287,111 @@
     </div>
 </div>
 
-
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        
         // --- Configuration ---
         const notificationApiUrl = "{% url 'api_unread_notifications' %}";
-        const pollingInterval = 15000; // Check for new notifications every 15 seconds
+        const pollingInterval = 15000; // 15 seconds
+        const DISMISSED_KEY = 'dismissedNotificationIDs'; // localStorage key
 
         // --- DOM Elements ---
         const badge = document.getElementById('notification-count-badge');
         const notificationList = document.getElementById('notification-list');
+        const markAllReadBtn = document.getElementById('mark-all-read-btn');
         
         // --- Sound Asset ---
         const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
         // --- Initial State ---
-        let currentNotificationCount = {{ notifications.count|default:0 }};
+        // We get the initial count from the server-rendered badge
+        let currentNotificationCount = parseInt(badge.textContent) || 0;
 
         // =================================================================
-        //                 HELPER FUNCTIONS (Your originals)
+        //                 LOCALSTORAGE HELPER FUNCTIONS
         // =================================================================
 
+        /**
+         * Gets the list of dismissed IDs from localStorage.
+         * @returns {Array<string>} An array of notification IDs.
+         */
+        function getDismissedIDs() {
+            try {
+                const dismissed = localStorage.getItem(DISMISSED_KEY);
+                return dismissed ? JSON.parse(dismissed) : [];
+            } catch (e) {
+                console.error('Error reading dismissed IDs from localStorage', e);
+                return [];
+            }
+        }
+
+        /**
+         * Adds a notification ID to the dismissed list in localStorage.
+         * @param {string} id - The notification ID to dismiss.
+         */
+        function addDismissedID(id) {
+            const dismissed = getDismissedIDs();
+            if (!dismissed.includes(id.toString())) {
+                dismissed.push(id.toString());
+                localStorage.setItem(DISMISSED_KEY, JSON.stringify(dismissed));
+            }
+        }
+
+        // =================================================================
+        //                 HELPER FUNCTIONS
+        // =================================================================
+
+        /**
+         * Returns the correct SVG icon HTML for a notification type.
+         */
         function getIconForType(type) {
-            // [Your existing getIconForType function... no changes needed]
             const icons = {
                 'selection': `<span class="avatar bg-green-lt me-3"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg></span>`,
                 'interview': `<span class="avatar bg-yellow-lt me-3"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11.5 21h-5.5a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M19 16l-2 3h4l-2 3" /></svg></span>`,
                 'follow_up': `<span class="avatar bg-orange-lt me-3"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M12 12l0 5" /><path d="M12 12l3.5 -2" /></svg></span>`,
                 'default': `<span class="avatar bg-blue-lt me-3"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4" /></svg></span>`
             };
+            
+            // Map other notification types to existing icons
             icons['joining_date'] = icons['selection'];
             icons['admin_remark'] = icons['default'];
             icons['invoice_due'] = icons['interview'];
             icons['interview_reminder'] = icons['interview'];
+            
             return icons[type] || icons['default'];
         }
 
+        /**
+         * Redraws the UI, adding a "Dismiss" button and filtering out dismissed items.
+         * @param {Array} notifications - Array of notification objects from the API.
+         */
         function updateNotificationUI(notifications) {
-            // [Your existing updateNotificationUI function... no changes needed]
             notificationList.innerHTML = ''; 
-            if (notifications.length === 0) {
+            
+            const dismissedIDs = getDismissedIDs();
+            const visibleNotifications = notifications.filter(notif => !dismissedIDs.includes(notif.id.toString()));
+
+            if (visibleNotifications.length === 0) {
                 notificationList.innerHTML = `<div class="p-4 text-center text-muted" id="notification-empty-state">You're all caught up!</div>`;
             } else {
-                notifications.forEach(notif => {
+                visibleNotifications.forEach(notif => {
                     const iconHtml = getIconForType(notif.notification_type);
                     const candidateName = notif.candidate__candidate_name ? `Candidate: ${notif.candidate__candidate_name}` : '';
+                    
                     const notifHtml = `
-                        <a href="/crm/notifications/read/${notif.id}/" class="list-group-item list-group-item-action">
-                            <div class="d-flex">
+                        <a href="/crm/notifications/read/${notif.id}/" class="list-group-item list-group-item-action notification-item" data-notification-id="${notif.id}">
+                            <div class="d-flex w-100">
                                 ${iconHtml}
                                 <div class="flex-fill">
                                     <div class="fw-bold">${notif.message}</div>
                                     <div class="text-muted small">${candidateName}</div>
                                 </div>
-                                <div class="text-nowrap text-muted text-end">
+                                <div class="text-nowrap text-muted text-end ms-3">
                                     <div class="small">${notif.timesince} ago</div>
                                     <span class="badge badge-dot bg-green mt-1"></span>
+                                </div>
+                                <div class="ms-2 d-flex align-items-center">
+                                    <button class="btn-close notification-dismiss-btn" data-id="${notif.id}" aria-label="Dismiss"></button>
                                 </div>
                             </div>
                         </a>`;
@@ -368,14 +400,26 @@
             }
         }
         
+        /**
+         * Updates the visibility and text of the notification count badge.
+         * @param {number} count - The number of unread notifications.
+         */
         function updateBadge(count) {
-            // [Your existing updateBadge function... no changes needed]
             badge.textContent = count;
             badge.style.display = count > 0 ? 'inline-block' : 'none';
         }
 
+        /**
+         * Clears the notification panel and resets the count.
+         */
+        function clearNotificationPanel() {
+            updateNotificationUI([]); // Show "You're all caught up!"
+            updateBadge(0);
+            currentNotificationCount = 0;
+        }
+
         // =================================================================
-        //           --- ADDED --- DESKTOP NOTIFICATION FUNCTIONS
+        //                 DESKTOP NOTIFICATION FUNCTIONS
         // =================================================================
 
         /**
@@ -386,15 +430,9 @@
                 console.warn('This browser does not support desktop notifications.');
                 return;
             }
-
-            // Check if permission is already granted or denied
             if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
                 Notification.requestPermission().then(permission => {
-                    if (permission === 'granted') {
-                        console.log('Desktop notification permission granted.');
-                    } else {
-                        console.log('Desktop notification permission denied.');
-                    }
+                    console.log(permission === 'granted' ? 'Desktop permission granted.' : 'Desktop permission denied.');
                 });
             }
         }
@@ -412,12 +450,10 @@
             const candidateName = notif.candidate__candidate_name ? `(${notif.candidate__candidate_name})` : '';
             const body = `${notif.message} ${candidateName}`;
             
-            // --- IMPORTANT ---
-            // You must change this icon path to a valid path in your static files
-            // For example: '/static/images/emta-logo.png'
+            // --- ❗️ IMPORTANT ❗️ ---
+            // Change this to a real icon path in your /static/ folder
             const icon = '/static/favicon.png'; 
 
-            // Construct the full, absolute URL for the notification link
             const notificationUrl = `${window.location.origin}/crm/notifications/read/${notif.id}/`;
 
             const options = {
@@ -430,16 +466,14 @@
 
             const notification = new Notification(title, options);
 
-            // Handle the click event on the notification
             notification.onclick = (event) => {
-                const url = event.target.data.url;
-                window.open(url, '_blank'); // Open the link in a new tab
-                event.target.close(); // Close the notification
+                window.open(event.target.data.url, '_blank');
+                event.target.close();
             };
         }
 
         // =================================================================
-        //                 CORE LOGIC (MODIFIED)
+        //                 CORE LOGIC (Polling)
         // =================================================================
 
         /**
@@ -450,46 +484,111 @@
                 .then(response => response.json())
                 .then(data => {
                     
-                    // --- MODIFIED ---
-                    // Check if new notifications have arrived since the last check
-                    if (data.unread_count > 0 && data.unread_count > currentNotificationCount) {
-                        
-                        // Play sound and update dropdown UI (your existing logic)
+                    // Check if new notifications have arrived
+                    if (data.unread_count > currentNotificationCount) {
                         notificationSound.play().catch(error => console.log("User interaction needed to play sound."));
-                        updateNotificationUI(data.notifications);
 
-                        // --- ADDED ---
-                        // Calculate how many notifications are new and show them
+                        // Find only the new ones
                         const newNotificationCount = data.unread_count - currentNotificationCount;
-                        
-                        // Get only the *newest* notifications (assumes API returns newest first)
                         const newNotifications = data.notifications.slice(0, newNotificationCount);
-                        
-                        // Show a desktop notification for each new one
+                        const dismissedIDs = getDismissedIDs();
+
+                        // Show desktop alerts for new, non-dismissed items
                         newNotifications.forEach(notif => {
-                            showDesktopNotification(notif);
+                            if (!dismissedIDs.includes(notif.id.toString())) {
+                                showDesktopNotification(notif);
+                            }
                         });
                     }
-                    // --- END MODIFICATION ---
 
-                    // Update the count for the next poll
+                    // Always update the UI and badge with the latest data from the server
+                    // The badge count is the *true* unread count
                     currentNotificationCount = data.unread_count; 
-                    updateBadge(data.unread_count);
+                    updateBadge(currentNotificationCount);
                     
-                    // If the list becomes empty (e.g., read on another tab), show the empty state
-                    if (data.unread_count === 0 && notificationList.children.length > 1) {
-                         updateNotificationUI([]);
-                    }
+                    // Redraw the list (this will auto-filter dismissed items)
+                    updateNotificationUI(data.notifications);
+
                 })
                 .catch(error => console.error('Error fetching notifications:', error));
         }
         
-        // --- ADDED ---
-        // Request permission as soon as the page loads
-        requestNotificationPermission();
+        // =================================================================
+        //                 EVENT LISTENERS
+        // =================================================================
 
-        // Start the process: check for notifications every `pollingInterval` milliseconds.
-        setInterval(fetchNotifications, pollingInterval);
+        /**
+         * Handles "Mark all as read"
+         * Also clears the dismissed list from localStorage.
+         */
+        markAllReadBtn.addEventListener('click', function (event) {
+            event.preventDefault(); // Stop the browser from navigating
+            const url = this.href; 
+
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Marked all as read.');
+                        clearNotificationPanel(); // Clear UI
+                        localStorage.removeItem(DISMISSED_KEY); // Clear dismissed cache
+                    } else {
+                        console.error('Failed to mark all as read.');
+                    }
+                })
+                .catch(error => console.error('Error in mark all as read:', error));
+        });
+
+        /**
+         * Smart listener for the notification list.
+         * Handles both "Read" (click body) and "Dismiss" (click 'x').
+         */
+        notificationList.addEventListener('click', function (event) {
+            const dismissBtn = event.target.closest('.notification-dismiss-btn');
+            const item = event.target.closest('.notification-item');
+
+            if (dismissBtn) {
+                // --- CASE 1: User clicked the "x" dismiss button ---
+                event.preventDefault();  // Stop link navigation
+                event.stopPropagation(); // Stop this event from bubbling up to the `item`
+                
+                const id = dismissBtn.dataset.id;
+                addDismissedID(id);      // Add to localStorage
+                item.remove();           // Remove from DOM
+
+                // Check if list is now visually empty
+                if (notificationList.querySelectorAll('.notification-item').length === 0) {
+                    updateNotificationUI([]); // Show "all caught up"
+                }
+                
+                // We DO NOT update the badge count, as it's still unread
+
+            } else if (item) {
+                // --- CASE 2: User clicked the main notification body ---
+                event.preventDefault(); // Stop default navigation
+                
+                const url = item.href;
+                window.open(url, '_blank'); // Open link (marks as read on backend)
+                
+                item.remove(); // Remove from DOM
+                
+                // This item is now read, so we can decrement the count
+                currentNotificationCount = Math.max(0, currentNotificationCount - 1);
+                updateBadge(currentNotificationCount);
+                
+                // Check if list is now visually empty
+                if (notificationList.querySelectorAll('.notification-item').length === 0) {
+                    updateNotificationUI([]);
+                }
+            }
+        });
+
+        // =================================================================
+        //                 INITIALIZATION
+        // =================================================================
+        
+        requestNotificationPermission();  // Ask for permission
+        fetchNotifications();             // Fetch initial data immediately on load
+        setInterval(fetchNotifications, pollingInterval); // Start polling
     });
 </script>
             
