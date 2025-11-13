@@ -3758,65 +3758,357 @@ def admin_export_vendors_to_excel(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'crm/404.html', status=404)
 
+import datetime as sc
+
+# Helper function to parse date ranges
+def parse_date_range(date_range_str):
+    """Parses a 'YYYY-MM-DD to YYYY-MM-DD' string into start and end dates."""
+    if ' to ' in date_range_str:
+        try:
+            start_str, end_str = date_range_str.split(' to ')
+            start_date = sc.datetime.strptime(start_str, '%Y-%m-%d').date()
+            # Add 1 day to end_date to make the range inclusive
+            end_date = sc.datetime.strptime(end_str, '%Y-%m-%d').date() + sc.timedelta(days=1)
+            return start_date, end_date
+        except ValueError:
+            pass
+    return None, None
+
 @login_required(login_url='/crm/404/')
 def selected_candidate(request) :
-    if request.user.is_staff or request.user.is_superuser:
-        logged_in_employee = request.user.employee
-        candidates_reg = Candidate_registration.objects.filter(selection_status='Selected').order_by('-id')
-        candidates_can = Candidate.objects.filter(selection_status='Selected').order_by('-id')
-        candidates = list(chain(candidates_reg, candidates_can))
-        candidates.sort(key=lambda x: x.selection_date if x.selection_date else datetime.min.date(), reverse=True)
-        context = {
-            'candidates': candidates
-        }
-        return render(request,'crm/selected-candidate.html',context)
-    else:
-        # If the user is not an admin, show a 404 page
+    if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
+
+    # --- Get Filter Parameters ---
+    search_query = request.GET.get('search', '')
+    company_filters = request.GET.getlist('company')
+    employee_filters = request.GET.getlist('employee')
+    selection_date_range = request.GET.get('selection_date', '')
+    joining_date_range = request.GET.get('joining_date', '')
+
+    # --- Build Base Q objects ---
+    reg_filters = Q(selection_status='Selected')
+    can_filters = Q(selection_status='Selected')
+
+    # 1. Search Filter
+    if search_query:
+        search_q = (
+            Q(candidate_name__icontains=search_query) |
+            Q(unique_code__icontains=search_query) |
+            Q(candidate_mobile_number__icontains=search_query) |
+            Q(candidate_email_address__icontains=search_query) |
+            Q(company_name__icontains=search_query)
+        )
+        reg_filters &= search_q
+        can_filters &= search_q
+
+    # 2. Company Filter
+    if company_filters:
+        reg_filters &= Q(company_name__in=company_filters)
+        can_filters &= Q(company_name__in=company_filters)
+
+    # 3. Employee Filter
+    if employee_filters:
+        reg_filters &= Q(employee_name__in=employee_filters)
+        can_filters &= Q(employee_name__in=employee_filters)
+
+    # 4. Selection Date Range
+    start_sel, end_sel = parse_date_range(selection_date_range)
+    if start_sel and end_sel:
+        reg_filters &= Q(selection_date__gte=start_sel, selection_date__lt=end_sel)
+        can_filters &= Q(selection_date__gte=start_sel, selection_date__lt=end_sel)
+
+    # 5. Joining Date Range
+    start_join, end_join = parse_date_range(joining_date_range)
+    if start_join and end_join:
+        reg_filters &= Q(candidate_joining_date__gte=start_join, candidate_joining_date__lt=end_join)
+        can_filters &= Q(candidate_joining_date__gte=start_join, candidate_joining_date__lt=end_join)
+
+    # --- Apply Filters ---
+    candidates_reg = Candidate_registration.objects.filter(reg_filters)
+    candidates_can = Candidate.objects.filter(can_filters)
+
+    # --- Chain, Sort, and Paginate ---
+    candidates_list = list(chain(candidates_reg, candidates_can))
+    
+    # Sort by selection_date, putting candidates without one at the end
+    candidates_list.sort(key=lambda x: x.selection_date if x.selection_date else sc.date.min, reverse=True)
+
+    paginator = Paginator(candidates_list, 100)  # 100 items per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # --- Get All Companies & Employees for Filters ---
+    # Query all selected candidates *before* filtering to get all options
+    reg_all = Candidate_registration.objects.filter(selection_status='Selected')
+    can_all = Candidate.objects.filter(selection_status='Selected')
+
+    all_employees = sorted(list(set(
+        [name for name in reg_all.values_list('employee_name', flat=True) if name] +
+        [name for name in can_all.values_list('employee_name', flat=True) if name]
+    )))
+    
+    all_companies = sorted(list(set(
+        [name for name in reg_all.values_list('company_name', flat=True) if name] +
+        [name for name in can_all.values_list('company_name', flat=True) if name]
+    )))
+
+    # --- Build Context ---
+    context = {
+        'page_obj': page_obj,
+        'all_employees': all_employees,
+        'all_companies': all_companies,
+        
+        # Pass current filters back to pre-fill the form
+        'current_search': search_query,
+        'current_companies': company_filters,
+        'current_employees': employee_filters,
+        'current_selection_date': selection_date_range,
+        'current_joining_date': joining_date_range,
+        
+        # Build query string for pagination links
+        'filter_query_string': request.GET.urlencode().replace('&page=' + str(page_number), ''),
+    }
+    return render(request, 'crm/selected-candidate.html', context)
+
+import datetime as fuc
 
 @login_required(login_url='/crm/404/')
 def follow_up_candidate(request):
-    if request.user.is_staff or request.user.is_superuser:
-        today = timezone.now().date()
-        date_range_start = today - timedelta(days=2)  # 25th if today is 27th
-        date_range_end = today + timedelta(days=3)    # 30th if today is 27th
-        
-        candidates_reg = Candidate_registration.objects.filter(
-            next_follow_up_date_time__isnull=False,
-            next_follow_up_date_time__gte=date_range_start,
-            next_follow_up_date_time__lte=date_range_end
-        ).order_by('next_follow_up_date_time')  # Order by follow-up date
-
-        candidates_can = Candidate.objects.filter(
-            next_follow_up_date_time__isnull=False,
-            next_follow_up_date_time__gte=date_range_start,
-            next_follow_up_date_time__lte=date_range_end
-        ).order_by('next_follow_up_date_time')  # Order by follow-up date
-        candidates = list(chain(candidates_reg, candidates_can))
-        candidates.sort(key=lambda x: x.next_follow_up_date_time if x.next_follow_up_date_time else datetime.min.date(), reverse=False)
-        context = {
-            'candidates': candidates,
-            'today': today
-        }
-        return render(request, 'crm/follow-up-candidate.html', context)
-    else:
-        # If the user is not an admin, show a 404 page
+    if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
 
+    today = timezone.now().date()
+    start_of_today = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # --- Get Filter Parameters ---
+    search_query = request.GET.get('search', '')
+    employee_filters = request.GET.getlist('employee')
+    date_range_str = request.GET.get('date_range', '')
+    lead_status_filter = request.GET.get('lead_status', '')
+    follow_up_status_filter = request.GET.get('follow_up_status', '')
+
+    # --- Build Base Q objects ---
+    reg_filters = Q(next_follow_up_date_time__isnull=False)
+    can_filters = Q(next_follow_up_date_time__isnull=False)
+
+    # 1. Search Filter
+    if search_query:
+        reg_filters &= (
+            Q(candidate_name__icontains=search_query) |
+            Q(unique_code__icontains=search_query) |
+            Q(candidate_mobile_number__icontains=search_query) |
+            Q(candidate_email_address__icontains=search_query)
+        )
+        can_filters &= (
+            Q(candidate_name__icontains=search_query) |
+            Q(candidate_mobile_number__icontains=search_query) |
+            Q(candidate_email_address__icontains=search_query)
+        )
+
+    # 2. Employee Filter
+    if employee_filters:
+        reg_filters &= Q(employee_name__in=employee_filters)
+        can_filters &= Q(employee_name__in=employee_filters)
+
+    # 3. Lead Status Filter
+    if lead_status_filter:
+        reg_filters &= Q(lead_generate=lead_status_filter)
+        can_filters &= Q(lead_generate=lead_status_filter)
+
+    # 4. Date Range & Follow-up Status Filters (These are related)
+    if date_range_str:
+        # If a specific date range is given, it overrides other date filters
+        try:
+            start_str, end_str = date_range_str.split(' to ')
+            start_date = fuc.datetime.strptime(start_str, '%Y-%m-%d').date()
+            # Add 1 day to end_date to make the range inclusive
+            end_date = fuc.datetime.strptime(end_str, '%Y-%m-%d').date() + fuc.timedelta(days=1)
+            
+            reg_filters &= Q(next_follow_up_date_time__gte=start_date, next_follow_up_date_time__lt=end_date)
+            can_filters &= Q(next_follow_up_date_time__gte=start_date, next_follow_up_date_time__lt=end_date)
+        except ValueError:
+            pass # Ignore badly formatted date range
+            
+    elif follow_up_status_filter:
+        # If no date range, but follow-up status is given
+        if follow_up_status_filter == 'overdue':
+            reg_filters &= Q(next_follow_up_date_time__lt=start_of_today)
+            can_filters &= Q(next_follow_up_date_time__lt=start_of_today)
+        elif follow_up_status_filter == 'today':
+            tomorrow = start_of_today + fuc.timedelta(days=1)
+            reg_filters &= Q(next_follow_up_date_time__gte=start_of_today, next_follow_up_date_time__lt=tomorrow)
+            can_filters &= Q(next_follow_up_date_time__gte=start_of_today, next_follow_up_date_time__lt=tomorrow)
+        elif follow_up_status_filter == 'upcoming':
+            tomorrow = start_of_today + fuc.timedelta(days=1)
+            reg_filters &= Q(next_follow_up_date_time__gte=tomorrow)
+            can_filters &= Q(next_follow_up_date_time__gte=tomorrow)
+            
+    else:
+        # DEFAULT: If no date filters are applied, use the original 5-day window
+        date_range_start = today - fuc.timedelta(days=2)
+        # Add 1 day to end_date to make it inclusive
+        date_range_end = today + fuc.timedelta(days=4) # 3 days from today + 1 for 'lt'
+        
+        reg_filters &= Q(next_follow_up_date_time__gte=date_range_start, next_follow_up_date_time__lt=date_range_end)
+        can_filters &= Q(next_follow_up_date_time__gte=date_range_start, next_follow_up_date_time__lt=date_range_end)
+
+    # --- Apply Filters to Querysets ---
+    candidates_reg = Candidate_registration.objects.filter(reg_filters)
+    candidates_can = Candidate.objects.filter(can_filters)
+
+    # --- Chain, Sort, and Paginate ---
+    candidates_list = list(chain(candidates_reg, candidates_can))
+    
+    # Sort the combined list in Python (by the follow-up date)
+    candidates_list.sort(key=lambda x: x.next_follow_up_date_time)
+
+    paginator = Paginator(candidates_list, 100)  # 100 items per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # --- Get All Employees & Statuses for Filters ---
+    # We query *before* filtering to show all possible filter options
+    reg_employees = Candidate_registration.objects.values_list('employee_name', flat=True).distinct()
+    can_employees = Candidate.objects.values_list('employee_name', flat=True).distinct()
+    all_employees = sorted(list(set(
+        [name for name in list(reg_employees) if name] + 
+        [name for name in list(can_employees) if name]
+    )))
+    
+    reg_statuses = Candidate_registration.objects.values_list('lead_generate', flat=True).distinct()
+    can_statuses = Candidate.objects.values_list('lead_generate', flat=True).distinct()
+    all_lead_statuses = sorted(list(set(
+        [status for status in list(reg_statuses) if status] +
+        [status for status in list(can_statuses) if status]
+    )))
+
+    # --- Build Context ---
+    context = {
+        'page_obj': page_obj,  # Pass the paginated page object
+        'today': today,
+        'start_of_today': start_of_today,
+        'all_employees': all_employees,
+        'all_lead_statuses': all_lead_statuses,
+        
+        # Pass current filters back to pre-fill the form
+        'current_search': search_query,
+        'current_employees': employee_filters,
+        'current_date_range': date_range_str,
+        'current_lead_status': lead_status_filter,
+        'current_follow_up_status': follow_up_status_filter,
+
+        
+        # Build query string for pagination links to preserve filters
+        'filter_query_string': request.GET.urlencode().replace('&page=' + str(page_number), ''),
+    }
+    return render(request, 'crm/follow-up-candidate.html', context)
+
+import datetime as gl
 @login_required(login_url='/crm/404/')
 def generated_leads(request):
-    if request.user.is_staff or request.user.is_superuser:
-        candidates_reg = Candidate_registration.objects.filter(lead_generate__in=['Hot', 'Converted']).order_by('-id')
-        candidates_can = Candidate.objects.filter(lead_generate__in=['Hot', 'Converted']).order_by('-id')
-        candidates = list(chain(candidates_reg, candidates_can))
-        candidates.sort(key=lambda x: x.register_time, reverse=True)
-        context = {
-            'candidates': candidates
-        }
-        return render(request,'crm/lead-generate.html',context)
-    else:
-        # If the user is not an admin, show a 404 page
+    if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
+
+    # --- Get Filter Parameters from GET request ---
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    employee_filters = request.GET.getlist('employee')  # Use getlist for multiple checkboxes
+    date_range_str = request.GET.get('date_range', '')
+
+    # --- Build Filter Q objects ---
+    reg_filters = Q()
+    can_filters = Q()
+
+    # 1. Status Filter
+    if status_filter:
+        reg_filters &= Q(lead_generate=status_filter)
+        can_filters &= Q(lead_generate=status_filter)
+    else:
+        # Default to 'Hot' and 'Converted' if no status is selected
+        reg_filters &= Q(lead_generate__in=['Hot', 'Converted'])
+        can_filters &= Q(lead_generate__in=['Hot', 'Converted'])
+
+    # 2. Search Filter
+    if search_query:
+        # Assumes fields to search on. Adjust field names if necessary.
+        reg_filters &= (
+            Q(candidate_name__icontains=search_query) |
+            Q(unique_code__icontains=search_query) |
+            Q(candidate_mobile_number__icontains=search_query) |
+            Q(candidate_email_address__icontains=search_query)
+        )
+        # Assumes Candidate model has similar fields
+        can_filters &= (
+            Q(candidate_name__icontains=search_query) |
+            Q(candidate_mobile_number__icontains=search_query) |
+            Q(candidate_email_address__icontains=search_query)
+        )
+
+    # 3. Employee Filter
+    if employee_filters:
+        reg_filters &= Q(employee_name__in=employee_filters)
+        can_filters &= Q(employee_name__in=employee_filters)
+
+    # 4. Date Range Filter
+    start_date = None
+    end_date = None
+    if ' to ' in date_range_str:
+        try:
+            start_str, end_str = date_range_str.split(' to ')
+            start_date = gl.datetime.strptime(start_str, '%Y-%m-%d').date()
+            end_date = gl.datetime.strptime(end_str, '%Y-%m-%d').date()
+        except ValueError:
+            start_date, end_date = None, None  # Ignore bad format
+
+    if start_date and end_date:
+        # Add 1 day to end_date to make the range inclusive for datetime
+        end_date_inclusive = end_date + gl.timedelta(days=1)
+        reg_filters &= Q(register_time__gte=start_date, register_time__lt=end_date_inclusive)
+        can_filters &= Q(register_time__gte=start_date, register_time__lt=end_date_inclusive)
+
+    # --- Apply Filters to Base Querysets ---
+    candidates_reg = Candidate_registration.objects.filter(reg_filters)
+    candidates_can = Candidate.objects.filter(can_filters)
+
+    # --- Chain, Sort, and Paginate ---
+    # This part is expensive as it loads all data into memory to sort.
+    # This is unavoidable with your current two-model structure.
+    candidates_list = list(chain(candidates_reg, candidates_can))
+    
+    # Sort the combined list in Python
+    candidates_list.sort(key=lambda x: x.register_time, reverse=True)
+
+    paginator = Paginator(candidates_list, 50)  # 50 items per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # --- Get Employee List for Filter Dropdown ---
+    # This must be done *before* filtering to show all available employees
+    reg_employees = Candidate_registration.objects.values_list('employee_name', flat=True).distinct()
+    can_employees = Candidate.objects.values_list('employee_name', flat=True).distinct()
+    
+    # Combine, remove None/empty, get unique, and sort
+    all_employees = sorted(list(set(
+        [name for name in list(reg_employees) if name] + 
+        [name for name in list(can_employees) if name]
+    )))
+
+    # --- Build Context ---
+    context = {
+        'page_obj': page_obj,  # Pass the paginated page object
+        'all_employees': all_employees,
+        
+        # Pass current filters back to pre-fill the form
+        'current_search': search_query,
+        'current_status': status_filter,
+        'current_employees': employee_filters,
+        'current_date_range': date_range_str,
+        
+        # Build query string for pagination links to preserve filters
+        'filter_query_string': request.GET.urlencode().replace('&page=' + str(page_number), ''),
+    }
+    return render(request, 'crm/lead-generate.html', context)
 
 @login_required(login_url='/crm/404/')
 def admin_vacancy_list(request) :

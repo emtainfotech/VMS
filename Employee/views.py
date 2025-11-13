@@ -4130,37 +4130,115 @@ def work_hours_summary(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
+import datetime as esl
+
+# Helper function to get a default date for sorting if selection_date is None
+def get_selection_date_key(x):
+    if x.selection_date:
+        return x.selection_date
+    # Use a very old date for items without a selection date to sort them last
+    return esl.date(1900, 1, 1)
+
 @login_required(login_url='/employee/404/')
 def employee_selected_candidate(request):
-    if request.user.is_authenticated:
-        logged_in_employee = Employee.objects.get(user=request.user)
-        
-        # Get selected candidates from both databases
-        candidates_reg = Candidate_registration.objects.filter(
-            employee_name=logged_in_employee, 
-            selection_status='Selected'
-        ).order_by('-id')
-        
-        candidates_can = Candidate.objects.filter(
-            employee_name=logged_in_employee,
-            selection_status='Selected'
-        ).order_by('-id')
-        
-        # Combine both querysets and sort by register_time (descending)
-        # Combine both querysets
-        combined_candidates = list(candidates_reg) + list(candidates_can)
-        
-        # Sort by register_time (descending)
-        # combined_candidates.sort(key=lambda x: x.register_time, reverse=True)
-        combined_candidates.sort(key=lambda x: x.selection_date if x.selection_date else datetime.min.date(), reverse=True)
-        
-        context = {
-            'candidates': combined_candidates
-        }
-        return render(request, 'employee/selected-candidate.html', context)
-    else:
-        # If the user is not an admin, show a 404 page
+    if not request.user.is_authenticated:
         return render(request, 'employee/404.html', status=404)
+
+    try:
+        logged_in_employee = Employee.objects.get(user=request.user)
+    except Employee.DoesNotExist:
+        return render(request, 'employee/404.html', status=404)
+
+    # --- Get Filter Parameters ---
+    search_query = request.GET.get('search', '')
+    selected_companies = request.GET.getlist('company') # For multi-select
+    selection_date_range_str = request.GET.get('selection_date_range', '')
+    joining_date_range_str = request.GET.get('joining_date_range', '')
+
+    # --- Base Query ---
+    base_filters = Q(employee_name=logged_in_employee, selection_status='Selected')
+
+    # --- Build Dynamic Filters ---
+    search_filter = Q()
+    if search_query:
+        search_filter = (
+            Q(candidate_name__icontains=search_query) |
+            Q(unique_code__icontains=search_query) |
+            Q(candidate_mobile_number__icontains=search_query) |
+            Q(company_name__icontains=search_query)
+        )
+
+    company_filter = Q()
+    if selected_companies:
+        selected_companies = [c for c in selected_companies if c]
+        if selected_companies:
+            company_filter = Q(company_name__in=selected_companies)
+
+    selection_date_filter = Q()
+    if selection_date_range_str:
+        try:
+            start_date_str, end_date_str = selection_date_range_str.split(' to ')
+            start_date = esl.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = esl.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            selection_date_filter = Q(selection_date__range=[start_date, end_date])
+        except ValueError:
+            pass
+
+    joining_date_filter = Q()
+    if joining_date_range_str:
+        try:
+            start_date_str, end_date_str = joining_date_range_str.split(' to ')
+            start_date = esl.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = esl.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            joining_date_filter = Q(candidate_joining_date__range=[start_date, end_date])
+        except ValueError:
+            pass
+
+    # --- Apply Filters ---
+    final_filters = base_filters & search_filter & company_filter & selection_date_filter & joining_date_filter
+
+    candidates_reg = Candidate_registration.objects.filter(final_filters)
+    candidates_can = Candidate.objects.filter(final_filters)
+
+    # --- Get Company List for Filter Dropdown ---
+    base_reg_companies = Candidate_registration.objects.filter(base_filters).values_list('company_name', flat=True)
+    base_can_companies = Candidate.objects.filter(base_filters).values_list('company_name', flat=True)
+    
+    all_companies = set(base_reg_companies) | set(base_can_companies)
+    sorted_companies = sorted([c for c in all_companies if c])
+
+    # --- Combine, Sort, and Paginate ---
+    combined_candidates = list(chain(candidates_reg, candidates_can))
+    combined_candidates.sort(key=get_selection_date_key, reverse=True)
+
+    paginator = Paginator(combined_candidates, 50)
+    page_number = request.GET.get('page')
+    
+    # Use .get_page for safer pagination (handles errors automatically)
+    page_obj = paginator.get_page(page_number)
+
+    # --- *** FIX *** ---
+    # Prepare filter parameters for pagination links
+    query_params = request.GET.copy()
+    if 'page' in query_params:
+        del query_params['page']
+    filter_params = query_params.urlencode()
+    # --- *** END FIX *** ---
+
+    context = {
+        'candidates': page_obj,
+        'paginator': paginator,
+        'filter_params': filter_params, # Pass the clean filter string
+        
+        # Pass filter values back to pre-fill the modal
+        'search_query': search_query,
+        'all_companies': sorted_companies,
+        'selected_companies': selected_companies,
+        'selection_date_range_str': selection_date_range_str,
+        'joining_date_range_str': joining_date_range_str,
+    }
+    return render(request, 'employee/selected-candidate.html', context)
+
 
 @login_required(login_url='/employee/404/')
 def employee_follow_up_candidate(request):
@@ -4199,33 +4277,105 @@ def employee_follow_up_candidate(request):
         # If the user is not an admin, show a 404 page
         return render(request, 'employee/404.html', status=404)
 
+import datetime as egl
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 @login_required(login_url='/employee/404/')
 def employee_generated_leads(request):
-    if request.user.is_authenticated:
-        logged_in_employee = Employee.objects.get(user=request.user)
-        
-        # Get candidates from both databases
-        candidates_reg = Candidate_registration.objects.filter(
-            employee_name=logged_in_employee,
-            lead_generate__in=['Hot', 'Converted']
-        ).order_by('-id')
-        
-        candidates_can = Candidate.objects.filter(
-            employee_name=logged_in_employee,
-            lead_generate__in=['Hot', 'Converted']
-        ).order_by('-id')
-        
-        # Combine both querysets
-        candidates = list(chain(candidates_reg, candidates_can))
-        candidates.sort(key=lambda x: x.register_time, reverse=True)
-        
-        context = {
-            'candidates': candidates
-        }
-        return render(request, 'employee/employee-lead-generate.html', context)
-    else:
-        # If the user is not an admin, show a 404 page
+    if not request.user.is_authenticated:
         return render(request, 'employee/404.html', status=404)
+
+    try:
+        logged_in_employee = Employee.objects.get(user=request.user)
+    except Employee.DoesNotExist:
+        # Handle case where employee object doesn't exist for the user
+        return render(request, 'employee/404.html', status=404)
+
+    # --- Filter Logic ---
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    date_range_str = request.GET.get('date_range', '')
+
+    # Base filters for the logged-in employee and lead status
+    base_filters_reg = Q(employee_name=logged_in_employee, lead_generate__in=['Hot', 'Converted'])
+    base_filters_can = Q(employee_name=logged_in_employee, lead_generate__in=['Hot', 'Converted'])
+    
+    # 1. Search Filter
+    search_filter = Q()
+    if search_query:
+        search_filter = (
+            Q(candidate_name__icontains=search_query) |
+            Q(unique_code__icontains=search_query) |
+            Q(candidate_mobile_number__icontains=search_query)
+        )
+
+    # 2. Status Filter
+    # Note: The original query *only* selected 'Hot' and 'Converted'. 
+    # If you want to filter by *other* statuses, you must change the base_filters.
+    # This filter will refine the 'Hot' and 'Converted' list.
+    if status_filter:
+        base_filters_reg &= Q(lead_generate=status_filter)
+        base_filters_can &= Q(lead_generate=status_filter)
+    
+    # 3. Date Range Filter
+    date_filter_reg = Q()
+    date_filter_can = Q()
+    if date_range_str:
+        try:
+            start_date_str, end_date_str = date_range_str.split(' to ')
+            start_date = egl.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = egl.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            # Add +1 day to end_date to make the range inclusive
+            end_date_inclusive = end_date + egl.timedelta(days=1)
+
+            # Use correct field names for each model
+            date_filter_reg = Q(register_time__range=[start_date, end_date_inclusive])
+            date_filter_can = Q(register_time__range=[start_date, end_date_inclusive]) # Assuming 'Candidate' also has 'register_time'
+        except ValueError:
+            pass  # Ignore invalid date formats
+
+    # Apply all filters to both querysets
+    candidates_reg = Candidate_registration.objects.filter(
+        base_filters_reg & search_filter & date_filter_reg
+    ).order_by('-id')
+    
+    candidates_can = Candidate.objects.filter(
+        base_filters_can & search_filter & date_filter_can
+    ).order_by('-id')
+
+    # --- Combination and Sorting ---
+    # This is done in memory. It's the only way with two different models.
+    all_candidates_list = list(chain(candidates_reg, candidates_can))
+    
+    # Sort the combined list in Python
+    # Use a default time if register_time is None to avoid errors
+    def get_sort_key(x):
+        return x.register_time if x.register_time else datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
+        
+    all_candidates_list.sort(key=get_sort_key, reverse=True)
+    
+    # --- Pagination ---
+    paginator = Paginator(all_candidates_list, 50)  # 50 candidates per page
+    page_number = request.GET.get('page')
+    
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        page_obj = paginator.page(paginator.num_pages)
+
+    context = {
+        'candidates': page_obj,  # Pass the paginated page object
+        'paginator': paginator,
+        
+        # Pass filter values back to pre-fill the form
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'date_range_str': date_range_str,
+    }
+    return render(request, 'employee/employee-lead-generate.html', context)
 
 @login_required(login_url='/employee/404/')
 def evms_vendor_paylist(request):

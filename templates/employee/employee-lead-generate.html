@@ -1,5 +1,5 @@
 {% extends "employee/performance-base.html" %}
-{% load static %} {# Make sure to load static files if you're using them for datepicker CSS/JS #}
+{% load static %}
 
 {% block content %}
 <div class="page-wrapper">
@@ -7,9 +7,9 @@
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
-                    <h2 class="page-title">Candidate Leads</h2> {# Updated title for clarity #}
+                    <h2 class="page-title">Candidate Leads</h2>
                     <div class="text-muted mt-1">
-                        <span id="total-leads">{{ candidates|length }}</span> candidate leads
+                        <span id="total-leads">{{ paginator.count }}</span> candidate leads
                     </div>
                 </div>
                 <div class="col-auto ms-auto d-print-none">
@@ -33,9 +33,9 @@
     <div class="page-body">
         <div class="container-xl">
             <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center w-100"> {# Added w-100 for better responsiveness #}
-                        <div class="col-12 col-md-4 mb-3 mb-md-0"> {# Adjusted column size #}
+                <form method="GET" action="" class="card-header">
+                    <div class="row align-items-center w-100 g-2">
+                        <div class="col-12 col-md-4">
                             <div class="input-group">
                                 <span class="input-group-text">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
@@ -46,98 +46,51 @@
                                         <path d="M21 21l-6 -6" />
                                     </svg>
                                 </span>
-                                <input type="text" id="searchInput" class="form-control" placeholder="Search leads..."
-                                    aria-label="Search leads">
+                                <input type="text" name="search" id="searchInput" class="form-control" placeholder="Search leads..."
+                                    aria-label="Search leads" value="{{ search_query|default:'' }}">
                             </div>
                         </div>
-                        <div class="col-12 col-md-8"> {# Adjusted column size for filters #}
-                            <div class="row g-2 justify-content-end"> {# Aligned filters to the right #}
+                        <div class="col-12 col-md-8">
+                            <div class="row g-2 justify-content-end">
                                 <div class="col-auto">
-                                    <label for="dateRangeFilter" class="form-label visually-hidden">Registration Date Range:</label>
-                                    <input type="text" class="form-control" id="dateRangeFilter" placeholder="Registration Date Range">
+                                    <input type="text" class="form-control" name="date_range" id="dateRangeFilter"
+                                        placeholder="Registration Date Range" value="{{ date_range_str|default:'' }}">
                                 </div>
                                 <div class="col-auto">
-                                    <label for="statusFilter" class="form-label visually-hidden">Status:</label>
-                                    <select id="statusFilter" class="form-select">
-                                        <option value="">All Statuses</option>
-                                        <option value="Hot">Hot</option>
-                                        <option value="Converted">Converted</option>
-                                        <option value="Cold">Cold</option> {# Added more status options for completeness #}
-                                        <option value="Not Interested">Not Interested</option>
-                                        <option value="Connect Later">Connect Later</option>
-                                        <option value="DND">DND</option>
-                                        <option value="Other">Other</option>
-                                    </select>
+                                    <select id="statusFilter" name="status" class="form-select">
+                                        <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+                                        <option value="Hot" {% if status_filter == 'Hot' %}selected{% endif %}>Hot</option>
+                                        <option value="Converted" {% if status_filter == 'Converted' %}selected{% endif %}>Converted</option>
+                                        </select>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn btn-primary">
+                                        Filter
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </form>
 
                 <style>
-                    /* Existing status badge styles */
-                    .status-badge {
-                        display: inline-block;
-                        padding: 0.25rem 0.5rem;
-                        border-radius: 50rem;
-                        font-size: 0.75rem;
-                        font-weight: 600;
-                        line-height: 1;
-                        text-align: center;
-                        white-space: nowrap;
-                        vertical-align: baseline;
-                    }
-
-                    .status-hot {
-                        background-color: rgba(253, 126, 20, 0.1);
-                        color: #fd7e14;
-                    }
-
-                    .status-converted {
-                        background-color: rgba(32, 201, 151, 0.1);
-                        color: #20c997;
-                    }
-
-                    .status-cold {
-                        background-color: rgba(250, 82, 82, 0.1);
-                        color: #fa5252;
-                    }
-
-                    /* Added for other statuses based on lead_generate values */
-                    .status-not-interested {
-                        background-color: rgba(108, 117, 125, 0.1);
-                        color: #6c757d;
-                    }
-
-                    .status-connect-later {
-                        background-color: rgba(0, 123, 255, 0.1);
-                        color: #007bff;
-                    }
-
-                    .status-dnd {
-                        background-color: rgba(220, 53, 69, 0.1);
-                        color: #dc3545;
-                    }
-
-                    .status-other {
-                        background-color: rgba(102, 16, 242, 0.1);
-                        color: #6610f2;
-                    }
+                    /* Your existing status badge styles */
+                    .status-badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 50rem; font-size: 0.75rem; font-weight: 600; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; }
+                    .status-hot { background-color: rgba(253, 126, 20, 0.1); color: #fd7e14; }
+                    .status-converted { background-color: rgba(32, 201, 151, 0.1); color: #20c997; }
+                    .status-cold { background-color: rgba(250, 82, 82, 0.1); color: #fa5252; }
+                    .status-not-interested { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
+                    .status-connect-later { background-color: rgba(0, 123, 255, 0.1); color: #007bff; }
+                    .status-dnd { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
+                    .status-other { background-color: rgba(102, 16, 242, 0.1); color: #6610f2; }
 
                     /* Sticky header styles */
-                    .table-responsive {
-                        position: relative;
-                        overflow-y: auto; /* Enable vertical scrolling */
-                        max-height: 600px; /* Adjust as needed to allow scrolling */
-                    }
-
-                    #leadsTable thead th {
-                        position: sticky;
-                        top: 0;
-                        background-color: var(--tblr-card-bg); /* Use Tabler's card background variable for consistent look */
-                        z-index: 10; /* Ensure header is above scrolling content */
-                        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); /* Optional: add a subtle shadow */
-                    }
+                    .table-responsive { position: relative; overflow-y: auto; max-height: 600px; }
+                    #leadsTable thead th { position: sticky; top: 0; background-color: var(--tblr-card-bg); z-index: 10; box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); }
+                
+                    /* Modal quick view helper styles */
+                    .quick-view-item { margin-bottom: 0.75rem; }
+                    .quick-view-label { font-weight: 600; color: var(--tblr-text-muted); }
                 </style>
                 <div class="table-responsive">
                     <table class="table table-vcenter table-hover table-nowrap" id="leadsTable">
@@ -145,19 +98,17 @@
                             <tr>
                                 <th class="w-1">#</th>
                                 <th>Candidate</th>
-                                <th>Contact Details</th> {# Fixed header #}
+                                <th>Contact Details</th>
                                 <th>Lead Status</th>
-                                <th>Registration Date</th> {# Fixed header #}
+                                <th>Registration Date</th>
                                 <th>Resume</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for candidate in candidates %}
-                            <tr data-search="{{ candidate.candidate_name|lower }} {{ candidate.unique_code|lower }} {{ candidate.candidate_mobile_number }}"
-                                data-status="{{ candidate.lead_generate|lower|slugify }}" {# Added slugify for consistency #}
-                                data-registration-date="{{ candidate.register_time|date:"Y-m-d" }}"> {# Added data attribute for date #}
-                                <td>{{ forloop.counter }}</td>
+                            <tr>
+                                <td>{{ forloop.counter0|add:candidates.start_index }}</td>
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="me-3">
@@ -208,14 +159,14 @@
                                 <td>
                                     <div class="status-badge status-{{ candidate.lead_generate|lower|slugify }}">
                                         {{ candidate.lead_generate }}
-                                        {% if candidate.lead_for %}
-                                        <span class="badge bg-blue-lt ms-1">{{ candidate.lead_for }}</span>
-                                        {% endif %}
                                     </div>
+                                    {% if candidate.lead_for %}
+                                    <span class="badge bg-blue-lt ms-1">{{ candidate.lead_for }}</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <div class="text-muted small">
-                                        {{ candidate.register_time|date:"M d, Y " }}
+                                        {{ candidate.register_time|date:"M d, Y" }}
                                     </div>
                                 </td>
                                 <td>
@@ -238,7 +189,8 @@
                                             </svg>
                                         </a>
                                         <a href="{{ candidate.candidate_resume.url }}" download
-                                            class="btn btn-sm btn-icon" title="Download Resume" data-bs-toggle="tooltip">
+                                            class="btn btn-sm btn-icon" title="Download Resume"
+                                            data-bs-toggle="tooltip">
                                             <svg xmlns="http://www.w3.org/2000/svg"
                                                 class="icon icon-tabler icon-tabler-download" width="24" height="24"
                                                 viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
@@ -256,39 +208,59 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-list justify-content-center">
+                                        <button type="button" class="btn btn-sm btn-icon" title="Quick View" 
+                                                data-bs-toggle="modal" data-bs-target="#candidateDetailModal"
+                                                data-name="{{ candidate.candidate_name }}"
+                                                data-code="{{ candidate.unique_code }}"
+                                                data-phone="{{ candidate.candidate_mobile_number }}"
+                                                data-email="{{ candidate.candidate_email_address|default:'N/A' }}"
+                                                data-status="{{ candidate.lead_generate }}"
+                                                data-lead-for="{{ candidate.lead_for|default:'N/A' }}"
+                                                data-registered="{{ candidate.register_time|date:'M d, Y, h:i A' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                               <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                               <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path>
+                                               <path d="M21 21l-6 -6"></path>
+                                            </svg>
+                                        </button>
+
                                         {% if candidate.lead_source == 'EVMS' %}
                                         <a href="{% url 'employee_evms_candidate_profile' candidate.id %}"
-                                            class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
-                                            {% else %}
-                                            <a href="{% url 'employee_candidate_profile' candidate.id %}"
-                                                class="btn btn-sm btn-icon" title="View Profile"
-                                                data-bs-toggle="tooltip">
-                                                {% endif %}
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24"
-                                                    height="24" viewBox="0 0 24 24" stroke-width="2"
-                                                    stroke="currentColor" fill="none" stroke-linecap="round"
-                                                    stroke-linejoin="round">
-                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                                                    <path
-                                                        d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
-                                                </svg>
-                                            </a>
-                                            <a href="tel:{{ candidate.candidate_mobile_number }}"
-                                                class="btn btn-sm btn-icon" title="Call Candidate"
-                                                data-bs-toggle="tooltip">
-                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                    class="icon icon-tabler icon-tabler-phone" width="24" height="24"
-                                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-                                                    fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                                    <path
-                                                        d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2">
-                                                    </path>
-                                                </svg>
-                                            </a>
+                                            class="btn btn-sm btn-icon" title="View Full Profile" data-bs-toggle="tooltip">
+                                        {% else %}
+                                        <a href="{% url 'employee_candidate_profile' candidate.id %}"
+                                            class="btn btn-sm btn-icon" title="View Full Profile"
+                                            data-bs-toggle="tooltip">
+                                        {% endif %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24"
+                                                height="24" viewBox="0 0 24 24" stroke-width="2"
+                                                stroke="currentColor" fill="none" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                                                <path
+                                                    d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                                            </svg>
+                                        </a>
+                                        <a href="tel:{{ candidate.candidate_mobile_number }}"
+                                            class="btn btn-sm btn-icon" title="Call Candidate"
+                                            data-bs-toggle="tooltip">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                class="icon icon-tabler icon-tabler-phone" width="24" height="24"
+                                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                                fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path
+                                                    d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2">
+                                                </path>
+                                            </svg>
+                                        </a>
                                     </div>
                                 </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No candidate leads found matching your criteria.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -296,76 +268,112 @@
                 </div>
 
                 <div class="card-footer d-flex align-items-center">
-                    <div class="pagination-info">
-                        Showing <span id="showingFrom">1</span> to <span id="showingTo">{{ candidates|length }}</span>
-                        of <span id="totalCount">{{ candidates|length }}</span> leads
+                    {% if candidates %}
+                    <div class="pagination-info text-muted">
+                        Showing <span id="showingFrom">{{ candidates.start_index }}</span>
+                        to <span id="showingTo">{{ candidates.end_index }}</span>
+                        of <span id="totalCount">{{ paginator.count }}</span> leads
                     </div>
+                    {% else %}
+                    <div class="pagination-info text-muted">
+                        No leads found.
+                    </div>
+                    {% endif %}
+
+                    {% if paginator.num_pages > 1 %}
                     <ul class="pagination m-0 ms-auto">
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                    <path d="M15 6l-6 6l6 6" />
-                                </svg>
+                        {% if candidates.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ candidates.previous_page_number }}&search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}&date_range={{ date_range_str|urlencode }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>
                                 prev
                             </a>
                         </li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="#">
-                                next
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                    <path d="M9 6l6 6l-6 6" />
-                                </svg>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>
+                                prev
                             </a>
                         </li>
+                        {% endif %}
+
+                        {% for num in paginator.page_range %}
+                            {% if num == candidates.number %}
+                                <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                            {% elif num > candidates.number|add:'-3' and num < candidates.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?page={{ num }}&search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}&date_range={{ date_range_str|urlencode }}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if candidates.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ candidates.next_page_number }}&search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}&date_range={{ date_range_str|urlencode }}">
+                                next
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                next
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>
+                            </a>
+                        </li>
+                        {% endif %}
                     </ul>
+                    {% endif %}
                 </div>
+
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    /* Your existing styles */
-    .avatar-container {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f1f5f9;
-    }
-
-    .badge.bg-blue-lt {
-        background-color: rgba(65, 138, 221, 0.1);
-        color: #418add;
-        padding: 0.25rem 0.5rem;
-    }
-
-    @media (max-width: 768px) {
-        .card-header .row>div {
-            width: 100%;
-        }
-
-        .card-header .input-group {
-            margin-bottom: 1rem;
-        }
-
-        #leadsTable td {
-            white-space: normal !important;
-        }
-    }
-</style>
+<div class="modal fade" id="candidateDetailModal" tabindex="-1" aria-labelledby="candidateDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="candidateDetailModalLabel">Candidate Quick View</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h2 class="mb-3" id="modalCandidateName"></h2>
+                        <div class="quick-view-item">
+                            <div class="quick-view-label">Code</div>
+                            <div id="modalCandidateCode"></div>
+                        </div>
+                        <div class="quick-view-item">
+                            <div class="quick-view-label">Phone</div>
+                            <div id="modalCandidatePhone"></div>
+                        </div>
+                        <div class="quick-view-item">
+                            <div class="quick-view-label">Email</div>
+                            <div id="modalCandidateEmail"></div>
+                        </div>
+                        <div class="quick-view-item">
+                            <div class="quick-view-label">Status</div>
+                            <div id="modalCandidateStatus"></div>
+                        </div>
+                        <div class="quick-view-item">
+                            <div class="quick-view-label">Lead For</div>
+                            <div id="modalCandidateLeadFor"></div>
+                        </div>
+                        <div class="quick-view-item">
+                            <div class="quick-view-label">Registered</div>
+                            <div id="modalCandidateRegistered"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -378,104 +386,42 @@
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
 
-        // Search and filter functionality
-        const searchInput = document.getElementById('searchInput');
-        const statusFilter = document.getElementById('statusFilter');
-        const dateRangeFilter = document.getElementById('dateRangeFilter'); // New date range filter element
-        const leadsTable = document.getElementById('leadsTable');
-        const rows = leadsTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-        const totalCountEl = document.getElementById('totalCount');
-        const showingFromEl = document.getElementById('showingFrom');
-        const showingToEl = document.getElementById('showingTo');
-
         // Initialize Flatpickr for date range filter
-        flatpickr(dateRangeFilter, {
-            mode: "range", // Allows selecting a date range
-            dateFormat: "Y-m-d", // Date format for the input
-            onChange: function (selectedDates, dateStr, instance) {
-                // This function runs when the date selection changes
-                filterLeads();
-            }
+        flatpickr(document.getElementById('dateRangeFilter'), {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            // We do NOT need an onChange filter anymore,
+            // the user will click the "Filter" button
         });
 
-        function filterLeads() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const statusFilterValue = statusFilter.value.toLowerCase();
+        // --- Modal Popup Logic ---
+        const candidateDetailModal = document.getElementById('candidateDetailModal');
+        candidateDetailModal.addEventListener('show.bs.modal', function (event) {
+            // Button that triggered the modal
+            const button = event.relatedTarget;
 
-            let startDate = null;
-            let endDate = null;
+            // Extract info from data-* attributes
+            const name = button.getAttribute('data-name');
+            const code = button.getAttribute('data-code');
+            const phone = button.getAttribute('data-phone');
+            const email = button.getAttribute('data-email');
+            const status = button.getAttribute('data-status');
+            const leadFor = button.getAttribute('data-lead-for');
+            const registered = button.getAttribute('data-registered');
 
-            // Get selected dates from Flatpickr
-            if (dateRangeFilter._flatpickr && dateRangeFilter._flatpickr.selectedDates.length === 2) {
-                startDate = dateRangeFilter._flatpickr.selectedDates[0];
-                endDate = dateRangeFilter._flatpickr.selectedDates[1];
-            }
-
-
-            let visibleCount = 0;
-
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-                const searchContent = row.getAttribute('data-search');
-                const rowStatus = row.getAttribute('data-status');
-                const rowRegistrationDate = new Date(row.getAttribute('data-registration-date')); // Get registration date from data attribute
-
-                const matchesSearch = searchContent.includes(searchTerm);
-                const matchesStatus = statusFilterValue === '' ||
-                    (rowStatus && rowStatus.toLowerCase().includes(statusFilterValue));
-
-                let matchesDateRange = true;
-                if (startDate && endDate) {
-                    // Normalize dates to start of day for accurate range comparison
-                    // This ensures that candidates registered on the start/end date are included.
-                    const rowDate = new Date(rowRegistrationDate.getFullYear(), rowRegistrationDate.getMonth(), rowRegistrationDate.getDate());
-                    const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-                    const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-                    matchesDateRange = rowDate >= start && rowDate <= end;
-                }
-
-                if (matchesSearch && matchesStatus && matchesDateRange) { // Include matchesDateRange in the condition
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
-            }
-
-            // Update counters
-            showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
-            showingToEl.textContent = visibleCount;
-            document.getElementById('total-leads').textContent = visibleCount;
-        }
-
-        // Event listeners
-        searchInput.addEventListener('input', filterLeads);
-        statusFilter.addEventListener('change', filterLeads);
-        // The Flatpickr onChange event already calls filterLeads, so no separate listener is strictly needed here for dateRangeFilter,
-        // but adding it won't hurt as a fallback if the date input is manually changed without the picker.
-        dateRangeFilter.addEventListener('change', filterLeads);
-
-        // Initial filter on page load
-        filterLeads();
-
-        // Make table rows clickable (except when clicking on buttons)
-        document.querySelectorAll('#leadsTable tbody tr').forEach(row => {
-            row.addEventListener('click', (e) => {
-                // Check if the click was on a button or link
-                if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-                    return;
-                }
-
-                // Find the profile link in the row and navigate to it
-                const profileLink = row.querySelector('td:nth-child(2) a');
-                if (profileLink) {
-                    window.location.href = profileLink.href;
-                }
-            });
-
-            // Change cursor on hover
-            row.style.cursor = 'pointer';
+            // Update the modal's content
+            const modal = this;
+            modal.querySelector('#modalCandidateName').textContent = name;
+            modal.querySelector('#modalCandidateCode').textContent = code;
+            modal.querySelector('#modalCandidatePhone').textContent = phone;
+            modal.querySelector('#modalCandidateEmail').textContent = email;
+            modal.querySelector('#modalCandidateStatus').textContent = status;
+            modal.querySelector('#modalCandidateLeadFor').textContent = leadFor;
+            modal.querySelector('#modalCandidateRegistered').textContent = registered;
         });
+
+        // NOTE: All client-side filtering JavaScript has been removed 
+        // as this is now handled by the backend.
     });
 </script>
 

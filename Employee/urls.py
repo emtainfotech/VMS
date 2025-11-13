@@ -81,36 +81,20 @@ urlpatterns = [
     path('ajax/get-employee-filtered-activity-list/', get_employee_filtered_activity_list, name='get_employee_filtered_activity_list'), 
     path('employee/tasks/', employee_task_dashboard, name='employee_task_dashboard'),
     path('tasks/<int:pk>/', task_detail_and_reassign, name='employee_task_detail'),
-    # URLs for the Notification System
     path('notifications/history/', employee_notification_history, name='employee_notification_history'),
     path('notifications/read/<int:notification_id>/', employee_mark_notification_as_read, name='employee_mark_notification_as_read'),
     path('notifications/read-all/', employee_mark_all_as_read, name='employee_mark_all_as_read'),
-    
-    # URL for the real-time API
     path('api/notifications/unread/', employee_get_unread_notifications_api, name='employee_api_unread_notifications'),
-    # --- Attendance URLs ---
     path('attendance/status/', get_attendance_status, name='get_attendance_status'),
     path('attendance/punch-in/', punch_in, name='punch_in'),
     path('attendance/punch-out/', punch_out, name='punch_out'),
     path('attendance/correct-punch/', correct_forgotten_punch, name='correct_forgotten_punch'),
-    
-    # --- Report URL ---
     path('attendance/my-report/', employee_attendance_report, name='employee_attendance_report'),
     path('mailbox/', mailbox_view, name='mailbox'),
-
-# 2. AJAX: Fetch a single email's content
     path('mailbox/email/<int:account_id>/<str:email_id>/', fetch_email_content_ajax, name='fetch_email_content_ajax'),
-
-    # 3. Download an attachment
     path('mailbox/attachment/<int:account_id>/<str:email_id>/<path:filename>/', download_attachment, name='download_attachment'),
-
-    # 4. AJAX: Toggle the star/flag on an email
     path('mailbox/toggle_star/', toggle_star_ajax, name='toggle_star_ajax'),
-
-    # 5. AJAX: NEW - Delete an email (move to trash)
     path('mailbox/delete/', delete_email_ajax, name='delete_email_ajax'),
-
-    # 6. AJAX: Check for new mail (for polling)
     path('mailbox/check_new_mail/', check_new_mail_ajax, name='check_new_mail_ajax'),
 
     path('admin/', admin.site.urls),

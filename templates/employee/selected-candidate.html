@@ -1,6 +1,10 @@
 {% extends 'employee/performance-base.html' %}
+{% load static %}
 
 {% block content %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
 <div class="page-wrapper">
   <div class="page-header d-print-none">
     <div class="container-xl">
@@ -8,11 +12,18 @@
         <div class="col">
           <h2 class="page-title">Selected Candidates</h2>
           <div class="text-muted mt-1">
-            <span id="total-candidates">{{ candidates|length }}</span> selected candidates
+            <span id="total-candidates">{{ paginator.count }}</span> selected candidates
           </div>
         </div>
         <div class="col-auto ms-auto d-print-none">
           <div class="btn-list">
+            <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#filterModal">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-filter" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                 <path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-4 2v-9l-4.414 -4.414a2 2 0 0 1 -.586 -1.414v-2.172z"></path>
+              </svg>
+              Filters
+            </button>
             <a href="{% url 'employee_candidate_registration' %}" class="btn btn-primary">
               <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -30,46 +41,6 @@
   <div class="page-body">
     <div class="container-xl">
       <div class="card">
-        <div class="card-header">
-          <div class="row g-2 align-items-end"> {# Changed to g-2 for spacing and align-items-end #}
-            <div class="col-12 col-md-3"> {# Adjusted column sizes for better layout #}
-              <label for="searchInput" class="form-label">Search Candidate:</label>
-              <div class="input-group">
-                <span class="input-group-text">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-                    <path d="M21 21l-6 -6" />
-                  </svg>
-                </span>
-                <input type="text" id="searchInput" class="form-control" placeholder="Search by name, contact, code..." aria-label="Search candidates">
-              </div>
-            </div>
-
-            <div class="col-12 col-md-3">
-              <label for="companyFilter" class="form-label">Company:</label>
-              <select id="companyFilter" class="form-select" multiple> {# Added multiple attribute #}
-                </select>
-            </div>
-
-            <div class="col-12 col-md-3">
-              <label for="employeeFilter" class="form-label">Employee:</label>
-              <select id="employeeFilter" class="form-select" multiple> {# Added multiple attribute #}
-                </select>
-            </div>
-            
-            <div class="col-12 col-md-3">
-              <label for="selectionDateRangeFilter" class="form-label">Selection Date Range:</label>
-              <input type="text" id="selectionDateRangeFilter" class="form-control" placeholder="Select date range">
-            </div>
-
-            <div class="col-12 col-md-3 mt-3 mt-md-0"> {# Added margin-top for small screens #}
-              <label for="joiningDateRangeFilter" class="form-label">Joining Date Range:</label>
-              <input type="text" id="joiningDateRangeFilter" class="form-control" placeholder="Select date range">
-            </div>
-          </div>
-        </div>
-
         <div class="table-responsive">
           <table class="table table-vcenter table-hover table-nowrap" id="selectedCandidatesTable">
             <thead>
@@ -78,7 +49,6 @@
                 <th>Candidate</th>
                 <th>Contact</th>
                 <th>Company</th>
-                <th>Employee</th> {# Added Employee column header #}
                 <th>Selection Date</th>
                 <th>Joining Date</th>
                 <th>Salary</th>
@@ -87,12 +57,8 @@
             </thead>
             <tbody>
               {% for candidate in candidates %}
-              <tr data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }} {{ candidate.company_name|lower }} {{ candidate.employee_name|lower }}"
-                  data-company="{{ candidate.company_name|lower }}" {# Storing lowercased for easier comparison #}
-                  data-employee="{{ candidate.employee_name|lower }}" {# Assuming employee_name is available #}
-                  data-selection-date="{{ candidate.selection_date|date:'Y-m-d' }}" {# Format for easy date comparison #}
-                  data-joining-date="{{ candidate.candidate_joining_date|date:'Y-m-d' }}"> {# Format for easy date comparison #}
-                <td>{{ forloop.counter }}</td>
+              <tr>
+                <td>{{ forloop.counter0|add:candidates.start_index }}</td>
                 <td>
                   <div class="d-flex align-items-center">
                     <div class="me-3">
@@ -141,11 +107,6 @@
                 <td>
                   <span class="badge bg-blue-lt">
                     {{ candidate.company_name|default:"-" }}
-                  </span>
-                </td>
-                <td> {# New Employee column #}
-                  <span class="badge ">
-                    {{ candidate.employee_name|default:"-" }}
                   </span>
                 </td>
                 <td>
@@ -215,112 +176,144 @@
                   {% endif %}
                 </td>
               </tr>
+              {% empty %}
+              <tr>
+                <td colspan="8" class="text-center text-muted">No selected candidates found matching your criteria.</td>
+              </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
 
         <div class="card-footer d-flex align-items-center">
-          <div class="pagination-info">
-            Showing <span id="showingFrom">1</span> to <span id="showingTo">{{ candidates|length }}</span> of <span id="totalCount">{{ candidates|length }}</span> candidates
+          {% if candidates %}
+          <div class="pagination-info text-muted">
+            Showing <span id="showingFrom">{{ candidates.start_index }}</span>
+            to <span id="showingTo">{{ candidates.end_index }}</span>
+            of <span id="totalCount">{{ paginator.count }}</span> candidates
           </div>
+          {% else %}
+          <div class="pagination-info text-muted">
+            No candidates found.
+          </div>
+          {% endif %}
+
+          {% if paginator.num_pages > 1 %}
           <ul class="pagination m-0 ms-auto">
-            <li class="page-item disabled">
-              <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M15 6l-6 6l6 6" />
-                </svg>
+            
+            {% if candidates.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ candidates.previous_page_number }}&{{ filter_params }}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>
                 prev
               </a>
             </li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
-            <li class="page-item">
-              <a class="page-link" href="#">
-                next
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M9 6l6 6l-6 6" />
-                </svg>
+            {% else %}
+            <li class="page-item disabled">
+              <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>
+                prev
               </a>
             </li>
+            {% endif %}
+
+            {% for num in paginator.page_range %}
+              {% if num == candidates.number %}
+                <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+              {% elif num > candidates.number|add:'-3' and num < candidates.number|add:'3' %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}&{{ filter_params }}">{{ num }}</a></li>
+              {% endif %}
+            {% endfor %}
+
+            {% if candidates.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ candidates.next_page_number }}&{{ filter_params }}">
+                next
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>
+              </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+              <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                next
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>
+              </a>
+            </li>
+            {% endif %}
           </ul>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="GET" action="{% url 'employee_selected_candidate' %}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="filterModalLabel">Filters</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          
+          <div class="mb-3">
+            <label for="modalSearchInput" class="form-label">Search</label>
+            <input type="text" id="modalSearchInput" name="search" class="form-control" placeholder="Search by name, contact, code..." value="{{ search_query|default:'' }}">
+          </div>
+
+          <div class="mb-3">
+            <label for="modalCompanyFilter" class="form-label">Company</label>
+            <select id="modalCompanyFilter" name="company" multiple placeholder="Select companies...">
+              {% for company in all_companies %}
+                <option value="{{ company }}" {% if company in selected_companies %}selected{% endif %}>
+                  {{ company }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="modalSelectionDateRangeFilter" class="form-label">Selection Date Range</label>
+            <input type="text" id="modalSelectionDateRangeFilter" name="selection_date_range" class="form-control" 
+                   placeholder="Select date range" value="{{ selection_date_range_str|default:'' }}">
+          </div>
+
+          <div class="mb-3">
+            <label for="modalJoiningDateRangeFilter" class="form-label">Joining Date Range</label>
+            <input type="text" id="modalJoiningDateRangeFilter" name="joining_date_range" class="form-control" 
+                   placeholder="Select date range" value="{{ joining_date_range_str|default:'' }}">
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <a href="{% url 'employee_selected_candidate' %}" class="btn btn-link me-auto">Clear Filters</a>
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Apply Filters</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <style>
-  .avatar-container {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f1f5f9;
-  }
-  
-  .badge.bg-blue-lt {
-    background-color: rgba(65, 138, 221, 0.1);
-    color: #418add;
-    padding: 0.25rem 0.5rem;
-  }
-  
   /* Sticky Table Header */
   .table-responsive {
     overflow-y: auto; /* Enable vertical scrolling */
-    max-height: calc(100vh - 350px); /* Adjust based on your layout */
+    max-height: calc(100vh - 300px); /* Adjust based on your layout */
   }
 
   .table th {
     position: sticky;
     top: 0;
-    background-color: #f8f9fa; /* Or your table header background color */
-    z-index: 10; /* Ensure header stays on top of content */
-  }
-
-  /* Adjust Tom-select styling for better integration if needed */
-  .ts-control {
-    border-color: var(--tblr-border-color, #dee2e6) !important; /* Bootstrap border color */
-  }
-  .ts-control.focus {
-    box-shadow: 0 0 0 0.25rem rgba(41, 128, 185, 0.25) !important; /* Bootstrap focus shadow */
-  }
-  .ts-wrapper.multi .ts-control > div {
-    background-color: var(--tblr-blue-lt) !important; /* Example badge color */
-    color: var(--tblr-blue) !important;
-  }
-  /* Flatpickr input styling to match Bootstrap forms */
-  .flatpickr-input {
-    min-height: calc(1.5em + 0.75rem + 2px); /* Matches Bootstrap form-control height */
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--tblr-body-color, #212529);
-    background-color: var(--tblr-body-bg, #fff);
-    background-clip: padding-box;
-    border: 1px solid var(--tblr-border-color, #dee2e6);
-    appearance: none;
-    border-radius: var(--tblr-border-radius, 0.25rem);
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  }
-
-  @media (max-width: 768px) {
-    .card-header .row > div {
-      width: 100%;
-    }
-    
-    .card-header .input-group {
-      margin-bottom: 1rem;
-    }
+    background-color: var(--tblr-card-bg); /* Use Tabler variable */
+    z-index: 10;
   }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
@@ -330,54 +323,8 @@
       return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // Get table and rows
-    const selectedCandidatesTable = document.getElementById('selectedCandidatesTable');
-    const rows = Array.from(selectedCandidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr'));
-
-    // Dynamically get unique companies and employees from table data
-    const uniqueCompanies = new Set();
-    const uniqueEmployees = new Set();
-    rows.forEach(row => {
-      const company = row.getAttribute('data-company');
-      // Ensure company is a non-empty string and not 'null' or '-'
-      if (company && company !== 'null' && company !== '-') {
-        uniqueCompanies.add(company);
-      }
-      const employee = row.getAttribute('data-employee');
-      // Ensure employee is a non-empty string and not 'null' or '-'
-      if (employee && employee !== 'null' && employee !== '-') {
-        uniqueEmployees.add(employee);
-      }
-    });
-
-    // Populate and initialize Tom-select for Company filter
-    const companyFilterSelectElement = document.getElementById('companyFilter');
-    Array.from(uniqueCompanies).sort().forEach(company => {
-      const option = document.createElement('option');
-      option.value = company; // Value for filtering
-      // Capitalize first letter of each word for display
-      option.textContent = company.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); 
-      companyFilterSelectElement.appendChild(option);
-    });
-    const companySelect = new TomSelect('#companyFilter', {
-      plugins: ['remove_button'], // Allows removing selected items
-      create: false, // Don't allow new options to be created
-      sortField: {
-        field: "text",
-        direction: "asc"
-      }
-    });
-
-    // Populate and initialize Tom-select for Employee filter
-    const employeeFilterSelectElement = document.getElementById('employeeFilter');
-    Array.from(uniqueEmployees).sort().forEach(employee => {
-      const option = document.createElement('option');
-      option.value = employee; // Value for filtering
-      // Capitalize first letter of each word for display
-      option.textContent = employee.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); 
-      employeeFilterSelectElement.appendChild(option);
-    });
-    const employeeSelect = new TomSelect('#employeeFilter', {
+    // Initialize Tom-select for Company filter INSIDE the modal
+    new TomSelect('#modalCompanyFilter', {
       plugins: ['remove_button'],
       create: false,
       sortField: {
@@ -386,157 +333,23 @@
       }
     });
 
-    // Initialize Flatpickr for date range filters
-    const selectionDateRangePicker = flatpickr("#selectionDateRangeFilter", {
-      mode: "range",
-      dateFormat: "Y-m-d", // Format for consistent data attributes
-      onChange: function(selectedDates, dateStr, instance) {
-        filterCandidates(); // Trigger filter when dates change
-      }
-    });
-
-    const joiningDateRangePicker = flatpickr("#joiningDateRangeFilter", {
+    // Initialize Flatpickr for date range filters INSIDE the modal
+    flatpickr("#modalSelectionDateRangeFilter", {
       mode: "range",
       dateFormat: "Y-m-d",
-      onChange: function(selectedDates, dateStr, instance) {
-        filterCandidates();
-      }
     });
 
-    // Get other filter elements
-    const searchInput = document.getElementById('searchInput');
-    const totalCandidatesSpan = document.getElementById('total-candidates'); // Reference to update candidate count
-    const showingFromEl = document.getElementById('showingFrom');
-    const showingToEl = document.getElementById('showingTo');
-    
-    function filterCandidates() {
-      const searchTerm = searchInput.value.toLowerCase();
-      const selectedCompanies = companySelect.getValue(); // Array of selected company values (lowercase)
-      const selectedEmployees = employeeSelect.getValue(); // Array of selected employee values (lowercase)
+    flatpickr("#modalJoiningDateRangeFilter", {
+      mode: "range",
+      dateFormat: "Y-m-d",
+    });
 
-      // Get selected date ranges (Flatpickr returns an array of Date objects)
-      const selectionDates = selectionDateRangePicker.selectedDates;
-      const joiningDates = joiningDateRangePicker.selectedDates;
-
-      let visibleCount = 0;
-      
-      rows.forEach(row => {
-        let rowTextContent = '';
-        const cells = row.getElementsByTagName('td');
-        // Combine text content from all relevant cells for general search
-        // Skipping the last column (Actions) as it's not typically searched
-        for (let j = 0; j < cells.length - 1; j++) { 
-          rowTextContent += ' ' + cells[j].textContent.toLowerCase();
-        }
-        
-        const searchContent = row.getAttribute('data-search') || ''; // Fallback for data-search
-        const rowCompany = (row.getAttribute('data-company') || '').toLowerCase();
-        const rowEmployee = (row.getAttribute('data-employee') || '').toLowerCase();
-        const rowSelectionDateStr = row.getAttribute('data-selection-date') || ''; // YYYY-MM-DD string
-        const rowJoiningDateStr = row.getAttribute('data-joining-date') || '';     // YYYY-MM-DD string
-        
-        // 1. General Search Filter
-        const matchesSearch = rowTextContent.includes(searchTerm) || searchContent.includes(searchTerm);
-        
-        // 2. Company Filter (multiple selection)
-        // If no companies are selected, all rows match this filter
-        // Else, check if the row's company is in the array of selected companies
-        const matchesCompany = selectedCompanies.length === 0 || selectedCompanies.includes(rowCompany);
-
-        // 3. Employee Filter (multiple selection)
-        // Similar logic as company filter
-        const matchesEmployee = selectedEmployees.length === 0 || selectedEmployees.includes(rowEmployee);
-
-        // 4. Selection Date Range Filter
-        let matchesSelectionDate = true;
-        if (selectionDates.length > 0) { // Only apply filter if dates are selected
-          if (!rowSelectionDateStr || rowSelectionDateStr === "-") { // If candidate has no selection date or it's placeholder, it won't match a filter
-            matchesSelectionDate = false;
-          } else {
-            const dateToCheck = new Date(rowSelectionDateStr); // Convert candidate's date string to Date object
-            // Ensure dates are compared without time component if only date matters
-            dateToCheck.setHours(0,0,0,0); 
-
-            const startDate = selectionDates[0];
-            startDate.setHours(0,0,0,0); // Normalize start date
-
-            if (selectionDates.length === 1) { // Single date selected in the picker
-              matchesSelectionDate = dateToCheck.getTime() === startDate.getTime();
-            } else if (selectionDates.length === 2) { // Date range selected
-              const endDate = selectionDates[1];
-              endDate.setHours(0,0,0,0); // Normalize end date
-              matchesSelectionDate = dateToCheck >= startDate && dateToCheck <= endDate;
-            }
-          }
-        }
-
-        // 5. Joining Date Range Filter
-        let matchesJoiningDate = true;
-        if (joiningDates.length > 0) { // Only apply filter if dates are selected
-          if (!rowJoiningDateStr || rowJoiningDateStr === "Not joined" || rowJoiningDateStr === "-") { // If candidate has no joining date, it won't match a filter
-            matchesJoiningDate = false;
-          } else {
-            const dateToCheck = new Date(rowJoiningDateStr);
-            dateToCheck.setHours(0,0,0,0); 
-
-            const startDate = joiningDates[0];
-            startDate.setHours(0,0,0,0); 
-
-            if (joiningDates.length === 1) { // Single date selected
-              matchesJoiningDate = dateToCheck.getTime() === startDate.getTime();
-            } else if (joiningDates.length === 2) { // Date range selected
-              const endDate = joiningDates[1];
-              endDate.setHours(0,0,0,0);
-              matchesJoiningDate = dateToCheck >= startDate && dateToCheck <= endDate;
-            }
-          }
-        }
-        
-        // Apply all filters
-        if (matchesSearch && matchesCompany && matchesEmployee && matchesSelectionDate && matchesJoiningDate) {
-          row.style.display = '';
-          visibleCount++;
-        } else {
-          row.style.display = 'none';
-        }
-      });
-      
-      // Update counters
-      showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
-      showingToEl.textContent = visibleCount;
-      totalCandidatesSpan.textContent = visibleCount; // Update total candidates count
-      
-      // Update pagination visibility
-      updatePagination(visibleCount);
-    }
-    
-    function updatePagination(visibleCount) {
-      const pagination = document.querySelector('.pagination');
-      // Hide pagination if no items are visible, show otherwise
-      if (visibleCount === 0) {
-        pagination.classList.add('d-none');
-      } else {
-        pagination.classList.remove('d-none');
-      }
-    }
-    
-    // Event listeners
-    searchInput.addEventListener('input', filterCandidates);
-    companySelect.on('change', filterCandidates); // Tom-select uses 'change' event
-    employeeSelect.on('change', filterCandidates); // Tom-select uses 'change' event
-    // Flatpickr handles its own change event, triggering filterCandidates automatically
-
-    // Initial filter on page load
-    filterCandidates();
-    
-    // Make table rows clickable (except when clicking on buttons or filter elements)
+    // Make table rows clickable
     document.querySelectorAll('#selectedCandidatesTable tbody tr').forEach(row => {
       row.addEventListener('click', (e) => {
-        // Ignore clicks on links, buttons, or any part of the filter elements (Tom-select or Flatpickr)
+        // Ignore clicks on links or buttons
         if (e.target.tagName === 'A' || e.target.closest('a') || 
-            e.target.tagName === 'BUTTON' || e.target.closest('button') ||
-            e.target.tagName === 'INPUT' || e.target.closest('input') ||
-            e.target.closest('.ts-wrapper') || e.target.closest('.flatpickr-calendar')) {
+            e.target.tagName === 'BUTTON' || e.target.closest('button')) {
           return;
         }
         
@@ -545,16 +358,9 @@
           window.location.href = profileLink.href;
         }
       });
-      
-      // Change cursor on hover to indicate clickability
-      row.style.cursor = 'pointer';
+      row.style.cursor = 'pointer'; // Change cursor on hover
     });
   });
 </script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
 {% endblock content %}

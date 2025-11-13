@@ -8,11 +8,15 @@
         <div class="col">
           <h2 class="page-title">Selected Candidates</h2>
           <div class="text-muted mt-1">
-            <span id="total-candidates">{{ candidates|length }}</span> selected candidates
+            <span id="total-candidates">{{ page_obj.paginator.count }}</span> selected candidates
           </div>
         </div>
         <div class="col-auto ms-auto d-print-none">
           <div class="btn-list">
+            <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 6l16 0" /><path d="M4 12l10 0" /><path d="M4 18l6 0" /></svg>
+                Filters
+            </button>
             <a href="{% url 'admin_candidate_registration' %}" class="btn btn-primary">
               <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -31,43 +35,7 @@
     <div class="container-xl">
       <div class="card">
         <div class="card-header">
-          <div class="row g-2 align-items-end">
-            <div class="col-12 col-md-3">
-              <label for="searchInput" class="form-label">Search Candidate:</label>
-              <div class="input-group">
-                <span class="input-group-text">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-                    <path d="M21 21l-6 -6" />
-                  </svg>
-                </span>
-                <input type="text" id="searchInput" class="form-control" placeholder="Search by name, contact, code..." aria-label="Search candidates">
-              </div>
-            </div>
-
-            <div class="col-12 col-md-3">
-              <label for="companyFilter" class="form-label">Company:</label>
-              <select id="companyFilter" class="form-select" multiple>
-                </select>
-            </div>
-
-            <div class="col-12 col-md-3">
-              <label for="employeeFilter" class="form-label">Employee:</label>
-              <select id="employeeFilter" class="form-select" multiple>
-                </select>
-            </div>
-            
-            <div class="col-12 col-md-3">
-              <label for="selectionDateRangeFilter" class="form-label">Selection Date Range:</label>
-              <input type="text" id="selectionDateRangeFilter" class="form-control" placeholder="Select date range">
-            </div>
-
-            <div class="col-12 col-md-3 mt-3 mt-md-0">
-              <label for="joiningDateRangeFilter" class="form-label">Joining Date Range:</label>
-              <input type="text" id="joiningDateRangeFilter" class="form-control" placeholder="Select date range">
-            </div>
-          </div>
+            <h3 class="card-title">Selected Candidate List</h3>
         </div>
 
         <div class="table-responsive">
@@ -86,13 +54,9 @@
               </tr>
             </thead>
             <tbody>
-              {% for candidate in candidates %}
-              <tr data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }} {{ candidate.company_name|lower }}"
-                  data-company="{{ candidate.company_name|lower }}"
-                  data-employee="{{ candidate.employee_name|lower }}"
-                  data-selection-date="{{ candidate.selection_date|date:'Y-m-d' }}"
-                  data-joining-date="{{ candidate.candidate_joining_date|date:'Y-m-d' }}">
-                <td>{{ forloop.counter }}</td>
+              {% for candidate in page_obj %}
+              <tr>
+                <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
                 <td>
                   <div class="d-flex align-items-center">
                     <div class="me-3">
@@ -106,7 +70,7 @@
                     </div>
                     <div>
                       <div class="font-weight-medium">
-                        <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' candidate.id %}{% else %}{% url 'admin_candidate_profile' candidate.id %}{% endif %}" class="text-reset">
+                        <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' candidate.id %}{% else %}{% url 'admin_candidate_profile' candidate.id %}{% endif %}" class="text-reset profile-link">
                           {{ candidate.candidate_name }}
                         </a>
                       </div>
@@ -133,7 +97,7 @@
                   </div>
                 </td>
                 <td>
-                  <span class="badge ">
+                  <span class="badge">
                     {{ candidate.employee_name|default:"-" }}
                   </span>
                 </td>
@@ -164,146 +128,113 @@
                 <td class="text-center">
                   <div class="btn-list justify-content-center">
                     <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' candidate.id %}{% else %}{% url 'admin_candidate_profile' candidate.id %}{% endif %}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                        <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
-                      </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg>
                     </a>
                     {% if candidate.candidate_resume %}
                     <a href="{{ candidate.candidate_resume.url }}" target="_blank" class="btn btn-sm btn-icon" title="View Resume" data-bs-toggle="tooltip">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
-                        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
-                        <path d="M9 9l1 0"></path>
-                        <path d="M9 13l6 0"></path>
-                        <path d="M9 17l6 0"></path>
-                      </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path><path d="M9 9l1 0"></path><path d="M9 13l6 0"></path><path d="M9 17l6 0"></path></svg>
                     </a>
                     <a href="{{ candidate.candidate_resume.url }}" download class="btn btn-sm btn-icon" title="Download Resume" data-bs-toggle="tooltip">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
-                        <path d="M7 11l5 5l5 -5"></path>
-                        <path d="M12 4l0 12"></path>
-                      </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path><path d="M7 11l5 5l5 -5"></path><path d="M12 4l0 12"></path></svg>
                     </a>
                     {% endif %}
                   </div>
                 </td>
+              </tr>
+              {% empty %}
+              <tr>
+                  <td colspan="9" class="text-center text-muted">No selected candidates found matching your criteria.</td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
 
+        {% if page_obj.paginator.num_pages > 1 %}
         <div class="card-footer d-flex align-items-center">
-          <div class="pagination-info">
-            Showing <span id="showingFrom">1</span> to <span id="showingTo">{{ candidates|length }}</span> of <span id="totalCount">{{ candidates|length }}</span> candidates
-          </div>
-          <ul class="pagination m-0 ms-auto">
-            <li class="page-item disabled">
-              <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M15 6l-6 6l6 6" />
-                </svg>
-                prev
-              </a>
-            </li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
-            <li class="page-item">
-              <a class="page-link" href="#">
-                next
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M9 6l6 6l-6 6" />
-                </svg>
-              </a>
-            </li>
-          </ul>
+            <div class="pagination-info text-muted">
+                Showing <span id="showingFrom">{{ page_obj.start_index }}</span>
+                to <span id="showingTo">{{ page_obj.end_index }}</span>
+                of <span id="totalCount">{{ page_obj.paginator.count }}</span> candidates
+            </div>
+            <ul class="pagination m-0 ms-auto">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ filter_query_string }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M15 6l-6 6l6 6" /></svg>
+                        prev
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M15 6l-6 6l6 6" /></svg>
+                        prev
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in page_obj.paginator.get_elided_page_range %}
+                    {% if page_num == page_obj.number %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ page_num }}</a></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_num }}&{{ filter_query_string }}">{{ page_num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ filter_query_string }}">
+                        next
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M9 6l6 6l-6 6" /></svg>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        next
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M9 6l6 6l-6 6" /></svg>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
         </div>
+        {% endif %}
       </div>
     </div>
   </div>
 </div>
 
-<style>
-  .avatar-container {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f1f5f9;
-  }
-  
-  .badge.bg-blue-lt {
-    background-color: rgba(65, 138, 221, 0.1);
-    color: #418add;
-    padding: 0.25rem 0.5rem;
-  }
-  
-  /* Sticky Table Header */
-  .table-responsive {
-    overflow-y: auto; /* Enable vertical scrolling */
-    max-height: calc(100vh - 350px); /* Adjust based on your layout */
-  }
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="GET" action="{% url 'selected_candidate' %}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">Filter Selected Candidates</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="filterSearchInput" class="form-label">Search</label>
+                            <input type="text" id="filterSearchInput" name="search" class="form-control"
+                                placeholder="Search by name, phone, email, company..." value="{{ current_search }}">
+                        </div>
 
-  .table th {
-    position: sticky;
-    top: 0;
-    background-color: #f8f9fa; /* Or your table header background color */
-    z-index: 10; /* Ensure header stays on top of content */
-  }
+                        <div class="col-md-6">
+                            <label for="filterSelectionDate" class="form-label">Selection Date Range</label>
+                            <input type="text" class="form-control" id="filterSelectionDate" name="selection_date"
+                                placeholder="Select selection date range" value="{{ current_selection_date }}">
+                        </div>
 
-  /* Adjust Tom-select styling for better integration if needed */
-  .ts-control {
-    border-color: var(--tblr-border-color, #dee2e6) !important; /* Bootstrap border color */
-  }
-  .ts-control.focus {
-    box-shadow: 0 0 0 0.25rem rgba(41, 128, 185, 0.25) !important; /* Bootstrap focus shadow */
-  }
-  .ts-wrapper.multi .ts-control > div {
-    background-color: var(--tblr-blue-lt) !important; /* Example badge color */
-    color: var(--tblr-blue) !important;
-  }
-  /* Flatpickr input styling to match Bootstrap forms */
-  .flatpickr-input {
-    min-height: calc(1.5em + 0.75rem + 2px); /* Matches Bootstrap form-control height */
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--tblr-body-color, #212529);
-    background-color: var(--tblr-body-bg, #fff);
-    background-clip: padding-box;
-    border: 1px solid var(--tblr-border-color, #dee2e6);
-    appearance: none;
-    border-radius: var(--tblr-border-radius, 0.25rem);
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  }
+                        <div class="col-md-6">
+                            <label for="filterJoiningDate" class="form-label">Joining Date Range</label>
+                            <input type="text" class="form-control" id="filterJoiningDate" name="joining_date"
+                                placeholder="Select joining date range" value="{{ current_joining_date }}">
+                        </div>
 
-  @media (max-width: 768px) {
-    .card-header .row > div {
-      width: 100%;
-    }
-    
-    .card-header .input-group {
-      margin-bottom: 1rem;
-    }
-  }
-</style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
@@ -313,202 +244,271 @@
       return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // Get table and rows
-    const selectedCandidatesTable = document.getElementById('selectedCandidatesTable');
-    const rows = Array.from(selectedCandidatesTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr'));
-
-    // Dynamically get unique companies and employees from table data
-    const uniqueCompanies = new Set();
-    const uniqueEmployees = new Set();
-    rows.forEach(row => {
-      const company = row.getAttribute('data-company');
-      const employee = row.getAttribute('data-employee');
-      if (company && company !== 'null' && company !== '-') {
-        uniqueCompanies.add(company);
-      }
-      if (employee && employee !== 'null' && employee !== '-') {
-        uniqueEmployees.add(employee);
-      }
-    });
-
-    // Populate and initialize Tom-select for Company filter
-    const companyFilterSelectElement = document.getElementById('companyFilter');
-    Array.from(uniqueCompanies).sort().forEach(company => {
-      const option = document.createElement('option');
-      option.value = company;
-      option.textContent = company.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); // Capitalize first letter of each word
-      companyFilterSelectElement.appendChild(option);
-    });
-    const companySelect = new TomSelect('#companyFilter', {
-      plugins: ['remove_button'],
-      create: false,
-      sortField: { field: "text", direction: "asc" }
-    });
-
-    // Populate and initialize Tom-select for Employee filter
-    const employeeFilterSelectElement = document.getElementById('employeeFilter');
-    Array.from(uniqueEmployees).sort().forEach(employee => {
-      const option = document.createElement('option');
-      option.value = employee;
-      option.textContent = employee.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); // Capitalize first letter of each word
-      employeeFilterSelectElement.appendChild(option);
-    });
-    const employeeSelect = new TomSelect('#employeeFilter', {
-      plugins: ['remove_button'],
-      create: false,
-      sortField: { field: "text", direction: "asc" }
-    });
-
+    // --- THIS IS THE MISSING PART ---
     // Initialize Flatpickr for date range filters
-    const selectionDateRangePicker = flatpickr("#selectionDateRangeFilter", {
+    flatpickr("#filterSelectionDate", {
       mode: "range",
       dateFormat: "Y-m-d",
-      onChange: function(selectedDates, dateStr, instance) {
-        filterCandidates();
-      }
     });
-
-    const joiningDateRangePicker = flatpickr("#joiningDateRangeFilter", {
+    flatpickr("#filterJoiningDate", {
       mode: "range",
       dateFormat: "Y-m-d",
-      onChange: function(selectedDates, dateStr, instance) {
-        filterCandidates();
-      }
     });
+    // ---------------------------------
 
-    // Get other filter elements
-    const searchInput = document.getElementById('searchInput');
-    const totalCountEl = document.getElementById('totalCount');
-    const showingFromEl = document.getElementById('showingFrom');
-    const showingToEl = document.getElementById('showingTo');
-    
-    function filterCandidates() {
-      const searchTerm = searchInput.value.toLowerCase();
-      const selectedCompanies = companySelect.getValue();
-      const selectedEmployees = employeeSelect.getValue();
+    // --- Helper Function for Dropdown Checkbox Filters ---
+    function setupCheckboxFilter(type) {
+        const searchInput = document.getElementById(`${type}SearchInput`);
+        const allCheckbox = document.getElementById(`${type}All`);
+        const itemCheckboxes = document.querySelectorAll(`.${type}-checkbox`);
+        const checkboxItems = document.querySelectorAll(`.${type}-checkbox-item`);
 
-      // Get selected date ranges (Flatpickr returns an array of Date objects)
-      const selectionDates = selectionDateRangePicker.selectedDates;
-      const joiningDates = joiningDateRangePicker.selectedDates;
+        if (!searchInput) return; // Exit if elements aren't found
 
-      // Helper function to format a Date object to YYYY-MM-DD
-      const formatDate = (date) => date ? date.toISOString().split('T')[0] : null;
+        // 1. Search functionality
+        searchInput.addEventListener('input', () => {
+            const search = searchInput.value.toLowerCase();
+            checkboxItems.forEach(item => {
+                const name = item.querySelector('label').textContent.toLowerCase();
+                item.style.display = name.includes(search) ? '' : 'none';
+            });
+        });
 
-      let visibleCount = 0;
-      
-      rows.forEach(row => {
-        let rowTextContent = '';
-        const cells = row.getElementsByTagName('td');
-        for (let j = 0; j < cells.length - 1; j++) {
-          rowTextContent += ' ' + cells[j].textContent.toLowerCase();
+        // 2. "All" checkbox logic
+        allCheckbox.addEventListener('change', () => {
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.checked = allCheckbox.checked;
+            });
+        });
+
+        // 3. Individual checkbox logic
+        itemCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                if (!checkbox.checked) {
+                    allCheckbox.checked = false;
+                } else {
+                    const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
+                    allCheckbox.checked = allChecked;
+                }
+            });
+        });
+
+        // 4. Set initial state of "All" checkbox
+        const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
+        if (allChecked && itemCheckboxes.length > 0) {
+            allCheckbox.checked = true;
         }
-        
-        const searchContent = row.getAttribute('data-search') || '';
-        const rowCompany = (row.getAttribute('data-company') || '').toLowerCase();
-        const rowEmployee = (row.getAttribute('data-employee') || '').toLowerCase();
-        const rowSelectionDateStr = row.getAttribute('data-selection-date') || ''; // String YYYY-MM-DD
-        const rowJoiningDateStr = row.getAttribute('data-joining-date') || '';     // String YYYY-MM-DD
-        
-        const matchesSearch = rowTextContent.includes(searchTerm) || searchContent.includes(searchTerm);
-        
-        const matchesCompany = selectedCompanies.length === 0 || selectedCompanies.includes(rowCompany);
-        const matchesEmployee = selectedEmployees.length === 0 || selectedEmployees.includes(rowEmployee);
-
-        // Date range matching logic for Selection Date
-        let matchesSelectionDate = true;
-        if (selectionDates.length > 0) { // If any date(s) are selected in the picker
-          if (rowSelectionDateStr === "") { // If candidate has no selection date, it won't match any filter
-            matchesSelectionDate = false;
-          } else {
-            const dateToCheck = new Date(rowSelectionDateStr); // Convert candidate's date string to Date object
-
-            if (selectionDates.length === 1) { // Single date selected in the picker
-              const selectedDate = selectionDates[0];
-              // Check if the candidate's date is on the exact selected date
-              matchesSelectionDate = dateToCheck.toDateString() === selectedDate.toDateString();
-            } else if (selectionDates.length === 2) { // Date range selected in the picker
-              const startDate = selectionDates[0];
-              const endDate = selectionDates[1];
-              // Check if the candidate's date falls within the range (inclusive)
-              matchesSelectionDate = dateToCheck >= startDate && dateToCheck <= endDate;
-            }
-          }
-        }
-
-        // Date range matching logic for Joining Date
-        let matchesJoiningDate = true;
-        if (joiningDates.length > 0) { // If any date(s) are selected in the picker
-          if (rowJoiningDateStr === "") { // If candidate has no joining date, it won't match any filter
-            matchesJoiningDate = false;
-          } else {
-            const dateToCheck = new Date(rowJoiningDateStr); // Convert candidate's date string to Date object
-
-            if (joiningDates.length === 1) { // Single date selected in the picker
-              const selectedDate = joiningDates[0];
-              // Check if the candidate's date is on the exact selected date
-              matchesJoiningDate = dateToCheck.toDateString() === selectedDate.toDateString();
-            } else if (joiningDates.length === 2) { // Date range selected in the picker
-              const startDate = joiningDates[0];
-              const endDate = joiningDates[1];
-              // Check if the candidate's date falls within the range (inclusive)
-              matchesJoiningDate = dateToCheck >= startDate && dateToCheck <= endDate;
-            }
-          }
-        }
-        
-        if (matchesSearch && matchesCompany && matchesEmployee && matchesSelectionDate && matchesJoiningDate) {
-          row.style.display = '';
-          visibleCount++;
-        } else {
-          row.style.display = 'none';
-        }
-      });
-      
-      // Update counters
-      showingFromEl.textContent = visibleCount > 0 ? '1' : '0';
-      showingToEl.textContent = visibleCount;
-      document.getElementById('total-candidates').textContent = visibleCount;
-      
-      // Update pagination visibility
-      updatePagination(visibleCount);
     }
-    
-    function updatePagination(visibleCount) {
-      const pagination = document.querySelector('.pagination');
-      if (visibleCount === 0) {
-        pagination.classList.add('d-none');
-      } else {
-        pagination.classList.remove('d-none');
-      }
-    }
-    
-    // Event listeners
-    searchInput.addEventListener('input', filterCandidates);
-    companySelect.on('change', filterCandidates);
-    employeeSelect.on('change', filterCandidates);
-    // Flatpickr handles its own change event, triggering filterCandidates
 
-    // Initial filter on page load
-    filterCandidates();
+    // --- Setup Filters ---
+    setupCheckboxFilter('company');
+    setupCheckboxFilter('employee');
     
-    // Make table rows clickable (except when clicking on buttons)
+    // --- Make table rows clickable ---
     document.querySelectorAll('#selectedCandidatesTable tbody tr').forEach(row => {
       row.addEventListener('click', (e) => {
         if (e.target.tagName === 'A' || e.target.closest('a') || 
-            e.target.tagName === 'BUTTON' || e.target.closest('button') ||
-            e.target.tagName === 'INPUT' || e.target.closest('input') ||
-            e.target.closest('.ts-wrapper') || e.target.closest('.flatpickr-calendar')) {
+            e.target.tagName === 'BUTTON' || e.target.closest('button')) {
           return;
         }
         
-        const profileLink = row.querySelector('td:nth-child(2) a');
+        const profileLink = row.querySelector('.profile-link');
         if (profileLink) {
           window.location.href = profileLink.href;
         }
       });
-      
-      row.style.cursor = 'pointer';
     });
   });
 </script>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Company</label>
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle" type="button" id="companyFilterBtn"
+                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                                    Select Company(s)
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="companyFilterBtn"
+                                    style="max-height: 300px; overflow-y: hidden; width: 100%; padding: 0.5rem;">
+                                    <li class="px-2 pb-2">
+                                        <input type="text" class="form-control" id="companySearchInput"
+                                            placeholder="Search company...">
+                                    </li>
+                                    <li class="px-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="companyAll">
+                                            <label class="form-check-label" for="companyAll">All Companies</label>
+                                        </div>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <div id="company-list-container" style="max-height: 200px; overflow-y: auto;">
+                                        {% for name in all_companies %}
+                                        <li class="px-2 company-checkbox-item"> 
+                                            <div class="form-check">
+                                                <input class="form-check-input company-checkbox" type="checkbox"
+                                                    name="company" value="{{ name }}" id="company-{{ name|slugify }}"
+                                                    {% if name in current_companies %}checked{% endif %}>
+                                                <label class="form-check-label" for="company-{{ name|slugify }}">
+                                                    {{ name }}
+                                                </label>
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+                                    </div>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Employee</label>
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle" type="button" id="employeeFilterBtn"
+                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                                    Select Employee(s)
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="employeeFilterBtn"
+                                    style="max-height: 300px; overflow-y: hidden; width: 100%; padding: 0.5rem;">
+                                    <li class="px-2 pb-2">
+                                        <input type="text" class="form-control" id="employeeSearchInput"
+                                            placeholder="Search employee...">
+                                    </li>
+                                    <li class="px-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="employeeAll">
+                                            <label class="form-check-label" for="employeeAll">All Employees</label>
+                                        </div>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <div id="employee-list-container" style="max-height: 200px; overflow-y: auto;">
+                                        {% for name in all_employees %}
+                                        <li class="px-2 employee-checkbox-item"> 
+                                            <div class="form-check">
+                                                <input class="form-check-input employee-checkbox" type="checkbox"
+                                                    name="employee" value="{{ name }}" id="employee-{{ name|slugify }}"
+                                                    {% if name in current_employees %}checked{% endif %}>
+                                                <label class="form-check-label" for="employee-{{ name|slugify }}">
+                                                    {{ name }}
+                                                </label>
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+                                    </div>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="{% url 'selected_candidate' %}" class="btn btn-link">Clear Filters</a>
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<style>
+  .avatar-container { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #f1f5f9; }
+  .badge.bg-blue-lt { background-color: rgba(65, 138, 221, 0.1); color: #418add; padding: 0.25rem 0.5rem; }
+  
+  /* Sticky Table Header */
+  .table-responsive { overflow-y: auto; max-height: calc(100vh - 350px); }
+  .table th { position: sticky; top: 0; background-color: var(--tblr-card-bg, #f8f9fa); z-index: 10; }
+
+  /* Clickable row cursor */
+  #selectedCandidatesTable tbody tr { cursor: pointer; }
+</style>
+{% endblock %}
+
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Initialize Flatpickr for date range filters
+    flatpickr("#filterSelectionDate", {
+      mode: "range",
+      dateFormat: "Y-m-d",
+    });
+    flatpickr("#filterJoiningDate", {
+      mode: "range",
+      dateFormat: "Y-m-d",
+    });
+
+    // --- Helper Function for Dropdown Checkbox Filters ---
+    function setupCheckboxFilter(type) {
+        const searchInput = document.getElementById(`${type}SearchInput`);
+        const allCheckbox = document.getElementById(`${type}All`);
+        const itemCheckboxes = document.querySelectorAll(`.${type}-checkbox`);
+        const checkboxItems = document.querySelectorAll(`.${type}-checkbox-item`);
+
+        if (!searchInput) return; // Exit if elements aren't found
+
+        // 1. Search functionality
+        searchInput.addEventListener('input', () => {
+            const search = searchInput.value.toLowerCase();
+            checkboxItems.forEach(item => {
+                const name = item.querySelector('label').textContent.toLowerCase();
+                item.style.display = name.includes(search) ? '' : 'none';
+            });
+        });
+
+        // 2. "All" checkbox logic
+        allCheckbox.addEventListener('change', () => {
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.checked = allCheckbox.checked;
+            });
+        });
+
+        // 3. Individual checkbox logic
+        itemCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                if (!checkbox.checked) {
+                    allCheckbox.checked = false;
+                } else {
+                    const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
+                    allCheckbox.checked = allChecked;
+                }
+            });
+        });
+
+        // 4. Set initial state of "All" checkbox
+        const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
+        if (allChecked && itemCheckboxes.length > 0) {
+            allCheckbox.checked = true;
+        }
+    }
+
+    // --- Setup Filters ---
+    setupCheckboxFilter('company');
+    setupCheckboxFilter('employee');
+    
+    // --- Make table rows clickable ---
+    document.querySelectorAll('#selectedCandidatesTable tbody tr').forEach(row => {
+      row.addEventListener('click', (e) => {
+        if (e.target.tagName === 'A' || e.target.closest('a') || 
+            e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+          return;
+        }
+        
+        const profileLink = row.querySelector('.profile-link');
+        if (profileLink) {
+          window.location.href = profileLink.href;
+        }
+      });
+    });
+  });
+</script>
+
+
 {% endblock %}

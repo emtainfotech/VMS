@@ -1,4 +1,5 @@
 {% extends 'crm/base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="page-wrapper">
@@ -8,11 +9,15 @@
         <div class="col">
           <h2 class="page-title">Follow Up Candidates</h2>
           <div class="text-muted mt-1">
-            <span id="total-candidates">{{ candidates|length }}</span> candidates requiring follow up
+            <span id="total-candidates">{{ page_obj.paginator.count }}</span> candidates requiring follow up
           </div>
         </div>
         <div class="col-auto ms-auto d-print-none">
           <div class="btn-list">
+            <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 6l16 0" /><path d="M4 12l10 0" /><path d="M4 18l6 0" /></svg>
+                Filters
+            </button>
             <a href="{% url 'admin_candidate_registration' %}" class="btn btn-primary">
               <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -30,45 +35,9 @@
   <div class="page-body">
     <div class="container-xl">
       <div class="card">
-  <div class="card-header g-2">
-    <div class="col-12 col-md-3 mb-3 ms-md-auto">
-      <div class="input-group">
-        <span class="input-group-text">
-          <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-            <path d="M21 21l-6 -6" />
-          </svg>
-        </span>
-        <input type="text" id="searchInput" class="form-control" placeholder="Search candidates..." aria-label="Search candidates">
-      </div>
-    </div>
-
-    <div class="col-12 col-md-3 mb-3 ms-md-auto">
-      <label for="employeeFilter" class="form-label visually-hidden">Employee Name:</label>
-      <select id="employeeFilter" class="form-select" multiple>
-        </select>
-    </div>
-
-    <div class="col-12 col-md-3 mb-3 ms-md-auto">
-        <label for="dateRangeFilter" class="form-label visually-hidden">Follow Up Date Range:</label>
-        <div class="input-icon">
-            <input class="form-control" placeholder="Select date range" id="dateRangeFilter">
-            <span class="input-icon-addon">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M11 15h1" /><path d="M12 15v3" /></svg>
-            </span>
+        <div class="card-header">
+            <h3 class="card-title">Follow-up List</h3>
         </div>
-    </div>
-
-    <div class="col-12 col-md-2 ms-md-auto">
-      <label for="leadStatusFilter" class="form-label visually-hidden">Lead Status:</label>
-      <select id="leadStatusFilter" class="form-select">
-        </select>
-    </div>
-
-  </div>
-</div>
-
         <div class="table-responsive">
           <table class="table table-vcenter table-hover table-nowrap" id="followUpTable">
             <thead>
@@ -84,13 +53,9 @@
               </tr>
             </thead>
             <tbody>
-              {% for candidate in candidates %}
-               <tr data-status="{% if candidate.next_follow_up_date_time == today %}today{% elif candidate.next_follow_up_date_time < today %}overdue{% else %}upcoming{% endif %}"
-                   data-search="{{ candidate.candidate_name|lower }} {{ candidate.candidate_mobile_number }} {{ candidate.unique_code|lower }}"
-                   data-employee="{{ candidate.employee_name|lower }}"
-                   data-followup-date="{{ candidate.next_follow_up_date_time|date:"Y-m-d" }}"
-                   data-lead-status="{{ candidate.lead_generate|lower }}">
-                <td>{{ forloop.counter }}</td>
+              {% for candidate in page_obj %}
+               <tr>
+                <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
                 <td>
                   <div class="d-flex align-items-center">
                     <div class="me-3">
@@ -104,7 +69,7 @@
                     </div>
                     <div>
                       <div class="font-weight-medium">
-                        <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' candidate.id %}{% else %}{% url 'admin_candidate_profile' candidate.id %}{% endif %}" class="text-reset">
+                        <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' candidate.id %}{% else %}{% url 'admin_candidate_profile' candidate.id %}{% endif %}" class="text-reset profile-link">
                           {{ candidate.candidate_name }}
                         </a>
                       </div>
@@ -141,10 +106,8 @@
                     <div class="me-2">
                       {% if candidate.next_follow_up_date_time|date:"Y-m-d" == today|date:"Y-m-d" %}
                         <span class="badge bg-orange-lt">Today</span>
-                      {% elif candidate.next_follow_up_date_time|date:"Y-m-d" < today|date:"Y-m-d" %}
+                      {% elif candidate.next_follow_up_date_time < start_of_today %}
                         <span class="badge bg-red-lt">Overdue</span>
-                      {% elif candidate.next_follow_up_date_time|date:"Y-m-d" == today|date:"Y-m-d"|add:"1" %}
-                        <span class="badge bg-blue-lt">Tomorrow</span>
                       {% else %}
                         <span class="badge bg-green-lt">Upcoming</span>
                       {% endif %}
@@ -155,135 +118,125 @@
                   </div>
                 </td>
                 <td>
-                  <span class="status-badge status-{{ candidate.lead_generate|lower }}">
+                  <span class="status-badge status-{{ candidate.lead_generate|lower|slugify }}">
                     {{ candidate.lead_generate }}
                   </span>
                 </td>
                 <td class="text-center">
                   <div class="btn-list justify-content-center">
                     <a href="{% if candidate.lead_source == 'EVMS' %}{% url 'evms_candidate_profile' candidate.id %}{% else %}{% url 'admin_candidate_profile' candidate.id %}{% endif %}" class="btn btn-sm btn-icon" title="View Profile" data-bs-toggle="tooltip">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                        <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
-                      </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg>
+    
                     </a>
                     <a href="tel:{{ candidate.candidate_mobile_number }}" class="btn btn-sm btn-icon" title="Call Candidate" data-bs-toggle="tooltip">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2" />
-                      </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2" /></svg>
                     </a>
                     {% if candidate.candidate_resume %}
                     <a href="{{ candidate.candidate_resume.url }}" target="_blank" class="btn btn-sm btn-icon" title="View Resume" data-bs-toggle="tooltip">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
-                        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
-                        <path d="M9 9l1 0"></path>
-                        <path d="M9 13l6 0"></path>
-                        <path d="M9 17l6 0"></path>
-                      </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path><path d="M9 9l1 0"></path><path d="M9 13l6 0"></path><path d="M9 17l6 0"></path></svg>
                     </a>
                     {% endif %}
                   </div>
                 </td>
+              </tr>
+              {% empty %}
+              <tr>
+                  <td colspan="8" class="text-center text-muted">No follow-ups found matching your criteria.</td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
 
+        {% if page_obj.paginator.num_pages > 1 %}
         <div class="card-footer d-flex align-items-center">
-          <div class="pagination-info">
-            Showing <span id="showingFrom">1</span> to <span id="showingTo">{{ candidates|length }}</span> of <span id="totalCount">{{ candidates|length }}</span> candidates
-          </div>
-          <ul class="pagination m-0 ms-auto">
-            <li class="page-item disabled">
-              <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M15 6l-6 6l6 6" />
-                </svg>
-                prev
-              </a>
-            </li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
-            <li class="page-item">
-              <a class="page-link" href="#">
-                next
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M9 6l6 6l-6 6" />
-                </svg>
-              </a>
-            </li>
-          </ul>
+            <div class="pagination-info text-muted">
+                Showing <span id="showingFrom">{{ page_obj.start_index }}</span>
+                to <span id="showingTo">{{ page_obj.end_index }}</span>
+                of <span id="totalCount">{{ page_obj.paginator.count }}</span> candidates
+            </div>
+            <ul class="pagination m-0 ms-auto">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ filter_query_string }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M15 6l-6 6l6 6" /></svg>
+                        prev
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M15 6l-6 6l6 6" /></svg>
+                        prev
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in page_obj.paginator.get_elided_page_range %}
+                    {% if page_num == page_obj.number %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ page_num }}</a></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_num }}&{{ filter_query_string }}">{{ page_num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ filter_query_string }}">
+                        next
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M9 6l6 6l-6 6" /></svg>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        next
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M9 6l6 6l-6 6" /></svg>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
         </div>
+        {% endif %}
       </div>
     </div>
   </div>
 </div>
 
-<style>
-  .status-badge {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    border-radius: 50rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    line-height: 1;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: baseline;
-  }
-  
-  .status-pending {
-    background-color: rgba(253, 126, 20, 0.1);
-    color: #fd7e14;
-  }
-  
-  .status-selected {
-    background-color: rgba(32, 201, 151, 0.1);
-    color: #20c997;
-  }
-  
-  .status-rejected {
-    background-color: rgba(250, 82, 82, 0.1);
-    color: #fa5252;
-  }
-  
-  .badge.bg-orange-lt {
-    background-color: rgba(253, 126, 20, 0.1);
-    color: #fd7e14;
-  }
-  
-  .badge.bg-red-lt {
-    background-color: rgba(250, 82, 82, 0.1);
-    color: #fa5252;
-  }
-  
-  .badge.bg-green-lt {
-    background-color: rgba(32, 201, 151, 0.1);
-    color: #20c997;
-  }
-  
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="GET" action="{% url 'follow_up_candidate' %}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">Filter Follow-ups</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="filterSearchInput" class="form-label">Search</label>
+                            <input type="text" id="filterSearchInput" name="search" class="form-control"
+                                placeholder="Search by name, phone, email, ID..." value="{{ current_search }}">
+                        </div>
 
+                        <div class="col-md-6">
+                            <label for="filterFollowUpStatus" class="form-label">Follow-up Status</label>
+                            <select id="filterFollowUpStatus" name="follow_up_status" class="form-select">
+                                <option value="" {% if not current_follow_up_status %}selected{% endif %}>Default (5-day Window)</option>
+                                <option value="overdue" {% if current_follow_up_status == 'overdue' %}selected{% endif %}>Overdue</option>
+                                <option value="today" {% if current_follow_up_status == 'today' %}selected{% endif %}>Today</option>
+                                <option value="upcoming" {% if current_follow_up_status == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                            </select>
+                        </div>
 
+                        <div class="col-md-6">
+                            <label for="filterDateRange" class="form-label">Follow-up Date Range</label>
+                            <input type="text" class="form-control" id="filterDateRange" name="date_range"
+                                placeholder="Overrides status filter" value="{{ current_date_range }}">
+                        </div>
 
-</style>
-
-
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
@@ -293,280 +246,251 @@
       return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // Get DOM elements - add null checks immediately
-    const searchInput = document.getElementById('searchInput');
-    // Renamed for clarity: original status filter is now `followUpStatusFilter`
-    const followUpStatusFilter = document.getElementById('statusFilter'); 
-    const employeeFilter = document.getElementById('employeeFilter');
-    const dateRangeFilter = document.getElementById('dateRangeFilter');
-    const leadStatusFilter = document.getElementById('leadStatusFilter');
+    // --- THIS IS THE MISSING PART ---
+    // Initialize Flatpickr for date range filter
+    flatpickr(document.getElementById('filterDateRange'), {
+        mode: "range",
+        dateFormat: "Y-m-d",
+    });
+    // ---------------------------------
 
-    const followUpTable = document.getElementById('followUpTable');
-    // Ensure table and its tbody exist before getting rows
-    const tableBody = followUpTable ? followUpTable.getElementsByTagName('tbody')[0] : null;
-    const rows = tableBody ? tableBody.getElementsByTagName('tr') : [];
+    // --- Employee Filter Dropdown JS ---
+    const employeeSearchInput = document.getElementById('employeeSearchInput');
+    const employeeAllCheckbox = document.getElementById('employeeAll');
+    const employeeCheckboxes = document.querySelectorAll('.employee-checkbox');
 
-    const totalCountEl = document.getElementById('totalCount');
-    const showingFromEl = document.getElementById('showingFrom');
-    const showingToEl = document.getElementById('showingTo');
-    const totalCandidatesHeader = document.getElementById('total-candidates');
-
-    let employeeChoices = null; // Initialize to null
-    let leadStatusChoices = null; // Initialize to null
-    let datePickerInstance = null; // Initialize to null
-
-    // If no rows, then no need to filter or initialize complex filters
-    if (rows.length === 0) {
-        console.warn("No table rows found. Filtering and advanced filter initialization skipped.");
-        if (totalCandidatesHeader) totalCandidatesHeader.textContent = '0';
-        if (totalCountEl) totalCountEl.textContent = '0';
-        if (showingFromEl) showingFromEl.textContent = '0';
-        if (showingToEl) showingToEl.textContent = '0';
-        const pagination = document.querySelector('.pagination');
-        if (pagination) pagination.classList.add('d-none');
-        return; // Exit if no data to process
-    }
-
-    // --- Populate Filters and Initialize Libraries ---
-
-    // Populate Employee Name Filter
-    function populateEmployeeFilter() {
-        if (!employeeFilter) {
-            console.error("Employee filter element not found.");
-            return;
-        }
-        const employeeNames = new Set();
-        for (let i = 0; i < rows.length; i++) {
-            const employeeCell = rows[i].querySelector('td:nth-child(4)');
-            if (employeeCell) {
-                const employeeName = employeeCell.textContent.trim();
-                if (employeeName) {
-                    employeeNames.add(employeeName);
-                }
+    // Function to filter employee checkboxes within the dropdown
+    function filterEmployeeCheckboxesDisplay() {
+        const search = employeeSearchInput.value.toLowerCase();
+        document.querySelectorAll('.employee-checkbox-item').forEach(item => {
+            const employeeName = item.querySelector('label').textContent.toLowerCase();
+            if (employeeName.includes(search)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
             }
-        }
-
-        const employeeOptions = Array.from(employeeNames).sort().map(name => ({ value: name.toLowerCase(), label: name }));
-
-        try {
-            employeeChoices = new Choices(employeeFilter, {
-                choices: employeeOptions,
-                removeItemButton: true,
-                searchEnabled: true,
-                placeholder: true,
-                placeholderValue: 'Select Employee(s)',
-            });
-            // Ensure choices object exists before adding listener
-            employeeChoices.passedElement.element.addEventListener('change', filterCandidates);
-        } catch (e) {
-            console.error("Error initializing Choices.js for employee filter:", e);
-        }
-    }
-
-    // Populate Lead Status Filter
-    function populateLeadStatusFilter() {
-        if (!leadStatusFilter) {
-            console.error("Lead status filter element not found.");
-            return;
-        }
-        const leadStatuses = new Set();
-        for (let i = 0; i < rows.length; i++) {
-            const statusBadge = rows[i].querySelector('td:nth-child(7) .status-badge');
-            if (statusBadge) {
-                const leadStatus = statusBadge.textContent.trim();
-                if (leadStatus) {
-                    leadStatuses.add(leadStatus);
-                }
-            }
-        }
-
-        const leadStatusOptions = Array.from(leadStatuses).sort().map(status => ({ value: status.toLowerCase(), label: status }));
-        
-        // Add 'All' option to the beginning
-        leadStatusOptions.unshift({ value: '', label: 'All Lead Statuses', selected: true });
-
-        try {
-            leadStatusChoices = new Choices(leadStatusFilter, {
-                choices: leadStatusOptions,
-                removeItemButton: false, // Not a multi-select
-                searchEnabled: false,
-                placeholder: true,
-                placeholderValue: 'Select Lead Status',
-            });
-            // Ensure choices object exists before adding listener
-            leadStatusChoices.passedElement.element.addEventListener('change', filterCandidates);
-        } catch (e) {
-            console.error("Error initializing Choices.js for lead status filter:", e);
-        }
-    }
-
-    // Initialize Flatpickr for Date Range Filter
-    function initializeDateRangePicker() {
-        if (!dateRangeFilter) {
-            console.error("Date range filter element not found.");
-            return;
-        }
-        try {
-            datePickerInstance = flatpickr(dateRangeFilter, {
-                mode: "range",
-                dateFormat: "Y-m-d",
-                altInput: true,
-                altFormat: "M j, Y",
-                placeholder: "Select Follow Up Date Range",
-                onChange: function(selectedDates, dateStr, instance) {
-                    filterCandidates();
-                }
-            });
-        } catch (e) {
-            console.error("Error initializing Flatpickr for date range filter:", e);
-        }
-    }
-
-    // --- Filter Functionality ---
-
-    function filterCandidates() {
-      // Use null-safe access for filter values
-      const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
-      const selectedFollowUpStatus = followUpStatusFilter ? followUpStatusFilter.value : '';
-      const selectedEmployees = employeeChoices ? employeeChoices.getValue(true).map(emp => emp.toLowerCase()) : [];
-      const selectedLeadStatus = leadStatusChoices ? leadStatusChoices.getValue(true).toLowerCase() : '';
-      
-      const dateRange = datePickerInstance && datePickerInstance.selectedDates ? datePickerInstance.selectedDates : [];
-      let startDate = null;
-      let endDate = null;
-
-      if (dateRange.length === 2) {
-        startDate = dateRange[0];
-        endDate = dateRange[1];
-      }
-
-      let visibleCount = 0;
-      
-      // Ensure rows exist before iterating
-      if (!rows || rows.length === 0) {
-        updateCounters(0); // Update counters to 0 if no rows
-        return;
-      }
-
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        let rowTextContent = '';
-        
-        // Get text content from all cells except actions column
-        const cells = row.getElementsByTagName('td');
-        // Loop through cells, skipping the last one (Actions)
-        for (let j = 0; j < cells.length - 1; j++) { 
-          if (cells[j]) { // Check if cell exists
-            rowTextContent += ' ' + cells[j].textContent.toLowerCase();
-            if (cells[j].hasAttribute('title')) {
-              rowTextContent += ' ' + cells[j].getAttribute('title').toLowerCase();
-            }
-          }
-        }
-        
-        // Include data attributes for specific filtering
-        const searchContent = row.getAttribute('data-search') || '';
-        const rowStatus = row.getAttribute('data-status') || '';
-        const rowEmployee = row.getAttribute('data-employee') || '';
-        const rowFollowUpDate = row.getAttribute('data-followup-date') ? new Date(row.getAttribute('data-followup-date')) : null;
-        const rowLeadStatus = row.getAttribute('data-lead-status') || '';
-
-        const matchesSearch = rowTextContent.includes(searchTerm) || searchContent.includes(searchTerm);
-        const matchesFollowUpStatus = selectedFollowUpStatus === '' || rowStatus === selectedFollowUpStatus;
-        const matchesEmployee = selectedEmployees.length === 0 || selectedEmployees.includes(rowEmployee);
-        const matchesLeadStatus = selectedLeadStatus === '' || rowLeadStatus === selectedLeadStatus;
-        
-        let matchesDateRange = true;
-        if (startDate && endDate && rowFollowUpDate) {
-          // Compare dates (ignore time for range filter)
-          const rowDateOnly = new Date(rowFollowUpDate.getFullYear(), rowFollowUpDate.getMonth(), rowFollowUpDate.getDate());
-          const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-          const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-          matchesDateRange = (rowDateOnly >= startDateOnly && rowDateOnly <= endDateOnly);
-        } else if (startDate && !endDate && rowFollowUpDate) { 
-          const rowDateOnly = new Date(rowFollowUpDate.getFullYear(), rowFollowUpDate.getMonth(), rowFollowUpDate.getDate());
-          const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-          matchesDateRange = (rowDateOnly >= startDateOnly);
-        } else if (!startDate && endDate && rowFollowUpDate) { 
-          const rowDateOnly = new Date(rowFollowUpDate.getFullYear(), rowFollowUpDate.getMonth(), rowFollowUpDate.getDate());
-          const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-          matchesDateRange = (rowDateOnly <= endDateOnly);
-        }
-
-
-        if (matchesSearch && matchesFollowUpStatus && matchesEmployee && matchesLeadStatus && matchesDateRange) {
-          row.style.display = '';
-          visibleCount++;
-        } else {
-          row.style.display = 'none';
-        }
-      }
-      
-      updateCounters(visibleCount);
+        });
     }
     
-    function updateCounters(count) {
-      if (showingFromEl) showingFromEl.textContent = count > 0 ? '1' : '0';
-      if (showingToEl) showingToEl.textContent = count;
-      if (totalCountEl) totalCountEl.textContent = count;
-      if (totalCandidatesHeader) totalCandidatesHeader.textContent = count;
-      updatePagination(count);
+    // Add input event listener for the employee search input
+    if (employeeSearchInput) {
+        employeeSearchInput.addEventListener('input', filterEmployeeCheckboxesDisplay);
     }
 
-    function updatePagination(visibleCount) {
-      const pagination = document.querySelector('.pagination');
-      if (pagination) { // Check if pagination element exists
-        if (visibleCount === 0) {
-          pagination.classList.add('d-none');
-        } else {
-          pagination.classList.remove('d-none');
-        }
-      }
-    }
-    
-    // Event listeners - add null checks for elements
-    if (searchInput) searchInput.addEventListener('input', filterCandidates);
-    // Renamed original status filter to followUpStatusFilter
-    if (followUpStatusFilter) followUpStatusFilter.addEventListener('change', filterCandidates); 
-    // Employee and Lead Status filters will trigger filterCandidates via Choices.js change event listener
-    // Date range filter will trigger filterCandidates via Flatpickr onChange event
-
-    // Initial population and filtering
-    // Only attempt to populate and initialize if elements are found
-    if (employeeFilter) populateEmployeeFilter();
-    if (leadStatusFilter) populateLeadStatusFilter();
-    if (dateRangeFilter) initializeDateRangePicker();
-    
-    filterCandidates(); // Initial filter to apply all conditions
-
-    // Make table rows clickable (except when clicking on buttons)
-    // Only attach listeners if rows exist
-    if (rows && rows.length > 0) {
-        document.querySelectorAll('#followUpTable tbody tr').forEach(row => {
-            row.style.cursor = 'pointer'; // Set cursor style for all rows
-
-            row.addEventListener('click', (e) => {
-                // Check if the click was on a button, link, input, or Choices.js element
-                if (e.target.tagName === 'A' || e.target.closest('a') || 
-                    e.target.tagName === 'BUTTON' || e.target.closest('button') ||
-                    e.target.tagName === 'INPUT' || e.target.closest('input') ||
-                    e.target.closest('.choices__inner') || e.target.closest('.flatpickr-calendar')) { // Added flatpickr-calendar
-                    return;
-                }
-                
-                // Find the profile link in the row and navigate to it
-                const profileLink = row.querySelector('td:nth-child(2) a');
-                if (profileLink) {
-                    window.location.href = profileLink.href;
-                }
+    // Logic for 'All Employees' checkbox
+    if (employeeAllCheckbox) {
+        employeeAllCheckbox.addEventListener('change', function () {
+            employeeCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
             });
         });
-    } else {
-        console.warn("No table rows found, skipping row click event listeners.");
     }
+
+    // Logic for individual employee checkboxes
+    employeeCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            if (!this.checked) {
+                if (employeeAllCheckbox) employeeAllCheckbox.checked = false;
+            } else {
+                const allChecked = Array.from(employeeCheckboxes).every(cb => cb.checked);
+                if (employeeAllCheckbox) employeeAllCheckbox.checked = allChecked;
+            }
+        });
+    });
+    
+    // Check initial state of 'All' checkbox on load
+    const allChecked = Array.from(employeeCheckboxes).every(cb => cb.checked);
+    if (allChecked && employeeCheckboxes.length > 0 && employeeAllCheckbox) {
+        employeeAllCheckbox.checked = true;
+    }
+
+
+    // --- Make table rows clickable ---
+    document.querySelectorAll('#followUpTable tbody tr').forEach(row => {
+        row.addEventListener('click', (e) => {
+            // Check if the click was on a button, link, or within an action/resume cell
+            if (e.target.tagName === 'A' || e.target.closest('a') || 
+                e.target.tagName === 'BUTTON' || e.target.closest('button'))
+            {
+                return;
+            }
+
+            // Find the profile link in the row and navigate to it
+            const profileLink = row.querySelector('.profile-link');
+            if (profileLink) {
+                window.location.href = profileLink.href;
+            }
+        });
+    });
   });
 </script>
+
+                        <div class="col-md-6">
+                            <label for="filterLeadStatus" class="form-label">Lead Status</label>
+                            <select id="filterLeadStatus" name="lead_status" class="form-select">
+                                <option value="" {% if not current_lead_status %}selected{% endif %}>All Lead Statuses</option>
+                                {% for status in all_lead_statuses %}
+                                <option value="{{ status }}" {% if current_lead_status == status %}selected{% endif %}>{{ status }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Employee</label>
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle" type="button" id="employeeFilterBtn"
+                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                                    Select Employee(s)
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="employeeFilterBtn"
+                                    style="max-height: 300px; overflow-y: hidden; width: 100%; padding: 0.5rem;">
+                                    <li class="px-2 pb-2">
+                                        <input type="text" class="form-control" id="employeeSearchInput"
+                                            placeholder="Search employee...">
+                                    </li>
+                                    <li class="px-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="" id="employeeAll">
+                                            <label class="form-check-label" for="employeeAll">All Employees</label>
+                                        </div>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <div id="employee-list-container" style="max-height: 200px; overflow-y: auto;">
+                                        {% for emp_name in all_employees %}
+                                        <li class="px-2 employee-checkbox-item"> 
+                                            <div class="form-check">
+                                                <input class="form-check-input employee-checkbox" type="checkbox"
+                                                    name="employee" value="{{ emp_name }}" id="employee-{{ emp_name|slugify }}"
+                                                    {% if emp_name in current_employees %}checked{% endif %}>
+                                                <label class="form-check-label" for="employee-{{ emp_name|slugify }}">
+                                                    {{ emp_name }}
+                                                </label>
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+                                    </div>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="{% url 'follow_up_candidate' %}" class="btn btn-link">Clear Filters</a>
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<style>
+  .status-badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 50rem; font-size: 0.75rem; font-weight: 600; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; }
+  .status-hot, .status-pending { background-color: rgba(253, 126, 20, 0.1); color: #fd7e14; }
+  .status-converted, .status-selected { background-color: rgba(32, 201, 151, 0.1); color: #20c997; }
+  .status-cold, .status-rejected { background-color: rgba(250, 82, 82, 0.1); color: #fa5252; }
+  .status-not-interested { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
+  .status-connect-later { background-color: rgba(0, 123, 255, 0.1); color: #007bff; }
+  .status-dnd { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
+  .status-other { background-color: rgba(102, 16, 242, 0.1); color: #6610f2; }
+  
+  .badge.bg-orange-lt { background-color: rgba(253, 126, 20, 0.1); color: #fd7e14; }
+  .badge.bg-red-lt { background-color: rgba(250, 82, 82, 0.1); color: #fa5252; }
+  .badge.bg-green-lt { background-color: rgba(32, 201, 151, 0.1); color: #20c997; }
+  .badge.bg-blue-lt { background-color: rgba(0, 123, 255, 0.1); color: #007bff; }
+
+  /* Clickable row cursor */
+  #followUpTable tbody tr { cursor: pointer; }
+</style>
 {% endblock %}
 
 
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Initialize Flatpickr for date range filter
+    flatpickr(document.getElementById('filterDateRange'), {
+        mode: "range",
+        dateFormat: "Y-m-d",
+    });
+
+    // --- Employee Filter Dropdown JS ---
+    const employeeSearchInput = document.getElementById('employeeSearchInput');
+    const employeeAllCheckbox = document.getElementById('employeeAll');
+    const employeeCheckboxes = document.querySelectorAll('.employee-checkbox');
+
+    // Function to filter employee checkboxes within the dropdown
+    function filterEmployeeCheckboxesDisplay() {
+        const search = employeeSearchInput.value.toLowerCase();
+        document.querySelectorAll('.employee-checkbox-item').forEach(item => {
+            const employeeName = item.querySelector('label').textContent.toLowerCase();
+            if (employeeName.includes(search)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+    
+    // Add input event listener for the employee search input
+    if (employeeSearchInput) {
+        employeeSearchInput.addEventListener('input', filterEmployeeCheckboxesDisplay);
+    }
+
+    // Logic for 'All Employees' checkbox
+    if (employeeAllCheckbox) {
+        employeeAllCheckbox.addEventListener('change', function () {
+            employeeCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    }
+
+    // Logic for individual employee checkboxes
+    employeeCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            if (!this.checked) {
+                if (employeeAllCheckbox) employeeAllCheckbox.checked = false;
+            } else {
+                const allChecked = Array.from(employeeCheckboxes).every(cb => cb.checked);
+                if (employeeAllCheckbox) employeeAllCheckbox.checked = allChecked;
+            }
+        });
+    });
+    
+    // Check initial state of 'All' checkbox on load
+    const allChecked = Array.from(employeeCheckboxes).every(cb => cb.checked);
+    if (allChecked && employeeCheckboxes.length > 0 && employeeAllCheckbox) {
+        employeeAllCheckbox.checked = true;
+    }
+
+
+    // --- Make table rows clickable ---
+    document.querySelectorAll('#followUpTable tbody tr').forEach(row => {
+        row.addEventListener('click', (e) => {
+            // Check if the click was on a button, link, or within an action/resume cell
+            if (e.target.tagName === 'A' || e.target.closest('a') || 
+                e.target.tagName === 'BUTTON' || e.target.closest('button'))
+            {
+                return;
+            }
+
+            // Find the profile link in the row and navigate to it
+            const profileLink = row.querySelector('.profile-link');
+            if (profileLink) {
+                window.location.href = profileLink.href;
+            }
+        });
+    });
+  });
+</script>
 {% endblock %}
