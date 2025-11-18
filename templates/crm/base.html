@@ -1063,6 +1063,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             <a class="dropdown-item {% if request.path == '/crm/interview-schedule-list/' %}active{% endif %}" href="{% url 'interview_schedule_list' %}">
                                 Interview Schedule
                             </a>
+                            <a class="dropdown-item {% if request.path == '/crm/analytics/interview-schedule/' %}active{% endif %}" href="{% url 'interview_schedule_matrix' %}">
+                                Interview Stats
+                            </a>
                         </div>
                     </li>
 

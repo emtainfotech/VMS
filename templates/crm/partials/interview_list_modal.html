@@ -1,0 +1,30 @@
+<div class="table-responsive">
+    <table class="table table-sm table-striped">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Candidate Name</th>
+                <th>Interviewer</th>
+                <th>Mode</th>
+                <th>Profile</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in interviews %}
+            <tr>
+                <td>{{ i.interview_date_time|date:"h:i A" }}</td>
+                <td class="fw-bold">{{ i.candidate.candidate_name }}</td>
+                <td>{{ i.interviewer_name|default:"-" }}</td>
+                <td>{{ i.get_interview_mode_display }}</td>
+                <td>
+                    <a href="#" class="btn btn-xs btn-primary" target="_blank">
+                        View
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center">No details found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

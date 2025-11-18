@@ -6640,3 +6640,160 @@ def admin_attendance_report(request):
         'selected_user_id': int(selected_user_id) if selected_user_id else None,
     }
     return render(request, 'crm/attendance_report.html', context)
+
+from django.shortcuts import render
+from django.db.models import Count, Q
+from django.db.models.functions import TruncDate
+from django.utils import timezone
+from datetime import timedelta, datetime
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+
+def interview_schedule_matrix(request):
+    # --- 1. Filter Logic ---
+    # Changed default to 'all' if you prefer seeing everything by default, 
+    # otherwise keep 'month'.
+    date_filter = request.GET.get('date_range', 'month') 
+    employee_id = request.GET.get('employee_id')
+    
+    # Base Query: Only Scheduled or Rescheduled
+    queryset = Candidate_Interview.objects.filter(
+        status__in=['scheduled', 'rescheduled']
+    )
+
+    today = timezone.now().date()
+    label = "All Time"
+
+    # Date Filtering
+    if date_filter == 'today':
+        queryset = queryset.filter(interview_date_time__date=today)
+        label = "Today"
+    elif date_filter == 'week':
+        start_week = today - timedelta(days=today.weekday())
+        queryset = queryset.filter(interview_date_time__date__gte=start_week)
+        label = "This Week"
+    elif date_filter == 'month':
+        queryset = queryset.filter(interview_date_time__month=today.month, interview_date_time__year=today.year)
+        label = "This Month"
+    elif date_filter == 'year':
+        queryset = queryset.filter(interview_date_time__year=today.year)
+        label = "This Year"
+    elif date_filter == 'all':
+        # No additional filter - keeps all records
+        label = "All Time"
+
+    # Employee Filtering
+    if employee_id:
+        queryset = queryset.filter(candidate__assigned_to_id=employee_id)
+
+    # --- 2. Prepare Columns (CRITICAL FIX) ---
+    # Step A: Get headers from the Vacancy Master Table (The "Expected" columns)
+    # Note: We use 'company__company_name' because VacancyDetails links to Company model
+    vacancy_headers = set(VacancyDetails.objects.values_list(
+        'company__company_name', 'job_profile'
+    ))
+
+    # Step B: Get headers from the actual Interview Data (The "Actual" columns)
+    # This ensures that if an interview has a typo in company/job name, it still gets a column!
+    interview_headers = set(queryset.values_list(
+        'company_name', 'job_position'
+    ))
+
+    # Step C: Combine them and clean up None values
+    # Using a Set Union (|) to remove duplicates
+    combined_headers = vacancy_headers | interview_headers
+    
+    # Clean data: remove entries where company or job is None/Empty
+    final_headers = []
+    for comp, job in combined_headers:
+        if comp and job: # Only add if both exist
+            final_headers.append((comp, job))
+            
+    # Sort alphabetically by Company then Job
+    final_headers.sort(key=lambda x: (x[0], x[1]))
+
+    # --- 3. Aggregate Data ---
+    stats = queryset.annotate(
+        interview_date=TruncDate('interview_date_time')
+    ).values(
+        'interview_date', 'company_name', 'job_position'
+    ).annotate(
+        count=Count('id')
+    ).order_by('-interview_date')
+
+    # --- 4. Transform Data for Matrix ---
+    data_map = {}
+    dates_set = set()
+    
+    for entry in stats:
+        d = entry['interview_date']
+        if d: # Ensure date is not None
+            comp = entry['company_name']
+            job = entry['job_position']
+            count = entry['count']
+            data_map[(d, comp, job)] = count
+            dates_set.add(d)
+
+    # Sort dates descending
+    sorted_dates = sorted(list(dates_set), reverse=True)
+
+    matrix_rows = []
+    # Totals dictionary
+    column_totals = {header: 0 for header in final_headers}
+    grand_total = 0
+
+    for date_obj in sorted_dates:
+        row_counts = []
+        for header in final_headers:
+            comp_name, job_name = header
+            
+            # Look up exactly using the header names
+            count = data_map.get((date_obj, comp_name, job_name), 0)
+            
+            row_counts.append({
+                'count': count,
+                'company': comp_name,
+                'job': job_name,
+                'date_str': date_obj.strftime('%Y-%m-%d')
+            })
+            
+            column_totals[header] += count
+            grand_total += count
+        
+        matrix_rows.append({
+            'date': date_obj,
+            'counts': row_counts
+        })
+
+    # Convert totals dict to list in order
+    footer_counts = [column_totals[h] for h in final_headers]
+
+    context = {
+        'vacancy_headers': final_headers, 
+        'matrix_rows': matrix_rows,
+        'footer_counts': footer_counts,
+        'grand_total': grand_total,
+        'employees': Employee.objects.all(),
+        'selected_date': date_filter,
+        'selected_emp': int(employee_id) if employee_id else '',
+        'label': label
+    }
+
+    return render(request, 'crm/interview_stats.html', context)
+
+
+# --- HELPER VIEW (No changes needed, but included for completeness) ---
+def get_interview_details(request):
+    date_str = request.GET.get('date')
+    company = request.GET.get('company')
+    job = request.GET.get('job')
+    
+    interviews = Candidate_Interview.objects.filter(
+        interview_date_time__date=date_str,
+        company_name=company,
+        job_position=job,
+        status__in=['scheduled', 'rescheduled']
+    ).select_related('candidate').order_by('interview_date_time')
+    
+    html = render_to_string('crm/partials/interview_list_modal.html', {'interviews': interviews})
+    return JsonResponse({'html': html})
