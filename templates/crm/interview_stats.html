@@ -6,127 +6,347 @@
     <meta charset="UTF-8">
     <title>Interview Schedule Matrix</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
     <style>
-        .table-container { max-height: 75vh; overflow-y: auto; border: 1px solid #dee2e6; }
-        thead th { position: sticky; top: 0; background-color: #343a40 !important; color: white; z-index: 10; }
-        tbody th { position: sticky; left: 0; background-color: ; z-index: 9; border-right: 2px solid #dee2e6; }
-        tfoot th, tfoot td { position: sticky; bottom: 0; background-color:  !important; z-index: 10; }
+        /* --- SCOPED THEME VARIABLES --- */
+        /* We scope this to .matrix-theme-wrapper to avoid conflicts with base.html */
+        .matrix-theme-wrapper {
+            /* --app-bg: #f0f2f5; */
+            --surface-bg: #ffffff;
+            --surface-border: #d1d5db; /* Darker border for contrast */
+            --text-primary: #111827;   /* Almost Black */
+            --text-secondary: #4b5563; /* Dark Grey */
+            --header-bg: #f3f4f6;      /* Distinct Header Grey */
+            --header-text: #1f2937;
+            --active-bg: #e0e7ff;
+            --active-text: #3730a3;
+            --sticky-shadow: rgba(0, 0, 0, 0.1);
+            --modal-bg: #ffffff;
+        }
+
+        /* AUTO DARK MODE */
+        @media (prefers-color-scheme: dark) {
+            .matrix-theme-wrapper {
+                --app-bg: #0f172a;
+                --surface-bg: #1e293b;
+                --surface-border: #334155;
+                --text-primary: #f9fafb;   /* Pure White */
+                --text-secondary: #9ca3af; /* Light Grey */
+                --header-bg: #0f172a;      /* Dark Header */
+                --header-text: #f3f4f6;
+                --active-bg: #312e81;
+                --active-text: #e0e7ff;
+                --sticky-shadow: rgba(0, 0, 0, 0.5);
+                --modal-bg: #1e293b;
+            }
+        }
+
+        /* --- FORCE INHERITANCE WITHIN WRAPPER --- */
+        .matrix-theme-wrapper {
+            /* background-color: var(--app-bg) !important; */
+            color: var(--text-primary) !important;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh; /* Ensure it covers the view */
+            padding: 1.5rem;
+        }
+
+        /* CARD STYLE */
+        .matrix-card {
+            background-color: var(--surface-bg);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px var(--sticky-shadow);
+            overflow: hidden;
+        }
+
+        /* --- ROBUST TABLE STYLES --- */
+        .matrix-table-container {
+            max-height: 75vh;
+            overflow: auto;
+            position: relative;
+        }
+
+        .matrix-table {
+            width: 100%;
+            border-collapse: separate; /* Necessary for sticky */
+            border-spacing: 0;
+        }
+
+        .matrix-table th, 
+        .matrix-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--surface-border);
+            border-right: 1px solid var(--surface-border);
+            background-color: var(--surface-bg); /* FORCE BG COLOR */
+            color: var(--text-primary);          /* FORCE TEXT COLOR */
+            white-space: nowrap;
+        }
+
+        /* --- STICKY HEADERS (High Specificity) --- */
         
-        .clickable-cell { cursor: pointer; transition: background 0.2s; }
-        .clickable-cell:hover { background-color:  !important; }
-        
-        /* Header Styling */
-        .company-header { font-size: 0.75rem; color: ; display: block; text-transform: uppercase; }
-        .job-header { font-size: 0.9rem; display: block; font-weight: bold; }
+        /* Top Header Row */
+        .matrix-table thead th {
+            position: sticky;
+            top: 0;
+            background-color: var(--header-bg) !important; /* Force Header BG */
+            color: var(--header-text) !important;
+            z-index: 20;
+            font-weight: 600;
+            box-shadow: 0 1px 2px var(--sticky-shadow);
+        }
+
+        /* Left Date Column */
+        .matrix-table tbody th {
+            position: sticky;
+            left: 0;
+            background-color: var(--surface-bg) !important;
+            color: var(--text-primary) !important;
+            z-index: 15;
+            border-right: 2px solid var(--surface-border);
+        }
+
+        /* Top-Left Intersection */
+        .matrix-table thead th:first-child {
+            left: 0;
+            z-index: 30;
+            background-color: var(--header-bg) !important;
+            border-right: 2px solid var(--surface-border);
+        }
+
+        /* Footer */
+        .matrix-table tfoot td, 
+        .matrix-table tfoot th {
+            position: sticky;
+            bottom: 0;
+            background-color: var(--header-bg) !important;
+            color: var(--header-text) !important;
+            z-index: 20;
+            border-top: 2px solid var(--surface-border);
+            font-weight: 700;
+        }
+        .matrix-table tfoot th:first-child {
+            left: 0;
+            z-index: 35;
+            border-right: 2px solid var(--surface-border);
+        }
+
+        /* --- CONTENT STYLING --- */
+        .header-company {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary) !important; /* Force contrast */
+            margin-bottom: 4px;
+            letter-spacing: 0.05em;
+        }
+        .header-job {
+            display: block;
+            font-size: 0.95rem;
+            color: var(--header-text);
+        }
+
+        .count-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background-color: var(--active-bg);
+            color: var(--active-text);
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .count-pill:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 5px var(--sticky-shadow);
+        }
+
+        .empty-dash {
+            color: var(--surface-border);
+            font-weight: 400;
+            font-size: 1.2rem;
+        }
+
+        /* --- FORM ELEMENTS --- */
+        .theme-select {
+            background-color: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--surface-border);
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+        .theme-select option {
+            background-color: var(--surface-bg);
+            color: var(--text-primary);
+        }
+        .theme-btn {
+            background-color: var(--active-text);
+            color: #ffffff;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+        }
+        .theme-btn-reset {
+            color: var(--text-secondary);
+            border: 1px solid var(--surface-border);
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        /* --- MODAL FIXES --- */
+        .modal-content {
+            /* background-color: var(--modal-bg); */
+            /* color: var(--text-primary); */
+        }
+        .btn-close {
+            filter: invert(0.5); /* Ensures X is visible in both modes */
+        }
     </style>
 </head>
-<body class=" p-4">
-<div class="page-wrapper">
-    <div class="container-xl">
-    
-        <div class="row mb-4 align-items-center">
-            <div class="col-md-4">
-                <h3 class="fw-bold mb-0">📅 Interview Schedule</h3>
-                <small class="text-muted">Tracking Scheduled & Rescheduled Interviews</small>
-            </div>
-            <div class="col-md-8">
-                <form method="GET" class="row g-2 justify-content-end">
-                    <div class="col-auto">
-                        <select name="date_range" class="form-select form-select-sm">
-                            <option value="today" {% if selected_date == 'today' %}selected{% endif %}>Today</option>
-                            <option value="week" {% if selected_date == 'week' %}selected{% endif %}>This Week</option>
-                            <option value="month" {% if selected_date == 'month' %}selected{% endif %}>This Month</option>
-                            <option value="year" {% if selected_date == 'year' %}selected{% endif %}>This Year</option>
-                            <option value="all" {% if selected_date == 'all' %}selected{% endif %}>All Time</option>
-                        </select>
-                    </div>
-                    <div class="col-auto">
-                        <select name="employee_id" class="form-select form-select-sm">
-                            <option value="">All Employees</option>
-                            {% for emp in employees %}
-                                <option value="{{ emp.id }}" {% if selected_emp == emp.id %}selected{% endif %}>{{ emp.first_name }} {{ emp.last_name }} ({{ emp.employee_id }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-                        <a href="." class="btn btn-outline-secondary btn-sm">Reset</a>
-                    </div>
-                </form>
-            </div>
-        </div>
+<body>
 
-        <div class="table-container bg-white shadow-sm">
-            <table class="table table-bordered table-hover mb-0 text-nowrap text-center align-middle">
+<!-- THEME WRAPPER: Isolates styles from base.html -->
+<div class="matrix-theme-wrapper">
+    
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold mb-1 text-dark">
+                <i class="bi bi-calendar-week text-primary me-2"></i>Interview Schedule
+            </h2>
+            <p class="mb-0 small" style="color: var(--text-secondary);">
+                Overview of scheduled & rescheduled interviews
+            </p>
+        </div>
+        
+        <!-- Filters -->
+        <div class="matrix-card p-2">
+            <form method="GET" class="d-flex flex-wrap gap-2 align-items-center justify-content-end">
+                
+                <select name="date_range" class="theme-select">
+                    <option value="today" {% if selected_date == 'today' %}selected{% endif %}>Today</option>
+                    <option value="week" {% if selected_date == 'week' %}selected{% endif %}>This Week</option>
+                    <option value="month" {% if selected_date == 'month' %}selected{% endif %}>This Month</option>
+                    <option value="year" {% if selected_date == 'year' %}selected{% endif %}>This Year</option>
+                    <option value="all" {% if selected_date == 'all' %}selected{% endif %}>All Time</option>
+                </select>
+
+                <select name="employee_id" class="theme-select" style="max-width: 200px;">
+                    <option value="">All Employees</option>
+                    {% for emp in employees %}
+                        <option value="{{ emp.id }}" {% if selected_emp == emp.id %}selected{% endif %}>
+                            {{ emp.employee_name|default:emp.first_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <a href="." class="theme-btn-reset" title="Reset"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Matrix Table -->
+    <div class="matrix-card">
+        <div class="matrix-table-container">
+            <table class="matrix-table">
                 <thead>
                     <tr>
-                        <th style="min-width: 100px; z-index: 20; left: 0;">Date</th>
+                        <th class="text-center align-middle" style="min-width: 120px;">
+                            <i class="bi bi-calendar3"></i> Date
+                        </th>
                         {% for col_tuple in vacancy_headers %}
-                            <th class="fw-normal px-3">
-                                <span class="company-header">{{ col_tuple.0 }}</span>
-                                <span class="job-header">{{ col_tuple.1 }}</span>
+                            <th class="text-center">
+                                <span class="header-company">{{ col_tuple.0 }}</span>
+                                <span class="header-job">{{ col_tuple.1 }}</span>
                             </th>
                         {% empty %}
-                            <th>No Vacancies Found</th>
+                            <th class="text-center py-4">No Vacancies Found</th>
                         {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in matrix_rows %}
                     <tr>
-                        <th scope="row" class="text-center">
-                            {{ row.date|date:"d M" }}
-                            <br><small class="fw-light text-muted">{{ row.date|date:"Y" }}</small>
+                        <!-- Sticky Date -->
+                        <th scope="row" class="text-center align-middle">
+                            <div style="line-height: 1.2;">
+                                <div style="font-size: 1.2rem; font-weight: 700;">{{ row.date|date:"d" }}</div>
+                                <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary);">{{ row.date|date:"M" }}</div>
+                                <div style="font-size: 0.7rem; color: var(--surface-border);">{{ row.date|date:"Y" }}</div>
+                            </div>
                         </th>
 
+                        <!-- Data Cells -->
                         {% for cell in row.counts %}
-                            {% if cell.count > 0 %}
-                                <td class="clickable-cell bg-primary-subtle text-primary fw-bold fs-6"
-                                    onclick="openInterviewModal('{{ cell.date_str }}', '{{ cell.company|escapejs }}', '{{ cell.job|escapejs }}')">
-                                    {{ cell.count }}
-                                </td>
-                            {% else %}
-                                <td class="text-muted fw-light">-</td>
-                            {% endif %}
+                            <td class="text-center align-middle">
+                                {% if cell.count > 0 %}
+                                    <div class="count-pill" 
+                                         onclick="openInterviewModal('{{ cell.date_str }}', '{{ cell.company|escapejs }}', '{{ cell.job|escapejs }}')"
+                                         title="View Details">
+                                        {{ cell.count }}
+                                    </div>
+                                {% else %}
+                                    <span class="empty-dash">&mdash;</span>
+                                {% endif %}
+                            </td>
                         {% endfor %}
                     </tr>
                     {% empty %}
-                    <tr><td colspan="100%" class="p-5 text-muted">No data found for {{ label }}</td></tr>
+                    <tr>
+                        <td colspan="100%" class="text-center py-5" style="color: var(--text-secondary);">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
+                            No interview data found.
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th class="text-center text-dark fw-bold border-end">TOTAL</th>
+                        <th class="text-center">TOTAL</th>
                         {% for total in footer_counts %}
-                            <td class="fw-bold text-dark bg-light">
-                                {{ total|default:"0" }}
+                            <td class="text-center">
+                                {% if total > 0 %}
+                                    <span style="color: var(--active-text);">{{ total }}</span>
+                                {% else %}
+                                    <span style="color: var(--surface-border);">0</span>
+                                {% endif %}
                             </td>
                         {% endfor %}
                     </tr>
                 </tfoot>
             </table>
         </div>
-
-        <div class="mt-3 text-end">
-            <span class="badge bg-dark fs-6">Grand Total Scheduled: {{ grand_total }}</span>
-        </div>
     </div>
+
+    <div class="mt-3 text-end">
+        <span style="color: var(--text-secondary);">Grand Total:</span>
+        <span class="fw-bold ms-2 fs-5" style="color: var(--text-primary);">{{ grand_total }}</span>
+    </div>
+
 </div>
 
+<!-- Modal -->
 <div class="modal fade" id="interviewModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title">Scheduled Interviews</h5>
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header border-bottom-0">
+                <div>
+                    <h5 class="modal-title fw-bold">Interview Details</h5>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="modalContent">
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2">Loading details...</p>
+                <div class="d-flex flex-column align-items-center justify-content-center py-5 opacity-50">
+                    <div class="spinner-border text-primary mb-2" role="status"></div>
+                    <span class="small">Loading...</span>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer border-top-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
@@ -135,29 +355,32 @@
 
 <script>
     function openInterviewModal(dateStr, company, job) {
-        // 1. Show the modal
-        const myModal = new bootstrap.Modal(document.getElementById('interviewModal'));
+        const modalEl = document.getElementById('interviewModal');
+        const myModal = new bootstrap.Modal(modalEl);
         myModal.show();
 
-        // 2. Set Loading State
+        // Set Title
+        modalEl.querySelector('.modal-title').innerHTML = 
+            `<span style="color:var(--active-text)">${company}</span> <br> <span class="small text-muted fw-normal">${job}</span>`;
+
+        // Loading
         const contentDiv = document.getElementById('modalContent');
         contentDiv.innerHTML = `
-            <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p class="mt-2">Loading candidates for ${company}...</p>
+            <div class="d-flex flex-column align-items-center justify-content-center py-5" style="color: var(--text-secondary)">
+                <div class="spinner-border mb-3" style="color: var(--active-text)" role="status"></div>
+                <span>Loading schedules...</span>
             </div>`;
 
-        // 3. Fetch Data via AJAX
+        // Fetch
         const url = `{% url 'get_interview_details' %}?date=${dateStr}&company=${encodeURIComponent(company)}&job=${encodeURIComponent(job)}`;
 
         fetch(url)
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 contentDiv.innerHTML = data.html;
             })
-            .catch(error => {
-                contentDiv.innerHTML = `<p class="text-danger text-center">Error loading data. Please try again.</p>`;
-                console.error('Error:', error);
+            .catch(err => {
+                contentDiv.innerHTML = `<p class="text-danger text-center">Error loading data.</p>`;
             });
     }
 </script>
