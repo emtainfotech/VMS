@@ -1442,7 +1442,7 @@ def admin_candidate_list(request):
         reverse=True
     )
     
-    paginator = Paginator(all_candidates_list, 50)
+    paginator = Paginator(all_candidates_list, 20)
     total_candidates_count = paginator.count
     candidates_page = paginator.page(1)
 
@@ -1530,7 +1530,7 @@ def get_candidates_api(request):
         reverse=True
     )
     
-    paginator = Paginator(filtered_candidates_list, 50)
+    paginator = Paginator(filtered_candidates_list, 20)
     page_number = request.GET.get('page', 1)
     
     try:
@@ -2187,7 +2187,7 @@ def admin_company_profile(request, id):
             ),
             key=lambda x: x.timestamp,
             reverse=True
-        )[:50]
+        )[:20]
         
         employees = Employee.objects.all()
         context = {
@@ -3834,7 +3834,7 @@ def selected_candidate(request) :
     # Sort by selection_date, putting candidates without one at the end
     candidates_list.sort(key=lambda x: x.selection_date if x.selection_date else sc.date.min, reverse=True)
 
-    paginator = Paginator(candidates_list, 100)  # 100 items per page
+    paginator = Paginator(candidates_list, 20)  # 20 items per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -3963,7 +3963,7 @@ def follow_up_candidate(request):
     # Sort the combined list in Python (by the follow-up date)
     candidates_list.sort(key=lambda x: x.next_follow_up_date_time)
 
-    paginator = Paginator(candidates_list, 100)  # 100 items per page
+    paginator = Paginator(candidates_list, 20)  # 20 items per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -4079,7 +4079,7 @@ def generated_leads(request):
     # Sort the combined list in Python
     candidates_list.sort(key=lambda x: x.register_time, reverse=True)
 
-    paginator = Paginator(candidates_list, 50)  # 50 items per page
+    paginator = Paginator(candidates_list, 20)  # 20 items per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 

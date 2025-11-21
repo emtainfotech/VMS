@@ -990,7 +990,7 @@ def employee_candidate_list(request):
         return render(request, 'employee/404.html', status=404)
 
     all_candidates = get_filtered_candidates(request, logged_in_employee)
-    paginator = Paginator(all_candidates, 100) 
+    paginator = Paginator(all_candidates, 20) 
     page_obj = paginator.get_page(1)
     
 
@@ -1013,7 +1013,7 @@ def filter_candidates_api(request):
 
     all_filtered_candidates = get_filtered_candidates(request, logged_in_employee)
     page_number = request.GET.get('page', 1)
-    paginator = Paginator(all_filtered_candidates, 100)
+    paginator = Paginator(all_filtered_candidates, 20)
     page_obj = paginator.get_page(page_number)
 
     rendered_rows_html = render_to_string(
@@ -4211,7 +4211,7 @@ def employee_selected_candidate(request):
     combined_candidates = list(chain(candidates_reg, candidates_can))
     combined_candidates.sort(key=get_selection_date_key, reverse=True)
 
-    paginator = Paginator(combined_candidates, 50)
+    paginator = Paginator(combined_candidates, 20)
     page_number = request.GET.get('page')
     
     # Use .get_page for safer pagination (handles errors automatically)
@@ -4354,7 +4354,7 @@ def employee_generated_leads(request):
     all_candidates_list.sort(key=get_sort_key, reverse=True)
     
     # --- Pagination ---
-    paginator = Paginator(all_candidates_list, 50)  # 50 candidates per page
+    paginator = Paginator(all_candidates_list, 20)  # 20 candidates per page
     page_number = request.GET.get('page')
     
     try:
@@ -5186,7 +5186,7 @@ def employee_assigned_candidate_list(request):
     }
 
     # Prepare initial page load data
-    paginator = Paginator(candidates_qs.order_by('-register_time'), 50)
+    paginator = Paginator(candidates_qs.order_by('-register_time'), 20)
     
     context = {
         'total_candidates_count': paginator.count,
@@ -5232,7 +5232,7 @@ def employee_get_assigned_candidates_api(request):
     
     filtered_candidates = candidates_qs.filter(q_filter).order_by('-register_time')
 
-    paginator = Paginator(filtered_candidates, 50)
+    paginator = Paginator(filtered_candidates, 20)
     page_number = request.GET.get('page', 1)
     
     try:
