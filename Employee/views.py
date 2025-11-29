@@ -1090,9 +1090,10 @@ def employee_candidate_registration(request):
         current_salary_type = request.POST.get('current_salary_type')
         expected_salary_type = request.POST.get('expected_salary_type')
         
-        # Save to database
-        candidate = Candidate_registration.objects.create(
-            employee_name=logged_in_employee,
+        # 1. Prepare the record (Use Candidate_registration(...) NOT .objects.create(...))
+        # This creates the object in memory but does NOT save it to the DB yet.
+        candidate = Candidate_registration(
+            employee_name=logged_in_employee,  # Ensure this field gets the string name if needed
             candidate_name=candidate_name,
             candidate_mobile_number=candidate_mobile_number,
             candidate_alternate_mobile_number=candidate_alternate_mobile_number,
@@ -1130,14 +1131,9 @@ def employee_candidate_registration(request):
             expected_salary_type=expected_salary_type
         )
 
-        # Create a CandidateActivity record
-        CandidateActivity.objects.create(
-            candidate=candidate,
-            employee=logged_in_employee,
-            action='created',
-            # changes=changes,
-            remark="Created via unified form"
-        )
+        # 2. Save explicitly with the user
+        # This triggers your custom save() method and passes the employee correctly
+        candidate.save(user=logged_in_employee)
 
         return JsonResponse({'status': 'success', 'redirect_url': reverse('employee_candidate_list')})
     else:
