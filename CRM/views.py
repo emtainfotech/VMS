@@ -5436,8 +5436,6 @@ def _get_chart_data(queryset, start_date, end_date, filter_q=None):
 
 
 # ===================================================================================
-# == MANAGER DASHBOARD VIEWS
-# ===================================================================================
 @login_required(login_url='/crm/404/')
 def admin_calls_list(request):
     if not (request.user.is_staff or request.user.is_superuser):
@@ -5484,7 +5482,7 @@ def admin_calls_list(request):
         last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
         connected_calls=Count('candidateactivity', filter=base_activity_filter & connected_filter),
         not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~connected_filter),
-         ).filter(total_calls__gt=0).order_by('-total_calls')
+          ).filter(total_calls__gt=0).order_by('-total_calls')
     
     LEAD_STATUSES = ['Hot', 'Converted']
     lead_transition_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
@@ -5505,12 +5503,22 @@ def admin_calls_list(request):
             candidate_joining_date__range=[start_date, end_date]
         ).count()
 
-        # This now correctly calculates the count of resumes added by this employee
-        stat.resumes_added = Candidate_registration.objects.filter(
-            Q(created_by=stat) | Q(updated_by=stat),
+        # === UPDATED RESUME LOGIC (INDIVIDUAL) ===
+        # 1. New registrations with Resume
+        created_resumes_count = Candidate_registration.objects.filter(
+            created_by=stat,
             created_at__date__range=[start_date, end_date],
             candidate_resume__isnull=False
         ).exclude(candidate_resume='').count()
+
+        # 2. Updated registrations with Resume (via Activity Log)
+        updated_resumes_count = CandidateActivity.objects.filter(
+            employee=stat,
+            timestamp__date__range=[start_date, end_date],
+            changes__has_key='candidate_resume'
+        ).count()
+
+        stat.resumes_added = created_resumes_count + updated_resumes_count
 
     all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created', 'updated'], employee__isnull=False)
     selections_queryset = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date])
@@ -5519,24 +5527,34 @@ def admin_calls_list(request):
         joining_status__iexact='Joined', 
         candidate_joining_date__range=[start_date, end_date]
     )
-     # Correctly query for total resumes added
-    resumes_queryset = Candidate_registration.objects.filter(
-        Q(created_by__isnull=False) | Q(updated_by__isnull=False),
+    
+    # === UPDATED RESUME LOGIC (TOTAL QUERYSETS) ===
+    resumes_created_qs = Candidate_registration.objects.filter(
         created_at__date__range=[start_date, end_date],
         candidate_resume__isnull=False
     ).exclude(candidate_resume='')
+    
+    resumes_updated_qs = CandidateActivity.objects.filter(
+        timestamp__date__range=[start_date, end_date],
+        changes__has_key='candidate_resume'
+    )
 
     if apply_employee_filter:
         all_activities_queryset = all_activities_queryset.filter(employee_id__in=selected_employee_ids)
         selections_queryset = selections_queryset.filter(updated_by_id__in=selected_employee_ids)
         joined_queryset = joined_queryset.filter(updated_by_id__in=selected_employee_ids)
-        resumes_queryset = resumes_queryset.filter(created_by_id__in=selected_employee_ids)
+        
+        # Apply filters to resume querysets
+        resumes_created_qs = resumes_created_qs.filter(created_by_id__in=selected_employee_ids)
+        resumes_updated_qs = resumes_updated_qs.filter(employee_id__in=selected_employee_ids)
         
     total_connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
     total_leads_generated_count = all_activities_queryset.filter(lead_transition_filter).annotate(date=TruncDate('timestamp')).values('candidate_id', 'date').distinct().count()
     total_selections_count = selections_queryset.count()
     total_joined_count = joined_queryset.count() # Get total joined count
-    total_resumes_count = resumes_queryset.count()
+    
+    # Calculate Total Resumes (Sum of created + updated)
+    total_resumes_count = resumes_created_qs.count() + resumes_updated_qs.count()
     
     total_hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
     
@@ -5587,7 +5605,6 @@ def admin_calls_list(request):
         'selected_employee_ids': [int(eid) for eid in selected_employee_ids if eid.isdigit()],
     }
     return render(request, 'crm/employee-calls-list.html', context)
-
 
 @login_required(login_url='/crm/404/')
 def get_filtered_activity_list(request):
@@ -5660,16 +5677,35 @@ def get_filtered_activity_list(request):
         return render(request, 'crm/partials/joined_candidate_list_partial.html', context)
     
     elif list_type == 'resumes':
-        list_title = "Candidates with Resumes Added"
-        candidates = Candidate_registration.objects.filter(
-            Q(created_by__isnull=False) | Q(updated_by__isnull=False),
-            created_at__date__range=[start_date, end_date],
-            candidate_resume__isnull=False,
-        ).exclude(candidate_resume='').select_related('created_by__user').order_by('-created_at')
+        list_title = "Candidates with Resumes Added/Updated"
         
+        # 1. Candidates CREATED with a resume in the date range
+        created_candidates_qs = Candidate_registration.objects.filter(
+            created_at__date__range=[start_date, end_date],
+            candidate_resume__isnull=False
+        ).exclude(candidate_resume='')
+
+        # 2. Candidates UPDATED with a resume in the date range (via Activity Log)
+        updated_activities_qs = CandidateActivity.objects.filter(
+            timestamp__date__range=[start_date, end_date],
+            changes__has_key='candidate_resume'
+        )
+
+        # Apply Employee Filters separately to both queries
         if apply_employee_filter:
-            candidates = candidates.filter(created_by_id__in=selected_employee_ids)
-            
+            created_candidates_qs = created_candidates_qs.filter(created_by_id__in=selected_employee_ids)
+            updated_activities_qs = updated_activities_qs.filter(employee_id__in=selected_employee_ids)
+
+        # Combine IDs from both sources
+        created_ids = list(created_candidates_qs.values_list('id', flat=True))
+        updated_ids = list(updated_activities_qs.values_list('candidate_id', flat=True))
+        all_candidate_ids = list(set(created_ids + updated_ids))
+
+        # Fetch the final list of Candidate objects
+        candidates = Candidate_registration.objects.filter(
+            id__in=all_candidate_ids
+        ).select_related('created_by__user').order_by('-updated_at')
+        
         context = {'candidates': candidates, 'list_title': list_title}
         return render(request, 'crm/partials/resume_list_partial.html', context)
     
@@ -6415,6 +6451,7 @@ from django.db.models.functions import TruncDate
 from collections import Counter
 from django.contrib.auth.decorators import login_required
 
+
 @login_required
 def employee_daily_report(request):
     """
@@ -6453,32 +6490,70 @@ def employee_daily_report(request):
     employee = get_object_or_404(Employee, pk=employee_id)
     all_employees = Employee.objects.all().order_by('first_name')
     
-    # --- Fetch and process data (this logic remains the same) ---
-    activities = list(CandidateActivity.objects.filter(employee=employee, timestamp__date__range=[start_date_obj, end_date_obj], action__in=['call_made', 'created', 'updated']))
-    resumes_added_dates = list(Candidate_registration.objects.filter(created_by=employee, created_at__date__range=[start_date_obj, end_date_obj], candidate_resume__isnull=False).exclude(candidate_resume='').values_list('created_at__date', flat=True))
+    # --- Fetch and process data ---
+    
+    # 1. General Activities for Calls and Leads logic
+    activities = list(CandidateActivity.objects.filter(
+        employee=employee, 
+        timestamp__date__range=[start_date_obj, end_date_obj], 
+        action__in=['call_made', 'created', 'updated']
+    ))
+
+    # 2. RESUME LOGIC (COMBINED)
+    # A. Get dates where NEW candidates were created with a resume
+    created_resume_dates = list(Candidate_registration.objects.filter(
+        created_by=employee, 
+        created_at__date__range=[start_date_obj, end_date_obj], 
+        candidate_resume__isnull=False
+    ).exclude(candidate_resume='').values_list('created_at__date', flat=True))
+
+    # B. Get dates where EXISTING candidates had a resume updated/added
+    # We look for the 'candidate_resume' key in the changes JSON
+    updated_resume_dates = list(CandidateActivity.objects.filter(
+        employee=employee,
+        timestamp__date__range=[start_date_obj, end_date_obj],
+        changes__has_key='candidate_resume'
+    ).values_list('timestamp__date', flat=True))
+
+    # C. Combine both lists and Count
+    all_resume_dates = created_resume_dates + updated_resume_dates
+    resume_counts = Counter(all_resume_dates)
+
+    # 3. Selection and Joining Logic
     selection_dates = list(Candidate_registration.objects.filter(updated_by=employee, selection_status__iexact='Selected', selection_date__range=[start_date_obj, end_date_obj]).values_list('selection_date', flat=True))
     joined_dates = list(Candidate_registration.objects.filter(updated_by=employee, joining_status__iexact='Joined', candidate_joining_date__range=[start_date_obj, end_date_obj]).values_list('candidate_joining_date', flat=True))
     
-    resume_counts = Counter(resumes_added_dates)
     selection_counts = Counter(selection_dates)
     joined_counts = Counter(joined_dates)
 
+    # --- Build Daily Data ---
     daily_performance_data = []
     current_date = start_date_obj
+    
     while current_date <= end_date_obj:
         day_activities = [act for act in activities if act.timestamp.date() == current_date]
+        
+        # Calculate Calls
         total_calls = sum(1 for act in day_activities if act.action in ['call_made', 'created'])
         connected_calls = sum(1 for act in day_activities if ((act.action == 'call_made' and act.changes.get('call_connection', {}).get('new') == 'Connected') or (act.action == 'created' and hasattr(act, 'candidate') and act.candidate.call_connection == 'Connected')))
+        
+        # Calculate Leads
         LEAD_STATUSES = ['Hot', 'Converted']
         leads_generated = len({act.candidate_id for act in day_activities if ((act.action == 'call_made' and act.changes.get('lead_generate', {}).get('new') in LEAD_STATUSES and act.changes.get('lead_generate', {}).get('old') not in LEAD_STATUSES) or (act.action == 'created' and hasattr(act, 'candidate') and act.candidate.lead_generate in LEAD_STATUSES))})
         converted_leads = len({act.candidate_id for act in day_activities if (act.action == 'call_made' and act.changes.get('lead_generate', {}).get('new') == 'Converted' and act.changes.get('lead_generate', {}).get('old') == 'Hot')})
+        
         last_activity_time = max(act.timestamp for act in day_activities) if day_activities else None
 
         daily_performance_data.append({
-            'date': current_date, 'total_calls': total_calls, 'connected_calls': connected_calls,
-            'not_connected_calls': total_calls - connected_calls, 'resumes_added': resume_counts.get(current_date, 0),
-            'leads_generated': leads_generated, 'converted_leads': converted_leads,
-            'selections': selection_counts.get(current_date, 0), 'joined': joined_counts.get(current_date, 0),
+            'date': current_date, 
+            'total_calls': total_calls, 
+            'connected_calls': connected_calls,
+            'not_connected_calls': total_calls - connected_calls, 
+            'resumes_added': resume_counts.get(current_date, 0), # This now includes Created + Updated
+            'leads_generated': leads_generated, 
+            'converted_leads': converted_leads,
+            'selections': selection_counts.get(current_date, 0), 
+            'joined': joined_counts.get(current_date, 0),
             'last_activity_time': last_activity_time,
         })
         current_date += timedelta(days=1)
