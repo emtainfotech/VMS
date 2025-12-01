@@ -26,6 +26,7 @@ urlpatterns = [
     path('employee-update-task-status/<int:task_id>/', employee_update_task_status, name='employee_update_task_status'),
     path('employee-candidate-list/',employee_candidate_list,name = 'employee_candidate_list'),
     path('employee-candidate-registration/',employee_candidate_registration,name = 'employee_candidate_registration'),
+    path('parse-resume/', parse_resume_view, name='parse_resume'),
     path('employee-candidate-profile/<int:id>/',employee_candidate_profile,name = 'employee_candidate_profile'),
     path('employee-company-list/',employee_company_list,name = 'employee_company_list'),
     path('employee-company-registration/',employee_company_registration,name = 'employee_company_registration'),

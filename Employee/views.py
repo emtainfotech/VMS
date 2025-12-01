@@ -1027,6 +1027,29 @@ def filter_candidates_api(request):
         'total_count': paginator.count,
     })
 
+# views.py
+import os
+from .utils import extract_text_from_file, parse_resume_data
+
+# --- 1. NEW VIEW FOR AJAX PARSING ---
+@login_required
+def parse_resume_view(request):
+    if request.method == 'POST' and request.FILES.get('resume_file'):
+        uploaded_file = request.FILES['resume_file']
+        
+        # Extract text
+        text = extract_text_from_file(uploaded_file)
+        
+        if not text:
+            return JsonResponse({'status': 'error', 'message': 'Could not read file text.'})
+        
+        # Parse data
+        parsed_data = parse_resume_data(text)
+        
+        return JsonResponse({'status': 'success', 'data': parsed_data})
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
 
 @login_required(login_url='/employee/404/')
 def employee_candidate_registration(request):
@@ -1089,6 +1112,15 @@ def employee_candidate_registration(request):
         other_department = request.POST.get('other_department')
         current_salary_type = request.POST.get('current_salary_type')
         expected_salary_type = request.POST.get('expected_salary_type')
+
+        # --- RENAME RESUME LOGIC STARTS ---
+        if candidate_resume and candidate_name:
+            # Get file extension (e.g., .pdf)
+            ext = os.path.splitext(candidate_resume.name)[1]
+            # Create new name: Name_Resume.pdf (Sanitize name to remove spaces/special chars)
+            clean_name = "".join(x for x in candidate_name if x.isalnum())
+            new_filename = f"{clean_name}_Resume{ext}"
+            candidate_resume.name = new_filename
         
         # 1. Prepare the record (Use Candidate_registration(...) NOT .objects.create(...))
         # This creates the object in memory but does NOT save it to the DB yet.
