@@ -3,6 +3,25 @@
 {% block content %}
     <div class="page-body">
         <div class="container-xl">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card card-active">
+                        <div class="card-body">
+                            <h3 class="card-title">🚀 Fast Track Registration</h3>
+                            <p class="text-muted">Upload a resume here to auto-fill details below.</p>
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="autoFillResumeInput" accept=".pdf,.docx">
+                                <button class="btn btn-primary" type="button" id="btnAutoFill">
+                                    Auto-Fill Form
+                                    <span class="spinner-border spinner-border-sm ms-2 d-none" id="autoFillLoader" role="status"></span>
+                                </button>
+                            </div>
+                            <div id="autoFillMessage" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="row row-cards">
                 <div class="col-12">
                     <div class="card-header">
@@ -1029,6 +1048,94 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     </style>
     
-</body>
-</html>
+    
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const autoFillInput = document.getElementById('autoFillResumeInput');
+    const autoFillBtn = document.getElementById('btnAutoFill');
+    const loader = document.getElementById('autoFillLoader');
+    const msgDiv = document.getElementById('autoFillMessage');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    // Actual Form Fields
+    const nameField = document.querySelector('[name="candidate_name"]');
+    const mobileField = document.querySelector('[name="candidate_mobile_number"]');
+    const emailField = document.querySelector('[name="candidate_email_address"]');
+    const genderSelect = document.querySelector('[name="gender"]');
+    const resumeInputInForm = document.getElementById('candidateResumeInput'); // Your actual form file input
+
+    autoFillBtn.addEventListener('click', function() {
+        if (!autoFillInput.files.length) {
+            msgDiv.innerHTML = '<span class="text-danger">Please select a file first.</span>';
+            return;
+        }
+
+        const file = autoFillInput.files[0];
+        const formData = new FormData();
+        formData.append('resume_file', file);
+
+        // UI Loading State
+        loader.classList.remove('d-none');
+        autoFillBtn.disabled = true;
+        msgDiv.innerHTML = '';
+
+        fetch("{% url 'parse_resume' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            loader.classList.add('d-none');
+            autoFillBtn.disabled = false;
+
+            if (data.status === 'success') {
+                const parsed = data.data;
+
+                // 1. Populate Text Fields
+                if (parsed.name) nameField.value = parsed.name;
+                if (parsed.email) emailField.value = parsed.email;
+                if (parsed.mobile) {
+                    mobileField.value = parsed.mobile;
+                    // Trigger your existing duplicate checker manually
+                    const event = new Event('input');
+                    mobileField.dispatchEvent(event);
+                }
+                
+                // 2. Populate Dropdowns (Gender)
+                if (parsed.gender) {
+                    // Try to find the option that matches
+                    Array.from(genderSelect.options).forEach(option => {
+                        if (option.value === parsed.gender) {
+                            genderSelect.value = parsed.gender;
+                        }
+                    });
+                }
+
+                // 3. Transfer the file to the actual form input
+                // This ensures the user doesn't have to upload the file twice
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                resumeInputInForm.files = dataTransfer.files;
+                
+                // Trigger the preview change event you already wrote
+                const changeEvent = new Event('change');
+                resumeInputInForm.dispatchEvent(changeEvent);
+
+                msgDiv.innerHTML = '<span class="text-success">Form auto-filled successfully! Please verify details.</span>';
+            } else {
+                msgDiv.innerHTML = `<span class="text-danger">Error: ${data.message}</span>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loader.classList.add('d-none');
+            autoFillBtn.disabled = false;
+            msgDiv.innerHTML = '<span class="text-danger">An error occurred while parsing.</span>';
+        });
+    });
+});
+</script>
 {% endblock content %}

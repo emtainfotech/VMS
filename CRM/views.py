@@ -953,7 +953,27 @@ def admin_candidate_profile(request, id):
         messages.error(request, "You are not authorized to view this page.")
         return render(request, 'crm/404.html', status=404)
     
+from Employee.utils import extract_text_from_file, parse_resume_data # Import the utility created above
+
+# --- 1. NEW VIEW FOR AJAX PARSING ---
+@login_required
+def parse_resume_view(request):
+    if request.method == 'POST' and request.FILES.get('resume_file'):
+        uploaded_file = request.FILES['resume_file']
+        
+        # Extract text
+        text = extract_text_from_file(uploaded_file)
+        
+        if not text:
+            return JsonResponse({'status': 'error', 'message': 'Could not read file text.'})
+        
+        # Parse data
+        parsed_data = parse_resume_data(text)
+        
+        return JsonResponse({'status': 'success', 'data': parsed_data})
     
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
 @login_required(login_url='/crm/404/')
 def admin_candidate_registration(request):
     logged_in_employee = Employee.objects.get(user=request.user)
@@ -1015,6 +1035,16 @@ def admin_candidate_registration(request):
         other_department = request.POST.get('other_department')
         current_salary_type = request.POST.get('current_salary_type')
         expected_salary_type = request.POST.get('expected_salary_type')
+
+        # --- RENAME RESUME LOGIC STARTS ---
+        if candidate_resume and candidate_name:
+            # Get file extension (e.g., .pdf)
+            ext = os.path.splitext(candidate_resume.name)[1]
+            # Create new name: Name_Resume.pdf (Sanitize name to remove spaces/special chars)
+            clean_name = "".join(x for x in candidate_name if x.isalnum())
+            new_filename = f"{clean_name}_Resume{ext}"
+            candidate_resume.name = new_filename
+        # --- RENAME RESUME LOGIC ENDS ---
         
         # Save to database
         candidate = Candidate_registration.objects.create(

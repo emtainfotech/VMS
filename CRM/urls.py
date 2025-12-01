@@ -93,6 +93,7 @@ urlpatterns = [
     path('attendance/reports/', admin_attendance_report, name='admin_attendance_report'),
     # Your existing path
     path('analytics/interview-schedule/', interview_schedule_matrix, name='interview_schedule_matrix'),
+    path('parse-resume/', parse_resume_view, name='parse_resume'),
     
     # NEW PATH for the modal popup
     path('analytics/get-interview-details/', get_interview_details, name='get_interview_details'),
