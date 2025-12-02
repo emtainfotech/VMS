@@ -92,7 +92,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'emtavms_db',
-        'USER': 'EmtaDataBase',
+        'USER': 'emtadatabase',
         'PASSWORD': 'Emta@0505',
         'HOST': 'localhost',
         'PORT': '5432',
