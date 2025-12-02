@@ -144,25 +144,6 @@ class AttendancePunch(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.get_punch_type_display()} at {self.timestamp}"
-
-class ScreenCapture(models.Model):
-    """
-    Stores a single screenshot captured from an employee's computer.
-    """
-    employee = models.ForeignKey(
-        Employee, 
-        on_delete=models.CASCADE, 
-        related_name='screen_captures'
-    )
-    # This stores the file in /media_root/screen_captures/YYYY/MM/DD/
-    screenshot = models.ImageField(upload_to='screen_captures/%Y/%m/%d/')
-    captured_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-captured_at'] # Always show the newest first
-
-    def __str__(self):
-        return f"Capture for {self.employee} at {self.captured_at.strftime('%Y-%m-%d %H:%M')}"
     
 # Renamed to avoid duplicacy and be more descriptive
 class EmployeeLoginRecord(models.Model):
