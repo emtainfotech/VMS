@@ -17,6 +17,12 @@
         padding: .5rem .75rem !important;
         font-size: .875rem;
     }
+    .status-warning {
+        background-color: #fff3cd !important; /* Light Orange/Yellow */
+    }
+    .status-critical {
+        background-color: #f8d7da !important; /* Light Red */
+    }
 </style>
 
 <div class="page-wrapper">
@@ -35,48 +41,45 @@
 
     <div class="page-body">
         <div class="container-xl">
-            <div class="card card-body mb-4">
-    <form method="get" action="{% url 'admin_calls_list' %}" id="main-filter-form">
-        <div class="row g-3 align-items-end">
             
-            <div class="col-md-4">
-                <label class="form-label">Filter by Employee(s)</label>
-                <select name="employees" id="employee_filter" multiple>
-                    <option value="all">All Employees</option>
-                    {% for employee in all_employees %}
-                        <option value="{{ employee.id }}" {% if employee.id in selected_employee_ids %}selected{% endif %}>
-                            {{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})
-                        </option>
-                    {% endfor %}
-                </select>
+            <div class="card card-body mb-4">
+                <form method="get" action="{% url 'admin_calls_list' %}" id="main-filter-form">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Filter by Employee(s)</label>
+                            <select name="employees" id="employee_filter" multiple>
+                                <option value="all">All Employees</option>
+                                {% for employee in all_employees %}
+                                    <option value="{{ employee.id }}" {% if employee.id in selected_employee_ids %}selected{% endif %}>
+                                        {{ employee.first_name }} {{ employee.last_name }} ({{ employee.user.username }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Period</label>
+                            <select name="period" id="period_filter" class="form-select">
+                                <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
+                                <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
+                                <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
+                                <option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option>
+                                <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" name="start_date" id="start_date_filter" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">End Date</label>
+                            <input type="date" name="end_date" id="end_date_filter" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                        </div>
+                    </div>
+                </form>
             </div>
-
-            <div class="col-md-2">
-                <label class="form-label">Period</label>
-                <select name="period" id="period_filter" class="form-select">
-                    <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
-                    <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
-                    <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
-                    <option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option>
-                    <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option>
-                </select>
-            </div>
-
-            <div class="col-md-2">
-                <label class="form-label">Start Date</label>
-                <input type="date" name="start_date" id="start_date_filter" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">End Date</label>
-                <input type="date" name="end_date" id="end_date_filter" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
-            </div>
-
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
-            </div>
-        </div>
-    </form>
-</div>
             
             <div class="row g-4 mb-4">
                 <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="total"><div class="card"><div class="card-body text-center"><div class="h1 mb-3">{{ total_stats.total_activities }}</div><div class="text-muted">Total Calls</div></div></div></div>
@@ -85,12 +88,24 @@
                 <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="leads"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-warning">{{ total_stats.total_leads_generated }}</div><div class="text-muted">Total Leads Generated</div></div></div></div>
                 <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="converted"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-primary">{{ total_stats.total_converted_leads }}</div><div class="text-muted">Total Conversion</div></div></div></div>
                 <div class="col-md-6 col-lg-2 clickable-card" data-filter-type="selected"><div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-success">{{ total_stats.total_selections }}</div><div class="text-muted">Total Selection's</div></div></div></div>
+                
                 <div class="col-sm-6 col-lg-2 clickable-card" data-filter-type="joined">
                     <div class="card"><div class="card-body text-center"><div class="h1 mb-3" style="color: #6f42c1;">{{ total_stats.total_joined }}</div><div class="text-muted">Total Joined</div></div></div>
                 </div>
                 <div class="col-sm-6 col-lg-2 clickable-card" data-filter-type="resumes">
-                <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-purple">{{ total_stats.total_resumes_added }}</div><div class="text-muted">Resumes Added</div></div></div>
-            </div>
+                    <div class="card"><div class="card-body text-center"><div class="h1 mb-3 text-purple">{{ total_stats.total_resumes_added }}</div><div class="text-muted">Resumes Added</div></div></div>
+                </div>
+
+                <div class="col-sm-6 col-lg-2 clickable-card" data-filter-type="resume_sharing">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="h1 mb-3" style="color: #fd7e14;">
+                                {{ total_stats.total_resume_sharing_count }} : {{ total_stats.total_resume_sharing_with_file }}
+                            </div>
+                            <div class="text-muted">Sharing : With File</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="activity-details-container" class="mb-4"></div>
@@ -99,31 +114,58 @@
                 <div class="card-header"><h3 class="card-title">Employee Breakdown</h3></div>
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter text-nowrap table-striped table-hover">
-                        <thead><tr><th>Employee Name</th><th>Total Activities</th><th>Connected</th><th>Not Connected</th><th>Resumes</th><th>Leads</th><th>Converted</th><th>Selections</th><th>Joined</th><th>Last Activity</th><th>Actions</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Employee Name</th>
+                                <th>Total Activities</th>
+                                <th>Connected</th>
+                                <th>Not Connected</th>
+                                <th>Resumes</th>
+                                <th>Resume Sharing</th>
+                                <th>Sharing + File</th>
+                                <th>Leads</th>
+                                <th>Converted</th>
+                                <th>Selections</th>
+                                <th>Joined</th>
+                                <th>Last Activity</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             {% for stat in employee_stats %}
                             <tr class="employee-row" data-employee-id="{{ stat.id }}" data-employee-name="{{ stat.first_name }} {{ stat.last_name }} ({{ stat.user.username }})" style="cursor: pointer;">
-        <td>{{ stat.first_name }} {{ stat.last_name }} ({{ stat.user.username }})</td>
-        <td><span class="badge bg-blue text-blue-fg">{{ stat.total_calls }}</span></td>
-        <td><span class="badge bg-green text-green-fg">{{ stat.connected_calls }}</span></td>
-        <td><span class="badge bg-red text-red-fg">{{ stat.not_connected_calls }}</span></td>
-        <td><span class="badge bg-purple-lt">{{ stat.resumes_added }}</span></td>
-        <td><span class="badge bg-warning text-warning-fg">{{ stat.leads_generated }}</span></td>
-        <td><span class="badge" style="background-color: #e5dff6; color: #6f42c1;">{{ stat.converted_leads_count }}</span></td>
-        <td><span class="badge bg-info text-info-fg">{{ stat.selections }}</span></td>
-        <td><span class="badge" style="background-color: #e5dff6; color: #6f42c1;">{{ stat.joined_count }}</span></td>
-        
-        <td class="last-activity-cell" data-timestamp="{% if stat.last_call_made %}{{ stat.last_call_made.isoformat }}{% endif %}">
-            {% if stat.last_call_made %}{{ stat.last_call_made|date:"M d, Y H:i" }}{% else %}N/A{% endif %}
-        </td>
-        <td>
-    <a href="{% url 'employee_daily_report' %}?employee={{ stat.id }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" class="btn btn-sm btn-outline-secondary">
-        Daily View
-    </a>
-</td>
-        </tr>
+                                <td>{{ stat.first_name }} {{ stat.last_name }} ({{ stat.user.username }})</td>
+                                <td><span class="badge bg-blue text-blue-fg">{{ stat.total_calls }}</span></td>
+                                <td><span class="badge bg-green text-green-fg">{{ stat.connected_calls }}</span></td>
+                                <td><span class="badge bg-red text-red-fg">{{ stat.not_connected_calls }}</span></td>
+                                <td><span class="badge bg-purple-lt">{{ stat.resumes_added }}</span></td>
+                                
+                                <td>
+                                    <span class="badge bg-orange-lt" title="Candidates marked as 'Resume Sharing'">
+                                        {{ stat.resume_sharing_count }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-teal-lt" title="Marked 'Resume Sharing' AND has file attached">
+                                        {{ stat.resume_sharing_with_file }}
+                                    </span>
+                                </td>
+                                <td><span class="badge bg-warning text-warning-fg">{{ stat.leads_generated }}</span></td>
+                                <td><span class="badge" style="background-color: #e5dff6; color: #6f42c1;">{{ stat.converted_leads_count }}</span></td>
+                                <td><span class="badge bg-info text-info-fg">{{ stat.selections }}</span></td>
+                                <td><span class="badge" style="background-color: #e5dff6; color: #6f42c1;">{{ stat.joined_count }}</span></td>
+                                
+                                <td class="last-activity-cell" data-timestamp="{% if stat.last_call_made %}{{ stat.last_call_made.isoformat }}{% endif %}">
+                                    {% if stat.last_call_made %}{{ stat.last_call_made|date:"M d, Y H:i" }}{% else %}N/A{% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'employee_daily_report' %}?employee={{ stat.id }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" class="btn btn-sm btn-outline-secondary">
+                                        Daily View
+                                    </a>
+                                </td>
+                            </tr>
                             <tr class="candidate-details-row" id="details-for-{{ stat.id }}" style="display: none;">
-                                <td colspan="12" class="p-0">
+                                <td colspan="14" class="p-0">
                                     <div class="details-container p-3">
                                         <div class="candidate-list-container"></div>
                                         <div class="row g-4 mt-3">
@@ -134,83 +176,15 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="8" class="text-center">No activity data found for the selected filters.</td></tr>
+                            <tr><td colspan="14" class="text-center">No activity data found for the selected filters.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
-            <style>
-    .status-warning {
-        background-color: #fff3cd !important; /* Light Orange/Yellow */
-    }
-    .status-critical {
-        background-color: #f8d7da !important; /* Light Red */
-    }
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-
-    function formatTimeAgo(date) {
-        const now = new Date();
-        const seconds = Math.floor((now - date) / 1000);
-        
-        let interval = seconds / 31536000;
-        if (interval > 1) return Math.floor(interval) + " years ago";
-        
-        interval = seconds / 2592000;
-        if (interval > 1) return Math.floor(interval) + " months ago";
-        
-        interval = seconds / 86400;
-        if (interval > 1) return Math.floor(interval) + " days ago";
-        
-        interval = seconds / 3600;
-        if (interval > 1) return `about ${Math.floor(interval)}h ago`;
-        
-        interval = seconds / 60;
-        if (interval > 1) return `${Math.floor(interval)}m ago`;
-        
-        return "just now";
-    }
-
-    function updateEmployeeStatus() {
-        const employeeRows = document.querySelectorAll('.employee-row');
-        const now = new Date();
-
-        employeeRows.forEach(row => {
-            const cell = row.querySelector('.last-activity-cell');
-            const timestamp = cell.dataset.timestamp;
-
-            if (timestamp) {
-                const lastActivityDate = new Date(timestamp);
-                const diffMinutes = (now - lastActivityDate) / 1000 / 60;
-                
-                // Remove previous status classes
-                row.classList.remove('status-warning', 'status-critical');
-
-                // Apply new status class based on time difference
-                if (diffMinutes > 25) {
-                    row.classList.add('status-critical');
-                } else if (diffMinutes > 15) {
-                    row.classList.add('status-warning');
-                }
-
-                // Update the text to show "time ago"
-                cell.textContent = formatTimeAgo(lastActivityDate);
-            }
-        });
-    }
-
-    // Run the function immediately on page load
-    updateEmployeeStatus();
-
-    // Then, run it again every 30 seconds to keep the status real-time
-    setInterval(updateEmployeeStatus, 30000); 
-});
-</script>
 
             <div class="row g-4"><div class="col-lg-6"><div class="card"><div class="card-header"><h3 class="card-title">All Employees: Activity Volume Trend</h3></div><div class="card-body"><div id="mainActivityChart"></div></div></div></div><div class="col-lg-6"><div class="card"><div class="card-header"><h3 class="card-title">All Employees: Lead Generation Trend</h3></div><div class="card-body"><div id="mainLeadsChart"></div></div></div></div></div>
+            
             <div class="row mt-4">
                 <div class="col-lg-12 mb-4">
                     <div class="card">
@@ -235,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     
-    // --- Initialize Tom Select (if the element exists) ---
+    // --- Initialize Tom Select ---
     const employeeFilterElement = document.getElementById('employee_filter');
     if (employeeFilterElement) {
         let employeeSelect = new TomSelect('#employee_filter', {
@@ -260,13 +234,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     
-    // --- General Filter and AJAX Logic with safety checks ---
+    // --- Date Inputs Logic ---
     const periodSelect = document.getElementById('period_filter');
     const startDateInput = document.getElementById('start_date_filter');
     const endDateInput = document.getElementById('end_date_filter');
 
     function toggleDateInputs() {
-        // This function will only run if all date-related elements exist
         if (periodSelect && startDateInput && endDateInput) {
             const isCustom = periodSelect.value === 'custom';
             startDateInput.disabled = !isCustom;
@@ -274,10 +247,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Add event listener only if the period select element exists
     if (periodSelect) {
         periodSelect.addEventListener('change', toggleDateInputs);
-        toggleDateInputs(); // Run on page load
+        toggleDateInputs();
     }
 
     function getCurrentFilters() {
@@ -296,14 +268,50 @@ document.addEventListener('DOMContentLoaded', function () {
         return params.toString();
     }
     
-    function toggleDateInputs() {
-        const isCustom = periodSelect.value === 'custom';
-        startDateInput.disabled = !isCustom;
-        endDateInput.disabled = !isCustom;
+    // --- Time Ago & Status Logic ---
+    function formatTimeAgo(date) {
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " years ago";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " months ago";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " days ago";
+        interval = seconds / 3600;
+        if (interval > 1) return `about ${Math.floor(interval)}h ago`;
+        interval = seconds / 60;
+        if (interval > 1) return `${Math.floor(interval)}m ago`;
+        return "just now";
     }
-    periodSelect.addEventListener('change', toggleDateInputs);
-    toggleDateInputs();
 
+    function updateEmployeeStatus() {
+        const employeeRows = document.querySelectorAll('.employee-row');
+        const now = new Date();
+
+        employeeRows.forEach(row => {
+            const cell = row.querySelector('.last-activity-cell');
+            const timestamp = cell.dataset.timestamp;
+
+            if (timestamp) {
+                const lastActivityDate = new Date(timestamp);
+                const diffMinutes = (now - lastActivityDate) / 1000 / 60;
+                
+                row.classList.remove('status-warning', 'status-critical');
+                if (diffMinutes > 25) {
+                    row.classList.add('status-critical');
+                } else if (diffMinutes > 15) {
+                    row.classList.add('status-warning');
+                }
+                cell.textContent = formatTimeAgo(lastActivityDate);
+            }
+        });
+    }
+    updateEmployeeStatus();
+    setInterval(updateEmployeeStatus, 30000); 
+
+    // --- Details & Charts Logic ---
     const detailsContainer = document.getElementById('activity-details-container');
     document.querySelectorAll('.clickable-card').forEach(card => {
         card.addEventListener('click', async function() {
@@ -404,5 +412,4 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
-
 {% endblock %}

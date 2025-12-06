@@ -5465,12 +5465,12 @@ def _get_chart_data(queryset, start_date, end_date, filter_q=None):
     return chart_labels, chart_data
 
 
-# ===================================================================================
 @login_required(login_url='/crm/404/')
 def admin_calls_list(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return render(request, 'crm/404.html', status=404)
     
+    # --- 1. Date & Filter Setup ---
     period = request.GET.get('period', 'today')
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
@@ -5497,6 +5497,7 @@ def admin_calls_list(request):
         start_date = end_date = today
         period = 'today'
 
+    # --- 2. Employee Queryset ---
     all_employees = Employee.objects.all().order_by('first_name')
     employee_queryset = Employee.objects.all()
     
@@ -5504,137 +5505,142 @@ def admin_calls_list(request):
     if apply_employee_filter:
         employee_queryset = employee_queryset.filter(id__in=selected_employee_ids)
 
-    base_activity_filter = Q(candidateactivity__timestamp__date__range=[start_date, end_date], candidateactivity__action__in=['call_made', 'created'], candidateactivity__employee__isnull=False)
-    connected_filter = Q(Q(candidateactivity__action='call_made', candidateactivity__changes__call_connection__new__iexact='Connected') | Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected'))
+    # --- 3. Filter Definitions ---
+    # Base filter for counting calls/activities
+    base_activity_filter = Q(
+        candidateactivity__timestamp__date__range=[start_date, end_date], 
+        candidateactivity__action__in=['call_made', 'created'], 
+        candidateactivity__employee__isnull=False
+    )
     
+    # Filter for "Connected" status
+    connected_filter = Q(
+        Q(candidateactivity__action='call_made', candidateactivity__changes__call_connection__new__iexact='Connected') | 
+        Q(candidateactivity__action='created', candidateactivity__candidate__call_connection__iexact='Connected')
+    )
+
+    # Filter for "Sharing Resume" remark (used in loop and totals)
+    resume_sharing_filter_q = Q(
+        Q(changes__calling_remark__new__iexact='Sharing Resume') | 
+        Q(action='created', candidate__calling_remark__iexact='Sharing Resume')
+    )
+
+    # --- 4. Employee Stats Aggregation ---
     employee_stats = employee_queryset.annotate(
         total_calls=Count('candidateactivity', filter=base_activity_filter),
         last_call_made=Max('candidateactivity__timestamp', filter=base_activity_filter),
         connected_calls=Count('candidateactivity', filter=base_activity_filter & connected_filter),
         not_connected_calls=Count('candidateactivity', filter=base_activity_filter & ~connected_filter),
-          ).filter(total_calls__gt=0).order_by('-total_calls')
+    ).filter(total_calls__gt=0).order_by('-total_calls')
     
+    # Detailed calculations per employee
     LEAD_STATUSES = ['Hot', 'Converted']
     lead_transition_filter = (Q(action='call_made', changes__lead_generate__new__in=LEAD_STATUSES) & ~Q(changes__lead_generate__old__in=LEAD_STATUSES)) | Q(action='created', candidate__lead_generate__in=LEAD_STATUSES)
     
-    # --- START OF CHANGE ---
     for stat in employee_stats:
-        employee_activities = CandidateActivity.objects.filter(employee=stat, timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created', 'updated'])
-        stat.leads_generated = employee_activities.filter(lead_transition_filter).annotate(date=TruncDate('timestamp')).values('candidate_id', 'date').distinct().count()
-        stat.selections = Candidate_registration.objects.filter(updated_by=stat, selection_status__iexact='Selected', selection_date__range=[start_date, end_date]).count()
+        # Get activities for this specific employee
+        employee_activities = CandidateActivity.objects.filter(
+            employee=stat, 
+            timestamp__date__range=[start_date, end_date], 
+            action__in=['call_made', 'created', 'updated']
+        )
+
+        # Leads Generated
+        stat.leads_generated = employee_activities.filter(lead_transition_filter).values('candidate_id').distinct().count()
         
-        # This now calculates a simple count instead of a percentage
+        # Selections & Joined
+        stat.selections = Candidate_registration.objects.filter(updated_by=stat, selection_status__iexact='Selected', selection_date__range=[start_date, end_date]).count()
+        stat.joined_count = Candidate_registration.objects.filter(updated_by=stat, joining_status__iexact='Joined', candidate_joining_date__range=[start_date, end_date]).count()
+        
+        # Converted Leads
         hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
         stat.converted_leads_count = employee_activities.filter(hot_to_converted_filter).count()
-        # This now calculates a simple count of joined candidates for each employee
-        stat.joined_count = Candidate_registration.objects.filter(
-            updated_by=stat, 
-            joining_status__iexact='Joined', 
-            candidate_joining_date__range=[start_date, end_date]
-        ).count()
 
-        # === UPDATED RESUME LOGIC (INDIVIDUAL) ===
-        # 1. New registrations with Resume
-        created_resumes_count = Candidate_registration.objects.filter(
-            created_by=stat,
-            created_at__date__range=[start_date, end_date],
-            candidate_resume__isnull=False
-        ).exclude(candidate_resume='').count()
+        # Resumes Added (General)
+        created_resumes = Candidate_registration.objects.filter(created_by=stat, created_at__date__range=[start_date, end_date], candidate_resume__isnull=False).exclude(candidate_resume='').count()
+        updated_resumes = CandidateActivity.objects.filter(employee=stat, timestamp__date__range=[start_date, end_date], changes__has_key='candidate_resume').count()
+        stat.resumes_added = created_resumes + updated_resumes
 
-        # 2. Updated registrations with Resume (via Activity Log)
-        updated_resumes_count = CandidateActivity.objects.filter(
-            employee=stat,
-            timestamp__date__range=[start_date, end_date],
-            changes__has_key='candidate_resume'
-        ).count()
+        # --- Resume Sharing Stats (Per Employee) ---
+        rs_activities = employee_activities.filter(resume_sharing_filter_q)
+        # Count unique candidates marked "Resume Sharing"
+        stat.resume_sharing_count = rs_activities.values('candidate_id').distinct().count()
+        # Count how many of those have a file
+        stat.resume_sharing_with_file = rs_activities.filter(
+            Q(candidate__candidate_resume__isnull=False) & ~Q(candidate__candidate_resume='')
+        ).values('candidate_id').distinct().count()
 
-        stat.resumes_added = created_resumes_count + updated_resumes_count
-
+    # --- 5. Global Totals Calculation ---
     all_activities_queryset = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], action__in=['call_made', 'created', 'updated'], employee__isnull=False)
-    selections_queryset = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date])
-    # New queryset for joined candidates
-    joined_queryset = Candidate_registration.objects.filter(
-        joining_status__iexact='Joined', 
-        candidate_joining_date__range=[start_date, end_date]
-    )
     
-    # === UPDATED RESUME LOGIC (TOTAL QUERYSETS) ===
-    resumes_created_qs = Candidate_registration.objects.filter(
-        created_at__date__range=[start_date, end_date],
-        candidate_resume__isnull=False
-    ).exclude(candidate_resume='')
-    
-    resumes_updated_qs = CandidateActivity.objects.filter(
-        timestamp__date__range=[start_date, end_date],
-        changes__has_key='candidate_resume'
-    )
-
     if apply_employee_filter:
         all_activities_queryset = all_activities_queryset.filter(employee_id__in=selected_employee_ids)
-        selections_queryset = selections_queryset.filter(updated_by_id__in=selected_employee_ids)
-        joined_queryset = joined_queryset.filter(updated_by_id__in=selected_employee_ids)
-        
-        # Apply filters to resume querysets
-        resumes_created_qs = resumes_created_qs.filter(created_by_id__in=selected_employee_ids)
-        resumes_updated_qs = resumes_updated_qs.filter(employee_id__in=selected_employee_ids)
-        
-    total_connected_filter = Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))
-    total_leads_generated_count = all_activities_queryset.filter(lead_transition_filter).annotate(date=TruncDate('timestamp')).values('candidate_id', 'date').distinct().count()
-    total_selections_count = selections_queryset.count()
-    total_joined_count = joined_queryset.count() # Get total joined count
-    
-    # Calculate Total Resumes (Sum of created + updated)
-    total_resumes_count = resumes_created_qs.count() + resumes_updated_qs.count()
-    
-    total_hot_to_converted_filter = Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot')
-    
-    total_stats_agg = all_activities_queryset.aggregate(
-        total_activities=Count('id', filter=Q(action__in=['call_made', 'created'])),
-        total_connected=Count('id', filter=total_connected_filter),
-        total_not_connected=Count('id', filter=~total_connected_filter & Q(action__in=['call_made', 'created'])),
-        # This new aggregation gets the total converted leads count
-        total_converted_leads=Count('id', filter=total_hot_to_converted_filter)
-        
-    )
-    
-    total_stats = {
-        **total_stats_agg, 
-        'total_leads_generated': total_leads_generated_count, 
-        'total_selections': total_selections_count,
-        'total_joined': total_joined_count,
-        'total_resumes_added': total_resumes_count
-    }
-    # --- END OF CHANGE ---
 
-    unique_lead_activities = all_activities_queryset.filter(lead_transition_filter)
-    unique_leads_dict = {}
-    for activity in unique_lead_activities.order_by('timestamp'):
-        unique_leads_dict[(activity.candidate_id, activity.timestamp.date())] = activity
-    unique_leads_queryset = CandidateActivity.objects.filter(id__in=[act.id for act in unique_leads_dict.values()])
+    # Basic Totals
+    total_stats = all_activities_queryset.aggregate(
+        total_activities=Count('id', filter=Q(action__in=['call_made', 'created'])),
+        total_connected=Count('id', filter=Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))),
+        total_not_connected=Count('id', filter=Q(action__in=['call_made', 'created']) & ~Q(Q(action='call_made', changes__call_connection__new__iexact='Connected') | Q(action='created', candidate__call_connection__iexact='Connected'))),
+        total_converted_leads=Count('id', filter=Q(changes__lead_generate__new__iexact='Converted', changes__lead_generate__old__iexact='Hot'))
+    )
+
+    # Complex Totals
+    total_stats['total_leads_generated'] = all_activities_queryset.filter(lead_transition_filter).values('candidate_id').distinct().count()
     
+    # Selections/Joined/Resumes Totals (Need separate querysets because they are on Registration model, not Activity)
+    sel_qs = Candidate_registration.objects.filter(selection_status__iexact='Selected', selection_date__range=[start_date, end_date])
+    join_qs = Candidate_registration.objects.filter(joining_status__iexact='Joined', candidate_joining_date__range=[start_date, end_date])
+    res_create_qs = Candidate_registration.objects.filter(created_at__date__range=[start_date, end_date], candidate_resume__isnull=False).exclude(candidate_resume='')
+    res_update_qs = CandidateActivity.objects.filter(timestamp__date__range=[start_date, end_date], changes__has_key='candidate_resume')
+    
+    if apply_employee_filter:
+        sel_qs = sel_qs.filter(updated_by_id__in=selected_employee_ids)
+        join_qs = join_qs.filter(updated_by_id__in=selected_employee_ids)
+        res_create_qs = res_create_qs.filter(created_by_id__in=selected_employee_ids)
+        res_update_qs = res_update_qs.filter(employee_id__in=selected_employee_ids)
+
+    total_stats['total_selections'] = sel_qs.count()
+    total_stats['total_joined'] = join_qs.count()
+    total_stats['total_resumes_added'] = res_create_qs.count() + res_update_qs.count()
+
+    # --- Global Resume Sharing Stats (For Top Cards) ---
+    total_resume_sharing_qs = all_activities_queryset.filter(resume_sharing_filter_q)
+    
+    # Metric 1: Total Candidates marked "Resume Sharing"
+    total_stats['total_resume_sharing_count'] = total_resume_sharing_qs.values('candidate_id').distinct().count()
+    
+    # Metric 2: Total of those with File attached
+    total_stats['total_resume_sharing_with_file'] = total_resume_sharing_qs.filter(
+        Q(candidate__candidate_resume__isnull=False) & ~Q(candidate__candidate_resume='')
+    ).values('candidate_id').distinct().count()
+
+
+    # --- 6. Charts & Extras ---
+    unique_leads_queryset = CandidateActivity.objects.filter(id__in=all_activities_queryset.filter(lead_transition_filter).values('id'))
     main_chart_labels, main_chart_data = _get_chart_data(all_activities_queryset.filter(action__in=['call_made', 'created']), start_date, end_date)
     leads_chart_labels, leads_chart_data = _get_chart_data(unique_leads_queryset, start_date, end_date)
-    
-    interview_detail_qs = Candidate_Interview.objects.filter(interview_date_time__date__range=[start_date, end_date], status__in=['scheduled', 'rescheduled'])
-    follow_up_candidates_qs = Candidate_registration.objects.filter(next_follow_up_date_time__date__range=[start_date, end_date])
 
-    if apply_employee_filter:
-        # Placeholder for your specific filter logic based on your models
-        pass
-
-    interview_detail = sorted(list(interview_detail_qs), key=lambda x: x.interview_date_time)
-    follow_up_candidates = sorted(list(follow_up_candidates_qs), key=lambda x: x.next_follow_up_date_time)
+    interview_detail = Candidate_Interview.objects.filter(interview_date_time__date__range=[start_date, end_date], status__in=['scheduled', 'rescheduled']).order_by('interview_date_time')
+    follow_up_candidates = Candidate_registration.objects.filter(next_follow_up_date_time__date__range=[start_date, end_date]).order_by('next_follow_up_date_time')
 
     context = {
-        'employee_stats': employee_stats, 'period': period, 'start_date': start_date, 'end_date': end_date,
-        'main_chart_labels': main_chart_labels, 'main_chart_data': main_chart_data,
-        'leads_chart_labels': leads_chart_labels, 'leads_chart_data': leads_chart_data,
-        'total_stats': total_stats, 'interview_detail': interview_detail,
+        'employee_stats': employee_stats, 
+        'period': period, 
+        'start_date': start_date, 
+        'end_date': end_date,
+        'main_chart_labels': main_chart_labels, 
+        'main_chart_data': main_chart_data,
+        'leads_chart_labels': leads_chart_labels, 
+        'leads_chart_data': leads_chart_data,
+        'total_stats': total_stats, 
+        'interview_detail': interview_detail,
         'follow_up_candidates': follow_up_candidates, 
         'all_employees': all_employees,
         'selected_employee_ids': [int(eid) for eid in selected_employee_ids if eid.isdigit()],
     }
     return render(request, 'crm/employee-calls-list.html', context)
+
+
 
 @login_required(login_url='/crm/404/')
 def get_filtered_activity_list(request):
