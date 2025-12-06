@@ -5712,6 +5712,14 @@ def get_filtered_activity_list(request):
         context = {'candidates': candidates, 'list_title': list_title}
         return render(request, 'crm/partials/joined_candidate_list_partial.html', context)
     
+    elif list_type == 'shared_resumes':
+        list_title = "Candidates Marked as 'Resume Sharing'"
+        resume_sharing_filter = Q(
+            Q(action='call_made', changes__calling_remark__new__iexact='Sharing Resume') | 
+            Q(action='created', candidate__calling_remark__iexact='Sharing Resume')
+        )
+        activities = activities.filter(resume_sharing_filter)
+    
     elif list_type == 'resumes':
         list_title = "Candidates with Resumes Added/Updated"
         
