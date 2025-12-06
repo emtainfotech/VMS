@@ -121,8 +121,8 @@
                                 <th>Connected</th>
                                 <th>Not Connected</th>
                                 <th>Resumes</th>
-                                <th>Resume Sharing</th>
-                                <th>Sharing + File</th>
+                                <th>Resume Ratio</th>
+                                <!-- <th>Sharing + File</th> -->
                                 <th>Leads</th>
                                 <th>Converted</th>
                                 <th>Selections</th>
@@ -142,14 +142,14 @@
                                 
                                 <td>
                                     <span class="badge bg-orange-lt" title="Candidates marked as 'Resume Sharing'">
-                                        {{ stat.resume_sharing_count }}
+                                        {{ stat.resume_sharing_count }} : {{ stat.resume_sharing_with_file }}
                                     </span>
                                 </td>
-                                <td>
+                                <!-- <td>
                                     <span class="badge bg-teal-lt" title="Marked 'Resume Sharing' AND has file attached">
                                         {{ stat.resume_sharing_with_file }}
                                     </span>
-                                </td>
+                                </td> -->
                                 <td><span class="badge bg-warning text-warning-fg">{{ stat.leads_generated }}</span></td>
                                 <td><span class="badge" style="background-color: #e5dff6; color: #6f42c1;">{{ stat.converted_leads_count }}</span></td>
                                 <td><span class="badge bg-info text-info-fg">{{ stat.selections }}</span></td>
